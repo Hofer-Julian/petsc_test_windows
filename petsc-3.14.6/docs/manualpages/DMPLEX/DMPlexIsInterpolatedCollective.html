@@ -1,0 +1,54 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DMPLEX/DMPlexIsInterpolatedCollective.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>DMPlexIsInterpolatedCollective</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/DMPLEX/DMPlexIsInterpolatedCollective.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="DMPlexIsInterpolatedCollective"><H1>DMPlexIsInterpolatedCollective</H1></A>
+Find out to what extent the DMPlex is topologically interpolated (in collective manner). 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscdmplex.h"   
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../DMPLEX/DMPlexIsInterpolatedCollective.html#DMPlexIsInterpolatedCollective">DMPlexIsInterpolatedCollective</A>(<A HREF="../DM/DM.html#DM">DM</A> dm, <A HREF="../DM/DMPlexInterpolatedFlag.html#DMPlexInterpolatedFlag">DMPlexInterpolatedFlag</A> *interpolated)
+</PRE>
+Collective
+<P>
+<H3><FONT COLOR="#CC3333">Input Parameter</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>dm      </B></TD><TD>- The <A HREF="../DM/DM.html#DM">DM</A> object
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Output Parameter</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>interpolated </B></TD><TD>- Flag whether the <A HREF="../DM/DM.html#DM">DM</A> is interpolated
+</TD></TR></TABLE>
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">Notes</FONT></H3>
+Unlike <A HREF="../DMPLEX/DMPlexIsInterpolated.html#DMPlexIsInterpolated">DMPlexIsInterpolated</A>(), this is collective so the results are guaranteed to be the same on all ranks.
+<P>
+This function will return <A HREF="../DM/DMPlexInterpolatedFlag.html#DMPlexInterpolatedFlag">DMPLEX_INTERPOLATED_MIXED</A> if the results of <A HREF="../DMPLEX/DMPlexIsInterpolated.html#DMPlexIsInterpolated">DMPlexIsInterpolated</A>() are different on different ranks.
+<P>
+<H3><FONT COLOR="#CC3333">Developer Notes</FONT></H3>
+Initially, plex-&gt;interpolatedCollective = <A HREF="../DM/DMPlexInterpolatedFlag.html#DMPlexInterpolatedFlag">DMPLEX_INTERPOLATED_INVALID</A>.
+<P>
+If plex-&gt;interpolatedCollective == <A HREF="../DM/DMPlexInterpolatedFlag.html#DMPlexInterpolatedFlag">DMPLEX_INTERPOLATED_INVALID</A>, this function calls <A HREF="../DMPLEX/DMPlexIsInterpolated.html#DMPlexIsInterpolated">DMPlexIsInterpolated</A>() which sets plex-&gt;interpolated.
+MPI_Allreduce() is then called and collectively consistent flag plex-&gt;interpolatedCollective is set and returned;
+if plex-&gt;interpolated varies on different ranks, plex-&gt;interpolatedCollective = <A HREF="../DM/DMPlexInterpolatedFlag.html#DMPlexInterpolatedFlag">DMPLEX_INTERPOLATED_MIXED</A>,
+otherwise sets plex-&gt;interpolatedCollective = plex-&gt;interpolated.
+<P>
+If plex-&gt;interpolatedCollective != <A HREF="../DM/DMPlexInterpolatedFlag.html#DMPlexInterpolatedFlag">DMPLEX_INTERPOLATED_INVALID</A>, this function just returns plex-&gt;interpolatedCollective.
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../DMPLEX/DMPlexInterpolate.html#DMPlexInterpolate">DMPlexInterpolate</A>(), <A HREF="../DMPLEX/DMPlexIsInterpolated.html#DMPlexIsInterpolated">DMPlexIsInterpolated</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>intermediate<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/dm/impls/plex/plexinterpolate.c.html#DMPlexIsInterpolatedCollective">src/dm/impls/plex/plexinterpolate.c</A>
+<BR><A HREF="./index.html">Index of all DMPLEX routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

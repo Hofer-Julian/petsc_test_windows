@@ -1,0 +1,39 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatScaLAPACKSetBlockSizes.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>MatScaLAPACKSetBlockSizes</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/Mat/MatScaLAPACKSetBlockSizes.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="MatScaLAPACKSetBlockSizes"><H1>MatScaLAPACKSetBlockSizes</H1></A>
+Sets the block sizes to be used for the distibution of the ScaLAPACK matrix 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscmat.h" 
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../Mat/MatScaLAPACKSetBlockSizes.html#MatScaLAPACKSetBlockSizes">MatScaLAPACKSetBlockSizes</A>(<A HREF="../Mat/Mat.html#Mat">Mat</A> A,<A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> mb,<A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> nb)
+</PRE>
+Logically Collective on A
+<P>
+<H3><FONT COLOR="#CC3333">Input Parameter</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>A  </B></TD><TD>- a <A HREF="../Mat/MATSCALAPACK.html#MATSCALAPACK">MATSCALAPACK</A> matrix
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>mb </B></TD><TD>- the row block size
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>nb </B></TD><TD>- the column block size
+</TD></TR></TABLE>
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../Mat/MatCreateScaLAPACK.html#MatCreateScaLAPACK">MatCreateScaLAPACK</A>(), <A HREF="../Mat/MatScaLAPACKGetBlockSizes.html#MatScaLAPACKGetBlockSizes">MatScaLAPACKGetBlockSizes</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>intermediate<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/mat/impls/scalapack/matscalapack.c.html#MatScaLAPACKSetBlockSizes">src/mat/impls/scalapack/matscalapack.c</A>
+<P><H3><FONT COLOR="CC3333">Implementations</FONT></H3><A HREF="../../../src/mat/impls/scalapack/matscalapack.c.html#MatScaLAPACKSetBlockSizes_ScaLAPACK">MatScaLAPACKSetBlockSizes_ScaLAPACK in src/mat/impls/scalapack/matscalapack.c</A><BR>
+<BR><A HREF="./index.html">Index of all Mat routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

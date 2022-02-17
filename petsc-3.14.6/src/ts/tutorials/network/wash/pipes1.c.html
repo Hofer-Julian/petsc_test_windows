@@ -1,0 +1,954 @@
+<center><a href="pipes1.c">Actual source code: pipes1.c</a></center><br>
+
+<html>
+<head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/src/ts/tutorials/network/wash/pipes1.c.html" />
+<title></title>
+<meta name="generator" content="c2html 0.9.4">
+<meta name="date" content="2021-03-30T16:51:58+00:00">
+</head>
+
+<body bgcolor="#FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 src/ts/tutorials/network/wash/pipes1.c.html "><small>Report Typos and Errors</small></a></div>
+<pre width="80">
+<a name="line1">  1: </a>static char help[] = <font color="#666666">"This example demonstrates DMNetwork. It is used for testing parallel generation of dmnetwork, then redistribute. \n\\n"</font>;
+<a name="line2">  2: </a><font color="#B22222">/*</font>
+<a name="line3">  3: </a><font color="#B22222">  Example: mpiexec -n &lt;np&gt; ./pipes1 -ts_max_steps 10</font>
+<a name="line4">  4: </a><font color="#B22222">*/</font>
+
+<a name="line6">  6: </a><font color="#A020F0">#include </font><font color="#666666">"wash.h"</font><font color="#A020F0"></font>
+<a name="line7">  7: </a>#include <A href="../../../../../include/petscdmplex.h.html">&lt;petscdmplex.h&gt;</A>
+
+<a name="line9">  9: </a><font color="#B22222">/*</font>
+<a name="line10"> 10: </a><font color="#B22222">  WashNetworkDistribute - proc[0] distributes sequential wash object</font>
+<a name="line11"> 11: </a><font color="#B22222">   Input Parameters:</font>
+<a name="line12"> 12: </a><font color="#B22222">.  comm - MPI communicator</font>
+<a name="line13"> 13: </a><font color="#B22222">.  wash - wash context with all network data in proc[0]</font>
+
+<a name="line15"> 15: </a><font color="#B22222">   Output Parameter:</font>
+<a name="line16"> 16: </a><font color="#B22222">.  wash - wash context with nedge, nvertex and edgelist distributed</font>
+
+<a name="line18"> 18: </a><font color="#B22222">   Note: The routine is used for testing parallel generation of dmnetwork, then redistribute.</font>
+<a name="line19"> 19: </a><font color="#B22222">*/</font>
+<a name="line20"> 20: </a><strong><font color="#4169E1"><a name="WashNetworkDistribute"></a><a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> WashNetworkDistribute(<a href="../../../../../docs/manualpages/Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</a> comm,Wash wash)</font></strong>
+<a name="line21"> 21: </a>{
+<a name="line23"> 23: </a>  <a href="../../../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a>    rank,size,tag=0;
+<a name="line24"> 24: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       i,e,v,numEdges,numVertices,nedges,*eowners=NULL,estart,eend,*vtype=NULL,nvertices;
+<a name="line25"> 25: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       *edgelist = wash-&gt;edgelist,*nvtx=NULL,*vtxDone=NULL;
+
+<a name="line28"> 28: </a>  <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_size.html#MPI_Comm_size">MPI_Comm_size</a>(comm,&amp;size);
+<a name="line29"> 29: </a>  <font color="#4169E1">if</font> (size == 1) <font color="#4169E1">return</font>(0);
+
+<a name="line31"> 31: </a>  <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_rank.html#MPI_Comm_rank">MPI_Comm_rank</a>(comm,&amp;rank);
+<a name="line32"> 32: </a>  numEdges    = wash-&gt;nedge;
+<a name="line33"> 33: </a>  numVertices = wash-&gt;nvertex;
+
+<a name="line35"> 35: </a>  <font color="#B22222">/* (1) all processes get global and local number of edges */</font>
+<a name="line36"> 36: </a>  <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Bcast.html#MPI_Bcast">MPI_Bcast</a>(&amp;numEdges,1,<a href="../../../../../docs/manualpages/Sys/MPIU_INT.html#MPIU_INT">MPIU_INT</a>,0,comm);
+<a name="line37"> 37: </a>  nedges = numEdges/size; <font color="#B22222">/* local nedges */</font>
+<a name="line38"> 38: </a>  <font color="#4169E1">if</font> (!rank) {
+<a name="line39"> 39: </a>    nedges += numEdges - size*(numEdges/size);
+<a name="line40"> 40: </a>  }
+<a name="line41"> 41: </a>  wash-&gt;Nedge = numEdges;
+<a name="line42"> 42: </a>  wash-&gt;nedge = nedges;
+<a name="line43"> 43: </a>  <font color="#B22222">/* <a href="../../../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,"[%d] nedges %d, numEdges %d\n",rank,nedges,numEdges); */</font>
+
+<a name="line45"> 45: </a>  <a href="../../../../../docs/manualpages/Sys/PetscCalloc3.html#PetscCalloc3">PetscCalloc3</a>(size+1,&amp;eowners,size,&amp;nvtx,numVertices,&amp;vtxDone);
+<a name="line46"> 46: </a>  <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Allgather.html#MPI_Allgather">MPI_Allgather</a>(&amp;nedges,1,<a href="../../../../../docs/manualpages/Sys/MPIU_INT.html#MPIU_INT">MPIU_INT</a>,eowners+1,1,<a href="../../../../../docs/manualpages/Sys/MPIU_INT.html#MPIU_INT">MPIU_INT</a>,<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>);
+<a name="line47"> 47: </a>  eowners[0] = 0;
+<a name="line48"> 48: </a>  <font color="#4169E1">for</font> (i=2; i&lt;=size; i++) {
+<a name="line49"> 49: </a>    eowners[i] += eowners[i-1];
+<a name="line50"> 50: </a>  }
+
+<a name="line52"> 52: </a>  estart = eowners[rank];
+<a name="line53"> 53: </a>  eend   = eowners[rank+1];
+<a name="line54"> 54: </a>  <font color="#B22222">/* <a href="../../../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,"[%d] own lists row %d - %d\n",rank,estart,eend); */</font>
+
+<a name="line56"> 56: </a>  <font color="#B22222">/* (2) distribute row block edgelist to all processors */</font>
+<a name="line57"> 57: </a>  <font color="#4169E1">if</font> (!rank) {
+<a name="line58"> 58: </a>    vtype = wash-&gt;vtype;
+<a name="line59"> 59: </a>    <font color="#4169E1">for</font> (i=1; i&lt;size; i++) {
+<a name="line60"> 60: </a>      <font color="#B22222">/* proc[0] sends edgelist to proc[i] */</font>
+<a name="line61"> 61: </a>      <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Send.html#MPI_Send">MPI_Send</a>(edgelist+2*eowners[i],2*(eowners[i+1]-eowners[i]),<a href="../../../../../docs/manualpages/Sys/MPIU_INT.html#MPIU_INT">MPIU_INT</a>,i,tag,comm);
+
+<a name="line63"> 63: </a>      <font color="#B22222">/* proc[0] sends vtype to proc[i] */</font>
+<a name="line64"> 64: </a>      <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Send.html#MPI_Send">MPI_Send</a>(vtype+2*eowners[i],2*(eowners[i+1]-eowners[i]),<a href="../../../../../docs/manualpages/Sys/MPIU_INT.html#MPIU_INT">MPIU_INT</a>,i,tag,comm);
+<a name="line65"> 65: </a>    }
+<a name="line66"> 66: </a>  } <font color="#4169E1">else</font> {
+<a name="line67"> 67: </a>    MPI_Status      status;
+<a name="line68"> 68: </a>    <a href="../../../../../docs/manualpages/Sys/PetscMalloc1.html#PetscMalloc1">PetscMalloc1</a>(2*(eend-estart),&amp;vtype);
+<a name="line69"> 69: </a>    <a href="../../../../../docs/manualpages/Sys/PetscMalloc1.html#PetscMalloc1">PetscMalloc1</a>(2*(eend-estart),&amp;edgelist);
+
+<a name="line71"> 71: </a>    <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Recv.html#MPI_Recv">MPI_Recv</a>(edgelist,2*(eend-estart),<a href="../../../../../docs/manualpages/Sys/MPIU_INT.html#MPIU_INT">MPIU_INT</a>,0,tag,comm,&amp;status);
+<a name="line72"> 72: </a>    <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Recv.html#MPI_Recv">MPI_Recv</a>(vtype,2*(eend-estart),<a href="../../../../../docs/manualpages/Sys/MPIU_INT.html#MPIU_INT">MPIU_INT</a>,0,tag,comm,&amp;status);
+<a name="line73"> 73: </a>  }
+
+<a name="line75"> 75: </a>  wash-&gt;edgelist = edgelist;
+
+<a name="line77"> 77: </a>  <font color="#B22222">/* (3) all processes get global and local number of vertices, without ghost vertices */</font>
+<a name="line78"> 78: </a>  <font color="#4169E1">if</font> (!rank) {
+<a name="line79"> 79: </a>    <font color="#4169E1">for</font> (i=0; i&lt;size; i++) {
+<a name="line80"> 80: </a>      <font color="#4169E1">for</font> (e=eowners[i]; e&lt;eowners[i+1]; e++) {
+<a name="line81"> 81: </a>        v = edgelist[2*e];
+<a name="line82"> 82: </a>        <font color="#4169E1">if</font> (!vtxDone[v]) {
+<a name="line83"> 83: </a>          nvtx[i]++; vtxDone[v] = 1;
+<a name="line84"> 84: </a>        }
+<a name="line85"> 85: </a>        v = edgelist[2*e+1];
+<a name="line86"> 86: </a>        <font color="#4169E1">if</font> (!vtxDone[v]) {
+<a name="line87"> 87: </a>          nvtx[i]++; vtxDone[v] = 1;
+<a name="line88"> 88: </a>        }
+<a name="line89"> 89: </a>      }
+<a name="line90"> 90: </a>    }
+<a name="line91"> 91: </a>  }
+<a name="line92"> 92: </a>  <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Bcast.html#MPI_Bcast">MPI_Bcast</a>(&amp;numVertices,1,<a href="../../../../../docs/manualpages/Sys/MPIU_INT.html#MPIU_INT">MPIU_INT</a>,0,<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>);
+<a name="line93"> 93: </a>  <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Scatter.html#MPI_Scatter">MPI_Scatter</a>(nvtx,1,<a href="../../../../../docs/manualpages/Sys/MPIU_INT.html#MPIU_INT">MPIU_INT</a>,&amp;nvertices,1,<a href="../../../../../docs/manualpages/Sys/MPIU_INT.html#MPIU_INT">MPIU_INT</a>,0,<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>);
+<a name="line94"> 94: </a>  <a href="../../../../../docs/manualpages/Sys/PetscFree3.html#PetscFree3">PetscFree3</a>(eowners,nvtx,vtxDone);
+
+<a name="line96"> 96: </a>  wash-&gt;Nvertex = numVertices;
+<a name="line97"> 97: </a>  wash-&gt;nvertex = nvertices;
+<a name="line98"> 98: </a>  wash-&gt;vtype   = vtype;
+<a name="line99"> 99: </a>  <font color="#4169E1">return</font>(0);
+<a name="line100">100: </a>}
+
+<a name="line102">102: </a><strong><font color="#4169E1"><a name="WASHIFunction"></a><a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> WASHIFunction(<a href="../../../../../docs/manualpages/TS/TS.html#TS">TS</a> ts,<a href="../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> t,<a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> X,<a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> Xdot,<a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> F,void* ctx)</font></strong>
+<a name="line103">103: </a>{
+<a name="line105">105: </a>  Wash           wash=(Wash)ctx;
+<a name="line106">106: </a>  <a href="../../../../../docs/manualpages/DM/DM.html#DM">DM</a>             networkdm;
+<a name="line107">107: </a>  <a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a>            localX,localXdot,localF, localXold;
+<a name="line108">108: </a>  const <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *cone;
+<a name="line109">109: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       vfrom,vto,offsetfrom,offsetto,varoffset;
+<a name="line110">110: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       v,vStart,vEnd,e,eStart,eEnd;
+<a name="line111">111: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       nend,type;
+<a name="line112">112: </a>  <a href="../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>      ghost;
+<a name="line113">113: </a>  <a href="../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>    *farr,*juncf, *pipef;
+<a name="line114">114: </a>  <a href="../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>      dt;
+<a name="line115">115: </a>  Pipe           pipe;
+<a name="line116">116: </a>  PipeField      *pipex,*pipexdot,*juncx;
+<a name="line117">117: </a>  Junction       junction;
+<a name="line118">118: </a>  <a href="../../../../../docs/manualpages/DMDA/DMDALocalInfo.html#DMDALocalInfo">DMDALocalInfo</a>  info;
+<a name="line119">119: </a>  const <a href="../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> *xarr,*xdotarr, *xoldarr;
+
+<a name="line122">122: </a>  localX    = wash-&gt;localX;
+<a name="line123">123: </a>  localXdot = wash-&gt;localXdot;
+
+<a name="line125">125: </a>  <a href="../../../../../docs/manualpages/TS/TSGetSolution.html#TSGetSolution">TSGetSolution</a>(ts,&amp;localXold);
+<a name="line126">126: </a>  <a href="../../../../../docs/manualpages/TS/TSGetDM.html#TSGetDM">TSGetDM</a>(ts,&amp;networkdm);
+<a name="line127">127: </a>  <a href="../../../../../docs/manualpages/TS/TSGetTimeStep.html#TSGetTimeStep">TSGetTimeStep</a>(ts,&amp;dt);
+<a name="line128">128: </a>  <a href="../../../../../docs/manualpages/DM/DMGetLocalVector.html#DMGetLocalVector">DMGetLocalVector</a>(networkdm,&amp;localF);
+
+<a name="line130">130: </a>  <font color="#B22222">/* Set F and localF as zero */</font>
+<a name="line131">131: </a>  <a href="../../../../../docs/manualpages/Vec/VecSet.html#VecSet">VecSet</a>(F,0.0);
+<a name="line132">132: </a>  <a href="../../../../../docs/manualpages/Vec/VecSet.html#VecSet">VecSet</a>(localF,0.0);
+
+<a name="line134">134: </a>  <font color="#B22222">/* Update ghost values of locaX and locaXdot */</font>
+<a name="line135">135: </a>  <a href="../../../../../docs/manualpages/DM/DMGlobalToLocalBegin.html#DMGlobalToLocalBegin">DMGlobalToLocalBegin</a>(networkdm,X,<a href="../../../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>,localX);
+<a name="line136">136: </a>  <a href="../../../../../docs/manualpages/DM/DMGlobalToLocalEnd.html#DMGlobalToLocalEnd">DMGlobalToLocalEnd</a>(networkdm,X,<a href="../../../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>,localX);
+
+<a name="line138">138: </a>  <a href="../../../../../docs/manualpages/DM/DMGlobalToLocalBegin.html#DMGlobalToLocalBegin">DMGlobalToLocalBegin</a>(networkdm,Xdot,<a href="../../../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>,localXdot);
+<a name="line139">139: </a>  <a href="../../../../../docs/manualpages/DM/DMGlobalToLocalEnd.html#DMGlobalToLocalEnd">DMGlobalToLocalEnd</a>(networkdm,Xdot,<a href="../../../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>,localXdot);
+
+<a name="line141">141: </a>  <a href="../../../../../docs/manualpages/Vec/VecGetArrayRead.html#VecGetArrayRead">VecGetArrayRead</a>(localX,&amp;xarr);
+<a name="line142">142: </a>  <a href="../../../../../docs/manualpages/Vec/VecGetArrayRead.html#VecGetArrayRead">VecGetArrayRead</a>(localXdot,&amp;xdotarr);
+<a name="line143">143: </a>  <a href="../../../../../docs/manualpages/Vec/VecGetArrayRead.html#VecGetArrayRead">VecGetArrayRead</a>(localXold,&amp;xoldarr);
+<a name="line144">144: </a>  <a href="../../../../../docs/manualpages/Vec/VecGetArray.html#VecGetArray">VecGetArray</a>(localF,&amp;farr);
+
+<a name="line146">146: </a>   <font color="#B22222">/* junction-&gt;type == JUNCTION:</font>
+<a name="line147">147: </a><font color="#B22222">           juncf[0] = -qJ + sum(qin); juncf[1] = qJ - sum(qout)</font>
+<a name="line148">148: </a><font color="#B22222">       junction-&gt;type == RESERVOIR (upper stream):</font>
+<a name="line149">149: </a><font color="#B22222">           juncf[0] = -hJ + H0; juncf[1] = qJ - sum(qout)</font>
+<a name="line150">150: </a><font color="#B22222">       junction-&gt;type == VALVE (down stream):</font>
+<a name="line151">151: </a><font color="#B22222">           juncf[0] =  -qJ + sum(qin); juncf[1] = qJ</font>
+<a name="line152">152: </a><font color="#B22222">  */</font>
+<a name="line153">153: </a>  <font color="#B22222">/* Vertex/junction initialization */</font>
+<a name="line154">154: </a>  <a href="../../../../../docs/manualpages/DMNetwork/DMNetworkGetVertexRange.html#DMNetworkGetVertexRange">DMNetworkGetVertexRange</a>(networkdm,&amp;vStart,&amp;vEnd);
+<a name="line155">155: </a>  <font color="#4169E1">for</font> (v=vStart; v&lt;vEnd; v++) {
+<a name="line156">156: </a>    <a href="../../../../../docs/manualpages/DMNetwork/DMNetworkIsGhostVertex.html#DMNetworkIsGhostVertex">DMNetworkIsGhostVertex</a>(networkdm,v,&amp;ghost);
+<a name="line157">157: </a>    <font color="#4169E1">if</font> (ghost) <font color="#4169E1">continue</font>;
+
+<a name="line159">159: </a>    <a href="../../../../../docs/manualpages/DMNetwork/DMNetworkGetComponent.html#DMNetworkGetComponent">DMNetworkGetComponent</a>(networkdm,v,0,&amp;type,(void**)&amp;junction);
+<a name="line160">160: </a>    <a href="../../../../../docs/manualpages/DMNetwork/DMNetworkGetVariableOffset.html#DMNetworkGetVariableOffset">DMNetworkGetVariableOffset</a>(networkdm,v,&amp;varoffset);
+<a name="line161">161: </a>    juncx      = (PipeField*)(xarr + varoffset);
+<a name="line162">162: </a>    juncf      = (<a href="../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>*)(farr + varoffset);
+
+<a name="line164">164: </a>    juncf[0] = -juncx[0].q;
+<a name="line165">165: </a>    juncf[1] =  juncx[0].q;
+
+<a name="line167">167: </a>    <font color="#4169E1">if</font> (junction-&gt;type == RESERVOIR) { <font color="#B22222">/* upstream reservoir */</font>
+<a name="line168">168: </a>      juncf[0] = juncx[0].h - wash-&gt;H0;
+<a name="line169">169: </a>    }
+<a name="line170">170: </a>  }
+
+<a name="line172">172: </a>  <font color="#B22222">/* Edge/pipe */</font>
+<a name="line173">173: </a>  <a href="../../../../../docs/manualpages/DMNetwork/DMNetworkGetEdgeRange.html#DMNetworkGetEdgeRange">DMNetworkGetEdgeRange</a>(networkdm,&amp;eStart,&amp;eEnd);
+<a name="line174">174: </a>  <font color="#4169E1">for</font> (e=eStart; e&lt;eEnd; e++) {
+<a name="line175">175: </a>    <a href="../../../../../docs/manualpages/DMNetwork/DMNetworkGetComponent.html#DMNetworkGetComponent">DMNetworkGetComponent</a>(networkdm,e,0,&amp;type,(void**)&amp;pipe);
+<a name="line176">176: </a>    <a href="../../../../../docs/manualpages/DMNetwork/DMNetworkGetVariableOffset.html#DMNetworkGetVariableOffset">DMNetworkGetVariableOffset</a>(networkdm,e,&amp;varoffset);
+<a name="line177">177: </a>    pipex    = (PipeField*)(xarr + varoffset);
+<a name="line178">178: </a>    pipexdot = (PipeField*)(xdotarr + varoffset);
+<a name="line179">179: </a>    pipef    = (<a href="../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>*)(farr + varoffset);
+
+<a name="line181">181: </a>    <font color="#B22222">/* Get some data into the pipe structure: note, some of these operations</font>
+<a name="line182">182: </a><font color="#B22222">     * might be redundant. Will it consume too much time? */</font>
+<a name="line183">183: </a>    pipe-&gt;dt   = dt;
+<a name="line184">184: </a>    pipe-&gt;xold = (PipeField*)(xoldarr + varoffset);
+
+<a name="line186">186: </a>    <font color="#B22222">/* Evaluate F over this edge/pipe: pipef[1], ...,pipef[2*nend] */</font>
+<a name="line187">187: </a>    <a href="../../../../../docs/manualpages/DMDA/DMDAGetLocalInfo.html#DMDAGetLocalInfo">DMDAGetLocalInfo</a>(pipe-&gt;da,&amp;info);
+<a name="line188">188: </a>    PipeIFunctionLocal_Lax(&amp;info,t,pipex,pipexdot,pipef,pipe);
+
+<a name="line190">190: </a>    <font color="#B22222">/* Get boundary values from connected vertices */</font>
+<a name="line191">191: </a>    <a href="../../../../../docs/manualpages/DMNetwork/DMNetworkGetConnectedVertices.html#DMNetworkGetConnectedVertices">DMNetworkGetConnectedVertices</a>(networkdm,e,&amp;cone);
+<a name="line192">192: </a>    vfrom = cone[0]; <font color="#B22222">/* local ordering */</font>
+<a name="line193">193: </a>    vto   = cone[1];
+<a name="line194">194: </a>    <a href="../../../../../docs/manualpages/DMNetwork/DMNetworkGetVariableOffset.html#DMNetworkGetVariableOffset">DMNetworkGetVariableOffset</a>(networkdm,vfrom,&amp;offsetfrom);
+<a name="line195">195: </a>    <a href="../../../../../docs/manualpages/DMNetwork/DMNetworkGetVariableOffset.html#DMNetworkGetVariableOffset">DMNetworkGetVariableOffset</a>(networkdm,vto,&amp;offsetto);
+
+<a name="line197">197: </a>    <font color="#B22222">/* Evaluate upstream boundary */</font>
+<a name="line198">198: </a>    <a href="../../../../../docs/manualpages/DMNetwork/DMNetworkGetComponent.html#DMNetworkGetComponent">DMNetworkGetComponent</a>(networkdm,vfrom,0,&amp;type,(void**)&amp;junction);
+<a name="line199">199: </a>    <font color="#4169E1">if</font> (junction-&gt;type != JUNCTION &amp;&amp; junction-&gt;type != RESERVOIR) <a href="../../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_SUP,<font color="#666666">"junction type is not supported"</font>);
+<a name="line200">200: </a>    juncx = (PipeField*)(xarr + offsetfrom);
+<a name="line201">201: </a>    juncf = (<a href="../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>*)(farr + offsetfrom);
+
+<a name="line203">203: </a>    pipef[0] = pipex[0].h - juncx[0].h;
+<a name="line204">204: </a>    juncf[1] -= pipex[0].q;
+
+<a name="line206">206: </a>    <font color="#B22222">/* Evaluate downstream boundary */</font>
+<a name="line207">207: </a>    <a href="../../../../../docs/manualpages/DMNetwork/DMNetworkGetComponent.html#DMNetworkGetComponent">DMNetworkGetComponent</a>(networkdm,vto,0,&amp;type,(void**)&amp;junction);
+<a name="line208">208: </a>    <font color="#4169E1">if</font> (junction-&gt;type != JUNCTION &amp;&amp; junction-&gt;type != VALVE) <a href="../../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_SUP,<font color="#666666">"junction type is not supported"</font>);
+<a name="line209">209: </a>    juncx = (PipeField*)(xarr + offsetto);
+<a name="line210">210: </a>    juncf = (<a href="../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>*)(farr + offsetto);
+<a name="line211">211: </a>    nend  = pipe-&gt;nnodes - 1;
+
+<a name="line213">213: </a>    pipef[2*nend + 1] = pipex[nend].h - juncx[0].h;
+<a name="line214">214: </a>    juncf[0] += pipex[nend].q;
+<a name="line215">215: </a>  }
+
+<a name="line217">217: </a>  <a href="../../../../../docs/manualpages/Vec/VecRestoreArrayRead.html#VecRestoreArrayRead">VecRestoreArrayRead</a>(localX,&amp;xarr);
+<a name="line218">218: </a>  <a href="../../../../../docs/manualpages/Vec/VecRestoreArrayRead.html#VecRestoreArrayRead">VecRestoreArrayRead</a>(localXdot,&amp;xdotarr);
+<a name="line219">219: </a>  <a href="../../../../../docs/manualpages/Vec/VecRestoreArray.html#VecRestoreArray">VecRestoreArray</a>(localF,&amp;farr);
+
+<a name="line221">221: </a>  <a href="../../../../../docs/manualpages/DM/DMLocalToGlobalBegin.html#DMLocalToGlobalBegin">DMLocalToGlobalBegin</a>(networkdm,localF,<a href="../../../../../docs/manualpages/Sys/ADD_VALUES.html#ADD_VALUES">ADD_VALUES</a>,F);
+<a name="line222">222: </a>  <a href="../../../../../docs/manualpages/DM/DMLocalToGlobalEnd.html#DMLocalToGlobalEnd">DMLocalToGlobalEnd</a>(networkdm,localF,<a href="../../../../../docs/manualpages/Sys/ADD_VALUES.html#ADD_VALUES">ADD_VALUES</a>,F);
+<a name="line223">223: </a>  <a href="../../../../../docs/manualpages/DM/DMRestoreLocalVector.html#DMRestoreLocalVector">DMRestoreLocalVector</a>(networkdm,&amp;localF);
+<a name="line224">224: </a>  <font color="#B22222">/*</font>
+<a name="line225">225: </a><font color="#B22222">   <a href="../../../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>("F:\n");</font>
+<a name="line226">226: </a><font color="#B22222">   <a href="../../../../../docs/manualpages/Vec/VecView.html#VecView">VecView</a>(F,<a href="../../../../../docs/manualpages/Viewer/PETSC_VIEWER_STDOUT_WORLD.html#PETSC_VIEWER_STDOUT_WORLD">PETSC_VIEWER_STDOUT_WORLD</a>);</font>
+<a name="line227">227: </a><font color="#B22222">   */</font>
+<a name="line228">228: </a>  <font color="#4169E1">return</font>(0);
+<a name="line229">229: </a>}
+
+<a name="line231">231: </a><strong><font color="#4169E1"><a name="WASHSetInitialSolution"></a><a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> WASHSetInitialSolution(<a href="../../../../../docs/manualpages/DM/DM.html#DM">DM</a> networkdm,<a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> X,Wash wash)</font></strong>
+<a name="line232">232: </a>{
+<a name="line234">234: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       k,nx,vkey,vfrom,vto,offsetfrom,offsetto;
+<a name="line235">235: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       type,varoffset;
+<a name="line236">236: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       e,eStart,eEnd;
+<a name="line237">237: </a>  <a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a>            localX;
+<a name="line238">238: </a>  <a href="../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>    *xarr;
+<a name="line239">239: </a>  Pipe           pipe;
+<a name="line240">240: </a>  Junction       junction;
+<a name="line241">241: </a>  const <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *cone;
+<a name="line242">242: </a>  const <a href="../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> *xarray;
+
+<a name="line245">245: </a>  <a href="../../../../../docs/manualpages/Vec/VecSet.html#VecSet">VecSet</a>(X,0.0);
+<a name="line246">246: </a>  <a href="../../../../../docs/manualpages/DM/DMGetLocalVector.html#DMGetLocalVector">DMGetLocalVector</a>(networkdm,&amp;localX);
+<a name="line247">247: </a>  <a href="../../../../../docs/manualpages/Vec/VecGetArray.html#VecGetArray">VecGetArray</a>(localX,&amp;xarr);
+
+<a name="line249">249: </a>  <font color="#B22222">/* Edge */</font>
+<a name="line250">250: </a>  <a href="../../../../../docs/manualpages/DMNetwork/DMNetworkGetEdgeRange.html#DMNetworkGetEdgeRange">DMNetworkGetEdgeRange</a>(networkdm,&amp;eStart,&amp;eEnd);
+<a name="line251">251: </a>  <font color="#4169E1">for</font> (e=eStart; e&lt;eEnd; e++) {
+<a name="line252">252: </a>    <a href="../../../../../docs/manualpages/DMNetwork/DMNetworkGetVariableOffset.html#DMNetworkGetVariableOffset">DMNetworkGetVariableOffset</a>(networkdm,e,&amp;varoffset);
+<a name="line253">253: </a>    <a href="../../../../../docs/manualpages/DMNetwork/DMNetworkGetComponent.html#DMNetworkGetComponent">DMNetworkGetComponent</a>(networkdm,e,0,&amp;type,(void**)&amp;pipe);
+
+<a name="line255">255: </a>    <font color="#B22222">/* set initial values for this pipe */</font>
+<a name="line256">256: </a>    PipeComputeSteadyState(pipe,wash-&gt;Q0,wash-&gt;H0);
+<a name="line257">257: </a>    <a href="../../../../../docs/manualpages/Vec/VecGetSize.html#VecGetSize">VecGetSize</a>(pipe-&gt;x,&amp;nx);
+
+<a name="line259">259: </a>    <a href="../../../../../docs/manualpages/Vec/VecGetArrayRead.html#VecGetArrayRead">VecGetArrayRead</a>(pipe-&gt;x,&amp;xarray);
+<a name="line260">260: </a>    <font color="#B22222">/* copy pipe-&gt;x to xarray */</font>
+<a name="line261">261: </a>    <font color="#4169E1">for</font> (k=0; k&lt;nx; k++) {
+<a name="line262">262: </a>      (xarr+varoffset)[k] = xarray[k];
+<a name="line263">263: </a>    }
+
+<a name="line265">265: </a>    <font color="#B22222">/* set boundary values into vfrom and vto */</font>
+<a name="line266">266: </a>    <a href="../../../../../docs/manualpages/DMNetwork/DMNetworkGetConnectedVertices.html#DMNetworkGetConnectedVertices">DMNetworkGetConnectedVertices</a>(networkdm,e,&amp;cone);
+<a name="line267">267: </a>    vfrom = cone[0]; <font color="#B22222">/* local ordering */</font>
+<a name="line268">268: </a>    vto   = cone[1];
+<a name="line269">269: </a>    <a href="../../../../../docs/manualpages/DMNetwork/DMNetworkGetVariableOffset.html#DMNetworkGetVariableOffset">DMNetworkGetVariableOffset</a>(networkdm,vfrom,&amp;offsetfrom);
+<a name="line270">270: </a>    <a href="../../../../../docs/manualpages/DMNetwork/DMNetworkGetVariableOffset.html#DMNetworkGetVariableOffset">DMNetworkGetVariableOffset</a>(networkdm,vto,&amp;offsetto);
+
+<a name="line272">272: </a>    <font color="#B22222">/* if vform is a head vertex: */</font>
+<a name="line273">273: </a>    <a href="../../../../../docs/manualpages/DMNetwork/DMNetworkGetComponent.html#DMNetworkGetComponent">DMNetworkGetComponent</a>(networkdm,vfrom,0,&amp;vkey,(void**)&amp;junction);
+<a name="line274">274: </a>    <font color="#4169E1">if</font> (junction-&gt;type == RESERVOIR) {
+<a name="line275">275: </a>      (xarr+offsetfrom)[1] = wash-&gt;H0; <font color="#B22222">/* 1st H */</font>
+<a name="line276">276: </a>    }
+
+<a name="line278">278: </a>    <font color="#B22222">/* if vto is an end vertex: */</font>
+<a name="line279">279: </a>    <a href="../../../../../docs/manualpages/DMNetwork/DMNetworkGetComponent.html#DMNetworkGetComponent">DMNetworkGetComponent</a>(networkdm,vto,0,&amp;vkey,(void**)&amp;junction);
+<a name="line280">280: </a>    <font color="#4169E1">if</font> (junction-&gt;type == VALVE) {
+<a name="line281">281: </a>      (xarr+offsetto)[0] = wash-&gt;QL; <font color="#B22222">/* last Q */</font>
+<a name="line282">282: </a>    }
+<a name="line283">283: </a>    <a href="../../../../../docs/manualpages/Vec/VecRestoreArrayRead.html#VecRestoreArrayRead">VecRestoreArrayRead</a>(pipe-&gt;x,&amp;xarray);
+<a name="line284">284: </a>  }
+
+<a name="line286">286: </a>  <a href="../../../../../docs/manualpages/Vec/VecRestoreArray.html#VecRestoreArray">VecRestoreArray</a>(localX,&amp;xarr);
+<a name="line287">287: </a>  <a href="../../../../../docs/manualpages/DM/DMLocalToGlobalBegin.html#DMLocalToGlobalBegin">DMLocalToGlobalBegin</a>(networkdm,localX,<a href="../../../../../docs/manualpages/Sys/ADD_VALUES.html#ADD_VALUES">ADD_VALUES</a>,X);
+<a name="line288">288: </a>  <a href="../../../../../docs/manualpages/DM/DMLocalToGlobalEnd.html#DMLocalToGlobalEnd">DMLocalToGlobalEnd</a>(networkdm,localX,<a href="../../../../../docs/manualpages/Sys/ADD_VALUES.html#ADD_VALUES">ADD_VALUES</a>,X);
+<a name="line289">289: </a>  <a href="../../../../../docs/manualpages/DM/DMRestoreLocalVector.html#DMRestoreLocalVector">DMRestoreLocalVector</a>(networkdm,&amp;localX);
+
+<a name="line291">291: </a><font color="#A020F0">#if 0</font>
+<a name="line292">292: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> N;
+<a name="line293">293: </a>  <a href="../../../../../docs/manualpages/Vec/VecGetSize.html#VecGetSize">VecGetSize</a>(X,&amp;N);
+<a name="line294">294: </a>  <a href="../../../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,<font color="#666666">"initial solution %d:\n"</font>,N);
+<a name="line295">295: </a>  <a href="../../../../../docs/manualpages/Vec/VecView.html#VecView">VecView</a>(X,<a href="../../../../../docs/manualpages/Viewer/PETSC_VIEWER_STDOUT_WORLD.html#PETSC_VIEWER_STDOUT_WORLD">PETSC_VIEWER_STDOUT_WORLD</a>);
+<a name="line296">296: </a><font color="#A020F0">#endif</font>
+<a name="line297">297: </a>  <font color="#4169E1">return</font>(0);
+<a name="line298">298: </a>}
+
+<a name="line300">300: </a><strong><font color="#4169E1"><a name="TSDMNetworkMonitor"></a><a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> TSDMNetworkMonitor(<a href="../../../../../docs/manualpages/TS/TS.html#TS">TS</a> ts, <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> step, <a href="../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> t, <a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> x, void *context)</font></strong>
+<a name="line301">301: </a>{
+<a name="line302">302: </a>  <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>     ierr;
+<a name="line303">303: </a>  DMNetworkMonitor   monitor;
+
+<a name="line306">306: </a>  monitor = (DMNetworkMonitor)context;
+<a name="line307">307: </a>  <a href="../../../../../docs/manualpages/DMNetwork/DMNetworkMonitorView.html#DMNetworkMonitorView">DMNetworkMonitorView</a>(monitor,x);
+<a name="line308">308: </a>  <font color="#4169E1">return</font>(0);
+<a name="line309">309: </a>}
+
+<a name="line311">311: </a><strong><font color="#4169E1"><a name="PipesView"></a><a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PipesView(<a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> X,<a href="../../../../../docs/manualpages/DM/DM.html#DM">DM</a> networkdm,Wash wash)</font></strong>
+<a name="line312">312: </a>{
+<a name="line313">313: </a>  <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>       ierr;
+<a name="line314">314: </a>  Pipe                 pipe;
+<a name="line315">315: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>             key,Start,End;
+<a name="line316">316: </a>  <a href="../../../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a>          rank;
+<a name="line317">317: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>             nx,nnodes,nidx,*idx1,*idx2,*idx1_h,*idx2_h,idx_start,i,k,k1,xstart,j1;
+<a name="line318">318: </a>  <a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a>                  Xq,Xh,localX;
+<a name="line319">319: </a>  <a href="../../../../../docs/manualpages/IS/IS.html#IS">IS</a>                   is1_q,is2_q,is1_h,is2_h;
+<a name="line320">320: </a>  <a href="../../../../../docs/manualpages/Vec/VecScatter.html#VecScatter">VecScatter</a>           ctx_q,ctx_h;
+
+<a name="line323">323: </a>  <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_rank.html#MPI_Comm_rank">MPI_Comm_rank</a>(<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,&amp;rank);
+
+<a name="line325">325: </a>  <font color="#B22222">/* get num of local and global total nnodes */</font>
+<a name="line326">326: </a>  nidx = wash-&gt;nnodes_loc;
+<a name="line327">327: </a>  <a href="../../../../../docs/manualpages/Sys/MPIU_Allreduce.html#MPIU_Allreduce">MPIU_Allreduce</a>(&amp;nidx,&amp;nx,1,<a href="../../../../../docs/manualpages/Sys/MPIU_INT.html#MPIU_INT">MPIU_INT</a>,MPI_SUM,<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>);
+
+<a name="line329">329: </a>  <a href="../../../../../docs/manualpages/Vec/VecCreate.html#VecCreate">VecCreate</a>(<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,&amp;Xq);
+<a name="line330">330: </a>  <font color="#4169E1">if</font> (rank == 0) { <font color="#B22222">/* all entries of Xq are in proc[0] */</font>
+<a name="line331">331: </a>    <a href="../../../../../docs/manualpages/Vec/VecSetSizes.html#VecSetSizes">VecSetSizes</a>(Xq,nx,<a href="../../../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a>);
+<a name="line332">332: </a>  } <font color="#4169E1">else</font> {
+<a name="line333">333: </a>    <a href="../../../../../docs/manualpages/Vec/VecSetSizes.html#VecSetSizes">VecSetSizes</a>(Xq,0,<a href="../../../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a>);
+<a name="line334">334: </a>  }
+<a name="line335">335: </a>  <a href="../../../../../docs/manualpages/Vec/VecSetFromOptions.html#VecSetFromOptions">VecSetFromOptions</a>(Xq);
+<a name="line336">336: </a>  <a href="../../../../../docs/manualpages/Vec/VecSet.html#VecSet">VecSet</a>(Xq,0.0);
+<a name="line337">337: </a>  <a href="../../../../../docs/manualpages/Vec/VecDuplicate.html#VecDuplicate">VecDuplicate</a>(Xq,&amp;Xh);
+
+<a name="line339">339: </a>  <a href="../../../../../docs/manualpages/DM/DMGetLocalVector.html#DMGetLocalVector">DMGetLocalVector</a>(networkdm,&amp;localX);
+
+<a name="line341">341: </a>  <font color="#B22222">/* set idx1 and idx2 */</font>
+<a name="line342">342: </a>  <a href="../../../../../docs/manualpages/Sys/PetscCalloc4.html#PetscCalloc4">PetscCalloc4</a>(nidx,&amp;idx1,nidx,&amp;idx2,nidx,&amp;idx1_h,nidx,&amp;idx2_h);
+
+<a name="line344">344: </a>  <a href="../../../../../docs/manualpages/DMNetwork/DMNetworkGetEdgeRange.html#DMNetworkGetEdgeRange">DMNetworkGetEdgeRange</a>(networkdm,&amp;Start, &amp;End);
+
+<a name="line346">346: </a>  <a href="../../../../../docs/manualpages/Vec/VecGetOwnershipRange.html#VecGetOwnershipRange">VecGetOwnershipRange</a>(X,&amp;xstart,NULL);
+<a name="line347">347: </a>  k1 = 0;
+<a name="line348">348: </a>  j1 = 0;
+<a name="line349">349: </a>  <font color="#4169E1">for</font> (i = Start; i &lt; End; i++) {
+<a name="line350">350: </a>    <a href="../../../../../docs/manualpages/DMNetwork/DMNetworkGetComponent.html#DMNetworkGetComponent">DMNetworkGetComponent</a>(networkdm,i,0,&amp;key,(void**)&amp;pipe);
+<a name="line351">351: </a>    nnodes = pipe-&gt;nnodes;
+<a name="line352">352: </a>    idx_start = pipe-&gt;id*nnodes;
+<a name="line353">353: </a>    <font color="#4169E1">for</font> (k=0; k&lt;nnodes; k++) {
+<a name="line354">354: </a>      idx1[k1] = xstart + j1*2*nnodes + 2*k;
+<a name="line355">355: </a>      idx2[k1] = idx_start + k;
+
+<a name="line357">357: </a>      idx1_h[k1] = xstart + j1*2*nnodes + 2*k + 1;
+<a name="line358">358: </a>      idx2_h[k1] = idx_start + k;
+<a name="line359">359: </a>      k1++;
+<a name="line360">360: </a>    }
+<a name="line361">361: </a>    j1++;
+<a name="line362">362: </a>  }
+
+<a name="line364">364: </a>  <a href="../../../../../docs/manualpages/IS/ISCreateGeneral.html#ISCreateGeneral">ISCreateGeneral</a>(<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,nidx,idx1,<a href="../../../../../docs/manualpages/Sys/PetscCopyMode.html#PetscCopyMode">PETSC_COPY_VALUES</a>,&amp;is1_q);
+<a name="line365">365: </a>  <a href="../../../../../docs/manualpages/IS/ISCreateGeneral.html#ISCreateGeneral">ISCreateGeneral</a>(<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,nidx,idx2,<a href="../../../../../docs/manualpages/Sys/PetscCopyMode.html#PetscCopyMode">PETSC_COPY_VALUES</a>,&amp;is2_q);
+<a name="line366">366: </a>  <a href="../../../../../docs/manualpages/Vec/VecScatterCreate.html#VecScatterCreate">VecScatterCreate</a>(X,is1_q,Xq,is2_q,&amp;ctx_q);
+<a name="line367">367: </a>  <a href="../../../../../docs/manualpages/Vec/VecScatterBegin.html#VecScatterBegin">VecScatterBegin</a>(ctx_q,X,Xq,<a href="../../../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>,<a href="../../../../../docs/manualpages/Vec/SCATTER_FORWARD.html#SCATTER_FORWARD">SCATTER_FORWARD</a>);
+<a name="line368">368: </a>  <a href="../../../../../docs/manualpages/Vec/VecScatterEnd.html#VecScatterEnd">VecScatterEnd</a>(ctx_q,X,Xq,<a href="../../../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>,<a href="../../../../../docs/manualpages/Vec/SCATTER_FORWARD.html#SCATTER_FORWARD">SCATTER_FORWARD</a>);
+
+<a name="line370">370: </a>  <a href="../../../../../docs/manualpages/IS/ISCreateGeneral.html#ISCreateGeneral">ISCreateGeneral</a>(<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,nidx,idx1_h,<a href="../../../../../docs/manualpages/Sys/PetscCopyMode.html#PetscCopyMode">PETSC_COPY_VALUES</a>,&amp;is1_h);
+<a name="line371">371: </a>  <a href="../../../../../docs/manualpages/IS/ISCreateGeneral.html#ISCreateGeneral">ISCreateGeneral</a>(<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,nidx,idx2_h,<a href="../../../../../docs/manualpages/Sys/PetscCopyMode.html#PetscCopyMode">PETSC_COPY_VALUES</a>,&amp;is2_h);
+<a name="line372">372: </a>  <a href="../../../../../docs/manualpages/Vec/VecScatterCreate.html#VecScatterCreate">VecScatterCreate</a>(X,is1_h,Xh,is2_h,&amp;ctx_h);
+<a name="line373">373: </a>  <a href="../../../../../docs/manualpages/Vec/VecScatterBegin.html#VecScatterBegin">VecScatterBegin</a>(ctx_h,X,Xh,<a href="../../../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>,<a href="../../../../../docs/manualpages/Vec/SCATTER_FORWARD.html#SCATTER_FORWARD">SCATTER_FORWARD</a>);
+<a name="line374">374: </a>  <a href="../../../../../docs/manualpages/Vec/VecScatterEnd.html#VecScatterEnd">VecScatterEnd</a>(ctx_h,X,Xh,<a href="../../../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>,<a href="../../../../../docs/manualpages/Vec/SCATTER_FORWARD.html#SCATTER_FORWARD">SCATTER_FORWARD</a>);
+
+<a name="line376">376: </a>  <a href="../../../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,<font color="#666666">"Xq: \n"</font>);
+<a name="line377">377: </a>  <a href="../../../../../docs/manualpages/Vec/VecView.html#VecView">VecView</a>(Xq,<a href="../../../../../docs/manualpages/Viewer/PETSC_VIEWER_STDOUT_WORLD.html#PETSC_VIEWER_STDOUT_WORLD">PETSC_VIEWER_STDOUT_WORLD</a>);
+<a name="line378">378: </a>  <a href="../../../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,<font color="#666666">"Xh: \n"</font>);
+<a name="line379">379: </a>  <a href="../../../../../docs/manualpages/Vec/VecView.html#VecView">VecView</a>(Xh,<a href="../../../../../docs/manualpages/Viewer/PETSC_VIEWER_STDOUT_WORLD.html#PETSC_VIEWER_STDOUT_WORLD">PETSC_VIEWER_STDOUT_WORLD</a>);
+
+<a name="line381">381: </a>  <a href="../../../../../docs/manualpages/Vec/VecScatterDestroy.html#VecScatterDestroy">VecScatterDestroy</a>(&amp;ctx_q);
+<a name="line382">382: </a>  <a href="../../../../../docs/manualpages/Sys/PetscFree4.html#PetscFree4">PetscFree4</a>(idx1,idx2,idx1_h,idx2_h);
+<a name="line383">383: </a>  <a href="../../../../../docs/manualpages/IS/ISDestroy.html#ISDestroy">ISDestroy</a>(&amp;is1_q);
+<a name="line384">384: </a>  <a href="../../../../../docs/manualpages/IS/ISDestroy.html#ISDestroy">ISDestroy</a>(&amp;is2_q);
+
+<a name="line386">386: </a>  <a href="../../../../../docs/manualpages/Vec/VecScatterDestroy.html#VecScatterDestroy">VecScatterDestroy</a>(&amp;ctx_h);
+<a name="line387">387: </a>  <a href="../../../../../docs/manualpages/IS/ISDestroy.html#ISDestroy">ISDestroy</a>(&amp;is1_h);
+<a name="line388">388: </a>  <a href="../../../../../docs/manualpages/IS/ISDestroy.html#ISDestroy">ISDestroy</a>(&amp;is2_h);
+
+<a name="line390">390: </a>  <a href="../../../../../docs/manualpages/Vec/VecDestroy.html#VecDestroy">VecDestroy</a>(&amp;Xq);
+<a name="line391">391: </a>  <a href="../../../../../docs/manualpages/Vec/VecDestroy.html#VecDestroy">VecDestroy</a>(&amp;Xh);
+<a name="line392">392: </a>  <a href="../../../../../docs/manualpages/DM/DMRestoreLocalVector.html#DMRestoreLocalVector">DMRestoreLocalVector</a>(networkdm,&amp;localX);
+<a name="line393">393: </a>  <font color="#4169E1">return</font>(0);
+<a name="line394">394: </a>}
+
+<a name="line396">396: </a><strong><font color="#4169E1"><a name="WashNetworkCleanUp"></a><a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> WashNetworkCleanUp(Wash wash)</font></strong>
+<a name="line397">397: </a>{
+<a name="line399">399: </a>  <a href="../../../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a>    rank;
+
+<a name="line402">402: </a>  <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_rank.html#MPI_Comm_rank">MPI_Comm_rank</a>(wash-&gt;comm,&amp;rank);
+<a name="line403">403: </a>  <a href="../../../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(wash-&gt;edgelist);
+<a name="line404">404: </a>  <a href="../../../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(wash-&gt;vtype);
+<a name="line405">405: </a>  <font color="#4169E1">if</font> (!rank) {
+<a name="line406">406: </a>    <a href="../../../../../docs/manualpages/Sys/PetscFree2.html#PetscFree2">PetscFree2</a>(wash-&gt;junction,wash-&gt;pipe);
+<a name="line407">407: </a>  }
+<a name="line408">408: </a>  <font color="#4169E1">return</font>(0);
+<a name="line409">409: </a>}
+
+<a name="line411">411: </a><strong><font color="#4169E1"><a name="WashNetworkCreate"></a><a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> WashNetworkCreate(<a href="../../../../../docs/manualpages/Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</a> comm,<a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> pipesCase,Wash *wash_ptr)</font></strong>
+<a name="line412">412: </a>{
+<a name="line414">414: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       npipes;
+<a name="line415">415: </a>  <a href="../../../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a>    rank;
+<a name="line416">416: </a>  Wash           wash=NULL;
+<a name="line417">417: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       i,numVertices,numEdges,*vtype;
+<a name="line418">418: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       *edgelist;
+<a name="line419">419: </a>  Junction       junctions=NULL;
+<a name="line420">420: </a>  Pipe           pipes=NULL;
+<a name="line421">421: </a>  <a href="../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>      washdist=<a href="../../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>;
+
+<a name="line424">424: </a>  <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_rank.html#MPI_Comm_rank">MPI_Comm_rank</a>(comm,&amp;rank);
+
+<a name="line426">426: </a>  <a href="../../../../../docs/manualpages/Sys/PetscCalloc1.html#PetscCalloc1">PetscCalloc1</a>(1,&amp;wash);
+<a name="line427">427: </a>  wash-&gt;comm = comm;
+<a name="line428">428: </a>  *wash_ptr  = wash;
+<a name="line429">429: </a>  wash-&gt;Q0   = 0.477432; <font color="#B22222">/* RESERVOIR */</font>
+<a name="line430">430: </a>  wash-&gt;H0   = 150.0;
+<a name="line431">431: </a>  wash-&gt;HL   = 143.488;  <font color="#B22222">/* VALVE */</font>
+<a name="line432">432: </a>  wash-&gt;QL   = 0.0;
+<a name="line433">433: </a>  wash-&gt;nnodes_loc = 0;
+
+<a name="line435">435: </a>  numVertices = 0;
+<a name="line436">436: </a>  numEdges    = 0;
+<a name="line437">437: </a>  edgelist    = NULL;
+
+<a name="line439">439: </a>  <font color="#B22222">/* proc[0] creates a sequential wash and edgelist */</font>
+<a name="line440">440: </a>  <a href="../../../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,<font color="#666666">"Setup pipesCase %D\n"</font>,pipesCase);
+
+<a name="line442">442: </a>  <font color="#B22222">/* Set global number of pipes, edges, and junctions */</font>
+<a name="line443">443: </a>  <font color="#B22222">/*-------------------------------------------------*/</font>
+<a name="line444">444: </a>  <font color="#4169E1">switch</font> (pipesCase) {
+<a name="line445">445: </a>  <font color="#4169E1">case</font> 0:
+<a name="line446">446: </a>    <font color="#B22222">/* pipeCase 0: */</font>
+<a name="line447">447: </a>    <font color="#B22222">/* =================================================</font>
+<a name="line448">448: </a><font color="#B22222">    (RESERVOIR) v0 --E0--&gt; v1--E1--&gt; v2 --E2--&gt;v3 (VALVE)</font>
+<a name="line449">449: </a><font color="#B22222">    ====================================================  */</font>
+<a name="line450">450: </a>    npipes = 3;
+<a name="line451">451: </a>    <a href="../../../../../docs/manualpages/Sys/PetscOptionsGetInt.html#PetscOptionsGetInt">PetscOptionsGetInt</a>(NULL,NULL, <font color="#666666">"-npipes"</font>, &amp;npipes, NULL);
+<a name="line452">452: </a>    wash-&gt;nedge   = npipes;
+<a name="line453">453: </a>    wash-&gt;nvertex = npipes + 1;
+
+<a name="line455">455: </a>    <font color="#B22222">/* Set local edges and vertices -- proc[0] sets entire network, then distributes */</font>
+<a name="line456">456: </a>    numVertices = 0;
+<a name="line457">457: </a>    numEdges    = 0;
+<a name="line458">458: </a>    edgelist    = NULL;
+<a name="line459">459: </a>    <font color="#4169E1">if</font> (!rank) {
+<a name="line460">460: </a>      numVertices = wash-&gt;nvertex;
+<a name="line461">461: </a>      numEdges    = wash-&gt;nedge;
+
+<a name="line463">463: </a>      <a href="../../../../../docs/manualpages/Sys/PetscCalloc1.html#PetscCalloc1">PetscCalloc1</a>(2*numEdges,&amp;edgelist);
+<a name="line464">464: </a>      <font color="#4169E1">for</font> (i=0; i&lt;numEdges; i++) {
+<a name="line465">465: </a>        edgelist[2*i] = i; edgelist[2*i+1] = i+1;
+<a name="line466">466: </a>      }
+
+<a name="line468">468: </a>      <font color="#B22222">/* Add network components */</font>
+<a name="line469">469: </a>      <font color="#B22222">/*------------------------*/</font>
+<a name="line470">470: </a>      <a href="../../../../../docs/manualpages/Sys/PetscCalloc2.html#PetscCalloc2">PetscCalloc2</a>(numVertices,&amp;junctions,numEdges,&amp;pipes);
+
+<a name="line472">472: </a>      <font color="#B22222">/* vertex */</font>
+<a name="line473">473: </a>      <font color="#4169E1">for</font> (i=0; i&lt;numVertices; i++) {
+<a name="line474">474: </a>        junctions[i].id = i;
+<a name="line475">475: </a>        junctions[i].type = JUNCTION;
+<a name="line476">476: </a>      }
+
+<a name="line478">478: </a>      junctions[0].type             = RESERVOIR;
+<a name="line479">479: </a>      junctions[numVertices-1].type = VALVE;
+<a name="line480">480: </a>    }
+<a name="line481">481: </a>    <font color="#4169E1">break</font>;
+<a name="line482">482: </a>  <font color="#4169E1">case</font> 1:
+<a name="line483">483: </a>    <font color="#B22222">/* pipeCase 1: */</font>
+<a name="line484">484: </a>    <font color="#B22222">/* ==========================</font>
+<a name="line485">485: </a><font color="#B22222">                v2 (VALVE)</font>
+<a name="line486">486: </a><font color="#B22222">                ^</font>
+<a name="line487">487: </a><font color="#B22222">                |</font>
+<a name="line488">488: </a><font color="#B22222">               E2</font>
+<a name="line489">489: </a><font color="#B22222">                |</font>
+<a name="line490">490: </a><font color="#B22222">    v0 --E0--&gt; v3--E1--&gt; v1</font>
+<a name="line491">491: </a><font color="#B22222">  (RESERVOIR)            (RESERVOIR)</font>
+<a name="line492">492: </a><font color="#B22222">    =============================  */</font>
+<a name="line493">493: </a>    npipes = 3;
+<a name="line494">494: </a>    wash-&gt;nedge   = npipes;
+<a name="line495">495: </a>    wash-&gt;nvertex = npipes + 1;
+
+<a name="line497">497: </a>    <font color="#B22222">/* Set local edges and vertices -- proc[0] sets entire network, then distributes */</font>
+<a name="line498">498: </a>    <font color="#4169E1">if</font> (!rank) {
+<a name="line499">499: </a>      numVertices = wash-&gt;nvertex;
+<a name="line500">500: </a>      numEdges    = wash-&gt;nedge;
+
+<a name="line502">502: </a>      <a href="../../../../../docs/manualpages/Sys/PetscCalloc1.html#PetscCalloc1">PetscCalloc1</a>(2*numEdges,&amp;edgelist);
+<a name="line503">503: </a>      edgelist[0] = 0; edgelist[1] = 3;  <font color="#B22222">/* edge[0] */</font>
+<a name="line504">504: </a>      edgelist[2] = 3; edgelist[3] = 1;  <font color="#B22222">/* edge[1] */</font>
+<a name="line505">505: </a>      edgelist[4] = 3; edgelist[5] = 2;  <font color="#B22222">/* edge[2] */</font>
+
+<a name="line507">507: </a>      <font color="#B22222">/* Add network components */</font>
+<a name="line508">508: </a>      <font color="#B22222">/*------------------------*/</font>
+<a name="line509">509: </a>      <a href="../../../../../docs/manualpages/Sys/PetscCalloc2.html#PetscCalloc2">PetscCalloc2</a>(numVertices,&amp;junctions,numEdges,&amp;pipes);
+<a name="line510">510: </a>      <font color="#B22222">/* vertex */</font>
+<a name="line511">511: </a>      <font color="#4169E1">for</font> (i=0; i&lt;numVertices; i++) {
+<a name="line512">512: </a>        junctions[i].id   = i;
+<a name="line513">513: </a>        junctions[i].type = JUNCTION;
+<a name="line514">514: </a>      }
+
+<a name="line516">516: </a>      junctions[0].type = RESERVOIR;
+<a name="line517">517: </a>      junctions[1].type = VALVE;
+<a name="line518">518: </a>      junctions[2].type = VALVE;
+<a name="line519">519: </a>    }
+<a name="line520">520: </a>    <font color="#4169E1">break</font>;
+<a name="line521">521: </a>  <font color="#4169E1">case</font> 2:
+<a name="line522">522: </a>    <font color="#B22222">/* pipeCase 2: */</font>
+<a name="line523">523: </a>    <font color="#B22222">/* ==========================</font>
+<a name="line524">524: </a><font color="#B22222">    (RESERVOIR)  v2--&gt; E2</font>
+<a name="line525">525: </a><font color="#B22222">                       |</font>
+<a name="line526">526: </a><font color="#B22222">            v0 --E0--&gt; v3--E1--&gt; v1</font>
+<a name="line527">527: </a><font color="#B22222">    (RESERVOIR)               (VALVE)</font>
+<a name="line528">528: </a><font color="#B22222">    =============================  */</font>
+
+<a name="line530">530: </a>    <font color="#B22222">/* Set application parameters -- to be used in function evalutions */</font>
+<a name="line531">531: </a>    npipes = 3;
+<a name="line532">532: </a>    wash-&gt;nedge   = npipes;
+<a name="line533">533: </a>    wash-&gt;nvertex = npipes + 1;
+
+<a name="line535">535: </a>    <font color="#B22222">/* Set local edges and vertices -- proc[0] sets entire network, then distributes */</font>
+<a name="line536">536: </a>    <font color="#4169E1">if</font> (!rank) {
+<a name="line537">537: </a>      numVertices = wash-&gt;nvertex;
+<a name="line538">538: </a>      numEdges    = wash-&gt;nedge;
+
+<a name="line540">540: </a>      <a href="../../../../../docs/manualpages/Sys/PetscCalloc1.html#PetscCalloc1">PetscCalloc1</a>(2*numEdges,&amp;edgelist);
+<a name="line541">541: </a>      edgelist[0] = 0; edgelist[1] = 3;  <font color="#B22222">/* edge[0] */</font>
+<a name="line542">542: </a>      edgelist[2] = 3; edgelist[3] = 1;  <font color="#B22222">/* edge[1] */</font>
+<a name="line543">543: </a>      edgelist[4] = 2; edgelist[5] = 3;  <font color="#B22222">/* edge[2] */</font>
+
+<a name="line545">545: </a>      <font color="#B22222">/* Add network components */</font>
+<a name="line546">546: </a>      <font color="#B22222">/*------------------------*/</font>
+<a name="line547">547: </a>      <a href="../../../../../docs/manualpages/Sys/PetscCalloc2.html#PetscCalloc2">PetscCalloc2</a>(numVertices,&amp;junctions,numEdges,&amp;pipes);
+<a name="line548">548: </a>      <font color="#B22222">/* vertex */</font>
+<a name="line549">549: </a>      <font color="#4169E1">for</font> (i=0; i&lt;numVertices; i++) {
+<a name="line550">550: </a>        junctions[i].id = i;
+<a name="line551">551: </a>        junctions[i].type = JUNCTION;
+<a name="line552">552: </a>      }
+
+<a name="line554">554: </a>      junctions[0].type = RESERVOIR;
+<a name="line555">555: </a>      junctions[1].type = VALVE;
+<a name="line556">556: </a>      junctions[2].type = RESERVOIR;
+<a name="line557">557: </a>    }
+<a name="line558">558: </a>    <font color="#4169E1">break</font>;
+<a name="line559">559: </a><strong><font color="#FF0000">  default:</font></strong>
+<a name="line560">560: </a>    <a href="../../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_ARG_WRONG,<font color="#666666">"not done yet"</font>);
+<a name="line561">561: </a>  }
+
+<a name="line563">563: </a>  <font color="#B22222">/* set edge global id */</font>
+<a name="line564">564: </a>  <font color="#4169E1">for</font> (i=0; i&lt;numEdges; i++) pipes[i].id = i;
+
+<a name="line566">566: </a>  <font color="#4169E1">if</font> (!rank) { <font color="#B22222">/* set vtype for proc[0] */</font>
+<a name="line567">567: </a>    <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> v;
+<a name="line568">568: </a>    <a href="../../../../../docs/manualpages/Sys/PetscMalloc1.html#PetscMalloc1">PetscMalloc1</a>(2*numEdges,&amp;vtype);
+<a name="line569">569: </a>    <font color="#4169E1">for</font> (i=0; i&lt;2*numEdges; i++) {
+<a name="line570">570: </a>      v        = edgelist[i];
+<a name="line571">571: </a>      vtype[i] = junctions[v].type;
+<a name="line572">572: </a>    }
+<a name="line573">573: </a>    wash-&gt;vtype = vtype;
+<a name="line574">574: </a>  }
+
+<a name="line576">576: </a>  *wash_ptr      = wash;
+<a name="line577">577: </a>  wash-&gt;nedge    = numEdges;
+<a name="line578">578: </a>  wash-&gt;nvertex  = numVertices;
+<a name="line579">579: </a>  wash-&gt;edgelist = edgelist;
+<a name="line580">580: </a>  wash-&gt;junction = junctions;
+<a name="line581">581: </a>  wash-&gt;pipe     = pipes;
+
+<a name="line583">583: </a>  <font color="#B22222">/* Distribute edgelist to other processors */</font>
+<a name="line584">584: </a>  <a href="../../../../../docs/manualpages/Sys/PetscOptionsGetBool.html#PetscOptionsGetBool">PetscOptionsGetBool</a>(NULL,NULL,<font color="#666666">"-wash_distribute"</font>,&amp;washdist,NULL);
+<a name="line585">585: </a>  <font color="#4169E1">if</font> (washdist) {
+<a name="line586">586: </a>    <font color="#B22222">/*</font>
+<a name="line587">587: </a><font color="#B22222">     <a href="../../../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>," Distribute sequential wash ...\n");</font>
+<a name="line588">588: </a><font color="#B22222">     */</font>
+<a name="line589">589: </a>    WashNetworkDistribute(comm,wash);
+<a name="line590">590: </a>  }
+<a name="line591">591: </a>  <font color="#4169E1">return</font>(0);
+<a name="line592">592: </a>}
+
+<a name="line594">594: </a><font color="#B22222">/* ------------------------------------------------------- */</font>
+<a name="line595">595: </a><strong><font color="#4169E1"><a name="main"></a>int main(int argc,char ** argv)</font></strong>
+<a name="line596">596: </a>{
+<a name="line597">597: </a>  <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>    ierr;
+<a name="line598">598: </a>  Wash              wash;
+<a name="line599">599: </a>  Junction          junctions,junction;
+<a name="line600">600: </a>  Pipe              pipe,pipes;
+<a name="line601">601: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>          KeyPipe,KeyJunction;
+<a name="line602">602: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>          *edgelist = NULL,*edgelists[1],*vtype = NULL;
+<a name="line603">603: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>          i,e,v,eStart,eEnd,vStart,vEnd,key;
+<a name="line604">604: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>          vkey,type;
+<a name="line605">605: </a>  const <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>    *cone;
+<a name="line606">606: </a>  <a href="../../../../../docs/manualpages/DM/DM.html#DM">DM</a>                networkdm;
+<a name="line607">607: </a>  <a href="../../../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a>       size,rank;
+<a name="line608">608: </a>  <a href="../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>         ftime;
+<a name="line609">609: </a>  <a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a>               X;
+<a name="line610">610: </a>  <a href="../../../../../docs/manualpages/TS/TS.html#TS">TS</a>                ts;
+<a name="line611">611: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>          steps=1;
+<a name="line612">612: </a>  <a href="../../../../../docs/manualpages/TS/TSConvergedReason.html#TSConvergedReason">TSConvergedReason</a> reason;
+<a name="line613">613: </a>  <a href="../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>         viewpipes,monipipes=<a href="../../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>,userJac=<a href="../../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>,viewdm=<a href="../../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>,viewX=<a href="../../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line614">614: </a>  <a href="../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>         test=<a href="../../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line615">615: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>          pipesCase=0;
+<a name="line616">616: </a>  DMNetworkMonitor  monitor;
+<a name="line617">617: </a>  <a href="../../../../../docs/manualpages/Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</a>          comm;
+
+<a name="line619">619: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>          nedges,nvertices; <font color="#B22222">/* local num of edges and vertices */</font>
+<a name="line620">620: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>          nnodes = 6,nv,ne;
+<a name="line621">621: </a>  const <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>    *vtx,*edge;
+
+<a name="line623">623: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInitialize.html#PetscInitialize">PetscInitialize</a>(&amp;argc,&amp;argv,<font color="#666666">"pOption"</font>,help);<font color="#4169E1">if</font> (ierr) <font color="#4169E1">return</font> ierr;
+
+<a name="line625">625: </a>  <font color="#B22222">/* Read runtime options */</font>
+<a name="line626">626: </a>  <a href="../../../../../docs/manualpages/Sys/PetscOptionsGetInt.html#PetscOptionsGetInt">PetscOptionsGetInt</a>(NULL,NULL, <font color="#666666">"-case"</font>, &amp;pipesCase, NULL);
+<a name="line627">627: </a>  <a href="../../../../../docs/manualpages/Sys/PetscOptionsGetBool.html#PetscOptionsGetBool">PetscOptionsGetBool</a>(NULL,NULL,<font color="#666666">"-user_Jac"</font>,&amp;userJac,NULL);
+<a name="line628">628: </a>  <a href="../../../../../docs/manualpages/Sys/PetscOptionsGetBool.html#PetscOptionsGetBool">PetscOptionsGetBool</a>(NULL,NULL,<font color="#666666">"-pipe_monitor"</font>,&amp;monipipes,NULL);
+<a name="line629">629: </a>  <a href="../../../../../docs/manualpages/Sys/PetscOptionsGetBool.html#PetscOptionsGetBool">PetscOptionsGetBool</a>(NULL,NULL,<font color="#666666">"-viewdm"</font>,&amp;viewdm,NULL);
+<a name="line630">630: </a>  <a href="../../../../../docs/manualpages/Sys/PetscOptionsGetBool.html#PetscOptionsGetBool">PetscOptionsGetBool</a>(NULL,NULL,<font color="#666666">"-viewX"</font>,&amp;viewX,NULL);
+<a name="line631">631: </a>  <a href="../../../../../docs/manualpages/Sys/PetscOptionsGetInt.html#PetscOptionsGetInt">PetscOptionsGetInt</a>(NULL,NULL, <font color="#666666">"-npipenodes"</font>, &amp;nnodes, NULL);
+<a name="line632">632: </a>  <a href="../../../../../docs/manualpages/Sys/PetscOptionsGetBool.html#PetscOptionsGetBool">PetscOptionsGetBool</a>(NULL,NULL,<font color="#666666">"-test"</font>,&amp;test,NULL);
+
+<a name="line634">634: </a>  <font color="#B22222">/* Create networkdm */</font>
+<a name="line635">635: </a>  <font color="#B22222">/*------------------*/</font>
+<a name="line636">636: </a>  <a href="../../../../../docs/manualpages/DMNetwork/DMNetworkCreate.html#DMNetworkCreate">DMNetworkCreate</a>(<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,&amp;networkdm);
+<a name="line637">637: </a>  <a href="../../../../../docs/manualpages/Sys/PetscObjectGetComm.html#PetscObjectGetComm">PetscObjectGetComm</a>((<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)networkdm,&amp;comm);
+<a name="line638">638: </a>  <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_rank.html#MPI_Comm_rank">MPI_Comm_rank</a>(comm,&amp;rank);
+<a name="line639">639: </a>  <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_size.html#MPI_Comm_size">MPI_Comm_size</a>(comm,&amp;size);
+
+<a name="line641">641: </a>  <font color="#4169E1">if</font> (size == 1 &amp;&amp; monipipes) {
+<a name="line642">642: </a>    <a href="../../../../../docs/manualpages/DMNetwork/DMNetworkMonitorCreate.html#DMNetworkMonitorCreate">DMNetworkMonitorCreate</a>(networkdm,&amp;monitor);
+<a name="line643">643: </a>  }
+
+<a name="line645">645: </a>  <font color="#B22222">/* Register the components in the network */</font>
+<a name="line646">646: </a>  <a href="../../../../../docs/manualpages/DMNetwork/DMNetworkRegisterComponent.html#DMNetworkRegisterComponent">DMNetworkRegisterComponent</a>(networkdm,<font color="#666666">"junctionstruct"</font>,<font color="#4169E1">sizeof</font>(<font color="#4169E1">struct _p_Junction</font>),&amp;KeyJunction);
+<a name="line647">647: </a>  <a href="../../../../../docs/manualpages/DMNetwork/DMNetworkRegisterComponent.html#DMNetworkRegisterComponent">DMNetworkRegisterComponent</a>(networkdm,<font color="#666666">"pipestruct"</font>,<font color="#4169E1">sizeof</font>(<font color="#4169E1">struct _p_Pipe</font>),&amp;KeyPipe);
+
+<a name="line649">649: </a>  <font color="#B22222">/* Create a distributed wash network (user-specific) */</font>
+<a name="line650">650: </a>  WashNetworkCreate(comm,pipesCase,&amp;wash);
+<a name="line651">651: </a>  nedges      = wash-&gt;nedge;
+<a name="line652">652: </a>  nvertices   = wash-&gt;nvertex; <font color="#B22222">/* local num of vertices, excluding ghosts */</font>
+<a name="line653">653: </a>  edgelist    = wash-&gt;edgelist;
+<a name="line654">654: </a>  vtype       = wash-&gt;vtype;
+<a name="line655">655: </a>  junctions   = wash-&gt;junction;
+<a name="line656">656: </a>  pipes       = wash-&gt;pipe;
+
+<a name="line658">658: </a>  <font color="#B22222">/* Set up the network layout */</font>
+<a name="line659">659: </a>  <a href="../../../../../docs/manualpages/DMNetwork/DMNetworkSetSizes.html#DMNetworkSetSizes">DMNetworkSetSizes</a>(networkdm,1,&amp;nvertices,&amp;nedges,0,NULL);
+
+<a name="line661">661: </a>  <font color="#B22222">/* Add local edge connectivity */</font>
+<a name="line662">662: </a>  edgelists[0] = edgelist;
+<a name="line663">663: </a>  <a href="../../../../../docs/manualpages/DMNetwork/DMNetworkSetEdgeList.html#DMNetworkSetEdgeList">DMNetworkSetEdgeList</a>(networkdm,edgelists,NULL);
+<a name="line664">664: </a>  <a href="../../../../../docs/manualpages/DMNetwork/DMNetworkLayoutSetUp.html#DMNetworkLayoutSetUp">DMNetworkLayoutSetUp</a>(networkdm);
+
+<a name="line666">666: </a>  <a href="../../../../../docs/manualpages/DMNetwork/DMNetworkGetEdgeRange.html#DMNetworkGetEdgeRange">DMNetworkGetEdgeRange</a>(networkdm,&amp;eStart,&amp;eEnd);
+<a name="line667">667: </a>  <a href="../../../../../docs/manualpages/DMNetwork/DMNetworkGetVertexRange.html#DMNetworkGetVertexRange">DMNetworkGetVertexRange</a>(networkdm,&amp;vStart,&amp;vEnd);
+<a name="line668">668: </a>  <font color="#B22222">/* <a href="../../../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,"[%d] eStart/End: %d - %d; vStart/End: %d - %d\n",rank,eStart,eEnd,vStart,vEnd); */</font>
+
+<a name="line670">670: </a>  <font color="#B22222">/* Test <a href="../../../../../docs/manualpages/DMNetwork/DMNetworkGetSubnetworkInfo.html#DMNetworkGetSubnetworkInfo">DMNetworkGetSubnetworkInfo</a>() */</font>
+<a name="line671">671: </a>  <font color="#4169E1">if</font> (test) {
+<a name="line672">672: </a>    <a href="../../../../../docs/manualpages/DMNetwork/DMNetworkGetSubnetworkInfo.html#DMNetworkGetSubnetworkInfo">DMNetworkGetSubnetworkInfo</a>(networkdm,0,&amp;nv,&amp;ne,&amp;vtx,&amp;edge);
+<a name="line673">673: </a>    <font color="#4169E1">if</font> (ne != eEnd - eStart || nv != vEnd - vStart) <a href="../../../../../docs/manualpages/Sys/SETERRQ2.html#SETERRQ2">SETERRQ2</a>(<a href="../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)networkdm),PETSC_ERR_ARG_WRONG,<font color="#666666">"ne %D or nv %D is incorrect"</font>,ne,nv);
+<a name="line674">674: </a>  }
+
+<a name="line676">676: </a>  <font color="#4169E1">if</font> (rank) { <font color="#B22222">/* junctions[] and pipes[] for proc[0] are allocated in WashNetworkCreate() */</font>
+<a name="line677">677: </a>    <font color="#B22222">/* vEnd - vStart = nvertices + num of ghost vertices! */</font>
+<a name="line678">678: </a>    <a href="../../../../../docs/manualpages/Sys/PetscCalloc2.html#PetscCalloc2">PetscCalloc2</a>(vEnd - vStart,&amp;junctions,nedges,&amp;pipes);
+<a name="line679">679: </a>  }
+
+<a name="line681">681: </a>  <font color="#B22222">/* Add Pipe component to all local edges */</font>
+<a name="line682">682: </a>  <font color="#4169E1">for</font> (e = eStart; e &lt; eEnd; e++) {
+<a name="line683">683: </a>    <font color="#4169E1">if</font> (test) {
+<a name="line684">684: </a>      <font color="#4169E1">if</font> (e != edge[e]) <a href="../../../../../docs/manualpages/Sys/SETERRQ2.html#SETERRQ2">SETERRQ2</a>(<a href="../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)networkdm),PETSC_ERR_ARG_WRONG,<font color="#666666">"e %D != edge %D from <a href="../../../../../docs/manualpages/DMNetwork/DMNetworkGetSubnetworkInfo.html#DMNetworkGetSubnetworkInfo">DMNetworkGetSubnetworkInfo</a>()"</font>,e,edge[e]);
+<a name="line685">685: </a>    }
+
+<a name="line687">687: </a>    pipes[e-eStart].nnodes = nnodes;
+<a name="line688">688: </a>    <a href="../../../../../docs/manualpages/DMNetwork/DMNetworkAddComponent.html#DMNetworkAddComponent">DMNetworkAddComponent</a>(networkdm,e,KeyPipe,&amp;pipes[e-eStart]);
+
+<a name="line690">690: </a>    <font color="#B22222">/* Add number of variables to each edge */</font>
+<a name="line691">691: </a>    <a href="../../../../../docs/manualpages/DMNetwork/DMNetworkAddNumVariables.html#DMNetworkAddNumVariables">DMNetworkAddNumVariables</a>(networkdm,e,2*pipes[e-eStart].nnodes);
+
+<a name="line693">693: </a>    <font color="#4169E1">if</font> (size == 1 &amp;&amp; monipipes) { <font color="#B22222">/* Add monitor -- show Q_{pipes[e-eStart].id}? */</font>
+<a name="line694">694: </a>      pipes[e-eStart].length = 600.0;
+<a name="line695">695: </a>      <a href="../../../../../docs/manualpages/DMNetwork/DMNetworkMonitorAdd.html#DMNetworkMonitorAdd">DMNetworkMonitorAdd</a>(monitor, <font color="#666666">"Pipe Q"</font>, e, pipes[e-eStart].nnodes, 0, 2, 0.0,pipes[e-eStart].length, -0.8, 0.8, <a href="../../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>);
+<a name="line696">696: </a>      <a href="../../../../../docs/manualpages/DMNetwork/DMNetworkMonitorAdd.html#DMNetworkMonitorAdd">DMNetworkMonitorAdd</a>(monitor, <font color="#666666">"Pipe H"</font>, e, pipes[e-eStart].nnodes, 1, 2, 0.0,pipes[e-eStart].length, -400.0, 800.0, <a href="../../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>);
+<a name="line697">697: </a>    }
+<a name="line698">698: </a>  }
+
+<a name="line700">700: </a>  <font color="#B22222">/* Add Junction component to all local vertices, including ghost vertices! */</font>
+<a name="line701">701: </a>  <font color="#4169E1">for</font> (v = vStart; v &lt; vEnd; v++) {
+<a name="line702">702: </a>    <font color="#4169E1">if</font> (test) {
+<a name="line703">703: </a>      <font color="#4169E1">if</font> (v != vtx[v-vStart]) <a href="../../../../../docs/manualpages/Sys/SETERRQ2.html#SETERRQ2">SETERRQ2</a>(<a href="../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)networkdm),PETSC_ERR_ARG_WRONG,<font color="#666666">"v %D != vtx %D from <a href="../../../../../docs/manualpages/DMNetwork/DMNetworkGetSubnetworkInfo.html#DMNetworkGetSubnetworkInfo">DMNetworkGetSubnetworkInfo</a>()"</font>,v,vtx[v-vStart]);
+<a name="line704">704: </a>    }
+
+<a name="line706">706: </a>    <a href="../../../../../docs/manualpages/DMNetwork/DMNetworkAddComponent.html#DMNetworkAddComponent">DMNetworkAddComponent</a>(networkdm,v,KeyJunction,&amp;junctions[v-vStart]);
+
+<a name="line708">708: </a>    <font color="#B22222">/* Add number of variables to vertex */</font>
+<a name="line709">709: </a>    <a href="../../../../../docs/manualpages/DMNetwork/DMNetworkAddNumVariables.html#DMNetworkAddNumVariables">DMNetworkAddNumVariables</a>(networkdm,v,2);
+<a name="line710">710: </a>  }
+
+<a name="line712">712: </a>  <font color="#4169E1">if</font> (size &gt; 1) {  <font color="#B22222">/* must be called before <a href="../../../../../docs/manualpages/DM/DMSetUp.html#DMSetUp">DMSetUp</a>()???. Other partitioners do not work yet??? -- cause crash in proc[0]! */</font>
+<a name="line713">713: </a>    <a href="../../../../../docs/manualpages/DM/DM.html#DM">DM</a>               plexdm;
+<a name="line714">714: </a>    <a href="../../../../../docs/manualpages/DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</a> part;
+<a name="line715">715: </a>    <a href="../../../../../docs/manualpages/DMNetwork/DMNetworkGetPlex.html#DMNetworkGetPlex">DMNetworkGetPlex</a>(networkdm,&amp;plexdm);
+<a name="line716">716: </a>    <a href="../../../../../docs/manualpages/DMPLEX/DMPlexGetPartitioner.html#DMPlexGetPartitioner">DMPlexGetPartitioner</a>(plexdm, &amp;part);
+<a name="line717">717: </a>    <a href="../../../../../docs/manualpages/DM/PetscPartitionerSetType.html#PetscPartitionerSetType">PetscPartitionerSetType</a>(part,<a href="../../../../../docs/manualpages/DM/PETSCPARTITIONERSIMPLE.html#PETSCPARTITIONERSIMPLE">PETSCPARTITIONERSIMPLE</a>);
+<a name="line718">718: </a>    <a href="../../../../../docs/manualpages/Sys/PetscOptionsSetValue.html#PetscOptionsSetValue">PetscOptionsSetValue</a>(NULL,<font color="#666666">"-dm_plex_csr_via_mat"</font>,<font color="#666666">"true"</font>); <font color="#B22222">/* for parmetis */</font>
+<a name="line719">719: </a>  }
+
+<a name="line721">721: </a>  <font color="#B22222">/* Set up <a href="../../../../../docs/manualpages/DM/DM.html#DM">DM</a> for use */</font>
+<a name="line722">722: </a>  <a href="../../../../../docs/manualpages/DM/DMSetUp.html#DMSetUp">DMSetUp</a>(networkdm);
+<a name="line723">723: </a>  <font color="#4169E1">if</font> (viewdm) {
+<a name="line724">724: </a>    <a href="../../../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,<font color="#666666">"\nOriginal networkdm, <a href="../../../../../docs/manualpages/DM/DMView.html#DMView">DMView</a>:\n"</font>);
+<a name="line725">725: </a>    <a href="../../../../../docs/manualpages/DM/DMView.html#DMView">DMView</a>(networkdm,<a href="../../../../../docs/manualpages/Viewer/PETSC_VIEWER_STDOUT_WORLD.html#PETSC_VIEWER_STDOUT_WORLD">PETSC_VIEWER_STDOUT_WORLD</a>);
+<a name="line726">726: </a>  }
+
+<a name="line728">728: </a>  <font color="#B22222">/* Set user physical parameters to the components */</font>
+<a name="line729">729: </a>  <font color="#4169E1">for</font> (e = eStart; e &lt; eEnd; e++) {
+<a name="line730">730: </a>    <a href="../../../../../docs/manualpages/DMNetwork/DMNetworkGetConnectedVertices.html#DMNetworkGetConnectedVertices">DMNetworkGetConnectedVertices</a>(networkdm,e,&amp;cone);
+<a name="line731">731: </a>    <font color="#B22222">/* vfrom */</font>
+<a name="line732">732: </a>    <a href="../../../../../docs/manualpages/DMNetwork/DMNetworkGetComponent.html#DMNetworkGetComponent">DMNetworkGetComponent</a>(networkdm,cone[0],0,&amp;vkey,(void**)&amp;junction);
+<a name="line733">733: </a>    junction-&gt;type = (VertexType)vtype[2*e];
+
+<a name="line735">735: </a>    <font color="#B22222">/* vto */</font>
+<a name="line736">736: </a>    <a href="../../../../../docs/manualpages/DMNetwork/DMNetworkGetComponent.html#DMNetworkGetComponent">DMNetworkGetComponent</a>(networkdm,cone[1],0,&amp;vkey,(void**)&amp;junction);
+<a name="line737">737: </a>    junction-&gt;type = (VertexType)vtype[2*e+1];
+<a name="line738">738: </a>  }
+
+<a name="line740">740: </a>  WashNetworkCleanUp(wash);
+
+<a name="line742">742: </a>  <font color="#B22222">/* Network partitioning and distribution of data */</font>
+<a name="line743">743: </a>  <a href="../../../../../docs/manualpages/DMNetwork/DMNetworkDistribute.html#DMNetworkDistribute">DMNetworkDistribute</a>(&amp;networkdm,0);
+<a name="line744">744: </a>  <font color="#4169E1">if</font> (viewdm) {
+<a name="line745">745: </a>    <a href="../../../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,<font color="#666666">"\nAfter <a href="../../../../../docs/manualpages/DMNetwork/DMNetworkDistribute.html#DMNetworkDistribute">DMNetworkDistribute</a>, <a href="../../../../../docs/manualpages/DM/DMView.html#DMView">DMView</a>:\n"</font>);
+<a name="line746">746: </a>    <a href="../../../../../docs/manualpages/DM/DMView.html#DMView">DMView</a>(networkdm,<a href="../../../../../docs/manualpages/Viewer/PETSC_VIEWER_STDOUT_WORLD.html#PETSC_VIEWER_STDOUT_WORLD">PETSC_VIEWER_STDOUT_WORLD</a>);
+<a name="line747">747: </a>  }
+
+<a name="line749">749: </a>  <font color="#B22222">/* create vectors */</font>
+<a name="line750">750: </a>  <a href="../../../../../docs/manualpages/DM/DMCreateGlobalVector.html#DMCreateGlobalVector">DMCreateGlobalVector</a>(networkdm,&amp;X);
+<a name="line751">751: </a>  <a href="../../../../../docs/manualpages/DM/DMCreateLocalVector.html#DMCreateLocalVector">DMCreateLocalVector</a>(networkdm,&amp;wash-&gt;localX);
+<a name="line752">752: </a>  <a href="../../../../../docs/manualpages/DM/DMCreateLocalVector.html#DMCreateLocalVector">DMCreateLocalVector</a>(networkdm,&amp;wash-&gt;localXdot);
+
+<a name="line754">754: </a>  <font color="#B22222">/* PipeSetUp -- each process only sets its own pipes */</font>
+<a name="line755">755: </a>  <font color="#B22222">/*---------------------------------------------------*/</font>
+<a name="line756">756: </a>  <a href="../../../../../docs/manualpages/DMNetwork/DMNetworkGetVertexRange.html#DMNetworkGetVertexRange">DMNetworkGetVertexRange</a>(networkdm,&amp;vStart,&amp;vEnd);
+
+<a name="line758">758: </a>  userJac = <a href="../../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>;
+<a name="line759">759: </a>  <a href="../../../../../docs/manualpages/DMNetwork/DMNetworkHasJacobian.html#DMNetworkHasJacobian">DMNetworkHasJacobian</a>(networkdm,userJac,userJac);
+<a name="line760">760: </a>  <a href="../../../../../docs/manualpages/DMNetwork/DMNetworkGetEdgeRange.html#DMNetworkGetEdgeRange">DMNetworkGetEdgeRange</a>(networkdm,&amp;eStart,&amp;eEnd);
+<a name="line761">761: </a>  <font color="#4169E1">for</font> (e=eStart; e&lt;eEnd; e++) { <font color="#B22222">/* each edge has only one component, pipe */</font>
+<a name="line762">762: </a>    <a href="../../../../../docs/manualpages/DMNetwork/DMNetworkGetComponent.html#DMNetworkGetComponent">DMNetworkGetComponent</a>(networkdm,e,0,&amp;type,(void**)&amp;pipe);
+
+<a name="line764">764: </a>    wash-&gt;nnodes_loc += pipe-&gt;nnodes; <font color="#B22222">/* local total num of nodes, will be used by PipesView() */</font>
+<a name="line765">765: </a>    PipeSetParameters(pipe,
+<a name="line766">766: </a>                             600.0,          <font color="#B22222">/* length */</font>
+<a name="line767">767: </a>                             0.5,            <font color="#B22222">/* diameter */</font>
+<a name="line768">768: </a>                             1200.0,         <font color="#B22222">/* a */</font>
+<a name="line769">769: </a>                             0.018);    <font color="#B22222">/* friction */</font>
+<a name="line770">770: </a>    PipeSetUp(pipe);
+
+<a name="line772">772: </a>    <font color="#4169E1">if</font> (userJac) {
+<a name="line773">773: </a>      <font color="#B22222">/* Create Jacobian matrix structures for a Pipe */</font>
+<a name="line774">774: </a>      <a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a>            *J;
+<a name="line775">775: </a>      PipeCreateJacobian(pipe,NULL,&amp;J);
+<a name="line776">776: </a>      <a href="../../../../../docs/manualpages/DMNetwork/DMNetworkEdgeSetMatrix.html#DMNetworkEdgeSetMatrix">DMNetworkEdgeSetMatrix</a>(networkdm,e,J);
+<a name="line777">777: </a>    }
+<a name="line778">778: </a>  }
+
+<a name="line780">780: </a>  <font color="#4169E1">if</font> (userJac) {
+<a name="line781">781: </a>    <a href="../../../../../docs/manualpages/DMNetwork/DMNetworkGetVertexRange.html#DMNetworkGetVertexRange">DMNetworkGetVertexRange</a>(networkdm,&amp;vStart,&amp;vEnd);
+<a name="line782">782: </a>    <font color="#4169E1">for</font> (v=vStart; v&lt;vEnd; v++) {
+<a name="line783">783: </a>      <a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a>            *J;
+<a name="line784">784: </a>      JunctionCreateJacobian(networkdm,v,NULL,&amp;J);
+<a name="line785">785: </a>      <a href="../../../../../docs/manualpages/DMNetwork/DMNetworkVertexSetMatrix.html#DMNetworkVertexSetMatrix">DMNetworkVertexSetMatrix</a>(networkdm,v,J);
+
+<a name="line787">787: </a>      <a href="../../../../../docs/manualpages/DMNetwork/DMNetworkGetComponent.html#DMNetworkGetComponent">DMNetworkGetComponent</a>(networkdm,v,0,&amp;vkey,(void**)&amp;junction);
+<a name="line788">788: </a>      junction-&gt;jacobian = J;
+<a name="line789">789: </a>    }
+<a name="line790">790: </a>  }
+
+<a name="line792">792: </a>  <font color="#B22222">/* Test <a href="../../../../../docs/manualpages/DMNetwork/DMNetworkGetSubnetworkInfo.html#DMNetworkGetSubnetworkInfo">DMNetworkGetSubnetworkInfo</a>() */</font>
+<a name="line793">793: </a>  <font color="#4169E1">if</font> (test) {
+<a name="line794">794: </a>    <a href="../../../../../docs/manualpages/DMNetwork/DMNetworkGetEdgeRange.html#DMNetworkGetEdgeRange">DMNetworkGetEdgeRange</a>(networkdm,&amp;eStart,&amp;eEnd);
+<a name="line795">795: </a>    <a href="../../../../../docs/manualpages/DMNetwork/DMNetworkGetSubnetworkInfo.html#DMNetworkGetSubnetworkInfo">DMNetworkGetSubnetworkInfo</a>(networkdm,0,&amp;nv,&amp;ne,&amp;vtx,&amp;edge);
+<a name="line796">796: </a>    <font color="#4169E1">if</font> (ne != eEnd - eStart || nv != vEnd - vStart) <a href="../../../../../docs/manualpages/Sys/SETERRQ2.html#SETERRQ2">SETERRQ2</a>(<a href="../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)networkdm),PETSC_ERR_ARG_WRONG,<font color="#666666">"ne %D or nv %D is incorrect"</font>,ne,nv);
+
+<a name="line798">798: </a>    <font color="#4169E1">for</font> (e = eStart; e &lt; eEnd; e++) {
+<a name="line799">799: </a>      <font color="#4169E1">if</font> (e != edge[e]) <a href="../../../../../docs/manualpages/Sys/SETERRQ2.html#SETERRQ2">SETERRQ2</a>(<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_ARG_WRONG,<font color="#666666">"e %D != edge %D from <a href="../../../../../docs/manualpages/DMNetwork/DMNetworkGetSubnetworkInfo.html#DMNetworkGetSubnetworkInfo">DMNetworkGetSubnetworkInfo</a>()"</font>,e,edge[e]);
+<a name="line800">800: </a>    }
+<a name="line801">801: </a>    <font color="#4169E1">for</font> (v = vStart; v &lt; vEnd; v++) {
+<a name="line802">802: </a>      <font color="#4169E1">if</font> (v != vtx[v-vStart]) <a href="../../../../../docs/manualpages/Sys/SETERRQ2.html#SETERRQ2">SETERRQ2</a>(<a href="../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)networkdm),PETSC_ERR_ARG_WRONG,<font color="#666666">"v %D != vtx %D from <a href="../../../../../docs/manualpages/DMNetwork/DMNetworkGetSubnetworkInfo.html#DMNetworkGetSubnetworkInfo">DMNetworkGetSubnetworkInfo</a>()"</font>,v,vtx[v-vStart]);
+<a name="line803">803: </a>    }
+<a name="line804">804: </a>  }
+
+<a name="line806">806: </a>  <font color="#B22222">/* Setup solver                                           */</font>
+<a name="line807">807: </a>  <font color="#B22222">/*--------------------------------------------------------*/</font>
+<a name="line808">808: </a>  <a href="../../../../../docs/manualpages/TS/TSCreate.html#TSCreate">TSCreate</a>(<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,&amp;ts);
+
+<a name="line810">810: </a>  <a href="../../../../../docs/manualpages/TS/TSSetDM.html#TSSetDM">TSSetDM</a>(ts,(<a href="../../../../../docs/manualpages/DM/DM.html#DM">DM</a>)networkdm);
+<a name="line811">811: </a>  <a href="../../../../../docs/manualpages/TS/TSSetIFunction.html#TSSetIFunction">TSSetIFunction</a>(ts,NULL,WASHIFunction,wash);
+
+<a name="line813">813: </a>  <a href="../../../../../docs/manualpages/TS/TSSetMaxSteps.html#TSSetMaxSteps">TSSetMaxSteps</a>(ts,steps);
+<a name="line814">814: </a>  <a href="../../../../../docs/manualpages/TS/TSSetExactFinalTime.html#TSSetExactFinalTime">TSSetExactFinalTime</a>(ts,<a href="../../../../../docs/manualpages/TS/TSExactFinalTimeOption.html#TSExactFinalTimeOption">TS_EXACTFINALTIME_STEPOVER</a>);
+<a name="line815">815: </a>  <a href="../../../../../docs/manualpages/TS/TSSetTimeStep.html#TSSetTimeStep">TSSetTimeStep</a>(ts,0.1);
+<a name="line816">816: </a>  <a href="../../../../../docs/manualpages/TS/TSSetType.html#TSSetType">TSSetType</a>(ts,<a href="../../../../../docs/manualpages/TS/TSBEULER.html#TSBEULER">TSBEULER</a>);
+<a name="line817">817: </a>  <font color="#4169E1">if</font> (size == 1 &amp;&amp; monipipes) {
+<a name="line818">818: </a>    <a href="../../../../../docs/manualpages/TS/TSMonitorSet.html#TSMonitorSet">TSMonitorSet</a>(ts, TSDMNetworkMonitor, monitor, NULL);
+<a name="line819">819: </a>  }
+<a name="line820">820: </a>  <a href="../../../../../docs/manualpages/TS/TSSetFromOptions.html#TSSetFromOptions">TSSetFromOptions</a>(ts);
+
+<a name="line822">822: </a>  WASHSetInitialSolution(networkdm,X,wash);
+
+<a name="line824">824: </a>  <a href="../../../../../docs/manualpages/TS/TSSolve.html#TSSolve">TSSolve</a>(ts,X);
+
+<a name="line826">826: </a>  <a href="../../../../../docs/manualpages/TS/TSGetSolveTime.html#TSGetSolveTime">TSGetSolveTime</a>(ts,&amp;ftime);
+<a name="line827">827: </a>  <a href="../../../../../docs/manualpages/TS/TSGetStepNumber.html#TSGetStepNumber">TSGetStepNumber</a>(ts,&amp;steps);
+<a name="line828">828: </a>  <a href="../../../../../docs/manualpages/TS/TSGetConvergedReason.html#TSGetConvergedReason">TSGetConvergedReason</a>(ts,&amp;reason);
+<a name="line829">829: </a>  <a href="../../../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,<font color="#666666">"%s at time %g after %D steps\n"</font>,TSConvergedReasons[reason],(double)ftime,steps);
+<a name="line830">830: </a>  <font color="#4169E1">if</font> (viewX) {
+<a name="line831">831: </a>    <a href="../../../../../docs/manualpages/Vec/VecView.html#VecView">VecView</a>(X,<a href="../../../../../docs/manualpages/Viewer/PETSC_VIEWER_STDOUT_WORLD.html#PETSC_VIEWER_STDOUT_WORLD">PETSC_VIEWER_STDOUT_WORLD</a>);
+<a name="line832">832: </a>  }
+
+<a name="line834">834: </a>  viewpipes = <a href="../../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line835">835: </a>  <a href="../../../../../docs/manualpages/Sys/PetscOptionsGetBool.html#PetscOptionsGetBool">PetscOptionsGetBool</a>(NULL,NULL, <font color="#666666">"-Jac_view"</font>, &amp;viewpipes,NULL);
+<a name="line836">836: </a>  <font color="#4169E1">if</font> (viewpipes) {
+<a name="line837">837: </a>    <a href="../../../../../docs/manualpages/SNES/SNES.html#SNES">SNES</a> snes;
+<a name="line838">838: </a>    <a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a>  Jac;
+<a name="line839">839: </a>    <a href="../../../../../docs/manualpages/TS/TSGetSNES.html#TSGetSNES">TSGetSNES</a>(ts,&amp;snes);
+<a name="line840">840: </a>    <a href="../../../../../docs/manualpages/SNES/SNESGetJacobian.html#SNESGetJacobian">SNESGetJacobian</a>(snes,&amp;Jac,NULL,NULL,NULL);
+<a name="line841">841: </a>    <a href="../../../../../docs/manualpages/Mat/MatView.html#MatView">MatView</a>(Jac,<a href="../../../../../docs/manualpages/Viewer/PETSC_VIEWER_DRAW_WORLD.html#PETSC_VIEWER_DRAW_WORLD">PETSC_VIEWER_DRAW_WORLD</a>);
+<a name="line842">842: </a>  }
+
+<a name="line844">844: </a>  <font color="#B22222">/* View solution q and h */</font>
+<a name="line845">845: </a>  <font color="#B22222">/* --------------------- */</font>
+<a name="line846">846: </a>  viewpipes = <a href="../../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line847">847: </a>  <a href="../../../../../docs/manualpages/Sys/PetscOptionsGetBool.html#PetscOptionsGetBool">PetscOptionsGetBool</a>(NULL,NULL, <font color="#666666">"-pipe_view"</font>, &amp;viewpipes,NULL);
+<a name="line848">848: </a>  <font color="#4169E1">if</font> (viewpipes) {
+<a name="line849">849: </a>    PipesView(X,networkdm,wash);
+<a name="line850">850: </a>  }
+
+<a name="line852">852: </a>  <font color="#B22222">/* Free spaces */</font>
+<a name="line853">853: </a>  <font color="#B22222">/* ----------- */</font>
+<a name="line854">854: </a>  <a href="../../../../../docs/manualpages/TS/TSDestroy.html#TSDestroy">TSDestroy</a>(&amp;ts);
+<a name="line855">855: </a>  <a href="../../../../../docs/manualpages/Vec/VecDestroy.html#VecDestroy">VecDestroy</a>(&amp;X);
+<a name="line856">856: </a>  <a href="../../../../../docs/manualpages/Vec/VecDestroy.html#VecDestroy">VecDestroy</a>(&amp;wash-&gt;localX);
+<a name="line857">857: </a>  <a href="../../../../../docs/manualpages/Vec/VecDestroy.html#VecDestroy">VecDestroy</a>(&amp;wash-&gt;localXdot);
+
+<a name="line859">859: </a>  <font color="#B22222">/* Destroy objects from each pipe that are created in PipeSetUp() */</font>
+<a name="line860">860: </a>  <a href="../../../../../docs/manualpages/DMNetwork/DMNetworkGetEdgeRange.html#DMNetworkGetEdgeRange">DMNetworkGetEdgeRange</a>(networkdm,&amp;eStart, &amp;eEnd);
+<a name="line861">861: </a>  <font color="#4169E1">for</font> (i = eStart; i &lt; eEnd; i++) {
+<a name="line862">862: </a>    <a href="../../../../../docs/manualpages/DMNetwork/DMNetworkGetComponent.html#DMNetworkGetComponent">DMNetworkGetComponent</a>(networkdm,i,0,&amp;key,(void**)&amp;pipe);
+<a name="line863">863: </a>    PipeDestroy(&amp;pipe);
+<a name="line864">864: </a>  }
+<a name="line865">865: </a>  <font color="#4169E1">if</font> (userJac) {
+<a name="line866">866: </a>    <font color="#4169E1">for</font> (v=vStart; v&lt;vEnd; v++) {
+<a name="line867">867: </a>      <a href="../../../../../docs/manualpages/DMNetwork/DMNetworkGetComponent.html#DMNetworkGetComponent">DMNetworkGetComponent</a>(networkdm,v,0,&amp;vkey,(void**)&amp;junction);
+<a name="line868">868: </a>      JunctionDestroyJacobian(networkdm,v,junction);
+<a name="line869">869: </a>    }
+<a name="line870">870: </a>  }
+
+<a name="line872">872: </a>  <font color="#4169E1">if</font> (size == 1 &amp;&amp; monipipes) {
+<a name="line873">873: </a>    <a href="../../../../../docs/manualpages/DMNetwork/DMNetworkMonitorDestroy.html#DMNetworkMonitorDestroy">DMNetworkMonitorDestroy</a>(&amp;monitor);
+<a name="line874">874: </a>  }
+<a name="line875">875: </a>  <a href="../../../../../docs/manualpages/DM/DMDestroy.html#DMDestroy">DMDestroy</a>(&amp;networkdm);
+<a name="line876">876: </a>  <a href="../../../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(wash);
+
+<a name="line878">878: </a>  <font color="#4169E1">if</font> (rank) {
+<a name="line879">879: </a>    <a href="../../../../../docs/manualpages/Sys/PetscFree2.html#PetscFree2">PetscFree2</a>(junctions,pipes);
+<a name="line880">880: </a>  }
+<a name="line881">881: </a>  <a href="../../../../../docs/manualpages/Sys/PetscFinalize.html#PetscFinalize">PetscFinalize</a>();
+<a name="line882">882: </a>  <font color="#4169E1">return</font> ierr;
+<a name="line883">883: </a>}
+
+<a name="line885">885: </a><font color="#B22222">/*TEST</font>
+
+<a name="line887">887: </a><font color="#B22222">   build:</font>
+<a name="line888">888: </a><font color="#B22222">     depends: pipeInterface.c pipeImpls.c</font>
+
+<a name="line890">890: </a><font color="#B22222">   test:</font>
+<a name="line891">891: </a><font color="#B22222">      args: -ts_monitor -case 1 -ts_max_steps 1 -options_left no -viewX -test</font>
+<a name="line892">892: </a><font color="#B22222">      localrunfiles: pOption</font>
+<a name="line893">893: </a><font color="#B22222">      output_file: output/pipes1_1.out</font>
+
+<a name="line895">895: </a><font color="#B22222">   test:</font>
+<a name="line896">896: </a><font color="#B22222">      suffix: 2</font>
+<a name="line897">897: </a><font color="#B22222">      nsize: 2</font>
+<a name="line898">898: </a><font color="#B22222">      requires: mumps</font>
+<a name="line899">899: </a><font color="#B22222">      args: -ts_monitor -case 1 -ts_max_steps 1 -petscpartitioner_type simple -options_left no -viewX -test</font>
+<a name="line900">900: </a><font color="#B22222">      localrunfiles: pOption</font>
+<a name="line901">901: </a><font color="#B22222">      output_file: output/pipes1_2.out</font>
+
+<a name="line903">903: </a><font color="#B22222">   test:</font>
+<a name="line904">904: </a><font color="#B22222">      suffix: 3</font>
+<a name="line905">905: </a><font color="#B22222">      nsize: 2</font>
+<a name="line906">906: </a><font color="#B22222">      requires: mumps</font>
+<a name="line907">907: </a><font color="#B22222">      args: -ts_monitor -case 0 -ts_max_steps 1 -petscpartitioner_type simple -options_left no -viewX -test</font>
+<a name="line908">908: </a><font color="#B22222">      localrunfiles: pOption</font>
+<a name="line909">909: </a><font color="#B22222">      output_file: output/pipes1_3.out</font>
+
+<a name="line911">911: </a><font color="#B22222">   test:</font>
+<a name="line912">912: </a><font color="#B22222">      suffix: 4</font>
+<a name="line913">913: </a><font color="#B22222">      args: -ts_monitor -case 2 -ts_max_steps 1 -options_left no -viewX -test</font>
+<a name="line914">914: </a><font color="#B22222">      localrunfiles: pOption</font>
+<a name="line915">915: </a><font color="#B22222">      output_file: output/pipes1_4.out</font>
+
+<a name="line917">917: </a><font color="#B22222">   test:</font>
+<a name="line918">918: </a><font color="#B22222">      suffix: 5</font>
+<a name="line919">919: </a><font color="#B22222">      nsize: 3</font>
+<a name="line920">920: </a><font color="#B22222">      requires: mumps</font>
+<a name="line921">921: </a><font color="#B22222">      args: -ts_monitor -case 2 -ts_max_steps 10 -petscpartitioner_type simple -options_left no -viewX -test</font>
+<a name="line922">922: </a><font color="#B22222">      localrunfiles: pOption</font>
+<a name="line923">923: </a><font color="#B22222">      output_file: output/pipes1_5.out</font>
+
+<a name="line925">925: </a><font color="#B22222">   test:</font>
+<a name="line926">926: </a><font color="#B22222">      suffix: 6</font>
+<a name="line927">927: </a><font color="#B22222">      nsize: 2</font>
+<a name="line928">928: </a><font color="#B22222">      requires: mumps</font>
+<a name="line929">929: </a><font color="#B22222">      args: -ts_monitor -case 1 -ts_max_steps 1 -petscpartitioner_type simple -options_left no -wash_distribute 0 -viewX -test</font>
+<a name="line930">930: </a><font color="#B22222">      localrunfiles: pOption</font>
+<a name="line931">931: </a><font color="#B22222">      output_file: output/pipes1_6.out</font>
+
+<a name="line933">933: </a><font color="#B22222">   test:</font>
+<a name="line934">934: </a><font color="#B22222">      suffix: 7</font>
+<a name="line935">935: </a><font color="#B22222">      nsize: 2</font>
+<a name="line936">936: </a><font color="#B22222">      requires: mumps</font>
+<a name="line937">937: </a><font color="#B22222">      args: -ts_monitor -case 2 -ts_max_steps 1 -petscpartitioner_type simple -options_left no -wash_distribute 0 -viewX -test</font>
+<a name="line938">938: </a><font color="#B22222">      localrunfiles: pOption</font>
+<a name="line939">939: </a><font color="#B22222">      output_file: output/pipes1_7.out</font>
+
+<a name="line941">941: </a><font color="#B22222">   test:</font>
+<a name="line942">942: </a><font color="#B22222">      suffix: 8</font>
+<a name="line943">943: </a><font color="#B22222">      nsize: 2</font>
+<a name="line944">944: </a><font color="#B22222">      requires: mumps parmetis</font>
+<a name="line945">945: </a><font color="#B22222">      args: -ts_monitor -case 2 -ts_max_steps 1 -petscpartitioner_type parmetis -options_left no -wash_distribute 1</font>
+<a name="line946">946: </a><font color="#B22222">      localrunfiles: pOption</font>
+<a name="line947">947: </a><font color="#B22222">      output_file: output/pipes1_8.out</font>
+
+<a name="line949">949: </a><font color="#B22222">TEST*/</font>
+</pre>
+</body>
+
+</html>

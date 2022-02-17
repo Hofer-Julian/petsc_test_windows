@@ -1,0 +1,129 @@
+<center><a href="ex7.c">Actual source code: ex7.c</a></center><br>
+
+<html>
+<head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/src/dm/impls/plex/tutorials/ex7.c.html" />
+<title></title>
+<meta name="generator" content="c2html 0.9.4">
+<meta name="date" content="2021-03-30T16:50:48+00:00">
+</head>
+
+<body bgcolor="#FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 src/dm/impls/plex/tutorials/ex7.c.html "><small>Report Typos and Errors</small></a></div>
+<pre width="80">
+<a name="line1">  1: </a>static char help[] = <font color="#666666">"Create a Plex sphere from quads and create a P1 section\n\n"</font>;
+
+<a name="line3">  3: </a>#include <A href="../../../../../include/petscdmplex.h.html">&lt;petscdmplex.h&gt;</A>
+
+<a name="line5">  5: </a><font color="#4169E1">typedef</font> <font color="#4169E1">struct</font> {
+<a name="line6">  6: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>  dim;     <font color="#B22222">/* Topological problem dimension */</font>
+<a name="line7">  7: </a>  <a href="../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> simplex; <font color="#B22222">/* Mesh with simplices */</font>
+<a name="line8">  8: </a>} AppCtx;
+
+<a name="line10"> 10: </a><strong><font color="#4169E1"><a name="ProcessOptions"></a>static <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> ProcessOptions(<a href="../../../../../docs/manualpages/Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</a> comm, AppCtx *options)</font></strong>
+<a name="line11"> 11: </a>{
+
+<a name="line15"> 15: </a>  options-&gt;dim     = 2;
+<a name="line16"> 16: </a>  options-&gt;simplex = <a href="../../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+
+<a name="line18"> 18: </a>  <a href="../../../../../docs/manualpages/Sys/PetscOptionsBegin.html#PetscOptionsBegin">PetscOptionsBegin</a>(comm, <font color="#666666">""</font>, <font color="#666666">"Sphere Mesh Options"</font>, <font color="#666666">"<a href="../../../../../docs/manualpages/DMPLEX/DMPLEX.html#DMPLEX">DMPLEX</a>"</font>);
+<a name="line19"> 19: </a>  <a href="../../../../../docs/manualpages/Sys/PetscOptionsRangeInt.html#PetscOptionsRangeInt">PetscOptionsRangeInt</a>(<font color="#666666">"-dim"</font>, <font color="#666666">"Problem dimension"</font>, <font color="#666666">"ex7.c"</font>, options-&gt;dim, &amp;options-&gt;dim, NULL,1,3);
+<a name="line20"> 20: </a>  <a href="../../../../../docs/manualpages/Sys/PetscOptionsBool.html#PetscOptionsBool">PetscOptionsBool</a>(<font color="#666666">"-simplex"</font>, <font color="#666666">"Use simplices, or tensor product cells"</font>, <font color="#666666">"ex7.c"</font>, options-&gt;simplex, &amp;options-&gt;simplex, NULL);
+<a name="line21"> 21: </a>  <a href="../../../../../docs/manualpages/Sys/PetscOptionsEnd.html#PetscOptionsEnd">PetscOptionsEnd</a>();
+<a name="line22"> 22: </a>  <font color="#4169E1">return</font>(0);
+<a name="line23"> 23: </a>}
+
+<a name="line25"> 25: </a><strong><font color="#4169E1"><a name="SetupSection"></a>static <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> SetupSection(<a href="../../../../../docs/manualpages/DM/DM.html#DM">DM</a> dm)</font></strong>
+<a name="line26"> 26: </a>{
+<a name="line27"> 27: </a>  <a href="../../../../../docs/manualpages/PetscSection/PetscSection.html#PetscSection">PetscSection</a>   s;
+<a name="line28"> 28: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       vStart, vEnd, v;
+
+<a name="line32"> 32: </a>  <a href="../../../../../docs/manualpages/DMPLEX/DMPlexGetDepthStratum.html#DMPlexGetDepthStratum">DMPlexGetDepthStratum</a>(dm, 0, &amp;vStart, &amp;vEnd);
+<a name="line33"> 33: </a>  <a href="../../../../../docs/manualpages/PetscSection/PetscSectionCreate.html#PetscSectionCreate">PetscSectionCreate</a>(<a href="../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>) dm), &amp;s);
+<a name="line34"> 34: </a>  <a href="../../../../../docs/manualpages/PetscSection/PetscSectionSetNumFields.html#PetscSectionSetNumFields">PetscSectionSetNumFields</a>(s, 1);
+<a name="line35"> 35: </a>  <a href="../../../../../docs/manualpages/PetscSection/PetscSectionSetFieldComponents.html#PetscSectionSetFieldComponents">PetscSectionSetFieldComponents</a>(s, 0, 1);
+<a name="line36"> 36: </a>  <a href="../../../../../docs/manualpages/PetscSection/PetscSectionSetChart.html#PetscSectionSetChart">PetscSectionSetChart</a>(s, vStart, vEnd);
+<a name="line37"> 37: </a>  <font color="#4169E1">for</font> (v = vStart; v &lt; vEnd; ++v) {
+<a name="line38"> 38: </a>    <a href="../../../../../docs/manualpages/PetscSection/PetscSectionSetDof.html#PetscSectionSetDof">PetscSectionSetDof</a>(s, v, 1);
+<a name="line39"> 39: </a>    <a href="../../../../../docs/manualpages/PetscSection/PetscSectionSetFieldDof.html#PetscSectionSetFieldDof">PetscSectionSetFieldDof</a>(s, v, 0, 1);
+<a name="line40"> 40: </a>  }
+<a name="line41"> 41: </a>  <a href="../../../../../docs/manualpages/PetscSection/PetscSectionSetUp.html#PetscSectionSetUp">PetscSectionSetUp</a>(s);
+<a name="line42"> 42: </a>  <a href="../../../../../docs/manualpages/DM/DMSetLocalSection.html#DMSetLocalSection">DMSetLocalSection</a>(dm, s);
+<a name="line43"> 43: </a>  <a href="../../../../../docs/manualpages/PetscSection/PetscSectionDestroy.html#PetscSectionDestroy">PetscSectionDestroy</a>(&amp;s);
+<a name="line44"> 44: </a>  <font color="#4169E1">return</font>(0);
+<a name="line45"> 45: </a>}
+
+<a name="line47"> 47: </a><strong><font color="#4169E1"><a name="main"></a>int main(int argc, char **argv)</font></strong>
+<a name="line48"> 48: </a>{
+<a name="line49"> 49: </a>  <a href="../../../../../docs/manualpages/DM/DM.html#DM">DM</a>             dm;
+<a name="line50"> 50: </a>  <a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a>            u;
+<a name="line51"> 51: </a>  AppCtx         ctx;
+
+<a name="line54"> 54: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInitialize.html#PetscInitialize">PetscInitialize</a>(&amp;argc, &amp;argv, NULL,help);<font color="#4169E1">if</font> (ierr) <font color="#4169E1">return</font> ierr;
+<a name="line55"> 55: </a>  ProcessOptions(<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>, &amp;ctx);
+<a name="line56"> 56: </a>  <a href="../../../../../docs/manualpages/DMPLEX/DMPlexCreateSphereMesh.html#DMPlexCreateSphereMesh">DMPlexCreateSphereMesh</a>(<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>, ctx.dim, ctx.simplex, 1.0, &amp;dm);
+<a name="line57"> 57: </a>  <a href="../../../../../docs/manualpages/Sys/PetscObjectSetName.html#PetscObjectSetName">PetscObjectSetName</a>((<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>) dm, <font color="#666666">"Sphere"</font>);
+<a name="line58"> 58: </a>  <font color="#B22222">/* Distribute mesh over processes */</font>
+<a name="line59"> 59: </a>  {
+<a name="line60"> 60: </a>     <a href="../../../../../docs/manualpages/DM/DM.html#DM">DM</a> dmDist = NULL;
+<a name="line61"> 61: </a>     <a href="../../../../../docs/manualpages/DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</a> part;
+<a name="line62"> 62: </a>     <a href="../../../../../docs/manualpages/DMPLEX/DMPlexGetPartitioner.html#DMPlexGetPartitioner">DMPlexGetPartitioner</a>(dm, &amp;part);
+<a name="line63"> 63: </a>     <a href="../../../../../docs/manualpages/DM/PetscPartitionerSetFromOptions.html#PetscPartitionerSetFromOptions">PetscPartitionerSetFromOptions</a>(part);
+<a name="line64"> 64: </a>     <a href="../../../../../docs/manualpages/DMPLEX/DMPlexDistribute.html#DMPlexDistribute">DMPlexDistribute</a>(dm, 0, NULL, &amp;dmDist);
+<a name="line65"> 65: </a>     <font color="#4169E1">if</font> (dmDist) {
+<a name="line66"> 66: </a>       <a href="../../../../../docs/manualpages/DM/DMDestroy.html#DMDestroy">DMDestroy</a>(&amp;dm);
+<a name="line67"> 67: </a>       dm  = dmDist;
+<a name="line68"> 68: </a>     }
+<a name="line69"> 69: </a>  }
+<a name="line70"> 70: </a>  <a href="../../../../../docs/manualpages/DM/DMSetFromOptions.html#DMSetFromOptions">DMSetFromOptions</a>(dm);
+<a name="line71"> 71: </a>  <a href="../../../../../docs/manualpages/DM/DMViewFromOptions.html#DMViewFromOptions">DMViewFromOptions</a>(dm, NULL, <font color="#666666">"-dm_view"</font>);
+<a name="line72"> 72: </a>  SetupSection(dm);
+<a name="line73"> 73: </a>  <a href="../../../../../docs/manualpages/DM/DMGetGlobalVector.html#DMGetGlobalVector">DMGetGlobalVector</a>(dm, &amp;u);
+<a name="line74"> 74: </a>  <a href="../../../../../docs/manualpages/Vec/VecSet.html#VecSet">VecSet</a>(u, 2);
+<a name="line75"> 75: </a>  <a href="../../../../../docs/manualpages/Vec/VecViewFromOptions.html#VecViewFromOptions">VecViewFromOptions</a>(u, NULL, <font color="#666666">"-vec_view"</font>);
+<a name="line76"> 76: </a>  <a href="../../../../../docs/manualpages/DM/DMRestoreGlobalVector.html#DMRestoreGlobalVector">DMRestoreGlobalVector</a>(dm, &amp;u);
+<a name="line77"> 77: </a>  <a href="../../../../../docs/manualpages/DM/DMDestroy.html#DMDestroy">DMDestroy</a>(&amp;dm);
+<a name="line78"> 78: </a>  <a href="../../../../../docs/manualpages/Sys/PetscFinalize.html#PetscFinalize">PetscFinalize</a>();
+<a name="line79"> 79: </a>  <font color="#4169E1">return</font> ierr;
+<a name="line80"> 80: </a>}
+
+<a name="line82"> 82: </a><font color="#B22222">/*TEST</font>
+
+<a name="line84"> 84: </a><font color="#B22222">  test:</font>
+<a name="line85"> 85: </a><font color="#B22222">    suffix: 2d_quad</font>
+<a name="line86"> 86: </a><font color="#B22222">    requires: !__float128</font>
+<a name="line87"> 87: </a><font color="#B22222">    args: -dm_view</font>
+
+<a name="line89"> 89: </a><font color="#B22222">  test:</font>
+<a name="line90"> 90: </a><font color="#B22222">    suffix: 2d_quad_parallel</font>
+<a name="line91"> 91: </a><font color="#B22222">    requires: !__float128</font>
+<a name="line92"> 92: </a><font color="#B22222">    args: -dm_view -petscpartitioner_type simple</font>
+<a name="line93"> 93: </a><font color="#B22222">    nsize: 2</font>
+
+<a name="line95"> 95: </a><font color="#B22222">  test:</font>
+<a name="line96"> 96: </a><font color="#B22222">    suffix: 2d_tri</font>
+<a name="line97"> 97: </a><font color="#B22222">    requires: !__float128</font>
+<a name="line98"> 98: </a><font color="#B22222">    args: -simplex -dm_view</font>
+
+<a name="line100">100: </a><font color="#B22222">  test:</font>
+<a name="line101">101: </a><font color="#B22222">    suffix: 2d_tri_parallel</font>
+<a name="line102">102: </a><font color="#B22222">    requires: !__float128</font>
+<a name="line103">103: </a><font color="#B22222">    args: -simplex -dm_view -petscpartitioner_type simple</font>
+<a name="line104">104: </a><font color="#B22222">    nsize: 2</font>
+
+<a name="line106">106: </a><font color="#B22222">  test:</font>
+<a name="line107">107: </a><font color="#B22222">    suffix: 3d_tri</font>
+<a name="line108">108: </a><font color="#B22222">    requires: !__float128</font>
+<a name="line109">109: </a><font color="#B22222">    args: -dim 3 -simplex -dm_view</font>
+
+<a name="line111">111: </a><font color="#B22222">  test:</font>
+<a name="line112">112: </a><font color="#B22222">    suffix: 3d_tri_parallel</font>
+<a name="line113">113: </a><font color="#B22222">    requires: !__float128</font>
+<a name="line114">114: </a><font color="#B22222">    args: -dim 3 -simplex -dm_view -petscpartitioner_type simple</font>
+<a name="line115">115: </a><font color="#B22222">    nsize: 2</font>
+
+<a name="line117">117: </a><font color="#B22222">TEST*/</font>
+</pre>
+</body>
+
+</html>

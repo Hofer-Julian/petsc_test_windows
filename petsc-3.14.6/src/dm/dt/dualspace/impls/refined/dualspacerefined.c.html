@@ -1,0 +1,219 @@
+<center><a href="dualspacerefined.c">Actual source code: dualspacerefined.c</a></center><br>
+
+<html>
+<head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/src/dm/dt/dualspace/impls/refined/dualspacerefined.c.html" />
+<title></title>
+<meta name="generator" content="c2html 0.9.4">
+<meta name="date" content="2021-03-30T16:51:03+00:00">
+</head>
+
+<body bgcolor="#FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 src/dm/dt/dualspace/impls/refined/dualspacerefined.c.html "><small>Report Typos and Errors</small></a></div>
+<pre width="80">
+<a name="line1">  1: </a>#include <A href="../../../../../../include/petsc/private/petscfeimpl.h.html">&lt;petsc/private/petscfeimpl.h&gt;</A>
+<a name="line2">  2: </a>#include <A href="../../../../../../include/petscdmplex.h.html">&lt;petscdmplex.h&gt;</A>
+
+<a name="line4">  4: </a><font color="#4169E1">typedef</font> <font color="#4169E1">struct</font> {
+<a name="line5">  5: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>        dummy;
+<a name="line6">  6: </a>} PetscDualSpace_Refined;
+
+<a name="line8">  8: </a><font color="#B22222">/*@</font>
+<a name="line9">  9: </a><font color="#B22222">   <a href="../../../../../../docs/manualpages/DUALSPACE/PetscDualSpaceRefinedSetCellSpaces.html#PetscDualSpaceRefinedSetCellSpaces">PetscDualSpaceRefinedSetCellSpaces</a> - Set the dual spaces for the closures of each of the cells</font>
+<a name="line10"> 10: </a><font color="#B22222">   in the multicell <a href="../../../../../../docs/manualpages/DM/DM.html#DM">DM</a> of a <a href="../../../../../../docs/manualpages/FE/PetscDualSpace.html#PetscDualSpace">PetscDualSpace</a></font>
+
+<a name="line12"> 12: </a><font color="#B22222">   Collective on <a href="../../../../../../docs/manualpages/FE/PetscDualSpace.html#PetscDualSpace">PetscDualSpace</a></font>
+
+<a name="line14"> 14: </a><font color="#B22222">   Input Arguments:</font>
+<a name="line15"> 15: </a><font color="#B22222">+  sp - a <a href="../../../../../../docs/manualpages/FE/PetscDualSpace.html#PetscDualSpace">PetscDualSpace</a></font>
+<a name="line16"> 16: </a><font color="#B22222">-  cellSpaces - one <a href="../../../../../../docs/manualpages/FE/PetscDualSpace.html#PetscDualSpace">PetscDualSpace</a> for each of the cells.  The reference count of each cell space will be incremented,</font>
+<a name="line17"> 17: </a><font color="#B22222">                so the user is still responsible for these spaces afterwards</font>
+
+<a name="line19"> 19: </a><font color="#B22222">   Level: intermediate</font>
+
+<a name="line21"> 21: </a><font color="#B22222">.seealso: <a href="../../../../../../docs/manualpages/FE/PetscFERefine.html#PetscFERefine">PetscFERefine</a>()</font>
+<a name="line22"> 22: </a><font color="#B22222">@*/</font>
+<a name="line23"> 23: </a><strong><font color="#4169E1"><a name="PetscDualSpaceRefinedSetCellSpaces"></a><a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../../../../docs/manualpages/DUALSPACE/PetscDualSpaceRefinedSetCellSpaces.html#PetscDualSpaceRefinedSetCellSpaces">PetscDualSpaceRefinedSetCellSpaces</a>(<a href="../../../../../../docs/manualpages/FE/PetscDualSpace.html#PetscDualSpace">PetscDualSpace</a> sp, const <a href="../../../../../../docs/manualpages/FE/PetscDualSpace.html#PetscDualSpace">PetscDualSpace</a> cellSpaces[])</font></strong>
+<a name="line24"> 24: </a>{
+
+<a name="line30"> 30: </a>  <font color="#4169E1">if</font> (sp-&gt;setupcalled) <a href="../../../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)sp), PETSC_ERR_ARG_WRONGSTATE, <font color="#666666">"Cannot change cell spaces after setup is called"</font>);
+<a name="line31"> 31: </a>  PetscTryMethod(sp, <font color="#666666">"PetscDualSpaceRefinedSetCellSpaces_C"</font>, (<a href="../../../../../../docs/manualpages/FE/PetscDualSpace.html#PetscDualSpace">PetscDualSpace</a>,const <a href="../../../../../../docs/manualpages/FE/PetscDualSpace.html#PetscDualSpace">PetscDualSpace</a> []),(sp,cellSpaces));
+<a name="line32"> 32: </a>  <font color="#4169E1">return</font>(0);
+<a name="line33"> 33: </a>}
+
+<a name="line35"> 35: </a><strong><font color="#4169E1"><a name="PetscDualSpaceRefinedSetCellSpaces_Refined"></a>static <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscDualSpaceRefinedSetCellSpaces_Refined(<a href="../../../../../../docs/manualpages/FE/PetscDualSpace.html#PetscDualSpace">PetscDualSpace</a> sp, const <a href="../../../../../../docs/manualpages/FE/PetscDualSpace.html#PetscDualSpace">PetscDualSpace</a> cellSpaces[])</font></strong>
+<a name="line36"> 36: </a>{
+<a name="line37"> 37: </a>  <a href="../../../../../../docs/manualpages/DM/DM.html#DM">DM</a> dm;
+<a name="line38"> 38: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> pStart, pEnd;
+<a name="line39"> 39: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> cStart, cEnd, c;
+
+<a name="line43"> 43: </a>  dm = sp-&gt;dm;
+<a name="line44"> 44: </a>  <font color="#4169E1">if</font> (!dm) <a href="../../../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>) sp), PETSC_ERR_ARG_WRONGSTATE, <font color="#666666">"<a href="../../../../../../docs/manualpages/FE/PetscDualSpace.html#PetscDualSpace">PetscDualSpace</a> must have a <a href="../../../../../../docs/manualpages/DM/DM.html#DM">DM</a> (<a href="../../../../../../docs/manualpages/DUALSPACE/PetscDualSpaceSetDM.html#PetscDualSpaceSetDM">PetscDualSpaceSetDM</a>()) before calling <a href="../../../../../../docs/manualpages/DUALSPACE/PetscDualSpaceRefinedSetCellSpaces.html#PetscDualSpaceRefinedSetCellSpaces">PetscDualSpaceRefinedSetCellSpaces</a>"</font>);
+<a name="line45"> 45: </a>  <a href="../../../../../../docs/manualpages/DMPLEX/DMPlexGetChart.html#DMPlexGetChart">DMPlexGetChart</a>(dm, &amp;pStart, &amp;pEnd);
+<a name="line46"> 46: </a>  <font color="#4169E1">if</font> (!sp-&gt;pointSpaces) {
+
+<a name="line48"> 48: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscCalloc1.html#PetscCalloc1">PetscCalloc1</a>(pEnd-pStart,&amp;(sp-&gt;pointSpaces));
+<a name="line49"> 49: </a>  }
+<a name="line50"> 50: </a>  <a href="../../../../../../docs/manualpages/DMPLEX/DMPlexGetHeightStratum.html#DMPlexGetHeightStratum">DMPlexGetHeightStratum</a>(dm, 0, &amp;cStart, &amp;cEnd);
+<a name="line51"> 51: </a>  <font color="#4169E1">for</font> (c = 0; c &lt; cEnd - cStart; c++) {
+<a name="line52"> 52: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscObjectReference.html#PetscObjectReference">PetscObjectReference</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)cellSpaces[c]);
+<a name="line53"> 53: </a>    <a href="../../../../../../docs/manualpages/DUALSPACE/PetscDualSpaceDestroy.html#PetscDualSpaceDestroy">PetscDualSpaceDestroy</a>(&amp;(sp-&gt;pointSpaces[c + cStart - pStart]));
+<a name="line54"> 54: </a>    sp-&gt;pointSpaces[c+cStart-pStart] = cellSpaces[c];
+<a name="line55"> 55: </a>  }
+<a name="line56"> 56: </a>  <font color="#4169E1">return</font>(0);
+<a name="line57"> 57: </a>}
+
+<a name="line59"> 59: </a><strong><font color="#4169E1"><a name="PetscDualSpaceDestroy_Refined"></a>static <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscDualSpaceDestroy_Refined(<a href="../../../../../../docs/manualpages/FE/PetscDualSpace.html#PetscDualSpace">PetscDualSpace</a> sp)</font></strong>
+<a name="line60"> 60: </a>{
+<a name="line61"> 61: </a>  PetscDualSpace_Refined *ref = (PetscDualSpace_Refined *) sp-&gt;data;
+<a name="line62"> 62: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>          ierr;
+
+<a name="line65"> 65: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscObjectComposeFunction.html#PetscObjectComposeFunction">PetscObjectComposeFunction</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>) sp, <font color="#666666">"PetscDualSpaceRefinedSetCellSpaces_C"</font>, NULL);
+<a name="line66"> 66: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(ref);
+<a name="line67"> 67: </a>  <font color="#4169E1">return</font>(0);
+<a name="line68"> 68: </a>}
+
+<a name="line70"> 70: </a><strong><font color="#4169E1"><a name="PetscDualSpaceSetUp_Refined"></a>static <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscDualSpaceSetUp_Refined(<a href="../../../../../../docs/manualpages/FE/PetscDualSpace.html#PetscDualSpace">PetscDualSpace</a> sp)</font></strong>
+<a name="line71"> 71: </a>{
+<a name="line72"> 72: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> pStart, pEnd, depth;
+<a name="line73"> 73: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> cStart, cEnd, c, spdim;
+<a name="line74"> 74: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> h;
+<a name="line75"> 75: </a>  <a href="../../../../../../docs/manualpages/DM/DM.html#DM">DM</a> dm;
+<a name="line76"> 76: </a>  <a href="../../../../../../docs/manualpages/PetscSection/PetscSection.html#PetscSection">PetscSection</a>   section;
+
+<a name="line80"> 80: </a>  <a href="../../../../../../docs/manualpages/DUALSPACE/PetscDualSpaceGetDM.html#PetscDualSpaceGetDM">PetscDualSpaceGetDM</a>(sp, &amp;dm);
+<a name="line81"> 81: </a>  <a href="../../../../../../docs/manualpages/DMPLEX/DMPlexGetDepth.html#DMPlexGetDepth">DMPlexGetDepth</a>(dm, &amp;depth);
+<a name="line82"> 82: </a>  <a href="../../../../../../docs/manualpages/DMPLEX/DMPlexGetChart.html#DMPlexGetChart">DMPlexGetChart</a>(dm, &amp;pStart, &amp;pEnd);
+<a name="line83"> 83: </a>  <a href="../../../../../../docs/manualpages/DMPLEX/DMPlexGetHeightStratum.html#DMPlexGetHeightStratum">DMPlexGetHeightStratum</a>(dm, 0, &amp;cStart, &amp;cEnd);
+<a name="line84"> 84: </a>  <font color="#4169E1">for</font> (c = cStart; c &lt; cEnd; c++) {
+<a name="line85"> 85: </a>    <font color="#4169E1">if</font> (sp-&gt;pointSpaces[c-pStart]) {
+<a name="line86"> 86: </a>      <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> ccStart, ccEnd;
+<a name="line87"> 87: </a>      <font color="#4169E1">if</font> (sp-&gt;pointSpaces[c-pStart]-&gt;k != sp-&gt;k) <a href="../../../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)sp), PETSC_ERR_ARG_INCOMP, <font color="#666666">"All cell spaces must have the same form degree as the refined dual space"</font>);
+<a name="line88"> 88: </a>      <font color="#4169E1">if</font> (sp-&gt;pointSpaces[c-pStart]-&gt;Nc != sp-&gt;Nc) <a href="../../../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)sp), PETSC_ERR_ARG_INCOMP, <font color="#666666">"All cell spaces must have the same number of components as the refined dual space"</font>);
+<a name="line89"> 89: </a>      <a href="../../../../../../docs/manualpages/DMPLEX/DMPlexGetHeightStratum.html#DMPlexGetHeightStratum">DMPlexGetHeightStratum</a>(sp-&gt;pointSpaces[c-pStart]-&gt;dm, 0, &amp;ccStart, &amp;ccEnd);
+<a name="line90"> 90: </a>      <font color="#4169E1">if</font> (ccEnd - ccStart != 1) <a href="../../../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)sp), PETSC_ERR_ARG_INCOMP, <font color="#666666">"All cell spaces must have a single cell themselves"</font>);
+<a name="line91"> 91: </a>    }
+<a name="line92"> 92: </a>  }
+<a name="line93"> 93: </a>  <font color="#4169E1">for</font> (c = cStart; c &lt; cEnd; c++) {
+<a name="line94"> 94: </a>    <font color="#4169E1">if</font> (sp-&gt;pointSpaces[c-pStart]) {
+<a name="line95"> 95: </a>      <a href="../../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> cUniform;
+
+<a name="line97"> 97: </a>      <a href="../../../../../../docs/manualpages/DUALSPACE/PetscDualSpaceGetUniform.html#PetscDualSpaceGetUniform">PetscDualSpaceGetUniform</a>(sp-&gt;pointSpaces[c-pStart],&amp;cUniform);
+<a name="line98"> 98: </a>      <font color="#4169E1">if</font> (!cUniform) <font color="#4169E1">break</font>;
+<a name="line99"> 99: </a>    }
+<a name="line100">100: </a>    <font color="#4169E1">if</font> ((c &gt; cStart) &amp;&amp; sp-&gt;pointSpaces[c-pStart] != sp-&gt;pointSpaces[c-1-pStart]) <font color="#4169E1">break</font>;
+<a name="line101">101: </a>  }
+<a name="line102">102: </a>  <font color="#4169E1">if</font> (c &lt; cEnd) sp-&gt;uniform = <a href="../../../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line103">103: </a>  <font color="#4169E1">for</font> (h = 0; h &lt; depth; h++) {
+<a name="line104">104: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> hStart, hEnd;
+
+<a name="line106">106: </a>    <a href="../../../../../../docs/manualpages/DMPLEX/DMPlexGetHeightStratum.html#DMPlexGetHeightStratum">DMPlexGetHeightStratum</a>(dm, h, &amp;hStart, &amp;hEnd);
+<a name="line107">107: </a>    <font color="#4169E1">for</font> (c = hStart; c &lt; hEnd; c++) {
+<a name="line108">108: </a>      <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> coneSize, e;
+<a name="line109">109: </a>      <a href="../../../../../../docs/manualpages/FE/PetscDualSpace.html#PetscDualSpace">PetscDualSpace</a> cspace = sp-&gt;pointSpaces[c-pStart];
+<a name="line110">110: </a>      const <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *cone;
+<a name="line111">111: </a>      const <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *refCone;
+
+<a name="line113">113: </a>      <font color="#4169E1">if</font> (!cspace) <font color="#4169E1">continue</font>;
+<a name="line114">114: </a>      <a href="../../../../../../docs/manualpages/DMPLEX/DMPlexGetConeSize.html#DMPlexGetConeSize">DMPlexGetConeSize</a>(dm, c, &amp;coneSize);
+<a name="line115">115: </a>      <a href="../../../../../../docs/manualpages/DMPLEX/DMPlexGetCone.html#DMPlexGetCone">DMPlexGetCone</a>(dm, c, &amp;cone);
+<a name="line116">116: </a>      <a href="../../../../../../docs/manualpages/DMPLEX/DMPlexGetCone.html#DMPlexGetCone">DMPlexGetCone</a>(cspace-&gt;dm, 0, &amp;refCone);
+<a name="line117">117: </a>      <font color="#4169E1">for</font> (e = 0; e &lt; coneSize; e++) {
+<a name="line118">118: </a>        <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> point = cone[e];
+<a name="line119">119: </a>        <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> refpoint = refCone[e];
+<a name="line120">120: </a>        <a href="../../../../../../docs/manualpages/FE/PetscDualSpace.html#PetscDualSpace">PetscDualSpace</a> espace;
+
+<a name="line122">122: </a>        <a href="../../../../../../docs/manualpages/DUALSPACE/PetscDualSpaceGetPointSubspace.html#PetscDualSpaceGetPointSubspace">PetscDualSpaceGetPointSubspace</a>(cspace,refpoint,&amp;espace);
+<a name="line123">123: </a>        <font color="#4169E1">if</font> (sp-&gt;pointSpaces[point-pStart] == NULL) {
+<a name="line124">124: </a>          <a href="../../../../../../docs/manualpages/Sys/PetscObjectReference.html#PetscObjectReference">PetscObjectReference</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)espace);
+<a name="line125">125: </a>          sp-&gt;pointSpaces[point-pStart] = espace;
+<a name="line126">126: </a>        }
+<a name="line127">127: </a>      }
+<a name="line128">128: </a>    }
+<a name="line129">129: </a>  }
+<a name="line130">130: </a>  <a href="../../../../../../docs/manualpages/DUALSPACE/PetscDualSpaceGetSection.html#PetscDualSpaceGetSection">PetscDualSpaceGetSection</a>(sp, &amp;section);
+<a name="line131">131: </a>  <a href="../../../../../../docs/manualpages/DUALSPACE/PetscDualSpaceGetDimension.html#PetscDualSpaceGetDimension">PetscDualSpaceGetDimension</a>(sp, &amp;spdim);
+<a name="line132">132: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscMalloc1.html#PetscMalloc1">PetscMalloc1</a>(spdim, &amp;(sp-&gt;functional));
+<a name="line133">133: </a>  PetscDualSpacePushForwardSubspaces_Internal(sp, pStart, pEnd);
+<a name="line134">134: </a>  <font color="#4169E1">return</font>(0);
+<a name="line135">135: </a>}
+
+<a name="line137">137: </a><strong><font color="#4169E1"><a name="PetscDualSpaceRefinedView_Ascii"></a>static <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscDualSpaceRefinedView_Ascii(<a href="../../../../../../docs/manualpages/FE/PetscDualSpace.html#PetscDualSpace">PetscDualSpace</a> sp, <a href="../../../../../../docs/manualpages/Viewer/PetscViewer.html#PetscViewer">PetscViewer</a> viewer)</font></strong>
+<a name="line138">138: </a>{
+<a name="line139">139: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>      ierr;
+
+<a name="line142">142: </a>  <font color="#4169E1">if</font> (sp-&gt;dm &amp;&amp; sp-&gt;pointSpaces) {
+<a name="line143">143: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> pStart, pEnd;
+<a name="line144">144: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> cStart, cEnd, c;
+
+<a name="line146">146: </a>    <a href="../../../../../../docs/manualpages/DMPLEX/DMPlexGetChart.html#DMPlexGetChart">DMPlexGetChart</a>(sp-&gt;dm, &amp;pStart, &amp;pEnd);
+<a name="line147">147: </a>    <a href="../../../../../../docs/manualpages/DMPLEX/DMPlexGetHeightStratum.html#DMPlexGetHeightStratum">DMPlexGetHeightStratum</a>(sp-&gt;dm, 0, &amp;cStart, &amp;cEnd);
+<a name="line148">148: </a>    <a href="../../../../../../docs/manualpages/Viewer/PetscViewerASCIIPrintf.html#PetscViewerASCIIPrintf">PetscViewerASCIIPrintf</a>(viewer, <font color="#666666">"Refined dual space:\n"</font>);
+<a name="line149">149: </a>    <a href="../../../../../../docs/manualpages/Viewer/PetscViewerASCIIPushTab.html#PetscViewerASCIIPushTab">PetscViewerASCIIPushTab</a>(viewer);
+<a name="line150">150: </a>    <font color="#4169E1">for</font> (c = cStart; c &lt; cEnd; c++) {
+<a name="line151">151: </a>      <font color="#4169E1">if</font> (!sp-&gt;pointSpaces[c-pStart]) {
+<a name="line152">152: </a>        <a href="../../../../../../docs/manualpages/Viewer/PetscViewerASCIIPrintf.html#PetscViewerASCIIPrintf">PetscViewerASCIIPrintf</a>(viewer, <font color="#666666">"Cell space %D not set yet\n"</font>, c);
+<a name="line153">153: </a>      } <font color="#4169E1">else</font> {
+<a name="line154">154: </a>        <a href="../../../../../../docs/manualpages/Viewer/PetscViewerASCIIPrintf.html#PetscViewerASCIIPrintf">PetscViewerASCIIPrintf</a>(viewer, <font color="#666666">"Cell space %D:ot set yet\n"</font>, c);
+<a name="line155">155: </a>        <a href="../../../../../../docs/manualpages/Viewer/PetscViewerASCIIPushTab.html#PetscViewerASCIIPushTab">PetscViewerASCIIPushTab</a>(viewer);
+<a name="line156">156: </a>        <a href="../../../../../../docs/manualpages/DUALSPACE/PetscDualSpaceView.html#PetscDualSpaceView">PetscDualSpaceView</a>(sp-&gt;pointSpaces[c-pStart],viewer);
+<a name="line157">157: </a>        <a href="../../../../../../docs/manualpages/Viewer/PetscViewerASCIIPopTab.html#PetscViewerASCIIPopTab">PetscViewerASCIIPopTab</a>(viewer);
+<a name="line158">158: </a>      }
+<a name="line159">159: </a>    }
+<a name="line160">160: </a>    <a href="../../../../../../docs/manualpages/Viewer/PetscViewerASCIIPopTab.html#PetscViewerASCIIPopTab">PetscViewerASCIIPopTab</a>(viewer);
+<a name="line161">161: </a>  } <font color="#4169E1">else</font> {
+<a name="line162">162: </a>    <a href="../../../../../../docs/manualpages/Viewer/PetscViewerASCIIPrintf.html#PetscViewerASCIIPrintf">PetscViewerASCIIPrintf</a>(viewer, <font color="#666666">"Refined dual space: (cell spaces not set yet)\n"</font>);
+<a name="line163">163: </a>  }
+<a name="line164">164: </a>  <font color="#4169E1">return</font>(0);
+<a name="line165">165: </a>}
+
+<a name="line167">167: </a><strong><font color="#4169E1"><a name="PetscDualSpaceView_Refined"></a>static <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscDualSpaceView_Refined(<a href="../../../../../../docs/manualpages/FE/PetscDualSpace.html#PetscDualSpace">PetscDualSpace</a> sp, <a href="../../../../../../docs/manualpages/Viewer/PetscViewer.html#PetscViewer">PetscViewer</a> viewer)</font></strong>
+<a name="line168">168: </a>{
+<a name="line169">169: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>      iascii;
+
+<a name="line175">175: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscObjectTypeCompare.html#PetscObjectTypeCompare">PetscObjectTypeCompare</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>) viewer, <a href="../../../../../../docs/manualpages/Viewer/PETSCVIEWERASCII.html#PETSCVIEWERASCII">PETSCVIEWERASCII</a>, &amp;iascii);
+<a name="line176">176: </a>  <font color="#4169E1">if</font> (iascii) {PetscDualSpaceRefinedView_Ascii(sp, viewer);}
+<a name="line177">177: </a>  <font color="#4169E1">return</font>(0);
+<a name="line178">178: </a>}
+
+<a name="line180">180: </a><strong><font color="#4169E1"><a name="PetscDualSpaceInitialize_Refined"></a>static <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscDualSpaceInitialize_Refined(<a href="../../../../../../docs/manualpages/FE/PetscDualSpace.html#PetscDualSpace">PetscDualSpace</a> sp)</font></strong>
+<a name="line181">181: </a>{
+<a name="line183">183: </a>  sp-&gt;ops-&gt;destroy              = PetscDualSpaceDestroy_Refined;
+<a name="line184">184: </a>  sp-&gt;ops-&gt;view                 = PetscDualSpaceView_Refined;
+<a name="line185">185: </a>  sp-&gt;ops-&gt;setfromoptions       = NULL;
+<a name="line186">186: </a>  sp-&gt;ops-&gt;duplicate            = NULL;
+<a name="line187">187: </a>  sp-&gt;ops-&gt;setup                = PetscDualSpaceSetUp_Refined;
+<a name="line188">188: </a>  sp-&gt;ops-&gt;createheightsubspace = NULL;
+<a name="line189">189: </a>  sp-&gt;ops-&gt;createpointsubspace  = NULL;
+<a name="line190">190: </a>  sp-&gt;ops-&gt;getsymmetries        = NULL;
+<a name="line191">191: </a>  sp-&gt;ops-&gt;apply                = <a href="../../../../../../docs/manualpages/DUALSPACE/PetscDualSpaceApplyDefault.html#PetscDualSpaceApplyDefault">PetscDualSpaceApplyDefault</a>;
+<a name="line192">192: </a>  sp-&gt;ops-&gt;applyall             = <a href="../../../../../../docs/manualpages/DUALSPACE/PetscDualSpaceApplyAllDefault.html#PetscDualSpaceApplyAllDefault">PetscDualSpaceApplyAllDefault</a>;
+<a name="line193">193: </a>  sp-&gt;ops-&gt;applyint             = <a href="../../../../../../docs/manualpages/DUALSPACE/PetscDualSpaceApplyInteriorDefault.html#PetscDualSpaceApplyInteriorDefault">PetscDualSpaceApplyInteriorDefault</a>;
+<a name="line194">194: </a>  sp-&gt;ops-&gt;createalldata        = <a href="../../../../../../docs/manualpages/DUALSPACE/PetscDualSpaceCreateAllDataDefault.html#PetscDualSpaceCreateAllDataDefault">PetscDualSpaceCreateAllDataDefault</a>;
+<a name="line195">195: </a>  sp-&gt;ops-&gt;createintdata        = <a href="../../../../../../docs/manualpages/DUALSPACE/PetscDualSpaceCreateInteriorDataDefault.html#PetscDualSpaceCreateInteriorDataDefault">PetscDualSpaceCreateInteriorDataDefault</a>;
+<a name="line196">196: </a>  <font color="#4169E1">return</font>(0);
+<a name="line197">197: </a>}
+
+<a name="line199">199: </a><font color="#B22222">/*MC</font>
+<a name="line200">200: </a><font color="#B22222">  <a href="../../../../../../docs/manualpages/DUALSPACE/PETSCDUALSPACEREFINED.html#PETSCDUALSPACEREFINED">PETSCDUALSPACEREFINED</a> = "refined" - A <a href="../../../../../../docs/manualpages/FE/PetscDualSpace.html#PetscDualSpace">PetscDualSpace</a> object that defines the joint dual space of a group of cells, usually refined from one larger cell</font>
+
+<a name="line202">202: </a><font color="#B22222">  Level: intermediate</font>
+
+<a name="line204">204: </a><font color="#B22222">.seealso: <a href="../../../../../../docs/manualpages/FE/PetscDualSpaceType.html#PetscDualSpaceType">PetscDualSpaceType</a>, <a href="../../../../../../docs/manualpages/DUALSPACE/PetscDualSpaceCreate.html#PetscDualSpaceCreate">PetscDualSpaceCreate</a>(), <a href="../../../../../../docs/manualpages/DUALSPACE/PetscDualSpaceSetType.html#PetscDualSpaceSetType">PetscDualSpaceSetType</a>()</font>
+<a name="line205">205: </a><font color="#B22222">M*/</font>
+<a name="line206">206: </a><strong><font color="#4169E1"><a name="PetscDualSpaceCreate_Refined"></a>PETSC_EXTERN <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscDualSpaceCreate_Refined(<a href="../../../../../../docs/manualpages/FE/PetscDualSpace.html#PetscDualSpace">PetscDualSpace</a> sp)</font></strong>
+<a name="line207">207: </a>{
+<a name="line208">208: </a>  PetscDualSpace_Refined *ref;
+<a name="line209">209: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>      ierr;
+
+<a name="line213">213: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscNewLog.html#PetscNewLog">PetscNewLog</a>(sp,&amp;ref);
+<a name="line214">214: </a>  sp-&gt;data = ref;
+
+<a name="line216">216: </a>  PetscDualSpaceInitialize_Refined(sp);
+<a name="line217">217: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscObjectComposeFunction.html#PetscObjectComposeFunction">PetscObjectComposeFunction</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>) sp, <font color="#666666">"PetscDualSpaceRefinedSetCellSpaces_C"</font>, PetscDualSpaceRefinedSetCellSpaces_Refined);
+<a name="line218">218: </a>  <font color="#4169E1">return</font>(0);
+<a name="line219">219: </a>}
+</pre>
+</body>
+
+</html>

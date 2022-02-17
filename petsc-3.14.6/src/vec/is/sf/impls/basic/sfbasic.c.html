@@ -1,0 +1,412 @@
+<center><a href="sfbasic.c">Actual source code: sfbasic.c</a></center><br>
+
+<html>
+<head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/src/vec/is/sf/impls/basic/sfbasic.c.html" />
+<title></title>
+<meta name="generator" content="c2html 0.9.4">
+<meta name="date" content="2021-03-30T16:49:53+00:00">
+</head>
+
+<body bgcolor="#FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 src/vec/is/sf/impls/basic/sfbasic.c.html "><small>Report Typos and Errors</small></a></div>
+<pre width="80">
+
+<a name="line2">  2: </a><font color="#A020F0">#include </font><font color="#666666">"petscsf.h"</font><font color="#A020F0"></font>
+<a name="line3">  3: </a>#include <A href="sfbasic.h.html">&lt;../src/vec/is/sf/impls/basic/sfbasic.h&gt;</A>
+<a name="line4">  4: </a>#include <A href="sfpack.h.html">&lt;../src/vec/is/sf/impls/basic/sfpack.h&gt;</A>
+
+<a name="line6">  6: </a><font color="#B22222">/*===================================================================================*/</font>
+<a name="line7">  7: </a><font color="#B22222">/*              SF public interface implementations                                  */</font>
+<a name="line8">  8: </a><font color="#B22222">/*===================================================================================*/</font>
+<a name="line9">  9: </a><strong><font color="#4169E1"><a name="PetscSFSetUp_Basic"></a>PETSC_INTERN <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscSFSetUp_Basic(<a href="../../../../../../docs/manualpages/PetscSF/PetscSF.html#PetscSF">PetscSF</a> sf)</font></strong>
+<a name="line10"> 10: </a>{
+<a name="line12"> 12: </a>  PetscSF_Basic  *bas = (PetscSF_Basic*)sf-&gt;data;
+<a name="line13"> 13: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       *rlengths,*ilengths,i;
+<a name="line14"> 14: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a>    rank,niranks,*iranks,tag;
+<a name="line15"> 15: </a>  <a href="../../../../../../docs/manualpages/Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</a>       comm;
+<a name="line16"> 16: </a>  MPI_Group      group;
+<a name="line17"> 17: </a>  MPI_Request    *rootreqs,*leafreqs;
+
+<a name="line20"> 20: </a>  <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_group.html#MPI_Comm_group">MPI_Comm_group</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,&amp;group);
+<a name="line21"> 21: </a>  <a href="../../../../../../docs/manualpages/PetscSF/PetscSFSetUpRanks.html#PetscSFSetUpRanks">PetscSFSetUpRanks</a>(sf,group);
+<a name="line22"> 22: </a>  <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Group_free.html#MPI_Group_free">MPI_Group_free</a>(&amp;group);
+<a name="line23"> 23: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscObjectGetComm.html#PetscObjectGetComm">PetscObjectGetComm</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)sf,&amp;comm);
+<a name="line24"> 24: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscObjectGetNewTag.html#PetscObjectGetNewTag">PetscObjectGetNewTag</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)sf,&amp;tag);
+<a name="line25"> 25: </a>  <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_rank.html#MPI_Comm_rank">MPI_Comm_rank</a>(comm,&amp;rank);
+<a name="line26"> 26: </a>  <font color="#B22222">/*</font>
+<a name="line27"> 27: </a><font color="#B22222">   * Inform roots about how many leaves and from which ranks</font>
+<a name="line28"> 28: </a><font color="#B22222">   */</font>
+<a name="line29"> 29: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscMalloc1.html#PetscMalloc1">PetscMalloc1</a>(sf-&gt;nranks,&amp;rlengths);
+<a name="line30"> 30: </a>  <font color="#B22222">/* Determine number, sending ranks and length of incoming */</font>
+<a name="line31"> 31: </a>  <font color="#4169E1">for</font> (i=0; i&lt;sf-&gt;nranks; i++) {
+<a name="line32"> 32: </a>    rlengths[i] = sf-&gt;roffset[i+1] - sf-&gt;roffset[i]; <font color="#B22222">/* Number of roots referenced by my leaves; for rank sf-&gt;ranks[i] */</font>
+<a name="line33"> 33: </a>  }
+<a name="line34"> 34: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscCommBuildTwoSided.html#PetscCommBuildTwoSided">PetscCommBuildTwoSided</a>(comm,1,<a href="../../../../../../docs/manualpages/Sys/MPIU_INT.html#MPIU_INT">MPIU_INT</a>,sf-&gt;nranks-sf-&gt;ndranks,sf-&gt;ranks+sf-&gt;ndranks,rlengths+sf-&gt;ndranks,&amp;niranks,&amp;iranks,(void**)&amp;ilengths);
+
+<a name="line36"> 36: </a>  <font color="#B22222">/* Sort iranks. See use of VecScatterGetRemoteOrdered_Private() in MatGetBrowsOfAoCols_MPIAIJ() on why.</font>
+<a name="line37"> 37: </a><font color="#B22222">     We could sort ranks there at the price of allocating extra working arrays. Presumably, niranks is</font>
+<a name="line38"> 38: </a><font color="#B22222">     small and the sorting is cheap.</font>
+<a name="line39"> 39: </a><font color="#B22222">   */</font>
+<a name="line40"> 40: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscSortMPIIntWithIntArray.html#PetscSortMPIIntWithIntArray">PetscSortMPIIntWithIntArray</a>(niranks,iranks,ilengths);
+
+<a name="line42"> 42: </a>  <font color="#B22222">/* Partition into distinguished and non-distinguished incoming ranks */</font>
+<a name="line43"> 43: </a>  bas-&gt;ndiranks = sf-&gt;ndranks;
+<a name="line44"> 44: </a>  bas-&gt;niranks = bas-&gt;ndiranks + niranks;
+<a name="line45"> 45: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscMalloc2.html#PetscMalloc2">PetscMalloc2</a>(bas-&gt;niranks,&amp;bas-&gt;iranks,bas-&gt;niranks+1,&amp;bas-&gt;ioffset);
+<a name="line46"> 46: </a>  bas-&gt;ioffset[0] = 0;
+<a name="line47"> 47: </a>  <font color="#4169E1">for</font> (i=0; i&lt;bas-&gt;ndiranks; i++) {
+<a name="line48"> 48: </a>    bas-&gt;iranks[i] = sf-&gt;ranks[i];
+<a name="line49"> 49: </a>    bas-&gt;ioffset[i+1] = bas-&gt;ioffset[i] + rlengths[i];
+<a name="line50"> 50: </a>  }
+<a name="line51"> 51: </a>  <font color="#4169E1">if</font> (bas-&gt;ndiranks &gt; 1 || (bas-&gt;ndiranks == 1 &amp;&amp; bas-&gt;iranks[0] != rank)) <a href="../../../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_PLIB,<font color="#666666">"Broken setup for shared ranks"</font>);
+<a name="line52"> 52: </a>  <font color="#4169E1">for</font> (; i&lt;bas-&gt;niranks; i++) {
+<a name="line53"> 53: </a>    bas-&gt;iranks[i] = iranks[i-bas-&gt;ndiranks];
+<a name="line54"> 54: </a>    bas-&gt;ioffset[i+1] = bas-&gt;ioffset[i] + ilengths[i-bas-&gt;ndiranks];
+<a name="line55"> 55: </a>  }
+<a name="line56"> 56: </a>  bas-&gt;itotal = bas-&gt;ioffset[i];
+<a name="line57"> 57: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(rlengths);
+<a name="line58"> 58: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(iranks);
+<a name="line59"> 59: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(ilengths);
+
+<a name="line61"> 61: </a>  <font color="#B22222">/* Send leaf identities to roots */</font>
+<a name="line62"> 62: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscMalloc1.html#PetscMalloc1">PetscMalloc1</a>(bas-&gt;itotal,&amp;bas-&gt;irootloc);
+<a name="line63"> 63: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscMalloc2.html#PetscMalloc2">PetscMalloc2</a>(bas-&gt;niranks-bas-&gt;ndiranks,&amp;rootreqs,sf-&gt;nranks-sf-&gt;ndranks,&amp;leafreqs);
+<a name="line64"> 64: </a>  <font color="#4169E1">for</font> (i=bas-&gt;ndiranks; i&lt;bas-&gt;niranks; i++) {
+<a name="line65"> 65: </a>    <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Irecv.html#MPI_Irecv">MPI_Irecv</a>(bas-&gt;irootloc+bas-&gt;ioffset[i],bas-&gt;ioffset[i+1]-bas-&gt;ioffset[i],<a href="../../../../../../docs/manualpages/Sys/MPIU_INT.html#MPIU_INT">MPIU_INT</a>,bas-&gt;iranks[i],tag,comm,&amp;rootreqs[i-bas-&gt;ndiranks]);
+<a name="line66"> 66: </a>  }
+<a name="line67"> 67: </a>  <font color="#4169E1">for</font> (i=0; i&lt;sf-&gt;nranks; i++) {
+<a name="line68"> 68: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a> npoints;
+<a name="line69"> 69: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscMPIIntCast.html#PetscMPIIntCast">PetscMPIIntCast</a>(sf-&gt;roffset[i+1] - sf-&gt;roffset[i],&amp;npoints);
+<a name="line70"> 70: </a>    <font color="#4169E1">if</font> (i &lt; sf-&gt;ndranks) {
+<a name="line71"> 71: </a>      <font color="#4169E1">if</font> (sf-&gt;ranks[i] != rank) <a href="../../../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_PLIB,<font color="#666666">"Cannot interpret distinguished leaf rank"</font>);
+<a name="line72"> 72: </a>      <font color="#4169E1">if</font> (bas-&gt;iranks[0] != rank) <a href="../../../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_PLIB,<font color="#666666">"Cannot interpret distinguished root rank"</font>);
+<a name="line73"> 73: </a>      <font color="#4169E1">if</font> (npoints != bas-&gt;ioffset[1]-bas-&gt;ioffset[0]) <a href="../../../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_PLIB,<font color="#666666">"Distinguished rank exchange has mismatched lengths"</font>);
+<a name="line74"> 74: </a>      <a href="../../../../../../docs/manualpages/Sys/PetscArraycpy.html#PetscArraycpy">PetscArraycpy</a>(bas-&gt;irootloc+bas-&gt;ioffset[0],sf-&gt;rremote+sf-&gt;roffset[i],npoints);
+<a name="line75"> 75: </a>      <font color="#4169E1">continue</font>;
+<a name="line76"> 76: </a>    }
+<a name="line77"> 77: </a>    <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Isend.html#MPI_Isend">MPI_Isend</a>(sf-&gt;rremote+sf-&gt;roffset[i],npoints,<a href="../../../../../../docs/manualpages/Sys/MPIU_INT.html#MPIU_INT">MPIU_INT</a>,sf-&gt;ranks[i],tag,comm,&amp;leafreqs[i-sf-&gt;ndranks]);
+<a name="line78"> 78: </a>  }
+<a name="line79"> 79: </a>  <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Waitall.html#MPI_Waitall">MPI_Waitall</a>(bas-&gt;niranks-bas-&gt;ndiranks,rootreqs,MPI_STATUSES_IGNORE);
+<a name="line80"> 80: </a>  <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Waitall.html#MPI_Waitall">MPI_Waitall</a>(sf-&gt;nranks-sf-&gt;ndranks,leafreqs,MPI_STATUSES_IGNORE);
+<a name="line81"> 81: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscFree2.html#PetscFree2">PetscFree2</a>(rootreqs,leafreqs);
+
+<a name="line83"> 83: </a>  sf-&gt;nleafreqs  = sf-&gt;nranks - sf-&gt;ndranks;
+<a name="line84"> 84: </a>  bas-&gt;nrootreqs = bas-&gt;niranks - bas-&gt;ndiranks;
+<a name="line85"> 85: </a>  sf-&gt;persistent = <a href="../../../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>;
+
+<a name="line87"> 87: </a>  <font color="#B22222">/* Setup fields related to packing */</font>
+<a name="line88"> 88: </a>  PetscSFSetUpPackFields(sf);
+<a name="line89"> 89: </a>  <font color="#4169E1">return</font>(0);
+<a name="line90"> 90: </a>}
+
+<a name="line92"> 92: </a><strong><font color="#4169E1"><a name="PetscSFReset_Basic"></a>PETSC_INTERN <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscSFReset_Basic(<a href="../../../../../../docs/manualpages/PetscSF/PetscSF.html#PetscSF">PetscSF</a> sf)</font></strong>
+<a name="line93"> 93: </a>{
+<a name="line94"> 94: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>    ierr;
+<a name="line95"> 95: </a>  PetscSF_Basic     *bas = (PetscSF_Basic*)sf-&gt;data;
+
+<a name="line98"> 98: </a>  <font color="#4169E1">if</font> (bas-&gt;inuse) <a href="../../../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)sf),PETSC_ERR_ARG_WRONGSTATE,<font color="#666666">"Outstanding operation has not been completed"</font>);
+<a name="line99"> 99: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscFree2.html#PetscFree2">PetscFree2</a>(bas-&gt;iranks,bas-&gt;ioffset);
+<a name="line100">100: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(bas-&gt;irootloc);
+<a name="line101">101: </a><font color="#A020F0">#if defined(PETSC_HAVE_DEVICE)</font>
+<a name="line102">102: </a>  <font color="#4169E1">for</font> (<a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> i=0; i&lt;2; i++) {PetscSFFree(sf,<a href="../../../../../../docs/manualpages/Sys/PetscMemType.html#PetscMemType">PETSC_MEMTYPE_DEVICE</a>,bas-&gt;irootloc_d[i]);}
+<a name="line103">103: </a><font color="#A020F0">#endif</font>
+<a name="line104">104: </a>  PetscSFLinkDestroy(sf,&amp;bas-&gt;avail);
+<a name="line105">105: </a>  PetscSFResetPackFields(sf);
+<a name="line106">106: </a>  <font color="#4169E1">return</font>(0);
+<a name="line107">107: </a>}
+
+<a name="line109">109: </a><strong><font color="#4169E1"><a name="PetscSFDestroy_Basic"></a>PETSC_INTERN <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscSFDestroy_Basic(<a href="../../../../../../docs/manualpages/PetscSF/PetscSF.html#PetscSF">PetscSF</a> sf)</font></strong>
+<a name="line110">110: </a>{
+
+<a name="line114">114: </a>  PetscSFReset_Basic(sf);
+<a name="line115">115: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(sf-&gt;data);
+<a name="line116">116: </a>  <font color="#4169E1">return</font>(0);
+<a name="line117">117: </a>}
+
+<a name="line119">119: </a><strong><font color="#4169E1"><a name="PetscSFView_Basic"></a>PETSC_INTERN <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscSFView_Basic(<a href="../../../../../../docs/manualpages/PetscSF/PetscSF.html#PetscSF">PetscSF</a> sf,<a href="../../../../../../docs/manualpages/Viewer/PetscViewer.html#PetscViewer">PetscViewer</a> viewer)</font></strong>
+<a name="line120">120: </a>{
+<a name="line122">122: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>      iascii;
+
+<a name="line125">125: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscObjectTypeCompare.html#PetscObjectTypeCompare">PetscObjectTypeCompare</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)viewer,<a href="../../../../../../docs/manualpages/Viewer/PETSCVIEWERASCII.html#PETSCVIEWERASCII">PETSCVIEWERASCII</a>,&amp;iascii);
+<a name="line126">126: </a>  <font color="#4169E1">if</font> (iascii) {<a href="../../../../../../docs/manualpages/Viewer/PetscViewerASCIIPrintf.html#PetscViewerASCIIPrintf">PetscViewerASCIIPrintf</a>(viewer,<font color="#666666">"  sort=%s\n"</font>,sf-&gt;rankorder ? <font color="#666666">"rank-order"</font> : <font color="#666666">"unordered"</font>);}
+<a name="line127">127: </a>  <font color="#4169E1">return</font>(0);
+<a name="line128">128: </a>}
+
+<a name="line130">130: </a><strong><font color="#4169E1"><a name="PetscSFBcastAndOpBegin_Basic"></a>static <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscSFBcastAndOpBegin_Basic(<a href="../../../../../../docs/manualpages/PetscSF/PetscSF.html#PetscSF">PetscSF</a> sf,MPI_Datatype unit,<a href="../../../../../../docs/manualpages/Sys/PetscMemType.html#PetscMemType">PetscMemType</a> rootmtype,const void *rootdata,<a href="../../../../../../docs/manualpages/Sys/PetscMemType.html#PetscMemType">PetscMemType</a> leafmtype,void *leafdata,MPI_Op op)</font></strong>
+<a name="line131">131: </a>{
+<a name="line132">132: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>    ierr;
+<a name="line133">133: </a>  PetscSFLink       link = NULL;
+<a name="line134">134: </a>  MPI_Request       *rootreqs = NULL,*leafreqs = NULL;
+<a name="line135">135: </a>  PetscSF_Basic     *bas = (PetscSF_Basic*)sf-&gt;data;
+
+<a name="line138">138: </a>  <font color="#B22222">/* Create a communication link, which provides buffers &amp; MPI requests etc */</font>
+<a name="line139">139: </a>  PetscSFLinkCreate(sf,unit,rootmtype,rootdata,leafmtype,leafdata,op,PETSCSF_BCAST,&amp;link);
+<a name="line140">140: </a>  <font color="#B22222">/* Get MPI requests from the link. We do not need buffers explicitly since we use persistent MPI */</font>
+<a name="line141">141: </a>  PetscSFLinkGetMPIBuffersAndRequests(sf,link,PETSCSF_../../../../../..2LEAF,NULL,NULL,&amp;rootreqs,&amp;leafreqs);
+<a name="line142">142: </a>  <font color="#B22222">/* Post Irecv for remote */</font>
+<a name="line143">143: </a>  MPI_Startall_irecv(sf-&gt;leafbuflen[PETSCSF_REMOTE],unit,sf-&gt;nleafreqs,leafreqs);
+<a name="line144">144: </a>  <font color="#B22222">/* Pack rootdata and do Isend for remote */</font>
+<a name="line145">145: </a>  PetscSFLinkPackRootData(sf,link,PETSCSF_REMOTE,rootdata);
+<a name="line146">146: </a>  MPI_Startall_isend(bas-&gt;rootbuflen[PETSCSF_REMOTE],unit,bas-&gt;nrootreqs,rootreqs);
+<a name="line147">147: </a>  <font color="#B22222">/* Do local BcastAndOp, which overlaps with the irecv/isend above */</font>
+<a name="line148">148: </a>  PetscSFLinkBcastAndOpLocal(sf,link,rootdata,leafdata,op);
+<a name="line149">149: </a>  <font color="#4169E1">return</font>(0);
+<a name="line150">150: </a>}
+
+<a name="line152">152: </a><strong><font color="#4169E1"><a name="PetscSFBcastAndOpEnd_Basic"></a>PETSC_INTERN <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscSFBcastAndOpEnd_Basic(<a href="../../../../../../docs/manualpages/PetscSF/PetscSF.html#PetscSF">PetscSF</a> sf,MPI_Datatype unit,const void *rootdata,void *leafdata,MPI_Op op)</font></strong>
+<a name="line153">153: </a>{
+<a name="line154">154: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>    ierr;
+<a name="line155">155: </a>  PetscSFLink       link = NULL;
+
+<a name="line158">158: </a>  <font color="#B22222">/* Retrieve the link used in XxxBegin() with root/leafdata as key */</font>
+<a name="line159">159: </a>  PetscSFLinkGetInUse(sf,unit,rootdata,leafdata,<a href="../../../../../../docs/manualpages/Sys/PetscCopyMode.html#PetscCopyMode">PETSC_OWN_POINTER</a>,&amp;link);
+<a name="line160">160: </a>  <font color="#B22222">/* Wait for the completion of mpi */</font>
+<a name="line161">161: </a>  PetscSFLinkMPIWaitall(sf,link,PETSCSF_../../../../../..2LEAF);
+<a name="line162">162: </a>  <font color="#B22222">/* Unpack leafdata and reclaim the link */</font>
+<a name="line163">163: </a>  PetscSFLinkUnpackLeafData(sf,link,PETSCSF_REMOTE,leafdata,op);
+<a name="line164">164: </a>  PetscSFLinkReclaim(sf,&amp;link);
+<a name="line165">165: </a>  <font color="#4169E1">return</font>(0);
+<a name="line166">166: </a>}
+
+<a name="line168">168: </a><font color="#B22222">/* Shared by ReduceBegin and FetchAndOpBegin */</font>
+<a name="line169">169: </a><strong><font color="#4169E1"><a name="PetscSFLeafToRootBegin_Basic"></a>PETSC_STATIC_INLINE <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscSFLeafToRootBegin_Basic(<a href="../../../../../../docs/manualpages/PetscSF/PetscSF.html#PetscSF">PetscSF</a> sf,MPI_Datatype unit,<a href="../../../../../../docs/manualpages/Sys/PetscMemType.html#PetscMemType">PetscMemType</a> leafmtype,const void *leafdata,<a href="../../../../../../docs/manualpages/Sys/PetscMemType.html#PetscMemType">PetscMemType</a> rootmtype,void *rootdata,MPI_Op op,PetscSFOperation sfop,PetscSFLink *out)</font></strong>
+<a name="line170">170: </a>{
+<a name="line171">171: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>    ierr;
+<a name="line172">172: </a>  PetscSFLink       link;
+<a name="line173">173: </a>  PetscSF_Basic     *bas = (PetscSF_Basic*)sf-&gt;data;
+<a name="line174">174: </a>  MPI_Request       *rootreqs = NULL,*leafreqs = NULL;
+
+<a name="line177">177: </a>  PetscSFLinkCreate(sf,unit,rootmtype,rootdata,leafmtype,leafdata,op,sfop,&amp;link);
+<a name="line178">178: </a>  PetscSFLinkGetMPIBuffersAndRequests(sf,link,PETSCSF_LEAF2../../../../../..,NULL,NULL,&amp;rootreqs,&amp;leafreqs);
+<a name="line179">179: </a>  MPI_Startall_irecv(bas-&gt;rootbuflen[PETSCSF_REMOTE],unit,bas-&gt;nrootreqs,rootreqs);
+<a name="line180">180: </a>  PetscSFLinkPackLeafData(sf,link,PETSCSF_REMOTE,leafdata);
+<a name="line181">181: </a>  MPI_Startall_isend(sf-&gt;leafbuflen[PETSCSF_REMOTE],unit,sf-&gt;nleafreqs,leafreqs);
+<a name="line182">182: </a>  *out = link;
+<a name="line183">183: </a>  <font color="#4169E1">return</font>(0);
+<a name="line184">184: </a>}
+
+<a name="line186">186: </a><font color="#B22222">/* leaf -&gt; root with reduction */</font>
+<a name="line187">187: </a><strong><font color="#4169E1"><a name="PetscSFReduceBegin_Basic"></a>static <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscSFReduceBegin_Basic(<a href="../../../../../../docs/manualpages/PetscSF/PetscSF.html#PetscSF">PetscSF</a> sf,MPI_Datatype unit,<a href="../../../../../../docs/manualpages/Sys/PetscMemType.html#PetscMemType">PetscMemType</a> leafmtype,const void *leafdata,<a href="../../../../../../docs/manualpages/Sys/PetscMemType.html#PetscMemType">PetscMemType</a> rootmtype,void *rootdata,MPI_Op op)</font></strong>
+<a name="line188">188: </a>{
+<a name="line189">189: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>    ierr;
+<a name="line190">190: </a>  PetscSFLink       link = NULL;
+
+<a name="line193">193: </a>  PetscSFLeafToRootBegin_Basic(sf,unit,leafmtype,leafdata,rootmtype,rootdata,op,PETSCSF_REDUCE,&amp;link);
+<a name="line194">194: </a>  PetscSFLinkReduceLocal(sf,link,leafdata,rootdata,op);
+<a name="line195">195: </a>  <font color="#4169E1">return</font>(0);
+<a name="line196">196: </a>}
+
+<a name="line198">198: </a><strong><font color="#4169E1"><a name="PetscSFReduceEnd_Basic"></a>PETSC_INTERN <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscSFReduceEnd_Basic(<a href="../../../../../../docs/manualpages/PetscSF/PetscSF.html#PetscSF">PetscSF</a> sf,MPI_Datatype unit,const void *leafdata,void *rootdata,MPI_Op op)</font></strong>
+<a name="line199">199: </a>{
+<a name="line200">200: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>    ierr;
+<a name="line201">201: </a>  PetscSFLink       link = NULL;
+
+<a name="line204">204: </a>  PetscSFLinkGetInUse(sf,unit,rootdata,leafdata,<a href="../../../../../../docs/manualpages/Sys/PetscCopyMode.html#PetscCopyMode">PETSC_OWN_POINTER</a>,&amp;link);
+<a name="line205">205: </a>  PetscSFLinkMPIWaitall(sf,link,PETSCSF_LEAF2../../../../../..);
+<a name="line206">206: </a>  PetscSFLinkUnpackRootData(sf,link,PETSCSF_REMOTE,rootdata,op);
+<a name="line207">207: </a>  PetscSFLinkReclaim(sf,&amp;link);
+<a name="line208">208: </a>  <font color="#4169E1">return</font>(0);
+<a name="line209">209: </a>}
+
+<a name="line211">211: </a><strong><font color="#4169E1"><a name="PetscSFFetchAndOpBegin_Basic"></a>PETSC_INTERN <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscSFFetchAndOpBegin_Basic(<a href="../../../../../../docs/manualpages/PetscSF/PetscSF.html#PetscSF">PetscSF</a> sf,MPI_Datatype unit,<a href="../../../../../../docs/manualpages/Sys/PetscMemType.html#PetscMemType">PetscMemType</a> rootmtype,void *rootdata,<a href="../../../../../../docs/manualpages/Sys/PetscMemType.html#PetscMemType">PetscMemType</a> leafmtype,const void *leafdata,void *leafupdate,MPI_Op op)</font></strong>
+<a name="line212">212: </a>{
+<a name="line213">213: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>    ierr;
+<a name="line214">214: </a>  PetscSFLink       link = NULL;
+
+<a name="line217">217: </a>  PetscSFLeafToRootBegin_Basic(sf,unit,leafmtype,leafdata,rootmtype,rootdata,op,PETSCSF_FETCH,&amp;link);
+<a name="line218">218: </a>  PetscSFLinkFetchAndOpLocal(sf,link,rootdata,leafdata,leafupdate,op);
+<a name="line219">219: </a>  <font color="#4169E1">return</font>(0);
+<a name="line220">220: </a>}
+
+<a name="line222">222: </a><strong><font color="#4169E1"><a name="PetscSFFetchAndOpEnd_Basic"></a>static <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscSFFetchAndOpEnd_Basic(<a href="../../../../../../docs/manualpages/PetscSF/PetscSF.html#PetscSF">PetscSF</a> sf,MPI_Datatype unit,void *rootdata,const void *leafdata,void *leafupdate,MPI_Op op)</font></strong>
+<a name="line223">223: </a>{
+<a name="line224">224: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>    ierr;
+<a name="line225">225: </a>  PetscSFLink       link = NULL;
+<a name="line226">226: </a>  MPI_Request       *rootreqs = NULL,*leafreqs = NULL;
+<a name="line227">227: </a>  PetscSF_Basic     *bas = (PetscSF_Basic*)sf-&gt;data;
+
+<a name="line230">230: </a>  PetscSFLinkGetInUse(sf,unit,rootdata,leafdata,<a href="../../../../../../docs/manualpages/Sys/PetscCopyMode.html#PetscCopyMode">PETSC_OWN_POINTER</a>,&amp;link);
+<a name="line231">231: </a>  <font color="#B22222">/* This implementation could be changed to unpack as receives arrive, at the cost of non-determinism */</font>
+<a name="line232">232: </a>  PetscSFLinkMPIWaitall(sf,link,PETSCSF_LEAF2../../../../../..);
+<a name="line233">233: </a>  <font color="#B22222">/* Do fetch-and-op, the (remote) update results are in rootbuf */</font>
+<a name="line234">234: </a>  PetscSFLinkFetchRootData(sf,link,PETSCSF_REMOTE,rootdata,op);
+
+<a name="line236">236: </a>  <font color="#B22222">/* Bcast rootbuf to leafupdate */</font>
+<a name="line237">237: </a>  PetscSFLinkGetMPIBuffersAndRequests(sf,link,PETSCSF_../../../../../..2LEAF,NULL,NULL,&amp;rootreqs,&amp;leafreqs);
+<a name="line238">238: </a>  <font color="#B22222">/* Post leaf receives and root sends */</font>
+<a name="line239">239: </a>  MPI_Startall_irecv(sf-&gt;leafbuflen[PETSCSF_REMOTE],unit,sf-&gt;nleafreqs,leafreqs);
+<a name="line240">240: </a>  MPI_Startall_isend(bas-&gt;rootbuflen[PETSCSF_REMOTE],unit,bas-&gt;nrootreqs,rootreqs);
+<a name="line241">241: </a>  <font color="#B22222">/* Unpack and insert fetched data into leaves */</font>
+<a name="line242">242: </a>  PetscSFLinkMPIWaitall(sf,link,PETSCSF_../../../../../..2LEAF);
+<a name="line243">243: </a>  PetscSFLinkUnpackLeafData(sf,link,PETSCSF_REMOTE,leafupdate,MPIU_REPLACE);
+<a name="line244">244: </a>  PetscSFLinkReclaim(sf,&amp;link);
+<a name="line245">245: </a>  <font color="#4169E1">return</font>(0);
+<a name="line246">246: </a>}
+
+<a name="line248">248: </a><strong><font color="#4169E1"><a name="PetscSFGetLeafRanks_Basic"></a>PETSC_INTERN <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscSFGetLeafRanks_Basic(<a href="../../../../../../docs/manualpages/PetscSF/PetscSF.html#PetscSF">PetscSF</a> sf,<a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *niranks,const <a href="../../../../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a> **iranks,const <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> **ioffset,const <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> **irootloc)</font></strong>
+<a name="line249">249: </a>{
+<a name="line250">250: </a>  PetscSF_Basic *bas = (PetscSF_Basic*)sf-&gt;data;
+
+<a name="line253">253: </a>  <font color="#4169E1">if</font> (niranks)  *niranks  = bas-&gt;niranks;
+<a name="line254">254: </a>  <font color="#4169E1">if</font> (iranks)   *iranks   = bas-&gt;iranks;
+<a name="line255">255: </a>  <font color="#4169E1">if</font> (ioffset)  *ioffset  = bas-&gt;ioffset;
+<a name="line256">256: </a>  <font color="#4169E1">if</font> (irootloc) *irootloc = bas-&gt;irootloc;
+<a name="line257">257: </a>  <font color="#4169E1">return</font>(0);
+<a name="line258">258: </a>}
+
+<a name="line260">260: </a><font color="#B22222">/* An optimized <a href="../../../../../../docs/manualpages/PetscSF/PetscSFCreateEmbeddedSF.html#PetscSFCreateEmbeddedSF">PetscSFCreateEmbeddedSF</a>. We aggresively make use of the established communication on sf.</font>
+<a name="line261">261: </a><font color="#B22222">   We need one bcast on sf, and no communication anymore to build the embedded sf. Note that selected[]</font>
+<a name="line262">262: </a><font color="#B22222">   was sorted before calling the routine.</font>
+<a name="line263">263: </a><font color="#B22222"> */</font>
+<a name="line264">264: </a><strong><font color="#4169E1"><a name="PetscSFCreateEmbeddedSF_Basic"></a>PETSC_INTERN <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscSFCreateEmbeddedSF_Basic(<a href="../../../../../../docs/manualpages/PetscSF/PetscSF.html#PetscSF">PetscSF</a> sf,<a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> nselected,const <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *selected,<a href="../../../../../../docs/manualpages/PetscSF/PetscSF.html#PetscSF">PetscSF</a> *newsf)</font></strong>
+<a name="line265">265: </a>{
+<a name="line266">266: </a>  <a href="../../../../../../docs/manualpages/PetscSF/PetscSF.html#PetscSF">PetscSF</a>           esf;
+<a name="line267">267: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>          esf_nranks,esf_ndranks,*esf_roffset,*esf_rmine,*esf_rremote;
+<a name="line268">268: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>          i,j,p,q,nroots,esf_nleaves,*new_ilocal,nranks,ndranks,niranks,ndiranks,minleaf,maxleaf,maxlocal;
+<a name="line269">269: </a>  char              *rootdata,*leafdata,*leafmem; <font color="#B22222">/* Only stores 0 or 1, so we can save memory with char */</font>
+<a name="line270">270: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a>       *esf_ranks;
+<a name="line271">271: </a>  const <a href="../../../../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a> *ranks,*iranks;
+<a name="line272">272: </a>  const <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>    *roffset,*rmine,*rremote,*ioffset,*irootloc;
+<a name="line273">273: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>         connected;
+<a name="line274">274: </a>  <a href="../../../../../../docs/manualpages/PetscSF/PetscSFNode.html#PetscSFNode">PetscSFNode</a>       *new_iremote;
+<a name="line275">275: </a>  PetscSF_Basic     *bas;
+<a name="line276">276: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>    ierr;
+
+<a name="line279">279: </a>  <a href="../../../../../../docs/manualpages/PetscSF/PetscSFCreate.html#PetscSFCreate">PetscSFCreate</a>(<a href="../../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)sf),&amp;esf);
+<a name="line280">280: </a>  <a href="../../../../../../docs/manualpages/PetscSF/PetscSFSetFromOptions.html#PetscSFSetFromOptions">PetscSFSetFromOptions</a>(esf);
+<a name="line281">281: </a>  <a href="../../../../../../docs/manualpages/PetscSF/PetscSFSetType.html#PetscSFSetType">PetscSFSetType</a>(esf,PETSCSFBASIC); <font color="#B22222">/* This optimized routine can only create a basic sf */</font>
+
+<a name="line283">283: </a>  <font color="#B22222">/* Find out which leaves are still connected to roots in the embedded sf by doing a Bcast */</font>
+<a name="line284">284: </a>  <a href="../../../../../../docs/manualpages/PetscSF/PetscSFGetGraph.html#PetscSFGetGraph">PetscSFGetGraph</a>(sf,&amp;nroots,NULL,NULL,NULL);
+<a name="line285">285: </a>  <a href="../../../../../../docs/manualpages/PetscSF/PetscSFGetLeafRange.html#PetscSFGetLeafRange">PetscSFGetLeafRange</a>(sf,&amp;minleaf,&amp;maxleaf);
+<a name="line286">286: </a>  maxlocal = maxleaf - minleaf + 1;
+<a name="line287">287: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscCalloc2.html#PetscCalloc2">PetscCalloc2</a>(nroots,&amp;rootdata,maxlocal,&amp;leafmem);
+<a name="line288">288: </a>  leafdata = leafmem - minleaf;
+<a name="line289">289: </a>  <font color="#B22222">/* Tag selected roots */</font>
+<a name="line290">290: </a>  <font color="#4169E1">for</font> (i=0; i&lt;nselected; ++i) rootdata[selected[i]] = 1;
+
+<a name="line292">292: </a>  <a href="../../../../../../docs/manualpages/PetscSF/PetscSFBcastBegin.html#PetscSFBcastBegin">PetscSFBcastBegin</a>(sf,MPI_CHAR,rootdata,leafdata);
+<a name="line293">293: </a>  <a href="../../../../../../docs/manualpages/PetscSF/PetscSFBcastEnd.html#PetscSFBcastEnd">PetscSFBcastEnd</a>(sf,MPI_CHAR,rootdata,leafdata);
+<a name="line294">294: </a>  PetscSFGetLeafInfo_Basic(sf,&amp;nranks,&amp;ndranks,&amp;ranks,&amp;roffset,&amp;rmine,&amp;rremote); <font color="#B22222">/* Get send info */</font>
+<a name="line295">295: </a>  esf_nranks = esf_ndranks = esf_nleaves = 0;
+<a name="line296">296: </a>  <font color="#4169E1">for</font> (i=0; i&lt;nranks; i++) {
+<a name="line297">297: </a>    connected = <a href="../../../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>; <font color="#B22222">/* Is this process still connected to this remote root rank? */</font>
+<a name="line298">298: </a>    <font color="#4169E1">for</font> (j=roffset[i]; j&lt;roffset[i+1]; j++) {<font color="#4169E1">if</font> (leafdata[rmine[j]]) {esf_nleaves++; connected = <a href="../../../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>;}}
+<a name="line299">299: </a>    <font color="#4169E1">if</font> (connected) {esf_nranks++; <font color="#4169E1">if</font> (i &lt; ndranks) esf_ndranks++;}
+<a name="line300">300: </a>  }
+
+<a name="line302">302: </a>  <font color="#B22222">/* Set graph of esf and also set up its outgoing communication (i.e., send info), which is usually done by <a href="../../../../../../docs/manualpages/PetscSF/PetscSFSetUpRanks.html#PetscSFSetUpRanks">PetscSFSetUpRanks</a> */</font>
+<a name="line303">303: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscMalloc1.html#PetscMalloc1">PetscMalloc1</a>(esf_nleaves,&amp;new_ilocal);
+<a name="line304">304: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscMalloc1.html#PetscMalloc1">PetscMalloc1</a>(esf_nleaves,&amp;new_iremote);
+<a name="line305">305: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscMalloc4.html#PetscMalloc4">PetscMalloc4</a>(esf_nranks,&amp;esf_ranks,esf_nranks+1,&amp;esf_roffset,esf_nleaves,&amp;esf_rmine,esf_nleaves,&amp;esf_rremote);
+<a name="line306">306: </a>  p    = 0; <font color="#B22222">/* Counter for connected root ranks */</font>
+<a name="line307">307: </a>  q    = 0; <font color="#B22222">/* Counter for connected leaves */</font>
+<a name="line308">308: </a>  esf_roffset[0] = 0;
+<a name="line309">309: </a>  <font color="#4169E1">for</font> (i=0; i&lt;nranks; i++) { <font color="#B22222">/* Scan leaf data again to fill esf arrays */</font>
+<a name="line310">310: </a>    connected = <a href="../../../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line311">311: </a>    <font color="#4169E1">for</font> (j=roffset[i]; j&lt;roffset[i+1]; j++) {
+<a name="line312">312: </a>      <font color="#4169E1">if</font> (leafdata[rmine[j]]) {
+<a name="line313">313: </a>        esf_rmine[q]         = new_ilocal[q] = rmine[j];
+<a name="line314">314: </a>        esf_rremote[q]       = rremote[j];
+<a name="line315">315: </a>        new_iremote[q].index = rremote[j];
+<a name="line316">316: </a>        new_iremote[q].rank  = ranks[i];
+<a name="line317">317: </a>        connected            = <a href="../../../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>;
+<a name="line318">318: </a>        q++;
+<a name="line319">319: </a>      }
+<a name="line320">320: </a>    }
+<a name="line321">321: </a>    <font color="#4169E1">if</font> (connected) {
+<a name="line322">322: </a>      esf_ranks[p]     = ranks[i];
+<a name="line323">323: </a>      esf_roffset[p+1] = q;
+<a name="line324">324: </a>      p++;
+<a name="line325">325: </a>    }
+<a name="line326">326: </a>  }
+
+<a name="line328">328: </a>  <font color="#B22222">/* SetGraph internally resets the SF, so we only set its fields after the call */</font>
+<a name="line329">329: </a>  <a href="../../../../../../docs/manualpages/PetscSF/PetscSFSetGraph.html#PetscSFSetGraph">PetscSFSetGraph</a>(esf,nroots,esf_nleaves,new_ilocal,<a href="../../../../../../docs/manualpages/Sys/PetscCopyMode.html#PetscCopyMode">PETSC_OWN_POINTER</a>,new_iremote,<a href="../../../../../../docs/manualpages/Sys/PetscCopyMode.html#PetscCopyMode">PETSC_OWN_POINTER</a>);
+<a name="line330">330: </a>  esf-&gt;nranks    = esf_nranks;
+<a name="line331">331: </a>  esf-&gt;ndranks   = esf_ndranks;
+<a name="line332">332: </a>  esf-&gt;ranks     = esf_ranks;
+<a name="line333">333: </a>  esf-&gt;roffset   = esf_roffset;
+<a name="line334">334: </a>  esf-&gt;rmine     = esf_rmine;
+<a name="line335">335: </a>  esf-&gt;rremote   = esf_rremote;
+<a name="line336">336: </a>  esf-&gt;nleafreqs = esf_nranks - esf_ndranks;
+
+<a name="line338">338: </a>  <font color="#B22222">/* Set up the incoming communication (i.e., recv info) stored in esf-&gt;data, which is usually done by PetscSFSetUp_Basic */</font>
+<a name="line339">339: </a>  bas  = (PetscSF_Basic*)esf-&gt;data;
+<a name="line340">340: </a>  PetscSFGetRootInfo_Basic(sf,&amp;niranks,&amp;ndiranks,&amp;iranks,&amp;ioffset,&amp;irootloc); <font color="#B22222">/* Get recv info */</font>
+<a name="line341">341: </a>  <font color="#B22222">/* Embedded sf always has simpler communication than the original one. We might allocate longer arrays than needed here. But we</font>
+<a name="line342">342: </a><font color="#B22222">     we do not care since these arrays are usually short. The benefit is we can fill these arrays by just parsing irootloc once.</font>
+<a name="line343">343: </a><font color="#B22222">   */</font>
+<a name="line344">344: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscMalloc2.html#PetscMalloc2">PetscMalloc2</a>(niranks,&amp;bas-&gt;iranks,niranks+1,&amp;bas-&gt;ioffset);
+<a name="line345">345: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscMalloc1.html#PetscMalloc1">PetscMalloc1</a>(ioffset[niranks],&amp;bas-&gt;irootloc);
+<a name="line346">346: </a>  bas-&gt;niranks = bas-&gt;ndiranks = bas-&gt;ioffset[0] = 0;
+<a name="line347">347: </a>  p = 0; <font color="#B22222">/* Counter for connected leaf ranks */</font>
+<a name="line348">348: </a>  q = 0; <font color="#B22222">/* Counter for connected roots */</font>
+<a name="line349">349: </a>  <font color="#4169E1">for</font> (i=0; i&lt;niranks; i++) {
+<a name="line350">350: </a>    connected = <a href="../../../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>; <font color="#B22222">/* Is the current process still connected to this remote leaf rank? */</font>
+<a name="line351">351: </a>    <font color="#4169E1">for</font> (j=ioffset[i]; j&lt;ioffset[i+1]; j++) {
+<a name="line352">352: </a>      <font color="#4169E1">if</font> (rootdata[irootloc[j]]) {
+<a name="line353">353: </a>        bas-&gt;irootloc[q++] = irootloc[j];
+<a name="line354">354: </a>        connected = <a href="../../../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>;
+<a name="line355">355: </a>      }
+<a name="line356">356: </a>    }
+<a name="line357">357: </a>    <font color="#4169E1">if</font> (connected) {
+<a name="line358">358: </a>      bas-&gt;niranks++;
+<a name="line359">359: </a>      <font color="#4169E1">if</font> (i&lt;ndiranks) bas-&gt;ndiranks++; <font color="#B22222">/* Note that order of ranks (including distinguished ranks) is kept */</font>
+<a name="line360">360: </a>      bas-&gt;iranks[p]    = iranks[i];
+<a name="line361">361: </a>      bas-&gt;ioffset[p+1] = q;
+<a name="line362">362: </a>      p++;
+<a name="line363">363: </a>    }
+<a name="line364">364: </a>  }
+<a name="line365">365: </a>  bas-&gt;itotal     = q;
+<a name="line366">366: </a>  bas-&gt;nrootreqs  = bas-&gt;niranks - bas-&gt;ndiranks;
+<a name="line367">367: </a>  esf-&gt;persistent = <a href="../../../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>;
+<a name="line368">368: </a>  <font color="#B22222">/* Setup packing related fields */</font>
+<a name="line369">369: </a>  PetscSFSetUpPackFields(esf);
+
+<a name="line371">371: </a>  <font color="#B22222">/* Copy from <a href="../../../../../../docs/manualpages/PetscSF/PetscSFSetUp.html#PetscSFSetUp">PetscSFSetUp</a>(), since this method wants to skip <a href="../../../../../../docs/manualpages/PetscSF/PetscSFSetUp.html#PetscSFSetUp">PetscSFSetUp</a>(). */</font>
+<a name="line372">372: </a><font color="#A020F0">#if defined(PETSC_HAVE_CUDA)</font>
+<a name="line373">373: </a>  <font color="#4169E1">if</font> (esf-&gt;backend == PETSCSF_BACKEND_CUDA) {
+<a name="line374">374: </a>    esf-&gt;ops-&gt;Malloc = PetscSFMalloc_Cuda;
+<a name="line375">375: </a>    esf-&gt;ops-&gt;Free   = PetscSFFree_Cuda;
+<a name="line376">376: </a>  }
+<a name="line377">377: </a><font color="#A020F0">#endif</font>
+
+<a name="line379">379: </a><font color="#A020F0">#if defined(PETSC_HAVE_KOKKOS)</font>
+<a name="line380">380: </a>  <font color="#4169E1">if</font> (esf-&gt;backend == PETSCSF_BACKEND_KOKKOS) {
+<a name="line381">381: </a>    esf-&gt;ops-&gt;Malloc = PetscSFMalloc_Kokkos;
+<a name="line382">382: </a>    esf-&gt;ops-&gt;Free   = PetscSFFree_Kokkos;
+<a name="line383">383: </a>  }
+<a name="line384">384: </a><font color="#A020F0">#endif</font>
+<a name="line385">385: </a>  esf-&gt;setupcalled = <a href="../../../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>; <font color="#B22222">/* We have done setup ourselves! */</font>
+<a name="line386">386: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscFree2.html#PetscFree2">PetscFree2</a>(rootdata,leafmem);
+<a name="line387">387: </a>  *newsf = esf;
+<a name="line388">388: </a>  <font color="#4169E1">return</font>(0);
+<a name="line389">389: </a>}
+
+<a name="line391">391: </a><strong><font color="#4169E1"><a name="PetscSFCreate_Basic"></a>PETSC_EXTERN <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscSFCreate_Basic(<a href="../../../../../../docs/manualpages/PetscSF/PetscSF.html#PetscSF">PetscSF</a> sf)</font></strong>
+<a name="line392">392: </a>{
+<a name="line393">393: </a>  PetscSF_Basic  *dat;
+
+<a name="line397">397: </a>  sf-&gt;ops-&gt;SetUp                = PetscSFSetUp_Basic;
+<a name="line398">398: </a>  sf-&gt;ops-&gt;Reset                = PetscSFReset_Basic;
+<a name="line399">399: </a>  sf-&gt;ops-&gt;Destroy              = PetscSFDestroy_Basic;
+<a name="line400">400: </a>  sf-&gt;ops-&gt;View                 = PetscSFView_Basic;
+<a name="line401">401: </a>  sf-&gt;ops-&gt;BcastAndOpBegin      = PetscSFBcastAndOpBegin_Basic;
+<a name="line402">402: </a>  sf-&gt;ops-&gt;BcastAndOpEnd        = PetscSFBcastAndOpEnd_Basic;
+<a name="line403">403: </a>  sf-&gt;ops-&gt;ReduceBegin          = PetscSFReduceBegin_Basic;
+<a name="line404">404: </a>  sf-&gt;ops-&gt;ReduceEnd            = PetscSFReduceEnd_Basic;
+<a name="line405">405: </a>  sf-&gt;ops-&gt;FetchAndOpBegin      = PetscSFFetchAndOpBegin_Basic;
+<a name="line406">406: </a>  sf-&gt;ops-&gt;FetchAndOpEnd        = PetscSFFetchAndOpEnd_Basic;
+<a name="line407">407: </a>  sf-&gt;ops-&gt;GetLeafRanks         = PetscSFGetLeafRanks_Basic;
+<a name="line408">408: </a>  sf-&gt;ops-&gt;CreateEmbeddedSF     = PetscSFCreateEmbeddedSF_Basic;
+
+<a name="line410">410: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscNewLog.html#PetscNewLog">PetscNewLog</a>(sf,&amp;dat);
+<a name="line411">411: </a>  sf-&gt;data = (void*)dat;
+<a name="line412">412: </a>  <font color="#4169E1">return</font>(0);
+<a name="line413">413: </a>}
+</pre>
+</body>
+
+</html>

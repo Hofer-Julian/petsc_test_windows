@@ -1,0 +1,35 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscElementalFinalizePackage.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>PetscElementalFinalizePackage</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/Sys/PetscElementalFinalizePackage.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="PetscElementalFinalizePackage"><H1>PetscElementalFinalizePackage</H1></A>
+Finalize Elemental package 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../Sys/PetscElementalFinalizePackage.html#PetscElementalFinalizePackage">PetscElementalFinalizePackage</A>(void)
+</PRE>
+Collective on MPI_COMM_WORLD, not <A HREF="../Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</A>
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">Note</FONT></H3>
+Can be called outside of <A HREF="../Sys/PetscInitialize.html#PetscInitialize">PetscInitialize</A>() and <A HREF="../Sys/PetscFinalize.html#PetscFinalize">PetscFinalize</A>().
+Users who do not call <A HREF="../Sys/PetscElementalInitializePackage.html#PetscElementalInitializePackage">PetscElementalInitializePackage</A>() do not have to call this function.
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../Mat/MATELEMENTAL.html#MATELEMENTAL">MATELEMENTAL</A>, <A HREF="../Sys/PetscElementalInitializePackage.html#PetscElementalInitializePackage">PetscElementalInitializePackage</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>developer<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/sys/objects/cxx/elemental.cxx.html#PetscElementalFinalizePackage">src/sys/objects/cxx/elemental.cxx</A>
+<P><H3><FONT COLOR="#CC3333">Examples</FONT></H3>
+<A HREF="../../../src/sys/tutorials/ex4.c.html">src/sys/tutorials/ex4.c.html</A><BR>
+<A HREF="../../../src/sys/tutorials/ex4f.F.html">src/sys/tutorials/ex4f.F.html</A><BR>
+<BR><A HREF="./index.html">Index of all Sys routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

@@ -1,0 +1,311 @@
+<center><a href="pythonsys.c">Actual source code: pythonsys.c</a></center><br>
+
+<html>
+<head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/src/sys/python/pythonsys.c.html" />
+<title></title>
+<meta name="generator" content="c2html 0.9.4">
+<meta name="date" content="2021-03-30T16:49:37+00:00">
+</head>
+
+<body bgcolor="#FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 src/sys/python/pythonsys.c.html "><small>Report Typos and Errors</small></a></div>
+<pre width="80">
+<a name="line1">  1: </a>#include <A href="../../../include/petsc/private/petscimpl.h.html">&lt;petsc/private/petscimpl.h&gt;</A>
+
+<a name="line3">  3: </a><font color="#B22222">/* ---------------------------------------------------------------- */</font>
+
+<a name="line5">  5: </a><font color="#A020F0">#if !defined(PETSC_PYTHON_EXE)</font>
+<a name="line6">  6: </a><strong><font color="#228B22">#define PETSC_PYTHON_EXE </font><font color="#666666">"python"</font><font color="#228B22"></font></strong>
+<a name="line7">  7: </a><font color="#A020F0">#endif</font>
+
+<a name="line9">  9: </a><strong><font color="#4169E1"><a name="PetscPythonFindExecutable"></a>static <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscPythonFindExecutable(char pythonexe[],size_t len)</font></strong>
+<a name="line10"> 10: </a>{
+<a name="line11"> 11: </a>  <a href="../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>      flag;
+
+<a name="line15"> 15: </a>  <font color="#B22222">/* get the path for the Python interpreter executable */</font>
+<a name="line16"> 16: </a>  <a href="../../../docs/manualpages/Sys/PetscStrncpy.html#PetscStrncpy">PetscStrncpy</a>(pythonexe,PETSC_PYTHON_EXE,len);
+<a name="line17"> 17: </a>  <a href="../../../docs/manualpages/Sys/PetscOptionsGetString.html#PetscOptionsGetString">PetscOptionsGetString</a>(NULL,NULL,<font color="#666666">"-python"</font>,pythonexe,len,&amp;flag);
+<a name="line18"> 18: </a>  <font color="#4169E1">if</font> (!flag || pythonexe[0]==0) {
+<a name="line19"> 19: </a>    <a href="../../../docs/manualpages/Sys/PetscStrncpy.html#PetscStrncpy">PetscStrncpy</a>(pythonexe,PETSC_PYTHON_EXE,len);
+<a name="line20"> 20: </a>  }
+<a name="line21"> 21: </a>  <font color="#4169E1">return</font>(0);
+<a name="line22"> 22: </a>}
+
+<a name="line24"> 24: </a><font color="#B22222">/*</font>
+<a name="line25"> 25: </a><font color="#B22222">    Python does not appear to have a universal way to indicate the location of Python dynamic library so try several possibilities</font>
+<a name="line26"> 26: </a><font color="#B22222">*/</font>
+<a name="line27"> 27: </a><strong><font color="#4169E1"><a name="PetscPythonFindLibraryName"></a>static <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscPythonFindLibraryName(const char pythonexe[],const char attempt[],char pythonlib[],size_t pl,<a href="../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> *found)</font></strong>
+<a name="line28"> 28: </a>{
+<a name="line29"> 29: </a>  char           command[2*PETSC_MAX_PATH_LEN];
+<a name="line30"> 30: </a>  FILE           *fp = NULL;
+<a name="line31"> 31: </a>  char           *eol;
+
+<a name="line35"> 35: </a>  <font color="#B22222">/* call Python to find out the name of the Python dynamic library */</font>
+<a name="line36"> 36: </a>  <a href="../../../docs/manualpages/Sys/PetscStrncpy.html#PetscStrncpy">PetscStrncpy</a>(command,pythonexe,<font color="#4169E1">sizeof</font>(command));
+<a name="line37"> 37: </a>  <a href="../../../docs/manualpages/Sys/PetscStrlcat.html#PetscStrlcat">PetscStrlcat</a>(command,<font color="#666666">" "</font>,<font color="#4169E1">sizeof</font>(command));
+<a name="line38"> 38: </a>  <a href="../../../docs/manualpages/Sys/PetscStrlcat.html#PetscStrlcat">PetscStrlcat</a>(command,attempt,<font color="#4169E1">sizeof</font>(command));
+<a name="line39"> 39: </a><font color="#A020F0">#if defined(PETSC_HAVE_POPEN)</font>
+<a name="line40"> 40: </a>  <a href="../../../docs/manualpages/Sys/PetscPOpen.html#PetscPOpen">PetscPOpen</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,NULL,command,<font color="#666666">"r"</font>,&amp;fp);
+<a name="line41"> 41: </a>  <font color="#4169E1">if</font> (!fgets(pythonlib,pl,fp)) <a href="../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_PLIB,<font color="#666666">"Python: bad output from executable: %s"</font>,pythonexe);
+<a name="line42"> 42: </a>  <a href="../../../docs/manualpages/Sys/PetscPClose.html#PetscPClose">PetscPClose</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,fp);
+<a name="line43"> 43: </a><font color="#A020F0">#else</font>
+<a name="line44"> 44: </a>  <a href="../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_LIB,<font color="#666666">"Python: Aborted due to missing popen()"</font>);
+<a name="line45"> 45: </a><font color="#A020F0">#endif</font>
+<a name="line46"> 46: </a>  <font color="#B22222">/* remove newlines */</font>
+<a name="line47"> 47: </a>  <a href="../../../docs/manualpages/Sys/PetscStrchr.html#PetscStrchr">PetscStrchr</a>(pythonlib,'\n',&amp;eol);
+<a name="line48"> 48: </a>  <font color="#4169E1">if</font> (eol) eol[0] = 0;
+<a name="line49"> 49: </a>  <a href="../../../docs/manualpages/Sys/PetscTestFile.html#PetscTestFile">PetscTestFile</a>(pythonlib,'r',found);
+<a name="line50"> 50: </a>  <font color="#4169E1">return</font>(0);
+<a name="line51"> 51: </a>}
+
+
+<a name="line54"> 54: </a><strong><font color="#4169E1"><a name="PetscPythonFindLibrary"></a>static <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscPythonFindLibrary(const char pythonexe[],char pythonlib[],size_t pl)</font></strong>
+<a name="line55"> 55: </a>{
+<a name="line56"> 56: </a>  const char     cmdline1[] = <font color="#666666">"-c 'import os;from distutils import sysconfig; print(os.path.join(sysconfig.get_config_var(\"LIBDIR\"),sysconfig.get_config_var(\"LDLIBRARY\")))'"</font>;
+<a name="line57"> 57: </a>  const char     cmdline2[] = <font color="#666666">"-c 'import os;from distutils import sysconfig; import sys;print(os.path.join(sysconfig.get_config_var(\"LIBDIR\"),\"libpython\"+sys.version[:3]+\".dylib\"))'"</font>;
+<a name="line58"> 58: </a>  const char     cmdline3[] = <font color="#666666">"-c 'import os;from distutils import sysconfig; print(os.path.join(sysconfig.get_config_var(\"LIBPL\"),sysconfig.get_config_var(\"LDLIBRARY\")))'"</font>;
+<a name="line59"> 59: </a>  const char     cmdline4[] = <font color="#666666">"-c 'from distutils import sysconfig; print(sysconfig.get_config_var(\"LIBPYTHON\"))'"</font>;
+<a name="line60"> 60: </a>  const char     cmdline5[] = <font color="#666666">"-c 'import os;from distutils import sysconfig; import sys;print(os.path.join(sysconfig.get_config_var(\"LIBDIR\"),\"libpython\"+sys.version[:3]+\".so\"))'"</font>;
+
+<a name="line62"> 62: </a>  <a href="../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>      found = <a href="../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+
+<a name="line66"> 66: </a><font color="#A020F0">#if defined(PETSC_PYTHON_LIB)</font>
+<a name="line67"> 67: </a>  <a href="../../../docs/manualpages/Sys/PetscStrncpy.html#PetscStrncpy">PetscStrncpy</a>(pythonlib,PETSC_PYTHON_LIB,pl);
+<a name="line68"> 68: </a>  <font color="#4169E1">return</font>(0);
+<a name="line69"> 69: </a><font color="#A020F0">#endif</font>
+
+<a name="line71"> 71: </a>  PetscPythonFindLibraryName(pythonexe,cmdline1,pythonlib,pl,&amp;found);
+<a name="line72"> 72: </a>  <font color="#4169E1">if</font> (!found) {
+<a name="line73"> 73: </a>    PetscPythonFindLibraryName(pythonexe,cmdline2,pythonlib,pl,&amp;found);
+<a name="line74"> 74: </a>  }
+<a name="line75"> 75: </a>  <font color="#4169E1">if</font> (!found) {
+<a name="line76"> 76: </a>    PetscPythonFindLibraryName(pythonexe,cmdline3,pythonlib,pl,&amp;found);
+<a name="line77"> 77: </a>  }
+<a name="line78"> 78: </a>  <font color="#4169E1">if</font> (!found) {
+<a name="line79"> 79: </a>    PetscPythonFindLibraryName(pythonexe,cmdline4,pythonlib,pl,&amp;found);
+<a name="line80"> 80: </a>  }
+<a name="line81"> 81: </a>  <font color="#4169E1">if</font> (!found) {
+<a name="line82"> 82: </a>    PetscPythonFindLibraryName(pythonexe,cmdline5,pythonlib,pl,&amp;found);
+<a name="line83"> 83: </a>  }
+<a name="line84"> 84: </a>  PetscInfo2(NULL,<font color="#666666">"Python library  %s found %d\n"</font>,pythonlib,found);
+<a name="line85"> 85: </a>  <font color="#4169E1">return</font>(0);
+<a name="line86"> 86: </a>}
+
+<a name="line88"> 88: </a><font color="#B22222">/* ---------------------------------------------------------------- */</font>
+
+<a name="line90"> 90: </a><font color="#4169E1">typedef struct _Py_object_t PyObject;</font> <font color="#B22222">/* fake definition */</font>
+
+<a name="line92"> 92: </a>static PyObject* Py_None = NULL;
+
+<a name="line94"> 94: </a><strong><font color="#4169E1">static const char* (*Py_GetVersion)(void)</font></strong>;
+
+<a name="line96"> 96: </a><strong><font color="#4169E1">static int       (*Py_IsInitialized)(void)</font></strong>;
+<a name="line97"> 97: </a><strong><font color="#4169E1">static void      (*Py_InitializeEx)(int)</font></strong>;
+<a name="line98"> 98: </a><strong><font color="#4169E1">static void      (*Py_Finalize)(void)</font></strong>;
+
+<a name="line100">100: </a><strong><font color="#4169E1">static void      (*PySys_SetArgv)(int,void*)</font></strong>;
+<a name="line101">101: </a><strong><font color="#4169E1">static PyObject* (*PySys_GetObject)(const char*)</font></strong>;
+<a name="line102">102: </a><strong><font color="#4169E1">static PyObject* (*PyObject_CallMethod)(PyObject*,const char*, const char*, ...)</font></strong>;
+<a name="line103">103: </a><strong><font color="#4169E1">static PyObject* (*PyImport_ImportModule)(const char*)</font></strong>;
+
+<a name="line105">105: </a><strong><font color="#4169E1">static void      (*Py_IncRef)(PyObject*)</font></strong>;
+<a name="line106">106: </a><strong><font color="#4169E1">static void      (*Py_DecRef)(PyObject*)</font></strong>;
+
+<a name="line108">108: </a><strong><font color="#4169E1">static void      (*PyErr_Clear)(void)</font></strong>;
+<a name="line109">109: </a><strong><font color="#4169E1">static PyObject* (*PyErr_Occurred)(void)</font></strong>;
+<a name="line110">110: </a><strong><font color="#4169E1">static void      (*PyErr_Fetch)(PyObject**,PyObject**,PyObject**)</font></strong>;
+<a name="line111">111: </a><strong><font color="#4169E1">static void      (*PyErr_NormalizeException)(PyObject**,PyObject**, PyObject**)</font></strong>;
+<a name="line112">112: </a><strong><font color="#4169E1">static void      (*PyErr_Display)(PyObject*,PyObject*,PyObject*)</font></strong>;
+<a name="line113">113: </a><strong><font color="#4169E1">static void      (*PyErr_Restore)(PyObject*,PyObject*,PyObject*)</font></strong>;
+
+
+<a name="line116">116: </a><strong><font color="#228B22">#define PetscDLPyLibOpen(libname) \</font></strong>
+<a name="line117">117: </a><strong><font color="#228B22">  <a href="../../../docs/manualpages/Sys/PetscDLLibraryAppend.html#PetscDLLibraryAppend">PetscDLLibraryAppend</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,&amp;PetscDLLibrariesLoaded,libname)</font></strong>
+<a name="line118">118: </a><strong><font color="#228B22">#define PetscDLPyLibSym(symbol, value) \</font></strong>
+<a name="line119">119: </a><strong><font color="#228B22">  <a href="../../../docs/manualpages/Sys/PetscDLLibrarySym.html#PetscDLLibrarySym">PetscDLLibrarySym</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,&amp;PetscDLLibrariesLoaded,NULL,symbol,(void**)value)</font></strong>
+<a name="line120">120: </a><strong><font color="#228B22">#define PetscDLPyLibClose(comm) \</font></strong>
+<a name="line121">121: </a><strong><font color="#228B22">  do { } while (0)</font></strong>
+
+<a name="line123">123: </a><strong><font color="#4169E1"><a name="PetscPythonLoadLibrary"></a>static <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscPythonLoadLibrary(const char pythonlib[])</font></strong>
+<a name="line124">124: </a>{
+
+<a name="line128">128: </a>  <font color="#B22222">/* open the Python dynamic library */</font>
+<a name="line129">129: </a>  PetscDLPyLibOpen(pythonlib);
+<a name="line130">130: </a>  PetscInfo1(NULL,<font color="#666666">"Python: loaded dynamic library %s\n"</font>, pythonlib);
+<a name="line131">131: </a>  <font color="#B22222">/* look required symbols from the Python C-API */</font>
+<a name="line132">132: </a>  PetscDLPyLibSym(<font color="#666666">"_Py_NoneStruct"</font>        , &amp;Py_None);
+<a name="line133">133: </a>  PetscDLPyLibSym(<font color="#666666">"Py_GetVersion"</font>         , &amp;Py_GetVersion);
+<a name="line134">134: </a>  PetscDLPyLibSym(<font color="#666666">"Py_IsInitialized"</font>      , &amp;Py_IsInitialized);
+<a name="line135">135: </a>  PetscDLPyLibSym(<font color="#666666">"Py_InitializeEx"</font>       , &amp;Py_InitializeEx);
+<a name="line136">136: </a>  PetscDLPyLibSym(<font color="#666666">"Py_Finalize"</font>           , &amp;Py_Finalize);
+<a name="line137">137: </a>  PetscDLPyLibSym(<font color="#666666">"PySys_GetObject"</font>       , &amp;PySys_GetObject);
+<a name="line138">138: </a>  PetscDLPyLibSym(<font color="#666666">"PySys_SetArgv"</font>         , &amp;PySys_SetArgv);
+<a name="line139">139: </a>  PetscDLPyLibSym(<font color="#666666">"PyObject_CallMethod"</font>   , &amp;PyObject_CallMethod);
+<a name="line140">140: </a>  PetscDLPyLibSym(<font color="#666666">"PyImport_ImportModule"</font> , &amp;PyImport_ImportModule);
+<a name="line141">141: </a>  PetscDLPyLibSym(<font color="#666666">"Py_IncRef"</font>             , &amp;Py_IncRef);
+<a name="line142">142: </a>  PetscDLPyLibSym(<font color="#666666">"Py_DecRef"</font>             , &amp;Py_DecRef);
+<a name="line143">143: </a>  PetscDLPyLibSym(<font color="#666666">"PyErr_Clear"</font>           , &amp;PyErr_Clear);
+<a name="line144">144: </a>  PetscDLPyLibSym(<font color="#666666">"PyErr_Occurred"</font>        , &amp;PyErr_Occurred);
+<a name="line145">145: </a>  PetscDLPyLibSym(<font color="#666666">"PyErr_Fetch"</font>             , &amp;PyErr_Fetch);
+<a name="line146">146: </a>  PetscDLPyLibSym(<font color="#666666">"PyErr_NormalizeException"</font>, &amp;PyErr_NormalizeException);
+<a name="line147">147: </a>  PetscDLPyLibSym(<font color="#666666">"PyErr_Display"</font>,            &amp;PyErr_Display);
+<a name="line148">148: </a>  PetscDLPyLibSym(<font color="#666666">"PyErr_Restore"</font>,            &amp;PyErr_Restore);
+<a name="line149">149: </a>  <font color="#B22222">/* XXX TODO: check that ALL symbols were there !!! */</font>
+<a name="line150">150: </a>  <font color="#4169E1">if</font> (!Py_None)          <a href="../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,1,<font color="#666666">"Python: failed to load symbols from Python dynamic library %s"</font>,pythonlib);
+<a name="line151">151: </a>  <font color="#4169E1">if</font> (!Py_GetVersion)    <a href="../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,1,<font color="#666666">"Python: failed to load symbols from Python dynamic library %s"</font>,pythonlib);
+<a name="line152">152: </a>  <font color="#4169E1">if</font> (!Py_IsInitialized) <a href="../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,1,<font color="#666666">"Python: failed to load symbols from Python dynamic library %s"</font>,pythonlib);
+<a name="line153">153: </a>  <font color="#4169E1">if</font> (!Py_InitializeEx)  <a href="../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,1,<font color="#666666">"Python: failed to load symbols from Python dynamic library %s"</font>,pythonlib);
+<a name="line154">154: </a>  <font color="#4169E1">if</font> (!Py_Finalize)      <a href="../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,1,<font color="#666666">"Python: failed to load symbols from Python dynamic library %s"</font>,pythonlib);
+<a name="line155">155: </a>  PetscInfo1(NULL,<font color="#666666">"Python: all required symbols loaded from Python dynamic library %s\n"</font>,pythonlib);
+<a name="line156">156: </a>  <font color="#4169E1">return</font>(0);
+<a name="line157">157: </a>}
+
+<a name="line159">159: </a><font color="#B22222">/* ---------------------------------------------------------------- */</font>
+
+<a name="line161">161: </a>static char      PetscPythonExe[PETSC_MAX_PATH_LEN] = { 0 };
+<a name="line162">162: </a>static char      PetscPythonLib[PETSC_MAX_PATH_LEN] = { 0 };
+<a name="line163">163: </a>static <a href="../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> PetscBeganPython = <a href="../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+
+<a name="line165">165: </a><font color="#B22222">/*@C</font>
+<a name="line166">166: </a><font color="#B22222">  PetscPythonFinalize - Finalize Python.</font>
+
+<a name="line168">168: </a><font color="#B22222">  Level: intermediate</font>
+
+<a name="line170">170: </a><font color="#B22222">@*/</font>
+<a name="line171">171: </a><strong><font color="#4169E1"><a name="PetscPythonFinalize"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  PetscPythonFinalize(void)</font></strong>
+<a name="line172">172: </a>{
+<a name="line174">174: </a>  <font color="#4169E1">if</font> (PetscBeganPython) { <font color="#4169E1">if</font> (Py_IsInitialized()) Py_Finalize(); }
+<a name="line175">175: </a>  PetscBeganPython = <a href="../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line176">176: </a>  <font color="#4169E1">return</font>(0);
+<a name="line177">177: </a>}
+
+<a name="line179">179: </a><font color="#B22222">/*@C</font>
+<a name="line180">180: </a><font color="#B22222">  PetscPythonInitialize - Initialize Python and import petsc4py.</font>
+
+<a name="line182">182: </a><font color="#B22222">   Input Parameter:</font>
+<a name="line183">183: </a><font color="#B22222">+  pyexe - path to the Python interpreter executable, or NULL.</font>
+<a name="line184">184: </a><font color="#B22222">-  pylib - full path to the Python dynamic library, or NULL.</font>
+
+<a name="line186">186: </a><font color="#B22222">  Level: intermediate</font>
+
+<a name="line188">188: </a><font color="#B22222">@*/</font>
+<a name="line189">189: </a><strong><font color="#4169E1"><a name="PetscPythonInitialize"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  PetscPythonInitialize(const char pyexe[],const char pylib[])</font></strong>
+<a name="line190">190: </a>{
+<a name="line191">191: </a>  PyObject       *module = NULL;
+
+<a name="line195">195: </a>  <font color="#4169E1">if</font> (PetscBeganPython) <font color="#4169E1">return</font>(0);
+<a name="line196">196: </a>  <font color="#B22222">/* Python executable */</font>
+<a name="line197">197: </a>  <font color="#4169E1">if</font> (pyexe &amp;&amp; pyexe[0] != 0) {
+<a name="line198">198: </a>    <a href="../../../docs/manualpages/Sys/PetscStrncpy.html#PetscStrncpy">PetscStrncpy</a>(PetscPythonExe,pyexe,<font color="#4169E1">sizeof</font>(PetscPythonExe));
+<a name="line199">199: </a>  } <font color="#4169E1">else</font> {
+<a name="line200">200: </a>    PetscPythonFindExecutable(PetscPythonExe,<font color="#4169E1">sizeof</font>(PetscPythonExe));
+<a name="line201">201: </a>  }
+<a name="line202">202: </a>  <font color="#B22222">/* Python dynamic library */</font>
+<a name="line203">203: </a>  <font color="#4169E1">if</font> (pylib &amp;&amp; pylib[0] != 0) {
+<a name="line204">204: </a>    <a href="../../../docs/manualpages/Sys/PetscStrncpy.html#PetscStrncpy">PetscStrncpy</a>(PetscPythonLib,pylib,<font color="#4169E1">sizeof</font>(PetscPythonLib));
+<a name="line205">205: </a>  } <font color="#4169E1">else</font> {
+<a name="line206">206: </a>    PetscPythonFindLibrary(PetscPythonExe,PetscPythonLib,<font color="#4169E1">sizeof</font>(PetscPythonLib));
+<a name="line207">207: </a>  }
+<a name="line208">208: </a>  <font color="#B22222">/* dynamically load Python library */</font>
+<a name="line209">209: </a>  PetscPythonLoadLibrary(PetscPythonLib);
+<a name="line210">210: </a>  <font color="#B22222">/* initialize Python */</font>
+<a name="line211">211: </a>  PetscBeganPython = <a href="../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line212">212: </a>  <font color="#4169E1">if</font> (!Py_IsInitialized()) {
+<a name="line213">213: </a>    static <a href="../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> registered = <a href="../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line214">214: </a>    const char       *py_version;
+<a name="line215">215: </a>    PyObject         *sys_path;
+<a name="line216">216: </a>    char             path[PETSC_MAX_PATH_LEN] = { 0 };
+
+<a name="line218">218: </a>    <font color="#B22222">/* initialize Python */</font>
+<a name="line219">219: </a>    Py_InitializeEx(0); <font color="#B22222">/* 0: do not install signal handlers */</font>
+<a name="line220">220: </a>    <font color="#B22222">/*  build 'sys.argv' list */</font>
+<a name="line221">221: </a>    py_version = Py_GetVersion();
+<a name="line222">222: </a>    <font color="#4169E1">if</font> (py_version[0] == '2') {
+<a name="line223">223: </a>      int argc = 0; char *argv[1] = {NULL};
+<a name="line224">224: </a>      PySys_SetArgv(argc,argv);
+<a name="line225">225: </a>    }
+<a name="line226">226: </a>    <font color="#4169E1">if</font> (py_version[0] == '3') {
+<a name="line227">227: </a>      int argc = 0; wchar_t *argv[1] = {NULL};
+<a name="line228">228: </a>      PySys_SetArgv(argc,argv);
+<a name="line229">229: </a>    }
+<a name="line230">230: </a>    <font color="#B22222">/* add PETSC_LIB_DIR in front of 'sys.path' */</font>
+<a name="line231">231: </a>    sys_path = PySys_GetObject(<font color="#666666">"path"</font>);
+<a name="line232">232: </a>    <font color="#4169E1">if</font> (sys_path) {
+<a name="line233">233: </a>      <a href="../../../docs/manualpages/Sys/PetscStrreplace.html#PetscStrreplace">PetscStrreplace</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,<font color="#666666">"${PETSC_LIB_DIR}"</font>,path,<font color="#4169E1">sizeof</font>(path));
+<a name="line234">234: </a>      Py_DecRef(PyObject_CallMethod(sys_path,<font color="#666666">"insert"</font>,<font color="#666666">"is"</font>,(int)0,(char*)path));
+<a name="line235">235: </a><font color="#A020F0">#if defined(PETSC_PETSC4PY_INSTALL_PATH)</font>
+<a name="line236">236: </a>      {
+<a name="line237">237: </a>        char *rpath;
+<a name="line238">238: </a>        <a href="../../../docs/manualpages/Sys/PetscStrallocpy.html#PetscStrallocpy">PetscStrallocpy</a>(PETSC_PETSC4PY_INSTALL_PATH,&amp;rpath);
+<a name="line239">239: </a>        Py_DecRef(PyObject_CallMethod(sys_path,<font color="#666666">"insert"</font>,<font color="#666666">"is"</font>,(int)0,rpath));
+<a name="line240">240: </a>        <a href="../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(rpath);
+<a name="line241">241: </a>      }
+<a name="line242">242: </a><font color="#A020F0">#endif</font>
+<a name="line243">243: </a>    }
+<a name="line244">244: </a>    <font color="#B22222">/* register finalizer */</font>
+<a name="line245">245: </a>    <font color="#4169E1">if</font> (!registered) {
+<a name="line246">246: </a>      <a href="../../../docs/manualpages/Sys/PetscRegisterFinalize.html#PetscRegisterFinalize">PetscRegisterFinalize</a>(PetscPythonFinalize);
+<a name="line247">247: </a>      registered = <a href="../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>;
+<a name="line248">248: </a>    }
+<a name="line249">249: </a>    PetscBeganPython = <a href="../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>;
+<a name="line250">250: </a>  }
+<a name="line251">251: </a>  <font color="#B22222">/* import 'petsc4py.PETSc' module */</font>
+<a name="line252">252: </a>  module = PyImport_ImportModule(<font color="#666666">"petsc4py.PETSc"</font>);
+<a name="line253">253: </a>  <font color="#4169E1">if</font> (module) {
+<a name="line254">254: </a>    <a href="../../../docs/manualpages/Profiling/PetscInfo.html#PetscInfo">PetscInfo</a>(NULL,<font color="#666666">"Python: successfully imported  module 'petsc4py.PETSc'\n"</font>);
+
+<a name="line256">256: </a>    Py_DecRef(module); module = NULL;
+<a name="line257">257: </a>  } <font color="#4169E1">else</font> {
+<a name="line258">258: </a>    PetscPythonPrintError();
+<a name="line259">259: </a>    <a href="../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_PLIB,<font color="#666666">"Python: could not import module 'petsc4py.PETSc', perhaps your PYTHONPATH does not contain it\n"</font>);
+<a name="line260">260: </a>  }
+<a name="line261">261: </a>  <font color="#4169E1">return</font>(0);
+<a name="line262">262: </a>}
+
+<a name="line264">264: </a><font color="#B22222">/*@C</font>
+<a name="line265">265: </a><font color="#B22222">  PetscPythonPrintError - Print Python errors.</font>
+
+<a name="line267">267: </a><font color="#B22222">  Level: developer</font>
+
+<a name="line269">269: </a><font color="#B22222">@*/</font>
+<a name="line270">270: </a><strong><font color="#4169E1"><a name="PetscPythonPrintError"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  PetscPythonPrintError(void)</font></strong>
+<a name="line271">271: </a>{
+<a name="line272">272: </a>  PyObject *exc=NULL, *val=NULL, *tb=NULL;
+
+<a name="line275">275: </a>  <font color="#4169E1">if</font> (!PetscBeganPython) <font color="#4169E1">return</font>(0);
+<a name="line276">276: </a>  <font color="#4169E1">if</font> (!PyErr_Occurred()) <font color="#4169E1">return</font>(0);
+<a name="line277">277: </a>  PyErr_Fetch(&amp;exc,&amp;val,&amp;tb);
+<a name="line278">278: </a>  PyErr_NormalizeException(&amp;exc,&amp;val,&amp;tb);
+<a name="line279">279: </a>  PyErr_Display(exc ? exc : Py_None, val ? val : Py_None, tb  ? tb  : Py_None);
+<a name="line280">280: </a>  PyErr_Restore(exc,val,tb);
+<a name="line281">281: </a>  <font color="#4169E1">return</font>(0);
+<a name="line282">282: </a>}
+
+<a name="line284">284: </a><font color="#B22222">/* ---------------------------------------------------------------- */</font>
+
+<a name="line286">286: </a><strong><font color="#4169E1">PETSC_EXTERN <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> (*PetscPythonMonitorSet_C)(<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>,const char[])</font></strong>;
+<a name="line287">287: </a><strong><font color="#4169E1"><a name="etscErrorCode"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> (*PetscPythonMonitorSet_C)(<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>,const char[])</font></strong> = NULL;
+
+<a name="line289">289: </a><font color="#B22222">/*@C</font>
+<a name="line290">290: </a><font color="#B22222">  PetscPythonMonitorSet - Set Python monitor</font>
+
+<a name="line292">292: </a><font color="#B22222">  Level: developer</font>
+
+<a name="line294">294: </a><font color="#B22222">@*/</font>
+<a name="line295">295: </a><strong><font color="#4169E1"><a name="PetscPythonMonitorSet"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscPythonMonitorSet(<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a> obj, const char url[])</font></strong>
+<a name="line296">296: </a>{
+
+<a name="line302">302: </a>  <font color="#4169E1">if</font> (!PetscPythonMonitorSet_C) {
+<a name="line303">303: </a>    PetscPythonInitialize(NULL,NULL);
+<a name="line304">304: </a>    <font color="#4169E1">if</font> (!PetscPythonMonitorSet_C) <a href="../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_LIB,<font color="#666666">"Couldn't initialize Python support for monitors"</font>);
+<a name="line305">305: </a>  }
+<a name="line306">306: </a>  PetscPythonMonitorSet_C(obj,url);
+<a name="line307">307: </a>  <font color="#4169E1">return</font>(0);
+<a name="line308">308: </a>}
+
+<a name="line310">310: </a><font color="#B22222">/* ---------------------------------------------------------------- */</font>
+</pre>
+</body>
+
+</html>

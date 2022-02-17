@@ -1,0 +1,141 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/sphinx_docs/html/developers/articles.html" />
+    <meta charset="utf-8" />
+    <title>Articles about PETSc Design &#8212; PETSc 3.14.6 documentation</title>
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/katex-math.css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/contrib/auto-render.min.js"></script>
+    <script src="../_static/katex_autorenderer.js"></script>
+    <link rel="shortcut icon" href="../_static/PETSc_RGB-logo.png"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="The Various Matrix Classes" href="matrices.html" /> 
+  </head><body>
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/sphinx_docs/html/developers/articles.html "><small>Report Typos and Errors</small></a></div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="matrices.html" title="The Various Matrix Classes"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">PETSc 3.14.6 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >PETSc Developer’s Documentation</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="design.html" accesskey="U">The Design of PETSc</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/PETSc-TAO_RGB.svg" alt="Logo"/>
+            </a></p>
+  <h3><a href="../index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Articles about PETSc Design</a><ul>
+<li><a class="reference internal" href="#references">References</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="matrices.html"
+                        title="previous chapter">The Various Matrix Classes</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/developers/articles.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="articles-about-petsc-design">
+<h1>Articles about PETSc Design<a class="headerlink" href="#articles-about-petsc-design" title="Permalink to this headline">¶</a></h1>
+<p>Many articles have been written about the design of PETSc. We mention
+an incomplete selection which may be of interest to developers.</p>
+<p>You may also be interested in <a class="reference external" href="https://www.mcs.anl.gov/petsc/publications/index.html">publications using PETSc</a>.</p>
+<p>Higher-level views of PETSc can be found in <span id="id1">[<a class="reference internal" href="#id1896">ref-Smi11</a>]</span>,
+<span id="id2">[<a class="reference internal" href="#id1914">ref-BGMS02</a>]</span>, <span id="id3">[<a class="reference internal" href="#id1923">ref-GS94</a>]</span>, <span id="id4">[<a class="reference internal" href="#id1926">ref-BGMS98</a>]</span>, and <span id="id5">[<a class="reference internal" href="#id478">ref-BGMS97</a>]</span>.</p>
+<div class="section" id="references">
+<h2>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
+<p id="id6"><dl class="citation">
+<dt class="label" id="id478"><span class="brackets"><a class="fn-backref" href="#id5">ref-BGMS97</a></span></dt>
+<dd><p>Satish Balay, William D. Gropp, Lois Curfman McInnes, and Barry F. Smith. Efficient management of parallelism in object oriented numerical software libraries. In E. Arge, A. M. Bruaset, and H. P. Langtangen, editors, <em>Modern Software Tools in Scientific Computing</em>, 163–202. Birkhäuser Press, 1997.</p>
+</dd>
+</dl>
+</p>
+<p id="id1256"><dl class="citation">
+<dt class="label" id="id1914"><span class="brackets"><a class="fn-backref" href="#id2">ref-BGMS02</a></span></dt>
+<dd><p>S. Balay, W. D. Gropp, L. C. McInnes, and B. F. Smith. <em>CRPC Handbook of Parallel Computing</em>, chapter Software for the Scalable Solution of PDEs. Morgan Kaufmann Publishers, 2002. URL: <a class="reference external" href="ftp://info.mcs.anl.gov/pub/tech_reports/reports/P834.ps.Z">ftp://info.mcs.anl.gov/pub/tech_reports/reports/P834.ps.Z</a>.</p>
+</dd>
+<dt class="label" id="id1926"><span class="brackets"><a class="fn-backref" href="#id4">ref-BGMS98</a></span></dt>
+<dd><p>Satish Balay, William D. Gropp, Lois Curfman McInnes, and Barry F. Smith. A microkernel design for component-based parallel numerical software systems. In <em>Proceedings of the SIAM Workshop on Object Oriented Methods for Inter-operable Scientific and Engineering Computing</em>, 58–67. SIAM, 1998. URL: <a class="reference external" href="ftp://info.mcs.anl.gov/pub/tech_reports/reports/P727.ps.Z">ftp://info.mcs.anl.gov/pub/tech_reports/reports/P727.ps.Z</a>.</p>
+</dd>
+<dt class="label" id="id1923"><span class="brackets"><a class="fn-backref" href="#id3">ref-GS94</a></span></dt>
+<dd><p>William D. Gropp and Barry F. Smith. Scalable, extensible, and portable numerical libraries. In <em>Proceedings of the Scalable Parallel Libraries Conference</em>, 87–93. Mississippi State University, 1994. IEEE.</p>
+</dd>
+<dt class="label" id="id1896"><span class="brackets"><a class="fn-backref" href="#id1">ref-Smi11</a></span></dt>
+<dd><p>B. Smith. <em>Encyclopedia of Parallel Computing</em>, chapter PETSc, the Portable, Extensible Toolkit for Scientific computing. Springer, 2011.</p>
+</dd>
+</dl>
+</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="matrices.html" title="The Various Matrix Classes"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">PETSc 3.14.6 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >PETSc Developer’s Documentation</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="design.html" >The Design of PETSc</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 1991-2021, UChicago Argonne, LLC and the PETSc Development Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.4.
+    </div>
+  </body>
+</html>

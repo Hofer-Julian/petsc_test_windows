@@ -1,0 +1,61 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscHelpPrintf.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>PetscHelpPrintf</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/Sys/PetscHelpPrintf.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="PetscHelpPrintf"><H1>PetscHelpPrintf</H1></A>
+Prints help messages. 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include &lt;petscsys.h&gt;
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> (*<A HREF="../Sys/PetscHelpPrintf.html#PetscHelpPrintf">PetscHelpPrintf</A>)(<A HREF="../Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</A> comm, const char format[],args);
+</PRE>
+Collective on comm
+<P>
+<H3><FONT COLOR="#CC3333">Input Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>comm </B></TD><TD>- the MPI communicator over which the help message is printed
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>format </B></TD><TD>- the usual printf() format string
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>args </B></TD><TD>- arguments to be printed
+</TD></TR></TABLE>
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">Fortran Note</FONT></H3>
+This routine is not supported in Fortran.
+<P>
+<H3><FONT COLOR="#CC3333">Note</FONT></H3>
+You can change how help messages are printed by replacing the function pointer with a function that does not simply write to stdout.
+<P>
+To use, write your own function, for example,
+<pre>
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> mypetschelpprintf(<A HREF="../Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</A> comm,const char format[],....)
+</pre>
+<pre>
+{ $ <A HREF="../Sys/PetscFunctionReturn.html#PetscFunctionReturn">PetscFunctionReturn</A>(0);
+</pre>
+<pre>
+} then do the assigment
+</pre>
+<pre>
+   <A HREF="../Sys/PetscHelpPrintf.html#PetscHelpPrintf">PetscHelpPrintf</A> = mypetschelpprintf;
+</pre>
+You can do the assignment before <A HREF="../Sys/PetscInitialize.html#PetscInitialize">PetscInitialize</A>().
+<P>
+The default routine used is called PetscHelpPrintfDefault().
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../Sys/PetscFPrintf.html#PetscFPrintf">PetscFPrintf</A>(), <A HREF="../Sys/PetscSynchronizedPrintf.html#PetscSynchronizedPrintf">PetscSynchronizedPrintf</A>(), <A HREF="../Sys/PetscErrorPrintf.html#PetscErrorPrintf">PetscErrorPrintf</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>developer<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../include/petscsys.h.html#PetscHelpPrintf">include/petscsys.h</A>
+<BR><A HREF="./index.html">Index of all Sys routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

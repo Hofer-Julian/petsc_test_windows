@@ -1,0 +1,180 @@
+<center><a href="ex4.c">Actual source code: ex4.c</a></center><br>
+
+<html>
+<head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/src/vec/is/sf/tests/ex4.c.html" />
+<title></title>
+<meta name="generator" content="c2html 0.9.4">
+<meta name="date" content="2021-03-30T16:49:55+00:00">
+</head>
+
+<body bgcolor="#FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 src/vec/is/sf/tests/ex4.c.html "><small>Report Typos and Errors</small></a></div>
+<pre width="80">
+<a name="line1">  1: </a>static char help[]= <font color="#666666">"Test PetscSFFCompose when the ilocal array is not the identity\n\n"</font>;
+
+<a name="line3">  3: </a>#include <A href="../../../../../include/petsc.h.html">&lt;petsc.h&gt;</A>
+<a name="line4">  4: </a>#include <A href="../../../../../include/petscsf.h.html">&lt;petscsf.h&gt;</A>
+
+<a name="line6">  6: </a><strong><font color="#4169E1"><a name="main"></a>int main(int argc, char **argv)</font></strong>
+<a name="line7">  7: </a>{
+<a name="line8">  8: </a>  <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>     ierr;
+<a name="line9">  9: </a>  <a href="../../../../../docs/manualpages/PetscSF/PetscSF.html#PetscSF">PetscSF</a>            sfA, sfB, sfBA;
+<a name="line10"> 10: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>           nrootsA, nleavesA, nrootsB, nleavesB;
+<a name="line11"> 11: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>          *ilocalA, *ilocalB;
+<a name="line12"> 12: </a>  <a href="../../../../../docs/manualpages/PetscSF/PetscSFNode.html#PetscSFNode">PetscSFNode</a>       *iremoteA, *iremoteB;
+<a name="line13"> 13: </a>  <a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a>                a, b, ba;
+<a name="line14"> 14: </a>  const <a href="../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> *arrayR;
+<a name="line15"> 15: </a>  <a href="../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>       *arrayW;
+<a name="line16"> 16: </a>  <a href="../../../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a>        size;
+<a name="line17"> 17: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>           i;
+<a name="line18"> 18: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>           maxleafB;
+<a name="line19"> 19: </a>  <a href="../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>          flag = <a href="../../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+
+<a name="line21"> 21: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInitialize.html#PetscInitialize">PetscInitialize</a>(&amp;argc,&amp;argv,NULL,help);<font color="#4169E1">if</font> (ierr) <font color="#4169E1">return</font> ierr;
+<a name="line22"> 22: </a>  <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_size.html#MPI_Comm_size">MPI_Comm_size</a>(<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,&amp;size);
+
+<a name="line24"> 24: </a>  <font color="#4169E1">if</font> (size != 1) <a href="../../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>, PETSC_ERR_USER, <font color="#666666">"Only coded for one MPI process"</font>);
+
+<a name="line26"> 26: </a>  <a href="../../../../../docs/manualpages/PetscSF/PetscSFCreate.html#PetscSFCreate">PetscSFCreate</a>(<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>, &amp;sfA);
+<a name="line27"> 27: </a>  <a href="../../../../../docs/manualpages/PetscSF/PetscSFCreate.html#PetscSFCreate">PetscSFCreate</a>(<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>, &amp;sfB);
+<a name="line28"> 28: </a>  <a href="../../../../../docs/manualpages/PetscSF/PetscSFSetFromOptions.html#PetscSFSetFromOptions">PetscSFSetFromOptions</a>(sfA);
+<a name="line29"> 29: </a>  <a href="../../../../../docs/manualpages/PetscSF/PetscSFSetFromOptions.html#PetscSFSetFromOptions">PetscSFSetFromOptions</a>(sfB);
+
+<a name="line31"> 31: </a>  <a href="../../../../../docs/manualpages/Sys/PetscOptionsGetBool.html#PetscOptionsGetBool">PetscOptionsGetBool</a>(NULL,NULL,<font color="#666666">"-sparse_sfB"</font>,&amp;flag,NULL);
+
+<a name="line33"> 33: </a>  <font color="#4169E1">if</font> (flag) {
+<a name="line34"> 34: </a>    <font color="#B22222">/* sfA permutes indices, sfB has sparse leaf space. */</font>
+<a name="line35"> 35: </a>    nrootsA = 3;
+<a name="line36"> 36: </a>    nleavesA = 3;
+<a name="line37"> 37: </a>    nrootsB = 3;
+<a name="line38"> 38: </a>    nleavesB = 2;
+<a name="line39"> 39: </a>  } <font color="#4169E1">else</font> {
+<a name="line40"> 40: </a>    <font color="#B22222">/* sfA reverses indices, sfB is identity */</font>
+<a name="line41"> 41: </a>    nrootsA = nrootsB = nleavesA = nleavesB = 4;
+<a name="line42"> 42: </a>  }
+<a name="line43"> 43: </a>  <a href="../../../../../docs/manualpages/Sys/PetscMalloc1.html#PetscMalloc1">PetscMalloc1</a>(nleavesA, &amp;ilocalA);
+<a name="line44"> 44: </a>  <a href="../../../../../docs/manualpages/Sys/PetscMalloc1.html#PetscMalloc1">PetscMalloc1</a>(nleavesA, &amp;iremoteA);
+<a name="line45"> 45: </a>  <a href="../../../../../docs/manualpages/Sys/PetscMalloc1.html#PetscMalloc1">PetscMalloc1</a>(nleavesB, &amp;ilocalB);
+<a name="line46"> 46: </a>  <a href="../../../../../docs/manualpages/Sys/PetscMalloc1.html#PetscMalloc1">PetscMalloc1</a>(nleavesB, &amp;iremoteB);
+
+<a name="line48"> 48: </a>  <font color="#4169E1">for</font> (i = 0; i &lt; nleavesA; i++) {
+<a name="line49"> 49: </a>    iremoteA[i].rank = 0;
+<a name="line50"> 50: </a>    iremoteA[i].index = i;
+<a name="line51"> 51: </a>    <font color="#4169E1">if</font> (flag) {
+<a name="line52"> 52: </a>      ilocalA[i] = (i + 1) % nleavesA;
+<a name="line53"> 53: </a>    } <font color="#4169E1">else</font> {
+<a name="line54"> 54: </a>      ilocalA[i] = nleavesA - i - 1;
+<a name="line55"> 55: </a>    }
+<a name="line56"> 56: </a>  }
+
+<a name="line58"> 58: </a>  <font color="#4169E1">for</font> (i = 0; i &lt; nleavesB; i++) {
+<a name="line59"> 59: </a>    iremoteB[i].rank = 0;
+<a name="line60"> 60: </a>    <font color="#4169E1">if</font> (flag) {
+<a name="line61"> 61: </a>      ilocalB[i] = nleavesB - i;
+<a name="line62"> 62: </a>      iremoteB[i].index = nleavesB - i - 1;
+<a name="line63"> 63: </a>    } <font color="#4169E1">else</font> {
+<a name="line64"> 64: </a>      ilocalB[i] = i;
+<a name="line65"> 65: </a>      iremoteB[i].index = i;
+<a name="line66"> 66: </a>    }
+<a name="line67"> 67: </a>  }
+
+<a name="line69"> 69: </a>  <a href="../../../../../docs/manualpages/PetscSF/PetscSFSetGraph.html#PetscSFSetGraph">PetscSFSetGraph</a>(sfA, nrootsA, nleavesA, ilocalA, <a href="../../../../../docs/manualpages/Sys/PetscCopyMode.html#PetscCopyMode">PETSC_OWN_POINTER</a>, iremoteA, <a href="../../../../../docs/manualpages/Sys/PetscCopyMode.html#PetscCopyMode">PETSC_OWN_POINTER</a>);
+<a name="line70"> 70: </a>  <a href="../../../../../docs/manualpages/PetscSF/PetscSFSetGraph.html#PetscSFSetGraph">PetscSFSetGraph</a>(sfB, nrootsB, nleavesB, ilocalB, <a href="../../../../../docs/manualpages/Sys/PetscCopyMode.html#PetscCopyMode">PETSC_OWN_POINTER</a>, iremoteB, <a href="../../../../../docs/manualpages/Sys/PetscCopyMode.html#PetscCopyMode">PETSC_OWN_POINTER</a>);
+<a name="line71"> 71: </a>  <a href="../../../../../docs/manualpages/PetscSF/PetscSFSetUp.html#PetscSFSetUp">PetscSFSetUp</a>(sfA);
+<a name="line72"> 72: </a>  <a href="../../../../../docs/manualpages/PetscSF/PetscSFSetUp.html#PetscSFSetUp">PetscSFSetUp</a>(sfB);
+<a name="line73"> 73: </a>  <a href="../../../../../docs/manualpages/Sys/PetscObjectSetName.html#PetscObjectSetName">PetscObjectSetName</a>((<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)sfA, <font color="#666666">"sfA"</font>);
+<a name="line74"> 74: </a>  <a href="../../../../../docs/manualpages/Sys/PetscObjectSetName.html#PetscObjectSetName">PetscObjectSetName</a>((<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)sfB, <font color="#666666">"sfB"</font>);
+
+<a name="line76"> 76: </a>  <a href="../../../../../docs/manualpages/Vec/VecCreateSeq.html#VecCreateSeq">VecCreateSeq</a>(<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>, nrootsA, &amp;a);
+<a name="line77"> 77: </a>  <a href="../../../../../docs/manualpages/Vec/VecCreateSeq.html#VecCreateSeq">VecCreateSeq</a>(<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>, nleavesA, &amp;b);
+<a name="line78"> 78: </a>  <a href="../../../../../docs/manualpages/PetscSF/PetscSFGetLeafRange.html#PetscSFGetLeafRange">PetscSFGetLeafRange</a>(sfB, NULL, &amp;maxleafB);
+<a name="line79"> 79: </a>  <a href="../../../../../docs/manualpages/Vec/VecCreateSeq.html#VecCreateSeq">VecCreateSeq</a>(<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>, maxleafB+1, &amp;ba);
+<a name="line80"> 80: </a>  <a href="../../../../../docs/manualpages/Vec/VecGetArray.html#VecGetArray">VecGetArray</a>(a, &amp;arrayW);
+<a name="line81"> 81: </a>  <font color="#4169E1">for</font> (i = 0; i &lt; nrootsA; i++) {
+<a name="line82"> 82: </a>    arrayW[i] = (<a href="../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>)i;
+<a name="line83"> 83: </a>  }
+<a name="line84"> 84: </a>  <a href="../../../../../docs/manualpages/Vec/VecRestoreArray.html#VecRestoreArray">VecRestoreArray</a>(a, &amp;arrayW);
+
+<a name="line86"> 86: </a>  <a href="../../../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>, <font color="#666666">"Initial <a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> A\n"</font>);
+<a name="line87"> 87: </a>  <a href="../../../../../docs/manualpages/Vec/VecView.html#VecView">VecView</a>(a, NULL);
+<a name="line88"> 88: </a>  <a href="../../../../../docs/manualpages/Vec/VecGetArrayRead.html#VecGetArrayRead">VecGetArrayRead</a>(a, &amp;arrayR);
+<a name="line89"> 89: </a>  <a href="../../../../../docs/manualpages/Vec/VecGetArray.html#VecGetArray">VecGetArray</a>(b, &amp;arrayW);
+
+<a name="line91"> 91: </a>  <a href="../../../../../docs/manualpages/PetscSF/PetscSFBcastBegin.html#PetscSFBcastBegin">PetscSFBcastBegin</a>(sfA, <a href="../../../../../docs/manualpages/Sys/MPIU_SCALAR.html#MPIU_SCALAR">MPIU_SCALAR</a>, arrayR, arrayW);
+<a name="line92"> 92: </a>  <a href="../../../../../docs/manualpages/PetscSF/PetscSFBcastEnd.html#PetscSFBcastEnd">PetscSFBcastEnd</a>(sfA, <a href="../../../../../docs/manualpages/Sys/MPIU_SCALAR.html#MPIU_SCALAR">MPIU_SCALAR</a>, arrayR, arrayW);
+<a name="line93"> 93: </a>  <a href="../../../../../docs/manualpages/Vec/VecRestoreArray.html#VecRestoreArray">VecRestoreArray</a>(b, &amp;arrayW);
+<a name="line94"> 94: </a>  <a href="../../../../../docs/manualpages/Vec/VecRestoreArrayRead.html#VecRestoreArrayRead">VecRestoreArrayRead</a>(a, &amp;arrayR);
+<a name="line95"> 95: </a>  <a href="../../../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>, <font color="#666666">"\nBroadcast A-&gt;B over sfA\n"</font>);
+<a name="line96"> 96: </a>  <a href="../../../../../docs/manualpages/Vec/VecView.html#VecView">VecView</a>(b, NULL);
+
+<a name="line98"> 98: </a>  <a href="../../../../../docs/manualpages/Vec/VecGetArrayRead.html#VecGetArrayRead">VecGetArrayRead</a>(b, &amp;arrayR);
+<a name="line99"> 99: </a>  <a href="../../../../../docs/manualpages/Vec/VecGetArray.html#VecGetArray">VecGetArray</a>(ba, &amp;arrayW);
+<a name="line100">100: </a>  arrayW[0] = 10.0;             <font color="#B22222">/* Not touched by bcast */</font>
+<a name="line101">101: </a>  <a href="../../../../../docs/manualpages/PetscSF/PetscSFBcastBegin.html#PetscSFBcastBegin">PetscSFBcastBegin</a>(sfB, <a href="../../../../../docs/manualpages/Sys/MPIU_SCALAR.html#MPIU_SCALAR">MPIU_SCALAR</a>, arrayR, arrayW);
+<a name="line102">102: </a>  <a href="../../../../../docs/manualpages/PetscSF/PetscSFBcastEnd.html#PetscSFBcastEnd">PetscSFBcastEnd</a>(sfB, <a href="../../../../../docs/manualpages/Sys/MPIU_SCALAR.html#MPIU_SCALAR">MPIU_SCALAR</a>, arrayR, arrayW);
+<a name="line103">103: </a>  <a href="../../../../../docs/manualpages/Vec/VecRestoreArrayRead.html#VecRestoreArrayRead">VecRestoreArrayRead</a>(b, &amp;arrayR);
+<a name="line104">104: </a>  <a href="../../../../../docs/manualpages/Vec/VecRestoreArray.html#VecRestoreArray">VecRestoreArray</a>(ba, &amp;arrayW);
+
+<a name="line106">106: </a>  <a href="../../../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>, <font color="#666666">"\nBroadcast B-&gt;BA over sfB\n"</font>);
+<a name="line107">107: </a>  <a href="../../../../../docs/manualpages/Vec/VecView.html#VecView">VecView</a>(ba, NULL);
+
+<a name="line109">109: </a>  <a href="../../../../../docs/manualpages/PetscSF/PetscSFCompose.html#PetscSFCompose">PetscSFCompose</a>(sfA, sfB, &amp;sfBA);
+<a name="line110">110: </a>  <a href="../../../../../docs/manualpages/PetscSF/PetscSFSetFromOptions.html#PetscSFSetFromOptions">PetscSFSetFromOptions</a>(sfBA);
+<a name="line111">111: </a>  <a href="../../../../../docs/manualpages/Sys/PetscObjectSetName.html#PetscObjectSetName">PetscObjectSetName</a>((<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)sfBA, <font color="#666666">"(sfB o sfA)"</font>);
+<a name="line112">112: </a>  <a href="../../../../../docs/manualpages/Vec/VecGetArrayRead.html#VecGetArrayRead">VecGetArrayRead</a>(a, &amp;arrayR);
+<a name="line113">113: </a>  <a href="../../../../../docs/manualpages/Vec/VecGetArray.html#VecGetArray">VecGetArray</a>(ba, &amp;arrayW);
+<a name="line114">114: </a>  arrayW[0] = 11.0;             <font color="#B22222">/* Not touched by bcast */</font>
+<a name="line115">115: </a>  <a href="../../../../../docs/manualpages/PetscSF/PetscSFBcastBegin.html#PetscSFBcastBegin">PetscSFBcastBegin</a>(sfBA, <a href="../../../../../docs/manualpages/Sys/MPIU_SCALAR.html#MPIU_SCALAR">MPIU_SCALAR</a>, arrayR, arrayW);
+<a name="line116">116: </a>  <a href="../../../../../docs/manualpages/PetscSF/PetscSFBcastEnd.html#PetscSFBcastEnd">PetscSFBcastEnd</a>(sfBA, <a href="../../../../../docs/manualpages/Sys/MPIU_SCALAR.html#MPIU_SCALAR">MPIU_SCALAR</a>, arrayR, arrayW);
+<a name="line117">117: </a>  <a href="../../../../../docs/manualpages/Vec/VecRestoreArray.html#VecRestoreArray">VecRestoreArray</a>(ba, &amp;arrayW);
+<a name="line118">118: </a>  <a href="../../../../../docs/manualpages/Vec/VecRestoreArrayRead.html#VecRestoreArrayRead">VecRestoreArrayRead</a>(a, &amp;arrayR);
+<a name="line119">119: </a>  <a href="../../../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>, <font color="#666666">"\nBroadcast A-&gt;BA over sfBA (sfB o sfA)\n"</font>);
+<a name="line120">120: </a>  <a href="../../../../../docs/manualpages/Vec/VecView.html#VecView">VecView</a>(ba, NULL);
+
+<a name="line122">122: </a>  <a href="../../../../../docs/manualpages/Vec/VecDestroy.html#VecDestroy">VecDestroy</a>(&amp;ba);
+<a name="line123">123: </a>  <a href="../../../../../docs/manualpages/Vec/VecDestroy.html#VecDestroy">VecDestroy</a>(&amp;b);
+<a name="line124">124: </a>  <a href="../../../../../docs/manualpages/Vec/VecDestroy.html#VecDestroy">VecDestroy</a>(&amp;a);
+
+<a name="line126">126: </a>  <a href="../../../../../docs/manualpages/PetscSF/PetscSFView.html#PetscSFView">PetscSFView</a>(sfA, NULL);
+<a name="line127">127: </a>  <a href="../../../../../docs/manualpages/PetscSF/PetscSFView.html#PetscSFView">PetscSFView</a>(sfB, NULL);
+<a name="line128">128: </a>  <a href="../../../../../docs/manualpages/PetscSF/PetscSFView.html#PetscSFView">PetscSFView</a>(sfBA, NULL);
+<a name="line129">129: </a>  <a href="../../../../../docs/manualpages/PetscSF/PetscSFDestroy.html#PetscSFDestroy">PetscSFDestroy</a>(&amp;sfA);
+<a name="line130">130: </a>  <a href="../../../../../docs/manualpages/PetscSF/PetscSFDestroy.html#PetscSFDestroy">PetscSFDestroy</a>(&amp;sfB);
+<a name="line131">131: </a>  <a href="../../../../../docs/manualpages/PetscSF/PetscSFDestroy.html#PetscSFDestroy">PetscSFDestroy</a>(&amp;sfBA);
+
+<a name="line133">133: </a>  <a href="../../../../../docs/manualpages/Sys/PetscFinalize.html#PetscFinalize">PetscFinalize</a>();
+
+<a name="line135">135: </a>  <font color="#4169E1">return</font> ierr;
+<a name="line136">136: </a>}
+
+<a name="line138">138: </a><font color="#B22222">/*TEST</font>
+
+<a name="line140">140: </a><font color="#B22222">   test:</font>
+<a name="line141">141: </a><font color="#B22222">     suffix: 1</font>
+
+<a name="line143">143: </a><font color="#B22222">   test:</font>
+<a name="line144">144: </a><font color="#B22222">     suffix: 2</font>
+<a name="line145">145: </a><font color="#B22222">     filter: grep -v "type" | grep -v "sort"</font>
+<a name="line146">146: </a><font color="#B22222">     args: -sparse_sfB</font>
+
+<a name="line148">148: </a><font color="#B22222">   test:</font>
+<a name="line149">149: </a><font color="#B22222">     suffix: 2_window</font>
+<a name="line150">150: </a><font color="#B22222">     filter: grep -v "type" | grep -v "sort"</font>
+<a name="line151">151: </a><font color="#B22222">     output_file: output/ex4_2.out</font>
+<a name="line152">152: </a><font color="#B22222">     args: -sparse_sfB -sf_type window -sf_window_sync {{fence active lock}} -sf_window_flavor {{create dynamic allocate}}</font>
+<a name="line153">153: </a><font color="#B22222">     requires: define(PETSC_HAVE_MPI_ONE_SIDED)</font>
+
+<a name="line155">155: </a><font color="#B22222">   # The nightly test suite with MPICH uses ch3:sock, which is broken when winsize == 0 in some of the processes</font>
+<a name="line156">156: </a><font color="#B22222">   test:</font>
+<a name="line157">157: </a><font color="#B22222">     suffix: 2_window_shared</font>
+<a name="line158">158: </a><font color="#B22222">     filter: grep -v "type" | grep -v "sort"</font>
+<a name="line159">159: </a><font color="#B22222">     output_file: output/ex4_2.out</font>
+<a name="line160">160: </a><font color="#B22222">     args: -sparse_sfB -sf_type window -sf_window_sync {{fence active lock}} -sf_window_flavor shared</font>
+<a name="line161">161: </a><font color="#B22222">     requires: define(PETSC_HAVE_MPI_PROCESS_SHARED_MEMORY) !define(PETSC_HAVE_MPICH_NUMVERSION) define(PETSC_HAVE_MPI_ONE_SIDED)</font>
+
+<a name="line163">163: </a><font color="#B22222">TEST*/</font>
+</pre>
+</body>
+
+</html>

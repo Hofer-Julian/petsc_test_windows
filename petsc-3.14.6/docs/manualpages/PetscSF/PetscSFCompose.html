@@ -1,0 +1,48 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/PetscSF/PetscSFCompose.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>PetscSFCompose</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/PetscSF/PetscSFCompose.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="PetscSFCompose"><H1>PetscSFCompose</H1></A>
+Compose a new <A HREF="../PetscSF/PetscSF.html#PetscSF">PetscSF</A> by putting the second SF under the first one in a top (roots) down (leaves) view 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscsf.h" 
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../PetscSF/PetscSFCompose.html#PetscSFCompose">PetscSFCompose</A>(<A HREF="../PetscSF/PetscSF.html#PetscSF">PetscSF</A> sfA,<A HREF="../PetscSF/PetscSF.html#PetscSF">PetscSF</A> sfB,<A HREF="../PetscSF/PetscSF.html#PetscSF">PetscSF</A> *sfBA)
+</PRE>
+<H3><FONT COLOR="#CC3333">Input Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>sfA </B></TD><TD>- The first <A HREF="../PetscSF/PetscSF.html#PetscSF">PetscSF</A>
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>sfB </B></TD><TD>- The second <A HREF="../PetscSF/PetscSF.html#PetscSF">PetscSF</A>
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Output Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>sfBA </B></TD><TD>- The composite SF
+</TD></TR></TABLE>
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">Notes</FONT></H3>
+Currently, the two SFs must be defined on congruent communicators and they must be true star
+forests, i.e. the same leaf is not connected with different roots.
+<P>
+sfA's leaf space and sfB's root space might be partially overlapped. The composition builds
+a graph with sfA's roots and sfB's leaves only when there is a path between them. Unconnected
+nodes (roots or leaves) are not in sfBA. Doing a Bcast on the new SF is equivalent to doing a
+Bcast on sfA, then a Bcast on sfB, on connected nodes.
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../PetscSF/PetscSF.html#PetscSF">PetscSF</A>, <A HREF="../PetscSF/PetscSFComposeInverse.html#PetscSFComposeInverse">PetscSFComposeInverse</A>(), <A HREF="../PetscSF/PetscSFGetGraph.html#PetscSFGetGraph">PetscSFGetGraph</A>(), <A HREF="../PetscSF/PetscSFSetGraph.html#PetscSFSetGraph">PetscSFSetGraph</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>developer<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/vec/is/sf/interface/sf.c.html#PetscSFCompose">src/vec/is/sf/interface/sf.c</A>
+<BR><A HREF="./index.html">Index of all PetscSF routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

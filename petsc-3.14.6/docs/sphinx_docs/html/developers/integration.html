@@ -1,0 +1,660 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/sphinx_docs/html/developers/integration.html" />
+    <meta charset="utf-8" />
+    <title>PETSc Integration Workflows &#8212; PETSc 3.14.6 documentation</title>
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/katex-math.css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/contrib/auto-render.min.js"></script>
+    <script src="../_static/katex_autorenderer.js"></script>
+    <link rel="shortcut icon" href="../_static/PETSc_RGB-logo.png"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="BuildSystem" href="buildsystem.html" />
+    <link rel="prev" title="PETSc Style and Usage Guide" href="style.html" /> 
+  </head><body>
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/sphinx_docs/html/developers/integration.html "><small>Report Typos and Errors</small></a></div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="buildsystem.html" title="BuildSystem"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="style.html" title="PETSc Style and Usage Guide"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">PETSc 3.14.6 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">PETSc Developer’s Documentation</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/PETSc-TAO_RGB.svg" alt="Logo"/>
+            </a></p>
+  <h3><a href="../index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">PETSc Integration Workflows</a><ul>
+<li><a class="reference internal" href="#integration-branches">Integration branches</a><ul>
+<li><a class="reference internal" href="#master"><code class="docutils literal notranslate"><span class="pre">master</span></code></a></li>
+<li><a class="reference internal" href="#release"><code class="docutils literal notranslate"><span class="pre">release</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#contributing-workflows">Contributing workflows</a><ul>
+<li><a class="reference internal" href="#before-filing-a-merge-request">Before filing a merge request</a></li>
+<li><a class="reference internal" href="#submit-merge-request">Submit merge request</a><ul>
+<li><a class="reference internal" href="#merge-request-from-a-fork">Merge request from a fork</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#test-using-gitlab-pipelines">Test using gitlab pipelines</a><ul>
+<li><a class="reference internal" href="#more-on-mr-pipelines">More on MR pipelines</a></li>
+<li><a class="reference internal" href="#submit-merge-requests-for-suggestions-on-design-etc">Submit merge requests for suggestions on design, etc.</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#merge-request-review-process">Merge request review process</a><ul>
+<li><a class="reference internal" href="#docs-only-changes">Docs-only changes</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#gitlab-instructions">GitLab instructions</a></li>
+<li><a class="reference internal" href="#git-instructions">Git instructions</a><ul>
+<li><a class="reference internal" href="#setup">Setup</a></li>
+<li><a class="reference internal" href="#quick-summary-of-git-commands-for-petsc-developers">Quick summary of Git commands for PETSc developers</a><ul>
+<li><a class="reference internal" href="#starting-and-working-on-a-new-feature-branch">Starting and working on a new feature branch</a></li>
+<li><a class="reference internal" href="#switching-between-and-handling-branches">Switching between and handling branches</a></li>
+<li><a class="reference internal" href="#reading-commit-logs">Reading commit logs</a></li>
+<li><a class="reference internal" href="#miscellaneous">Miscellaneous</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#prompt">Prompt</a></li>
+<li><a class="reference internal" href="#tab-completion">Tab completion</a></li>
+<li><a class="reference internal" href="#writing-commit-messages">Writing commit messages</a><ul>
+<li><a class="reference internal" href="#merge-commits">Merge commits</a></li>
+<li><a class="reference internal" href="#further-reading">Further reading</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#developing-new-features">Developing new features</a></li>
+<li><a class="reference internal" href="#checking-out-tracking-a-remote-branch">Checking out (tracking) a remote branch</a></li>
+<li><a class="reference internal" href="#merging">Merging</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="style.html"
+                        title="previous chapter">PETSc Style and Usage Guide</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="buildsystem.html"
+                        title="next chapter">BuildSystem</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/developers/integration.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="petsc-integration-workflows">
+<h1>PETSc Integration Workflows<a class="headerlink" href="#petsc-integration-workflows" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="integration-branches">
+<h2>Integration branches<a class="headerlink" href="#integration-branches" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="master">
+<span id="sec-master-branch"></span><h3><code class="docutils literal notranslate"><span class="pre">master</span></code><a class="headerlink" href="#master" title="Permalink to this headline">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">master</span></code> branch (soon to be renamed) contains all features and bug fixes that are believed to be
+stable and will be in the next release (e.g. version 3.14). Users developing software based
+on recently-added features in PETSc should follow <code class="docutils literal notranslate"><span class="pre">master</span></code>.</p>
+<p>New feature branches should start from <code class="docutils literal notranslate"><span class="pre">master</span></code>.</p>
+</div>
+<div class="section" id="release">
+<span id="sec-release-branch"></span><h3><code class="docutils literal notranslate"><span class="pre">release</span></code><a class="headerlink" href="#release" title="Permalink to this headline">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">release</span></code> branch provides bug-fix patches for the latest release.
+Bug fixes for the release should be started here:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ git checkout -b yourname/fix-component-name release
+</pre></div>
+</div>
+<p>As with new features, it will be tested and later merged to
+<code class="docutils literal notranslate"><span class="pre">release</span></code> and <code class="docutils literal notranslate"><span class="pre">master</span></code>. Bug-fix updates (e.g. 3.14.1) are tagged on <code class="docutils literal notranslate"><span class="pre">release</span></code> (e.g. v3.14.1).</p>
+</div>
+</div>
+<div class="section" id="contributing-workflows">
+<h2>Contributing workflows<a class="headerlink" href="#contributing-workflows" title="Permalink to this headline">¶</a></h2>
+<p>By submitting code, the contributor gives irretrievable consent to the
+redistribution and/or modification of the contributed source code as
+described in the <a class="reference external" href="https://gitlab.com/petsc/petsc/-/blob/master/CONTRIBUTING">PETSc open source license</a>.</p>
+<div class="section" id="before-filing-a-merge-request">
+<h3>Before filing a merge request<a class="headerlink" href="#before-filing-a-merge-request" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Read the <a class="reference internal" href="style.html"><span class="doc">PETSc Style and Usage Guide</span></a></p></li>
+<li><p>If your contribution can be logically decomposed into 2 or more
+separate contributions, submit them in sequence with different
+branches instead of all at once.</p></li>
+<li><p>Include tests which cover any changes to the source code.</p></li>
+<li><p>Run the full test suite on your machine -
+i.e <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">alltests</span> <span class="pre">TIMEOUT=600</span></code></p></li>
+<li><p>Run source checker on your machine -
+i.e <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">checkbadSource</span></code></p></li>
+</ul>
+</div>
+<div class="section" id="submit-merge-request">
+<h3>Submit merge request<a class="headerlink" href="#submit-merge-request" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">push</span></code> prints a URL that can be used to create a merge request.
+Alternatively, use <a class="reference external" href="https://gitlab.com/petsc/petsc/-/merge_requests/new">GitLab’s web interface</a>.</p></li>
+<li><p>Select the correct target branch (<a class="reference internal" href="#sec-master-branch"><span class="std std-ref">master</span></a> or <a class="reference internal" href="#sec-release-branch"><span class="std std-ref">release</span></a>).</p></li>
+<li><p>Select appropriate <a class="reference external" href="https://gitlab.com/petsc/petsc/-/labels">labels</a> including “workflow::Pipeline-Testing”</p></li>
+<li><p>If the merge request resolves an outstanding <a class="reference external" href="https://gitlab.com/petsc/petsc/issues">issue</a>), you should include a <a class="reference external" href="https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#default-closing-pattern">closing
+pattern</a>
+such as “Fixes #123” in the MR’s description so that issue gets
+closed once the MR is merged.</p></li>
+</ul>
+<div class="section" id="merge-request-from-a-fork">
+<h4>Merge request from a fork<a class="headerlink" href="#merge-request-from-a-fork" title="Permalink to this headline">¶</a></h4>
+<ul class="simple">
+<li><p>To use the web interface option - use the fork web page, merge requests, new merge request.</p></li>
+<li><p>Select the correct target repository <code class="docutils literal notranslate"><span class="pre">petsc/petsc</span></code> (along with the target branch)</p></li>
+<li><p>Assign the MR to one of the developers.</p></li>
+<li><p>Fork users lack permissions to use pipeline resources or set labels
+mentioned in the workflow below. Hence one of the developers would
+have to help with these processes. (If necessary - ping a developer
+in the comments section of the MR page)</p></li>
+</ul>
+</div>
+</div>
+<div class="section" id="test-using-gitlab-pipelines">
+<h3>Test using gitlab pipelines<a class="headerlink" href="#test-using-gitlab-pipelines" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Test pipelines can be started/controlled from the <code class="docutils literal notranslate"><span class="pre">Pipelines</span></code> tab
+on MR page.  When a merge request is created a pipeline is
+automatically started (with a merge with destination branch) - but
+goes into pause state.</p></li>
+<li><p>To run this pipeline <cite>un-pause</cite> this already started pipeline (or
+start a new one if necessary).</p></li>
+<li><p>The test pipeline status is displayed near the top of the MR page
+(and in the pipelines tab)</p></li>
+</ul>
+<div class="section" id="more-on-mr-pipelines">
+<h4>More on MR pipelines<a class="headerlink" href="#more-on-mr-pipelines" title="Permalink to this headline">¶</a></h4>
+<ul class="simple">
+<li><p>Do not overdo requesting testing; it is a limited resource, so if you
+realize a currently running test pipeline is no longer needed, cancel it.</p></li>
+<li><p>When there are failures in a some jobs - and a fix is pushed for
+these failures, one can try re-testing only with the previously
+failed jobs, before running the full pipeline. To do this, start a
+new pipeline (if one is not already auto-started by the MR), cancel
+the pipeline on the pipeline page (this cancels all the jobs in the
+pipeline), now retry the selected jobs by using the little retry
+button to the right of job name. If the selected jobs are
+successful - one can run the full pipeline by using the retry
+button at the top of the page.</p></li>
+<li><p>Note the retry button at the top of pipeline page does NOT use any
+new changes to the branch when it retries - it retries exactly the
+same git commit that was previously tried (and skips the already
+successful jobs).</p></li>
+<li><p>Please report all “odd” errors in the testing that don’t seem related
+to your branch in <a class="reference external" href="https://gitlab.com/petsc/petsc/issues/360">issue 360</a>.</p>
+<ol class="arabic simple">
+<li><p>Check the current current threads to see if it is listed and add
+it there, with a link to your MR (e.g. <code class="docutils literal notranslate"><span class="pre">!1234</span></code>). Otherwise, create a new thread.</p></li>
+<li><p>Click the three dots in the top right of the thread and select
+“copy link”</p></li>
+<li><p>Add this link in your MR description.</p></li>
+</ol>
+</li>
+</ul>
+</div>
+<div class="section" id="submit-merge-requests-for-suggestions-on-design-etc">
+<h4>Submit merge requests for suggestions on design, etc.<a class="headerlink" href="#submit-merge-requests-for-suggestions-on-design-etc" title="Permalink to this headline">¶</a></h4>
+<ul class="simple">
+<li><p>You do not need to test the code before submitting</p></li>
+<li><p>Make sure to select DRAFT at the top of the MR page</p></li>
+<li><p>select the additional label “workflow::Request-For-Comment”</p></li>
+<li><p>There is also a button <code class="docutils literal notranslate"><span class="pre">Add</span> <span class="pre">a</span> <span class="pre">task</span> <span class="pre">list</span></code> (next to numbered list) if
+you edit any Markdown-supporting text area. You can use this to add
+task lists to a WIP MR.</p></li>
+</ul>
+</div>
+</div>
+<div class="section" id="merge-request-review-process">
+<h3>Merge request review process<a class="headerlink" href="#merge-request-review-process" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Once the MR is tested and ready for review, change the label on the
+MR page to “workflow::Review”</p></li>
+</ul>
+<p>It is the <strong>submitter’s</strong> responsibility to track the progress of the MR
+and ensure it gets merged to master (or release). If the pipeline tests
+detect problems it is the <strong>submitter’s</strong> responsibility to fix the
+errors.</p>
+<p>Gitlab merge requests (MRs) use “threads” to track discussions on MR.
+This allows Gitlab and reviewers to track what threads are not yet
+resolved.</p>
+<ul class="simple">
+<li><p>When introducing a new topic (thread) in reviewing a MR make sure you
+submit with <code class="docutils literal notranslate"><span class="pre">Start</span> <span class="pre">thread</span></code> and not the <code class="docutils literal notranslate"><span class="pre">Comment</span></code> green button.</p></li>
+<li><p>When responding to a thread make sure to use <code class="docutils literal notranslate"><span class="pre">Reply</span> <span class="pre">box</span></code> for that
+thread; do not introduce a new thread or a comment.</p></li>
+</ul>
+<p>The <strong>submitter</strong> must mark threads as resolved as they fix the related
+issue.</p>
+<p>If the <strong>submitter</strong> feels the MR is not getting reviewed in a timely
+manner they may Assign (upper right corner of the screen) to potential
+reviewers and request in the discussion these same people to review by &#64;
+mentioning them.</p>
+<p>When the merge has been approved (requires codeowners, integrator
+approvals), all the tests work, and all the threads have been resolved
+the <strong>submitter</strong> must set a label to “workflow::Ready-For-Merge” (can
+also assign the MR to (&#64;sbalay) if necessary)</p>
+<div class="section" id="docs-only-changes">
+<h4>Docs-only changes<a class="headerlink" href="#docs-only-changes" title="Permalink to this headline">¶</a></h4>
+<p>To allow for small, quick changes to documentation, if you have made
+<strong>absolutely sure</strong> that your changes only affect documentation, you may
+create your merge request, add the
+“workflow::Docs-Review-Merge” label, and assign to an integrator
+to review and merge.</p>
+<p>If in doubt, use the normal review process.</p>
+<p>Remember that documentation changes should be made to the <a class="reference internal" href="#sec-release-branch"><span class="std std-ref">the release branch</span></a>
+if they apply to the release version of PETSc.</p>
+</div>
+</div>
+</div>
+<div class="section" id="gitlab-instructions">
+<h2>GitLab instructions<a class="headerlink" href="#gitlab-instructions" title="Permalink to this headline">¶</a></h2>
+<p>We use labels to track related groups of activities. To follow labels
+(such as GPU or DMNetwork) go to <a class="reference external" href="https://gitlab.com/petsc/petsc/-/labels">the labels page</a>
+and click “Subscribe” on the right side of the table. All merge requests
+and issue submissions should supply appropriate labels.</p>
+</div>
+<div class="section" id="git-instructions">
+<h2>Git instructions<a class="headerlink" href="#git-instructions" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="setup">
+<h3>Setup<a class="headerlink" href="#setup" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Set your name: <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">config</span> <span class="pre">--global</span> <span class="pre">user.name</span>&#160; <span class="pre">&quot;Your</span> <span class="pre">Name&quot;</span></code></p></li>
+<li><p>Set your email: <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">config</span> <span class="pre">--global</span> <span class="pre">user.email</span> <span class="pre">&quot;me&#64;example.com&quot;</span></code></p></li>
+<li><p>Do not push local branches nonexistent on upstream by default:
+<code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">config</span> <span class="pre">--global</span> <span class="pre">push.default</span> <span class="pre">simple</span></code> (older versions of git
+require <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">config</span> <span class="pre">--global</span> <span class="pre">push.default</span> <span class="pre">tracking</span></code>)</p></li>
+</ul>
+</div>
+<div class="section" id="quick-summary-of-git-commands-for-petsc-developers">
+<h3>Quick summary of Git commands for PETSc developers<a class="headerlink" href="#quick-summary-of-git-commands-for-petsc-developers" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="starting-and-working-on-a-new-feature-branch">
+<h4>Starting and working on a new feature branch<a class="headerlink" href="#starting-and-working-on-a-new-feature-branch" title="Permalink to this headline">¶</a></h4>
+<ul>
+<li><p>Make sure you start from master: <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">checkout</span> <span class="pre">master</span></code></p></li>
+<li><p>Create and switch to a new feature branch:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">checkout</span> <span class="o">-</span><span class="n">b</span> <span class="o">&lt;</span><span class="n">loginname</span><span class="o">&gt;/&lt;</span><span class="n">affected</span><span class="o">-</span><span class="n">package</span><span class="o">&gt;-&lt;</span><span class="kt">short</span><span class="o">-</span><span class="n">description</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<p>For example, Barry’s new feature branch on removing CPP in snes/ will
+use</p>
+<p><code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">checkout</span> <span class="pre">-b</span> <span class="pre">barry/snes-removecpp</span></code>. Use all lowercase and no
+additional underscores.</p>
+</li>
+<li><p>Write code</p></li>
+<li><p>Inspect changes: <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">status</span></code></p></li>
+<li><p>Commit code:</p>
+<ul class="simple">
+<li><p>Commit all files changed: <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">commit</span> <span class="pre">-a</span></code> or</p></li>
+<li><p>Commit selected files: <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">commit</span> <span class="pre">file1</span> <span class="pre">file2</span> <span class="pre">file1</span></code> or</p></li>
+<li><p>Add new files to be committed: <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">add</span> <span class="pre">file1</span> <span class="pre">file2</span></code> followed by
+<code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">commit</span></code>. Modified files can be added to a commit in the
+same way.</p></li>
+</ul>
+</li>
+<li><p>Push feature branch to the remote for review:
+<code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">push</span> <span class="pre">-u</span> <span class="pre">origin</span> <span class="pre">barry/snes-removecpp</span></code></p>
+<p>(or equivalently,
+<code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">push</span> <span class="pre">--set-upstream</span> <span class="pre">origin</span> <span class="pre">barry/snes-removecpp</span></code>)</p>
+</li>
+</ul>
+</div>
+<div class="section" id="switching-between-and-handling-branches">
+<h4>Switching between and handling branches<a class="headerlink" href="#switching-between-and-handling-branches" title="Permalink to this headline">¶</a></h4>
+<ul>
+<li><p>Switch: <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">checkout</span> <span class="pre">&lt;branchname&gt;</span></code>, for example
+<code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">checkout</span> <span class="pre">barry/snes-removecpp</span></code></p></li>
+<li><p>Show local and remote-tracking branches: <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">branch</span> <span class="pre">-a</span></code></p></li>
+<li><p>Show available remotes: <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">remote</span> <span class="pre">-v</span></code></p></li>
+<li><p>Show all branches available on remote: <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">ls-remote</span></code>. Use
+<code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">remote</span> <span class="pre">show</span> <span class="pre">origin</span></code> for a complete summary.</p></li>
+<li><p>Delete local branch: <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">branch</span> <span class="pre">-d</span> <span class="pre">&lt;branchname&gt;</span></code> (only after merge
+to <code class="docutils literal notranslate"><span class="pre">master</span></code> is complete)</p></li>
+<li><p>Delete remote branch: <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">push</span> <span class="pre">origin</span> <span class="pre">:&lt;branchname&gt;</span></code> (mind the
+colon in front of the branch name)</p></li>
+<li><p>Checkout and track a branch available on remote:
+<code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">checkout</span> <span class="pre">-t</span> <span class="pre">knepley/dm-hexfem</span></code> (if you inspect other feature
+branches, e.g. Matt’s hexfem feature branch).</p>
+<p>If you have multiple remotes defined, use
+<code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">checkout</span> <span class="pre">-t</span> <span class="pre">&lt;remotename&gt;/knepley/dm-hexfem</span></code>,
+e.g. <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">checkout</span> <span class="pre">-t</span> <span class="pre">origin/knepley/dm-hexfem</span></code></p>
+</li>
+<li><p>Checkout a branch from remote, but do not track upstream changes on
+remote: <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">checkout</span> <span class="pre">--no-track</span> <span class="pre">knepley/dm-hexfem</span></code></p></li>
+</ul>
+</div>
+<div class="section" id="reading-commit-logs">
+<h4>Reading commit logs<a class="headerlink" href="#reading-commit-logs" title="Permalink to this headline">¶</a></h4>
+<ul class="simple">
+<li><p>Show logs: <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">log</span></code></p></li>
+<li><p>Show logs for file or folder: <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">log</span> <span class="pre">file</span></code></p></li>
+<li><p>Show changes for each log: <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">log</span> <span class="pre">-p</span></code> (add file or folder name if
+required)</p></li>
+<li><p>Show diff:</p>
+<ul>
+<li><p>Current working tree: <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">diff</span> <span class="pre">path/to/file</span></code></p></li>
+<li><p>To other commit: <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">diff</span> <span class="pre">&lt;SHA1&gt;</span> <span class="pre">path/to/file</span></code></p></li>
+<li><p>Compare version of file in two commits:
+<code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">diff</span> <span class="pre">&lt;SHA1&gt;</span> <span class="pre">&lt;SHA1&gt;</span> <span class="pre">path/to/file</span></code></p></li>
+</ul>
+</li>
+<li><p>Show changes that are in master, but not yet in my current branch:</p>
+<ul>
+<li><p>At any path: <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">log</span> <span class="pre">..master</span></code></p></li>
+<li><p>Only affecting a path: <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">log</span> <span class="pre">..master</span> <span class="pre">src/dm/impls/plex/</span></code></p></li>
+<li><p>Tabulated by author:
+<code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">shortlog</span> <span class="pre">v3.3..master</span> <span class="pre">src/dm/impls/plex</span></code></p></li>
+</ul>
+</li>
+<li><p>Showing branches:</p>
+<ul>
+<li><p>Not yet stable: <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">branch</span> <span class="pre">--all</span> <span class="pre">--no-merged</span> <span class="pre">master</span></code></p></li>
+<li><p>Will be in the next release: <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">branch</span> <span class="pre">--all</span> <span class="pre">--merged</span> <span class="pre">master</span></code></p></li>
+<li><p>Remove <code class="docutils literal notranslate"><span class="pre">--all</span></code> to the above to not include remote tracking
+branches (work you have not interacted with yet).</p></li>
+</ul>
+</li>
+<li><p>Find where to fix a bug:</p>
+<ul>
+<li><p>Find the bad line (e.g., using a debugger)</p></li>
+<li><p>Find the commit that introduced it: <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">blame</span> <span class="pre">path/to/file</span></code></p></li>
+<li><p>Find the branch containing that commit:
+<code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">branch</span> <span class="pre">--contains</span> <span class="pre">COMMIT</span></code> (usually one topic branch)</p></li>
+<li><p>Fix bug: <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">checkout</span> <span class="pre">topic-branch-name</span></code>, fix bug,
+<code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">commit</span></code>, make Merge Request, etc.</p></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="miscellaneous">
+<h4>Miscellaneous<a class="headerlink" href="#miscellaneous" title="Permalink to this headline">¶</a></h4>
+<ul class="simple">
+<li><p>Discard changes to a file which are not yet committed:
+<code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">checkout</span> <span class="pre">path/to/file</span></code></p></li>
+<li><p>Discard all changes to the current working tree: <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">checkout</span> <span class="pre">-f</span></code></p></li>
+<li><p>Forward-port local commits to the updated upstream head on master:
+<code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">rebase</span> <span class="pre">master</span></code> (on feature branch)</p></li>
+<li><p>Delete local branch: <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">branch</span> <span class="pre">-D</span> <span class="pre">&lt;branchname&gt;</span></code></p></li>
+<li><p>Delete remote branch: <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">push</span> <span class="pre">origin</span> <span class="pre">:&lt;branchname&gt;</span></code> (only after
+successful integration into <code class="docutils literal notranslate"><span class="pre">master</span></code>)</p></li>
+</ul>
+</div>
+</div>
+<div class="section" id="prompt">
+<h3>Prompt<a class="headerlink" href="#prompt" title="Permalink to this headline">¶</a></h3>
+<p>To stay oriented when working with branches, we encourage configuring
+<a class="reference external" href="https://raw.github.com/git/git/master/contrib/completion/git-prompt.sh">git-prompt</a>.
+In the following, we will include the directory, branch name, and
+PETSC_ARCH in our prompt, e.g.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>~/Src/petsc <span class="o">(</span><span class="nv">master</span><span class="o">=)</span> arch-complex
+$ git checkout release
+ ~/Src/petsc <span class="o">(</span>release&lt;<span class="o">)</span> arch-complex
+</pre></div>
+</div>
+<p>The &lt; indicates that our copy of release is behind the repository we are
+pulling from. To achieve this we have the following in our .profile (for
+bash)</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">source</span> ~/bin/git-prompt.sh  <span class="o">(</span>point this to the location of your git-prompt.sh<span class="o">)</span>
+<span class="nb">export</span> <span class="nv">GIT_PS1_SHOWDIRTYSTATE</span><span class="o">=</span><span class="m">1</span>
+<span class="nb">export</span> <span class="nv">GIT_PS1_SHOWUPSTREAM</span><span class="o">=</span><span class="s2">&quot;auto&quot;</span>
+<span class="nb">export</span> <span class="nv">PS1</span><span class="o">=</span><span class="s1">&#39;\w\[\e[1m\]\[\e[35m\]$(__git_ps1 &quot; (%s)&quot;)\[\e[0m\] ${PETSC_ARCH}\n\$ &#39;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="tab-completion">
+<h3>Tab completion<a class="headerlink" href="#tab-completion" title="Permalink to this headline">¶</a></h3>
+<p>To get tab-completion for git commands, first download and then source
+<a class="reference external" href="https://raw.github.com/git/git/master/contrib/completion/git-completion.bash">git-completion.bash</a>.</p>
+</div>
+<div class="section" id="writing-commit-messages">
+<span id="sec-commit-messages"></span><h3>Writing commit messages<a class="headerlink" href="#writing-commit-messages" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>ComponentName: one-line explanation of commit
+
+After a blank line, write a more detailed explanation of the commit.
+Many tools do not auto-wrap this part, so wrap paragraph text at a
+reasonable length. Commit messages are meant for other people to read,
+possibly months or years later, so describe the rationale for the change
+in a manner that will make sense later.
+
+If any interfaces have changed, the commit should fix occurrences in
+PETSc itself and the message should state its impact on users.
+
+If this affects any known issues, include &quot;fix #ISSUENUMBER&quot; or
+&quot;see #ISSUENUM&quot; in the message (without quotes). GitLab will create
+a link to the issue as well as a link from the issue to this commit,
+notifying anyone that was watching the issue. Feel free to link to
+mailing list discussions or [petsc-maint #NUMBER].
+</pre></div>
+</div>
+<p>Formatted tags in commit messages:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>We have defined several standard tags you should use; this makes it easy
+to search for specific types of contributions. Multiple tags may be used
+in the same commit message.
+
+* If other people contributed significantly to a commit, perhaps by
+reporting bugs or by writing an initial version of the patch,
+acknowledge them using tags at the end of the commit message.
+
+Reported-by: Helpful User &lt;helpful@example.com&gt;
+Based-on-patch-by: Original Idea &lt;original@example.com&gt;
+Thanks-to: Incremental Improver &lt;improver@example.com&gt;
+
+* If work is done for a particular well defined funding
+source or project you should label the commit with one
+or more of the tags
+
+Funded-by: My funding source
+Project: My project name
+\spend 1h  or 30m
+</pre></div>
+</div>
+<p>Commit message template:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>In order to remember tags for commit messages you can create
+a file ~/git/.gitmessage containing the tags. Then on each commit
+git automatically includes these in the editor. Just remember to
+always delete the ones you do not use. For example I have
+
+Funded-by:
+Project:
+\spend
+Reported-by:
+Thanks-to:
+</pre></div>
+</div>
+<p>Searching git on commit messages:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Once you have started using tags it is possible to search the
+commit history for all contributions for a single project etc.
+
+* Get summary of all commits Funded by a particular source
+  git log --all --grep=&#39;Funded-by: P-ECP’ --reverse [-stat or -shortstat]
+
+* Get the number of insertions
+ git log --all --grep=&#39;Funded-by: P-ECP&#39; --reverse --shortstat | grep changed | cut -f5 -d&quot; &quot; | awk &#39;{total += $NF} END { print total }&#39;
+
+* Get the number of deletions
+ git log --all --grep=&#39;Funded-by: P-ECP&#39; --reverse --shortstat | grep changed | cut -f7 -d&quot; &quot; | awk &#39;{total += $NF} END { print total }&#39;
+
+* Get time
+ git log --all --grep=&#39;Funded-by: P-ECP&#39; | grep Time: | cut -f2 -d&quot;:&quot; | sed s/hours//g | sed s/hour//g |awk &#39;{total += $NF} END { print total }&#39;
+</pre></div>
+</div>
+<div class="section" id="merge-commits">
+<h4>Merge commits<a class="headerlink" href="#merge-commits" title="Permalink to this headline">¶</a></h4>
+<p>Do not use <code class="docutils literal notranslate"><span class="pre">-m</span> <span class="pre">'useless</span> <span class="pre">merge</span> <span class="pre">statement'</span></code> when performing a merge.
+Instead, let <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">merge</span></code> set up a commit message in your editor. It
+will look something like this:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Merge branch &#39;master&#39; into yourname/your-feature
+
+Conflicts:
+  path/to/affected/file.c
+  other/conflicted/paths.h
+</pre></div>
+</div>
+<p>(perhaps without a Conflicts section if there are no conflicts). In your
+editor, add a short description of <em>why</em> you are merging. The final
+commit can look something like this:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Merge branch &#39;master&#39; into yourname/your-feature
+
+Obtain symbol visibility (PETSC_INTERN), <a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/SNES/SNESSetConvergenceHistory.html#SNESSetConvergenceHistory">SNESSetConvergenceHistory</a>()
+bug fix, and <a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/SNES/SNESConvergedDefault.html#SNESConvergedDefault">SNESConvergedDefault</a>() interface change.
+
+Conflicts:
+  path/to/affected/file.c
+  other/conflicted/paths.h
+</pre></div>
+</div>
+<p>It should either be to obtain a specific feature or because some major
+changes affect you. When merging to an integration branch, a short summary of the
+purpose of the topic branch is useful.</p>
+</div>
+<div class="section" id="further-reading">
+<h4>Further reading<a class="headerlink" href="#further-reading" title="Permalink to this headline">¶</a></h4>
+<p><a class="reference external" href="http://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html">http://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html</a></p>
+</div>
+</div>
+<div class="section" id="developing-new-features">
+<h3>Developing new features<a class="headerlink" href="#developing-new-features" title="Permalink to this headline">¶</a></h3>
+<p>Always start new features on a fresh branch (‘topic branch’) named after
+what you intend to develop. <strong>Always branch from</strong> <code class="docutils literal notranslate"><span class="pre">master</span></code>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>master<span class="o">)</span> $ git checkout -b yourname/purpose-of-branch
+Switched to a new branch <span class="s1">&#39;yourname/purpose-of-branch&#39;</span>
+<span class="o">(</span>yourname/purpose-of-branch<span class="o">)</span> $
+</pre></div>
+</div>
+<p>The naming convention for a topic branch is</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>&lt;yourname&gt;/&lt;affected-package&gt;-[&lt;affected-package&gt;-...]-&lt;short description&gt;
+</pre></div>
+</div>
+<p>For example, Matt’s work on finite elements for hexahedra within dmplex
+is carried out in the topic branch <code class="docutils literal notranslate"><span class="pre">knepley/dmplex-hexfem</span></code> or
+<code class="docutils literal notranslate"><span class="pre">knepley/dmplex-petscsection-hexfem</span></code>. Don’t use spaces or underscores,
+use lowercase letters only.</p>
+<p>Now develop your feature, committing as you go. Write <a class="reference internal" href="#sec-commit-messages"><span class="std std-ref">good commit messages</span></a>.
+If you are familiar with
+<code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">rebase</span></code>, it can be used at this time to edit your local history,
+making its purpose as clear as possible for the reader. When your
+feature is ready for review and possible integration, run</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>yourname/purpose-of-branch<span class="o">)</span> $ git push --set-upstream origin yourname/purpose-of-branch
+</pre></div>
+</div>
+<p>You can continue to work on this branch, and use <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">push</span></code> to make
+your changes visible. Only push on <em>your</em> branches.</p>
+<p>If you have long-running development of a feature, you will probably
+fall behind the master branch.
+You can replay your changes on top
+of the latest <code class="docutils literal notranslate"><span class="pre">master</span></code> using</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>yourname/purpose-of-branch<span class="o">)</span> $ git rebase master
+</pre></div>
+</div>
+</div>
+<div class="section" id="checking-out-tracking-a-remote-branch">
+<h3>Checking out (tracking) a remote branch<a class="headerlink" href="#checking-out-tracking-a-remote-branch" title="Permalink to this headline">¶</a></h3>
+<p>If you wish to work on a branch that is available on the remote (shown
+via <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">remote</span> <span class="pre">show</span> <span class="pre">origin</span></code>), run</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git checkout &lt;branchname&gt;
+</pre></div>
+</div>
+<p>to create a local branch that will merge from the remote branch. If your
+local repository is not yet aware of the new branch at the remote
+repository, run <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">fetch</span></code> and then repeat the checkout.</p>
+</div>
+<div class="section" id="merging">
+<h3>Merging<a class="headerlink" href="#merging" title="Permalink to this headline">¶</a></h3>
+<p>Every branch has a purpose. Merging into branch <code class="docutils literal notranslate"><span class="pre">branch-A</span></code> is a
+declaration that the purpose of <code class="docutils literal notranslate"><span class="pre">branch-A</span></code> is better served by
+including those commits that were in <code class="docutils literal notranslate"><span class="pre">branch-B</span></code>. This is achieved with
+the command</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>branch-A<span class="o">)</span> $ git merge branch-B
+</pre></div>
+</div>
+<p>Topic branches do not normally contain merge commits, but it is
+acceptable to merge from <code class="docutils literal notranslate"><span class="pre">master</span></code> or from other topic branches if your
+topic depends on a feature or bug fix introduced there. When making such
+a merge, use the commit message to state the reason for the merge.</p>
+<p>For further philosophy on merges, see</p>
+<ul class="simple">
+<li><p><a class="reference external" href="http://gitster.livejournal.com/42247.html">Junio Hamano: Fun with merges and purposes of
+branches</a></p></li>
+<li><p><a class="reference external" href="http://lwn.net/Articles/328436/">LWN: Rebasing and merging: some git best
+practices</a></p></li>
+<li><p><a class="reference external" href="http://yarchive.net/comp/linux/git_merges_from_upstream.html">Linus Torvalds: Merges from
+upstream</a></p></li>
+<li><p><a class="reference external" href="http://lists.mcs.anl.gov/pipermail/petsc-dev/2013-March/011728.html">petsc-dev mailing
+list</a></p></li>
+</ul>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="buildsystem.html" title="BuildSystem"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="style.html" title="PETSc Style and Usage Guide"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">PETSc 3.14.6 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >PETSc Developer’s Documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 1991-2021, UChicago Argonne, LLC and the PETSc Development Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.4.
+    </div>
+  </body>
+</html>

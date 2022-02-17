@@ -1,0 +1,45 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DMPLEX/DMPlexIsDistributed.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>DMPlexIsDistributed</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/DMPLEX/DMPlexIsDistributed.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="DMPlexIsDistributed"><H1>DMPlexIsDistributed</H1></A>
+Find out whether this <A HREF="../DM/DM.html#DM">DM</A> is distributed, i.e. more than one rank owns some points. 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscdmplex.h"   
+#include "petscdmlabel.h"  
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../DMPLEX/DMPlexIsDistributed.html#DMPlexIsDistributed">DMPlexIsDistributed</A>(<A HREF="../DM/DM.html#DM">DM</A> dm, <A HREF="../Sys/PetscBool.html#PetscBool">PetscBool</A> *distributed)
+</PRE>
+Collective
+<P>
+<H3><FONT COLOR="#CC3333">Input Parameter</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>dm      </B></TD><TD>- The <A HREF="../DM/DM.html#DM">DM</A> object
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Output Parameter</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>distributed </B></TD><TD>- Flag whether the <A HREF="../DM/DM.html#DM">DM</A> is distributed
+</TD></TR></TABLE>
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">Notes</FONT></H3>
+This currently finds out whether at least two ranks have any DAG points.
+This involves MPI_Allreduce() with one integer.
+The result is currently not stashed so every call to this routine involves this global communication.
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../DMPLEX/DMPlexDistribute.html#DMPlexDistribute">DMPlexDistribute</A>(), <A HREF="../DMPLEX/DMPlexGetOverlap.html#DMPlexGetOverlap">DMPlexGetOverlap</A>(), <A HREF="../DMPLEX/DMPlexIsInterpolated.html#DMPlexIsInterpolated">DMPlexIsInterpolated</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>intermediate<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/dm/impls/plex/plexdistribute.c.html#DMPlexIsDistributed">src/dm/impls/plex/plexdistribute.c</A>
+<BR><A HREF="./index.html">Index of all DMPLEX routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

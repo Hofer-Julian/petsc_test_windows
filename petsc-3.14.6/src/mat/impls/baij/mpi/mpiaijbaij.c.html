@@ -1,0 +1,60 @@
+<center><a href="mpiaijbaij.c">Actual source code: mpiaijbaij.c</a></center><br>
+
+<html>
+<head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/src/mat/impls/baij/mpi/mpiaijbaij.c.html" />
+<title></title>
+<meta name="generator" content="c2html 0.9.4">
+<meta name="date" content="2021-03-30T16:50:11+00:00">
+</head>
+
+<body bgcolor="#FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 src/mat/impls/baij/mpi/mpiaijbaij.c.html "><small>Report Typos and Errors</small></a></div>
+<pre width="80">
+
+<a name="line2">  2: </a>#include <A href="mpibaij.h.html">&lt;../src/mat/impls/baij/mpi/mpibaij.h&gt;</A>
+<a name="line3">  3: </a>#include <A href="../../aij/mpi/mpiaij.h.html">&lt;../src/mat/impls/aij/mpi/mpiaij.h&gt;</A>
+<a name="line4">  4: </a>#include <A href="../../../../../include/petsc/private/matimpl.h.html">&lt;petsc/private/matimpl.h&gt;</A>
+<a name="line5">  5: </a>#include <A href="../../../../../include/petscmat.h.html">&lt;petscmat.h&gt;</A>
+
+<a name="line7">  7: </a><strong><font color="#4169E1"><a name="MatConvert_MPIAIJ_MPIBAIJ"></a>PETSC_INTERN <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatConvert_MPIAIJ_MPIBAIJ(<a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> A, <a href="../../../../../docs/manualpages/Mat/MatType.html#MatType">MatType</a> newtype,<a href="../../../../../docs/manualpages/Mat/MatReuse.html#MatReuse">MatReuse</a> reuse,<a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> *newmat)</font></strong>
+<a name="line8">  8: </a>{
+<a name="line9">  9: </a>  <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>    ierr;
+<a name="line10"> 10: </a>  <a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a>               M;
+<a name="line11"> 11: </a>  Mat_MPIAIJ        *mpimat = (Mat_MPIAIJ*)A-&gt;data;
+<a name="line12"> 12: </a>  Mat_SeqAIJ        *Aa     = (Mat_SeqAIJ*)mpimat-&gt;A-&gt;data,*Ba = (Mat_SeqAIJ*)mpimat-&gt;B-&gt;data;
+<a name="line13"> 13: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>          *d_nnz,*o_nnz;
+<a name="line14"> 14: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>          i,m,n,lm,ln,bs=<a href="../../../../../docs/manualpages/Sys/PetscAbs.html#PetscAbs">PetscAbs</a>(A-&gt;rmap-&gt;bs);
+
+<a name="line17"> 17: </a>  <font color="#4169E1">if</font> (reuse != <a href="../../../../../docs/manualpages/Mat/MatReuse.html#MatReuse">MAT_REUSE_MATRIX</a>) {
+<a name="line18"> 18: </a>    <a href="../../../../../docs/manualpages/Mat/MatGetSize.html#MatGetSize">MatGetSize</a>(A,&amp;m,&amp;n);
+<a name="line19"> 19: </a>    <a href="../../../../../docs/manualpages/Mat/MatGetLocalSize.html#MatGetLocalSize">MatGetLocalSize</a>(A,&amp;lm,&amp;ln);
+<a name="line20"> 20: </a>    <a href="../../../../../docs/manualpages/Sys/PetscMalloc2.html#PetscMalloc2">PetscMalloc2</a>(lm/bs,&amp;d_nnz,lm/bs,&amp;o_nnz);
+
+<a name="line22"> 22: </a>    <font color="#4169E1">for</font> (i=0; i&lt;lm/bs; i++) {
+<a name="line23"> 23: </a>      d_nnz[i] = (Aa-&gt;i[i*bs+1] - Aa-&gt;i[i*bs])/bs;
+<a name="line24"> 24: </a>      o_nnz[i] = (Ba-&gt;i[i*bs+1] - Ba-&gt;i[i*bs])/bs;
+<a name="line25"> 25: </a>    }
+
+<a name="line27"> 27: </a>    <a href="../../../../../docs/manualpages/Mat/MatCreate.html#MatCreate">MatCreate</a>(<a href="../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)A),&amp;M);
+<a name="line28"> 28: </a>    <a href="../../../../../docs/manualpages/Mat/MatSetSizes.html#MatSetSizes">MatSetSizes</a>(M,lm,ln,m,n);
+<a name="line29"> 29: </a>    <a href="../../../../../docs/manualpages/Mat/MatSetType.html#MatSetType">MatSetType</a>(M,<a href="../../../../../docs/manualpages/Mat/MATMPIBAIJ.html#MATMPIBAIJ">MATMPIBAIJ</a>);
+<a name="line30"> 30: </a>    <a href="../../../../../docs/manualpages/Mat/MatSeqBAIJSetPreallocation.html#MatSeqBAIJSetPreallocation">MatSeqBAIJSetPreallocation</a>(M,bs,0,d_nnz);
+<a name="line31"> 31: </a>    <a href="../../../../../docs/manualpages/Mat/MatMPIBAIJSetPreallocation.html#MatMPIBAIJSetPreallocation">MatMPIBAIJSetPreallocation</a>(M,bs,0,d_nnz,0,o_nnz);
+<a name="line32"> 32: </a>    <a href="../../../../../docs/manualpages/Sys/PetscFree2.html#PetscFree2">PetscFree2</a>(d_nnz,o_nnz);
+<a name="line33"> 33: </a>  } <font color="#4169E1">else</font> M = *newmat;
+
+<a name="line35"> 35: </a>  <font color="#B22222">/* reuse may not be equal to <a href="../../../../../docs/manualpages/Mat/MatReuse.html#MatReuse">MAT_REUSE_MATRIX</a>, but the basic converter will reallocate or replace newmat if this value is not used */</font>
+<a name="line36"> 36: </a>  <font color="#B22222">/* if reuse is equal to <a href="../../../../../docs/manualpages/Mat/MatReuse.html#MatReuse">MAT_INITIAL_MATRIX</a>, it has been appropriately preallocated before                                          */</font>
+<a name="line37"> 37: </a>  <font color="#B22222">/*                      <a href="../../../../../docs/manualpages/Mat/MatReuse.html#MatReuse">MAT_INPLACE_MATRIX</a>, it will be replaced with MatHeaderReplace below                                        */</font>
+<a name="line38"> 38: </a>  MatConvert_Basic(A,newtype,<a href="../../../../../docs/manualpages/Mat/MatReuse.html#MatReuse">MAT_REUSE_MATRIX</a>,&amp;M);
+
+<a name="line40"> 40: </a>  <font color="#4169E1">if</font> (reuse == <a href="../../../../../docs/manualpages/Mat/MatReuse.html#MatReuse">MAT_INPLACE_MATRIX</a>) {
+<a name="line41"> 41: </a>    MatHeaderReplace(A,&amp;M);
+<a name="line42"> 42: </a>  } <font color="#4169E1">else</font> *newmat = M;
+<a name="line43"> 43: </a>  <font color="#4169E1">return</font>(0);
+<a name="line44"> 44: </a>}
+</pre>
+</body>
+
+</html>

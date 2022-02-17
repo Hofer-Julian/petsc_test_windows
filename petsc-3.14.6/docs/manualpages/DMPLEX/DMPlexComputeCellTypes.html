@@ -1,0 +1,40 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DMPLEX/DMPlexComputeCellTypes.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>DMPlexComputeCellTypes</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/DMPLEX/DMPlexComputeCellTypes.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="DMPlexComputeCellTypes"><H1>DMPlexComputeCellTypes</H1></A>
+Infer the polytope type of every cell using its dimension and cone size. 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscdmplex.h"   
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../DMPLEX/DMPlexComputeCellTypes.html#DMPlexComputeCellTypes">DMPlexComputeCellTypes</A>(<A HREF="../DM/DM.html#DM">DM</A> dm)
+</PRE>
+Collective on dm
+<P>
+<H3><FONT COLOR="#CC3333">Input Parameter</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>mesh </B></TD><TD>- The DMPlex
+</TD></TR></TABLE>
+<P>
+<A HREF="../DMPLEX/DMPlexComputeCellTypes.html#DMPlexComputeCellTypes">DMPlexComputeCellTypes</A>() should be called after all calls to <A HREF="../DMPLEX/DMPlexSymmetrize.html#DMPlexSymmetrize">DMPlexSymmetrize</A>() and <A HREF="../DMPLEX/DMPlexStratify.html#DMPlexStratify">DMPlexStratify</A>()
+<P>
+
+<P>
+Note: This function is normally called automatically by Plex when a cell type is requested. It creates an
+internal <A HREF="../DM/DMLabel.html#DMLabel">DMLabel</A> named "celltype" which can be directly accessed using <A HREF="../DM/DMGetLabel.html#DMGetLabel">DMGetLabel</A>(). A user may disable
+automatic creation by creating the label manually, using <A HREF="../DM/DMCreateLabel.html#DMCreateLabel">DMCreateLabel</A>(dm, "celltype").
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../DMPLEX/DMPlexCreate.html#DMPlexCreate">DMPlexCreate</A>(), <A HREF="../DMPLEX/DMPlexSymmetrize.html#DMPlexSymmetrize">DMPlexSymmetrize</A>(), <A HREF="../DMPLEX/DMPlexStratify.html#DMPlexStratify">DMPlexStratify</A>(), <A HREF="../DM/DMGetLabel.html#DMGetLabel">DMGetLabel</A>(), <A HREF="../DM/DMCreateLabel.html#DMCreateLabel">DMCreateLabel</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>developer<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/dm/impls/plex/plex.c.html#DMPlexComputeCellTypes">src/dm/impls/plex/plex.c</A>
+<BR><A HREF="./index.html">Index of all DMPLEX routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

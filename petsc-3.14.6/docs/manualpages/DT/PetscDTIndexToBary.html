@@ -1,0 +1,44 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DT/PetscDTIndexToBary.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>PetscDTIndexToBary</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/DT/PetscDTIndexToBary.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="PetscDTIndexToBary"><H1>PetscDTIndexToBary</H1></A>
+convert an index into a barycentric coordinate. 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscdt.h" 
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../DT/PetscDTIndexToBary.html#PetscDTIndexToBary">PetscDTIndexToBary</A>(<A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> len, <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> sum, <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> index, <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> coord[])
+</PRE>
+<H3><FONT COLOR="#CC3333">Input Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>len </B></TD><TD>- the desired length of the barycentric tuple (usually 1 more than the dimension it represents, so a barycentric coordinate in a triangle has length 3)
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>sum </B></TD><TD>- the value that the sum of the barycentric coordinates (which will be non-negative integers) should sum to
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>index </B></TD><TD>- the index to convert: should be &gt;= 0 and &lt; Binomial(len - 1 + sum, sum)
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Output Parameter</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>coord </B></TD><TD>- will be filled with the barycentric coordinate
+</TD></TR></TABLE>
+<P>
+
+<P>
+Note: the indices map to barycentric coordinates in lexicographic order, where the first index is the
+least significant and the last index is the most significant.
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../DT/PetscDTBaryToIndex.html#PetscDTBaryToIndex">PetscDTBaryToIndex</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>beginner<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/dm/dt/interface/dt.c.html#PetscDTIndexToBary">src/dm/dt/interface/dt.c</A>
+<BR><A HREF="./index.html">Index of all DT routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

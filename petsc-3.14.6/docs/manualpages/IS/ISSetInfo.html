@@ -1,0 +1,65 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/IS/ISSetInfo.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>ISSetInfo</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/IS/ISSetInfo.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="ISSetInfo"><H1>ISSetInfo</H1></A>
+Set known information about an index set. 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscis.h" 
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../IS/ISSetInfo.html#ISSetInfo">ISSetInfo</A>(<A HREF="../IS/IS.html#IS">IS</A> is, <A HREF="../IS/ISInfo.html#ISInfo">ISInfo</A> info, ISInfoType type, <A HREF="../Sys/PetscBool.html#PetscBool">PetscBool</A> permanent, <A HREF="../Sys/PetscBool.html#PetscBool">PetscBool</A> flg)
+</PRE>
+Logically Collective on <A HREF="../IS/IS.html#IS">IS</A> if type is IS_GLOBAL
+<P>
+<H3><FONT COLOR="#CC3333">Input Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>is </B></TD><TD>- the index set
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>info </B></TD><TD>- describing a property of the index set, one of those listed below,
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>type </B></TD><TD>- IS_LOCAL if the information describes the local portion of the index set,
+IS_GLOBAL if it describes the whole index set
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>permanent </B></TD><TD>- <A HREF="../Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</A> if it is known that the property will persist through changes to the index set, <A HREF="../Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</A> otherwise
+If the user sets a property as permanently known, it will bypass computation of that property
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>flg </B></TD><TD>- set the described property as true (<A HREF="../Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</A>) or false (<A HREF="../Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</A>)
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Info Describing IS Structure</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B><A HREF="../IS/ISInfo.html#ISInfo">IS_SORTED</A> </B></TD><TD>- the [local part of the] index set is sorted in ascending order
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B><A HREF="../IS/ISInfo.html#ISInfo">IS_UNIQUE</A> </B></TD><TD>- each entry in the [local part of the] index set is unique
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B><A HREF="../IS/ISInfo.html#ISInfo">IS_PERMUTATION</A> </B></TD><TD>- the [local part of the] index set is a permutation of the integers {0, 1, ..., N-1}, where N is the size of the [local part of the] index set
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B><A HREF="../IS/ISInfo.html#ISInfo">IS_INTERVAL</A> </B></TD><TD>- the [local part of the] index set is equal to a contiguous range of integers {f, f + 1, ..., f + N-1}
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B><A HREF="../IS/ISInfo.html#ISInfo">IS_IDENTITY</A> </B></TD><TD>- the [local part of the] index set is equal to the integers {0, 1, ..., N-1}
+</TD></TR></TABLE>
+<P>
+<P>
+<H3><FONT COLOR="#CC3333">Notes</FONT></H3>
+If type is IS_GLOBAL, all processes that share the index set must pass the same value in flg
+<P>
+It is possible to set a property with <A HREF="../IS/ISSetInfo.html#ISSetInfo">ISSetInfo</A>() that contradicts what would be previously computed with <A HREF="../IS/ISGetInfo.html#ISGetInfo">ISGetInfo</A>()
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+  <A HREF="../IS/ISInfo.html#ISInfo">ISInfo</A>, ISInfoType, <A HREF="../IS/IS.html#IS">IS</A>
+<BR>
+<P>
+<P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>advanced<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/vec/is/is/interface/index.c.html#ISSetInfo">src/vec/is/is/interface/index.c</A>
+<BR><A HREF="./index.html">Index of all IS routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

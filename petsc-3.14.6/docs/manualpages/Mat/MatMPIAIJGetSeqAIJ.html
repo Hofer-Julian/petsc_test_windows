@@ -1,0 +1,50 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatMPIAIJGetSeqAIJ.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>MatMPIAIJGetSeqAIJ</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/Mat/MatMPIAIJGetSeqAIJ.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="MatMPIAIJGetSeqAIJ"><H1>MatMPIAIJGetSeqAIJ</H1></A>
+Returns the local piece of this distributed matrix 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscmat.h" 
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../Mat/MatMPIAIJGetSeqAIJ.html#MatMPIAIJGetSeqAIJ">MatMPIAIJGetSeqAIJ</A>(<A HREF="../Mat/Mat.html#Mat">Mat</A> A,<A HREF="../Mat/Mat.html#Mat">Mat</A> *Ad,<A HREF="../Mat/Mat.html#Mat">Mat</A> *Ao,const <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> *colmap[])
+</PRE>
+Not collective
+<P>
+<H3><FONT COLOR="#CC3333">Input Parameter</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>A </B></TD><TD>- The MPIAIJ matrix
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Output Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>Ad </B></TD><TD>- The local diagonal block as a SeqAIJ matrix
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>Ao </B></TD><TD>- The local off-diagonal block as a SeqAIJ matrix
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>colmap </B></TD><TD>- An array mapping local column numbers of Ao to global column numbers of the parallel matrix
+</TD></TR></TABLE>
+<P>
+Note: The rows in Ad and Ao are in [0, Nr), where Nr is the number of local rows on this process. The columns
+in Ad are in [0, Nc) where Nc is the number of local columns. The columns are Ao are in [0, Nco), where Nco is
+the number of nonzero columns in the local off-diagonal piece of the matrix A. The array colmap maps these
+local column numbers to global column numbers in the original matrix.
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../Mat/MatMPIAIJGetLocalMat.html#MatMPIAIJGetLocalMat">MatMPIAIJGetLocalMat</A>(), <A HREF="../Mat/MatMPIAIJGetLocalMatCondensed.html#MatMPIAIJGetLocalMatCondensed">MatMPIAIJGetLocalMatCondensed</A>(), <A HREF="../Mat/MatCreateAIJ.html#MatCreateAIJ">MatCreateAIJ</A>(), <A HREF="../Mat/MATMPIAIJ.html#MATMPIAIJ">MATMPIAIJ</A>, <A HREF="../Mat/MATSEQAIJ.html#MATSEQAIJ">MATSEQAIJ</A>
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>intermediate<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/mat/impls/aij/mpi/mpiaij.c.html#MatMPIAIJGetSeqAIJ">src/mat/impls/aij/mpi/mpiaij.c</A>
+<P><H3><FONT COLOR="#CC3333">Examples</FONT></H3>
+<A HREF="../../../src/mat/tutorials/ex8.c.html">src/mat/tutorials/ex8.c.html</A><BR>
+<BR><A HREF="./index.html">Index of all Mat routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

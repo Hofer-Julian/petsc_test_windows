@@ -1,0 +1,43 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DT/PetscDTAltVInteriorPattern.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>PetscDTAltVInteriorPattern</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/DT/PetscDTAltVInteriorPattern.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="PetscDTAltVInteriorPattern"><H1>PetscDTAltVInteriorPattern</H1></A>
+compute the sparsity and sign pattern of the interior product matrix computed in <A HREF="../DT/PetscDTAltVInteriorMatrix.html#PetscDTAltVInteriorMatrix">PetscDTAltVInteriorMatrix</A>() 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscdt.h" 
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../DT/PetscDTAltVInteriorPattern.html#PetscDTAltVInteriorPattern">PetscDTAltVInteriorPattern</A>(<A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> N, <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> k, <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> (*indices)[3])
+</PRE>
+<H3><FONT COLOR="#CC3333">Input Arguments</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>N </B></TD><TD>- the dimension of the vector space, N &gt;= 0
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>k </B></TD><TD>- the degree of the k-forms on which intvMat from <A HREF="../DT/PetscDTAltVInteriorMatrix.html#PetscDTAltVInteriorMatrix">PetscDTAltVInteriorMatrix</A>() acts, 0 &lt;= k &lt;= N.
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Output Arguments</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>indices </B></TD><TD>- The interior product matrix intvMat has size [(N choose (k-1)) x (N choose k)] and has (N choose k) * k
+non-zeros.  indices[i][0] and indices[i][1] are the row and column of a non-zero, and its value is equal to the vector
+coordinate v[j] if indices[i][2] = j, or -v[j] if indices[i][2] = -(j+1)
+</TD></TR></TABLE>
+<P>
+
+<P>
+Note: this function is useful when the interior product needs to be computed at multiple locations, as when computing the Koszul differential
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../DT/PetscDTAltV.html#PetscDTAltV">PetscDTAltV</A>, <A HREF="../DT/PetscDTAltVInterior.html#PetscDTAltVInterior">PetscDTAltVInterior</A>(), <A HREF="../DT/PetscDTAltVInteriorMatrix.html#PetscDTAltVInteriorMatrix">PetscDTAltVInteriorMatrix</A>(), <A HREF="../DT/PetscDTAltVPullback.html#PetscDTAltVPullback">PetscDTAltVPullback</A>(), <A HREF="../DT/PetscDTAltVPullbackMatrix.html#PetscDTAltVPullbackMatrix">PetscDTAltVPullbackMatrix</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>intermediate<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/dm/dt/interface/dtaltv.c.html#PetscDTAltVInteriorPattern">src/dm/dt/interface/dtaltv.c</A>
+<BR><A HREF="./index.html">Index of all DT routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

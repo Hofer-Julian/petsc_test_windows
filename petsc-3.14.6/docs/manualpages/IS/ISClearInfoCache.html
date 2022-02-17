@@ -1,0 +1,41 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/IS/ISClearInfoCache.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>ISClearInfoCache</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/IS/ISClearInfoCache.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="ISClearInfoCache"><H1>ISClearInfoCache</H1></A>
+clear the cache of computed index set properties 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscis.h" 
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../IS/ISClearInfoCache.html#ISClearInfoCache">ISClearInfoCache</A>(<A HREF="../IS/IS.html#IS">IS</A> is, <A HREF="../Sys/PetscBool.html#PetscBool">PetscBool</A> clear_permanent_local)
+</PRE>
+Not collective
+<P>
+<H3><FONT COLOR="#CC3333">Input Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>is </B></TD><TD>- the index set
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>clear_permanent_local </B></TD><TD>- whether to remove the permanent status of local properties
+</TD></TR></TABLE>
+<P>
+NOTE: because all processes must agree on the global permanent status of a property,
+the permanent status can only be changed with <A HREF="../IS/ISSetInfo.html#ISSetInfo">ISSetInfo</A>(), because this routine is not collective
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+  <A HREF="../IS/ISInfo.html#ISInfo">ISInfo</A>, ISInfoType, <A HREF="../IS/ISSetInfo.html#ISSetInfo">ISSetInfo</A>(), <A HREF="../IS/ISClearInfoCache.html#ISClearInfoCache">ISClearInfoCache</A>()
+<BR>
+<P>
+<P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>developer<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/vec/is/is/interface/index.c.html#ISClearInfoCache">src/vec/is/is/interface/index.c</A>
+<BR><A HREF="./index.html">Index of all IS routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

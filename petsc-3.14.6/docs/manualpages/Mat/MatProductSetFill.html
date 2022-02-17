@@ -1,0 +1,38 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatProductSetFill.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>MatProductSetFill</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/Mat/MatProductSetFill.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="MatProductSetFill"><H1>MatProductSetFill</H1></A>
+Set an expected fill of the matrix product. 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscmat.h" 
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../Mat/MatProductSetFill.html#MatProductSetFill">MatProductSetFill</A>(<A HREF="../Mat/Mat.html#Mat">Mat</A> mat,<A HREF="../Sys/PetscReal.html#PetscReal">PetscReal</A> fill)
+</PRE>
+Collective on <A HREF="../Mat/Mat.html#Mat">Mat</A>
+<P>
+<H3><FONT COLOR="#CC3333">Input Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>mat </B></TD><TD>- the matrix product
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>fill </B></TD><TD>- expected fill as ratio of nnz(mat)/(nnz(A) + nnz(B) + nnz(C)); use <A HREF="../Sys/PETSC_DEFAULT.html#PETSC_DEFAULT">PETSC_DEFAULT</A> if you do not have a good estimate. If the product is a dense matrix, this is irrelevent.
+</TD></TR></TABLE>
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../Mat/MatProductSetType.html#MatProductSetType">MatProductSetType</A>(), <A HREF="../Mat/MatProductSetAlgorithm.html#MatProductSetAlgorithm">MatProductSetAlgorithm</A>(), <A HREF="../Mat/MatProductCreate.html#MatProductCreate">MatProductCreate</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>intermediate<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/mat/interface/matproduct.c.html#MatProductSetFill">src/mat/interface/matproduct.c</A>
+<P><H3><FONT COLOR="#CC3333">Examples</FONT></H3>
+<A HREF="../../../src/tao/pde_constrained/tutorials/parabolic.c.html">src/tao/pde_constrained/tutorials/parabolic.c.html</A><BR>
+<BR><A HREF="./index.html">Index of all Mat routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

@@ -1,0 +1,35 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSPPIPECG2.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>KSPPIPECG2</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/KSP/KSPPIPECG2.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="KSPPIPECG2"><H1>KSPPIPECG2</H1></A>
+Pipelined conjugate gradient method with a single non-blocking allreduce per two iterations. This method has only a single non-blocking reduction per two iterations, compared to 2 blocking for standard CG.  The
+non-blocking reduction is overlapped by two matrix-vector products and two preconditioner applications.
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">Notes</FONT></H3>
+MPI configuration may be necessary for reductions to make asynchronous progress, which is important for performance of pipelined methods.
+See the FAQ on the PETSc website for details.
+<P>
+<H3><FONT COLOR="#CC3333">Contributed by</FONT></H3>
+Manasi Tiwari, Computational and Data Sciences, Indian Institute of Science, Bangalore
+<P>
+<H3><FONT COLOR="#CC3333">Reference</FONT></H3>
+Manasi Tiwari and Sathish Vadhiyar, "Pipelined Conjugate Gradient Methods for Distributed Memory Systems",
+Submitted to International Conference on High Performance Computing, Data and Analytics 2020.
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../KSP/KSPCreate.html#KSPCreate">KSPCreate</A>(), <A HREF="../KSP/KSPSetType.html#KSPSetType">KSPSetType</A>(), <A HREF="../KSP/KSPCG.html#KSPCG">KSPCG</A>, <A HREF="../KSP/KSPPIPECG.html#KSPPIPECG">KSPPIPECG</A>
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>intermediate<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/ksp/ksp/impls/cg/pipecg2/pipecg2.c.html#KSPPIPECG2">src/ksp/ksp/impls/cg/pipecg2/pipecg2.c</A>
+<BR><A HREF="./index.html">Index of all KSP routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

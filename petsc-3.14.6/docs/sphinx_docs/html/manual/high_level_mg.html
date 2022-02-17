@@ -1,0 +1,200 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/sphinx_docs/html/manual/high_level_mg.html" />
+    <meta charset="utf-8" />
+    <title>High Level Support for Multigrid with KSPSetDM() and SNESSetDM() &#8212; PETSc 3.14.6 documentation</title>
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/katex-math.css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/contrib/auto-render.min.js"></script>
+    <script src="../_static/katex_autorenderer.js"></script>
+    <link rel="shortcut icon" href="../_static/PETSc_RGB-logo.png"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="DMPlex: Unstructured Grids in PETSc" href="dmplex.html" />
+    <link rel="prev" title="Performing sensitivity analysis" href="sensitivity_analysis.html" /> 
+  </head><body>
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/sphinx_docs/html/manual/high_level_mg.html "><small>Report Typos and Errors</small></a></div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="dmplex.html" title="DMPlex: Unstructured Grids in PETSc"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="sensitivity_analysis.html" title="Performing sensitivity analysis"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">PETSc 3.14.6 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >PETSc Users Manual</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="programming.html" accesskey="U">Programming with PETSc</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/PETSc-TAO_RGB.svg" alt="Logo"/>
+            </a></p>
+  <h3><a href="../index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">High Level Support for Multigrid with KSPSetDM() and SNESSetDM()</a><ul>
+<li><a class="reference internal" href="#adaptive-interpolation">Adaptive Interpolation</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="sensitivity_analysis.html"
+                        title="previous chapter">Performing sensitivity analysis</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="dmplex.html"
+                        title="next chapter">DMPlex: Unstructured Grids in PETSc</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/manual/high_level_mg.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="high-level-support-for-multigrid-with-kspsetdm-and-snessetdm">
+<span id="chapter-kspdm"></span><h1>High Level Support for Multigrid with KSPSetDM() and SNESSetDM()<a class="headerlink" href="#high-level-support-for-multigrid-with-kspsetdm-and-snessetdm" title="Permalink to this headline">¶</a></h1>
+<p>This chapter needs to be written. For now, see the manual pages (and
+linked examples) for <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSPSetDM.html#KSPSetDM">KSPSetDM</a>()</span></code> and <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/SNES/SNESSetDM.html#SNESSetDM">SNESSetDM</a>()</span></code>.</p>
+<p>Smoothing on each level of the hierarchy is handled by a <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSP.html#KSP">KSP</a></span></code> held by the <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/PC/PCMG.html#PCMG">PCMG</a></span></code>, or in the nonlinear case, a <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/SNES/SNES.html#SNES">SNES</a></span></code> held by <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/SNESFAS/SNESFAS.html#SNESFAS">SNESFAS</a></span></code>. The <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DM/DM.html#DM">DM</a></span></code> for each level is associated with the smoother using <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSPSetDM.html#KSPSetDM">KSPSetDM</a>()</span></code> and <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/SNES/SNESSetDM.html#SNESSetDM">SNESSetDM</a>()</span></code>.</p>
+<p>The linear operators which carry out interpolation and restriction (usually of type <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MATMAIJ.html#MATMAIJ">MATMAIJ</a></span></code>) are held by the <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/PC/PCMG.html#PCMG">PCMG</a></span></code>/<code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/SNESFAS/SNESFAS.html#SNESFAS">SNESFAS</a></span></code>, and generated automatically by the <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DM/DM.html#DM">DM</a></span></code> using information about the discretization. Below we briefly discuss the different operations:</p>
+<p><strong>Interpolation</strong> transfers a function from the coarse space to the fine space. We would like this process to be accurate for the functions resolved by the coarse grid, in particular the approximate solution computed there. By default, we create these matrices using local interpolation of the fine grid dual basis functions in the coarse basis. However, an adaptive procedure can optimize the coefficients of the interpolator to reproduce pairs of coarse/fine functions which should approximate the lowest modes of the generalized eigenproblem</p>
+<div class="math">
+\[A x = \lambda M x\]</div>
+<p>where <span class="math">\(A\)</span> is the system matrix and <span class="math">\(M\)</span> is the smoother. Note that for defect-correction MG, the interpolated solution from the coarse space need not be as accurate as the fine solution, for the same reason that updates in iterative refinement can be less accurate. However, in FAS or in the final interpolation step for each level of Full Multigrid, we must have interpolation as accurate as the fine solution since we are moving the entire solution itself.</p>
+<p><strong>Injection</strong> should accurately transfer the fine solution to the coarse grid. Accuracy here means that the action of a coarse dual function on either should produce approximately the same result. In the structured grid case, this means that we just use the same values on coarse points. This can result in aliasing.</p>
+<p><strong>Restriction</strong> is intended to transfer the fine residual to the coarse space. Here we use averaging (often the transpose of the interpolation operation) to damp out the fine space contributions. Thus, it is less accurate than injection, but avoids aliasing of the high modes.</p>
+<div class="section" id="adaptive-interpolation">
+<h2>Adaptive Interpolation<a class="headerlink" href="#adaptive-interpolation" title="Permalink to this headline">¶</a></h2>
+<p>For a multigrid cycle, the interpolator <span class="math">\(P\)</span> is intended to accurately reproduce “smooth” functions from the coarse space in the fine space, keeping the energy of the interpolant about the same. For the Laplacian on a structured mesh, it is easy to determine what these low-frequency functions are. They are the Fourier modes. However an arbitrary operator <span class="math">\(A\)</span> will have different coarse modes that we want to resolve accurately on the fine grid, so that our coarse solve produces a good guess for the fine problem. How do we make sure that our interpolator <span class="math">\(P\)</span> can do this?</p>
+<p>We first must decide what we mean by accurate interpolation of some functions. Suppose we know the continuum function <span class="math">\(f\)</span> that we care about, and we are only interested in a finite element description of discrete functions. Then the coarse function representing <span class="math">\(f\)</span> is given by</p>
+<div class="math">
+\[f^C = \sum_i f^C_i \phi^C_i,\]</div>
+<p>and similarly the fine grid form is</p>
+<div class="math">
+\[f^F = \sum_i f^F_i \phi^F_i.\]</div>
+<p>Now we would like the interpolant of the coarse representer to the fine grid to be as close as possible to the fine representer in a least squares sense, meaning we want to solve the minimization problem</p>
+<div class="math">
+\[\min_{P} \| f^F - P f^C \|_2\]</div>
+<p>Now we can express <span class="math">\(P\)</span> as a matrix by looking at the matrix elements <span class="math">\(P_{ij} = \phi^F_i P \phi^C_j\)</span>. Then we have</p>
+<div class="math">
+\[\begin{aligned}
+  &\phi^F_i f^F - \phi^F_i P f^C \\
+= &f^F_i - \sum_j P_{ij} f^C_j
+\end{aligned}\]</div>
+<p>so that our discrete optimization problem is</p>
+<div class="math">
+\[\min_{P_{ij}} \| f^F_i - \sum_j P_{ij} f^C_j \|_2\]</div>
+<p>and we will treat each row of the interpolator as a separate optimization problem. We could allow an arbitrary sparsity pattern, or try to determine adaptively, as is done in sparse approximate inverse preconditioning. However, we know the supports of the basis functions in finite elements, and thus the naive sparsity pattern from local interpolation can be used.</p>
+<p>We note here that the BAMG framework of Brannick, et. al. <span id="id1">[<a class="reference internal" href="#id1241">BBKL11</a>]</span> does not use fine and coarse functions spaces, but rather a fine point/coarse point division which we will not employ here. Our general PETSc routine should work for both since the input would be the checking set (fine basis coefficients or fine space points) and the approximation set (coarse basis coefficients in the support or coarse points in the sparsity pattern).</p>
+<p>We can easily solve the above problem using QR factorization. However, there are many smooth functions from the coarse space that we want interpolated accurately, and a single <span class="math">\(f\)</span> would not constrain the values <span class="math">\(P_{ij}\)</span> well. Therefore, we will use several functions <span class="math">\(\{f_k\}\)</span> in our minimization,</p>
+<div class="math">
+\[\begin{aligned}
+  &\min_{P_{ij}} \sum_k w_k \| f^{F,k}_i - \sum_j P_{ij} f^{C,k}_j \|_2 \\
+= &\min_{P_{ij}} \sum_k \| \sqrt{w_k} f^{F,k}_i - \sqrt{w_k} \sum_j P_{ij} f^{C,k}_j \|_2 \\
+= &\min_{P_{ij}} \| W^{1/2} \mathbf{f}^{F}_i - W^{1/2} \mathbf{f}^{C} p_i \|_2
+\end{aligned}\]</div>
+<p>where</p>
+<div class="math">
+\[\begin{aligned}
+W         &= \begin{pmatrix} w_0 & & \\ & \ddots & \\ & & w_K \end{pmatrix} \\
+\mathbf{f}^{F}_i &= \begin{pmatrix} f^{F,0}_i \\ \vdots \\ f^{F,K}_i \end{pmatrix} \\
+\mathbf{f}^{C}   &= \begin{pmatrix} f^{C,0}_0 & \cdots & f^{C,0}_n \\ \vdots & \ddots &  \vdots \\ f^{C,K}_0 & \cdots & f^{C,K}_n \end{pmatrix} \\
+p_i       &= \begin{pmatrix} P_{i0} \\ \vdots \\ P_{in} \end{pmatrix}
+\end{aligned}\]</div>
+<p>or alternatively</p>
+<div class="math">
+\[\begin{aligned}
+[W]_{kk}     &= w_k \\
+[f^{F}_i]_k  &= f^{F,k}_i \\
+[f^{C}]_{kj} &= f^{C,k}_j \\
+[p_i]_j      &= P_{ij}
+\end{aligned}\]</div>
+<p>We thus have a standard least-squares problem</p>
+<div class="math">
+\[\min_{P_{ij}} \| b - A x \|_2\]</div>
+<p>where</p>
+<div class="math">
+\[\begin{aligned}
+A &= W^{1/2} f^{C} \\
+b &= W^{1/2} f^{F}_i \\
+x &= p_i
+\end{aligned}\]</div>
+<p>which can be solved using LAPACK.</p>
+<p>We will typically perform this optimization on a multigrid level <span class="math">\(l\)</span> when the change in eigenvalue from level <span class="math">\(l+1\)</span> is relatively large, meaning</p>
+<div class="math">
+\[\frac{|\lambda_l - \lambda_{l+1}|}{|\lambda_l|}.\]</div>
+<p>This indicates that the generalized eigenvector associated with that eigenvalue was not adequately represented by <span class="math">\(P^l_{l+1}\)</span>, and the interpolator should be recomputed.</p>
+<hr><p id="id2"><dl class="citation">
+<dt class="label" id="id1241"><span class="brackets"><a class="fn-backref" href="#id1">BBKL11</a></span></dt>
+<dd><p>Achi Brandt, James Brannick, Karsten Kahl, and Irene Livshits. Bootstrap AMG. <em>SIAM Journal on Scientific Computing</em>, 33(2):612–632, 2011.</p>
+</dd>
+</dl>
+</p>
+<span class="target" id="id1252"></span></div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="dmplex.html" title="DMPlex: Unstructured Grids in PETSc"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="sensitivity_analysis.html" title="Performing sensitivity analysis"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">PETSc 3.14.6 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >PETSc Users Manual</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="programming.html" >Programming with PETSc</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 1991-2021, UChicago Argonne, LLC and the PETSc Development Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.4.
+    </div>
+  </body>
+</html>

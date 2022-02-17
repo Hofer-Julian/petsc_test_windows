@@ -1,0 +1,110 @@
+<center><a href="ex9.c">Actual source code: ex9.c</a></center><br>
+
+<html>
+<head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/src/dm/impls/plex/tutorials/ex9.c.html" />
+<title></title>
+<meta name="generator" content="c2html 0.9.4">
+<meta name="date" content="2021-03-30T16:50:48+00:00">
+</head>
+
+<body bgcolor="#FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 src/dm/impls/plex/tutorials/ex9.c.html "><small>Report Typos and Errors</small></a></div>
+<pre width="80">
+<a name="line1">  1: </a>static char help[] = <font color="#666666">"Evaluate the shape quality of a mesh\n\n"</font>;
+
+<a name="line3">  3: </a>#include <A href="../../../../../include/petscdmplex.h.html">&lt;petscdmplex.h&gt;</A>
+
+<a name="line5">  5: </a><font color="#4169E1">typedef</font> <font color="#4169E1">struct</font> {
+<a name="line6">  6: </a>  char      filename[PETSC_MAX_PATH_LEN]; <font color="#B22222">/* Import mesh from file */</font>
+<a name="line7">  7: </a>  <a href="../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> report;                       <font color="#B22222">/* Print a quality report */</font>
+<a name="line8">  8: </a>  <a href="../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> condLimit, tol;               <font color="#B22222">/* Condition number limit for cell output */</font>
+<a name="line9">  9: </a>} AppCtx;
+
+<a name="line11"> 11: </a><strong><font color="#4169E1"><a name="ProcessOptions"></a>static <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> ProcessOptions(<a href="../../../../../docs/manualpages/Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</a> comm, AppCtx *options)</font></strong>
+<a name="line12"> 12: </a>{
+
+<a name="line16"> 16: </a>  options-&gt;filename[0] = '\0';
+<a name="line17"> 17: </a>  options-&gt;report      = <a href="../../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line18"> 18: </a>  options-&gt;tol         = 0.5;
+<a name="line19"> 19: </a>  options-&gt;condLimit   = <a href="../../../../../docs/manualpages/Sys/PETSC_DETERMINE.html#PETSC_DETERMINE">PETSC_DETERMINE</a>;
+
+<a name="line21"> 21: </a>  <a href="../../../../../docs/manualpages/Sys/PetscOptionsBegin.html#PetscOptionsBegin">PetscOptionsBegin</a>(comm, <font color="#666666">""</font>, <font color="#666666">"Mesh Quality Evaluation Options"</font>, <font color="#666666">"<a href="../../../../../docs/manualpages/DMPLEX/DMPLEX.html#DMPLEX">DMPLEX</a>"</font>);
+<a name="line22"> 22: </a>  <a href="../../../../../docs/manualpages/Sys/PetscOptionsString.html#PetscOptionsString">PetscOptionsString</a>(<font color="#666666">"-filename"</font>, <font color="#666666">"The mesh file"</font>, <font color="#666666">"ex9.c"</font>, options-&gt;filename, options-&gt;filename, <font color="#4169E1">sizeof</font>(options-&gt;filename), NULL);
+<a name="line23"> 23: </a>  <a href="../../../../../docs/manualpages/Sys/PetscOptionsBool.html#PetscOptionsBool">PetscOptionsBool</a>(<font color="#666666">"-report"</font>, <font color="#666666">"Output a mesh quality report"</font>, <font color="#666666">"ex9.c"</font>, options-&gt;report, &amp;options-&gt;report, NULL);
+<a name="line24"> 24: </a>  <a href="../../../../../docs/manualpages/Sys/PetscOptionsReal.html#PetscOptionsReal">PetscOptionsReal</a>(<font color="#666666">"-cond_limit"</font>, <font color="#666666">"Condition number limit for cell output"</font>, <font color="#666666">"ex9.c"</font>, options-&gt;condLimit, &amp;options-&gt;condLimit, NULL);
+<a name="line25"> 25: </a>  <a href="../../../../../docs/manualpages/Sys/PetscOptionsReal.html#PetscOptionsReal">PetscOptionsReal</a>(<font color="#666666">"-orth_qual_atol"</font>, <font color="#666666">"Absolute tolerance for Orthogonal Quality"</font>, <font color="#666666">"ex9.c"</font>, options-&gt;tol, &amp;options-&gt;tol, NULL);
+<a name="line26"> 26: </a>  <a href="../../../../../docs/manualpages/Sys/PetscOptionsEnd.html#PetscOptionsEnd">PetscOptionsEnd</a>();
+<a name="line27"> 27: </a>  <font color="#4169E1">return</font>(0);
+<a name="line28"> 28: </a>}
+
+<a name="line30"> 30: </a><strong><font color="#4169E1"><a name="CreateMesh"></a>static <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> CreateMesh(<a href="../../../../../docs/manualpages/Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</a> comm, AppCtx *user, <a href="../../../../../docs/manualpages/DM/DM.html#DM">DM</a> *dm)</font></strong>
+<a name="line31"> 31: </a>{
+<a name="line32"> 32: </a>  <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  ierr;
+
+<a name="line35"> 35: </a>  <font color="#4169E1">if</font> (user-&gt;filename[0]) {<a href="../../../../../docs/manualpages/DMPLEX/DMPlexCreateFromFile.html#DMPlexCreateFromFile">DMPlexCreateFromFile</a>(comm, user-&gt;filename, <a href="../../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>, dm);}
+<a name="line36"> 36: </a>  <font color="#4169E1">else</font>                   {<a href="../../../../../docs/manualpages/DMPLEX/DMPlexCreateBoxMesh.html#DMPlexCreateBoxMesh">DMPlexCreateBoxMesh</a>(comm, 2, <a href="../../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>, NULL, NULL, NULL, NULL, <a href="../../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>, dm);}
+<a name="line37"> 37: </a>  <a href="../../../../../docs/manualpages/Sys/PetscObjectSetName.html#PetscObjectSetName">PetscObjectSetName</a>((<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>) *dm, <font color="#666666">"Mesh"</font>);
+<a name="line38"> 38: </a>  <a href="../../../../../docs/manualpages/DM/DMSetFromOptions.html#DMSetFromOptions">DMSetFromOptions</a>(*dm);
+<a name="line39"> 39: </a>  <a href="../../../../../docs/manualpages/DM/DMViewFromOptions.html#DMViewFromOptions">DMViewFromOptions</a>(*dm, NULL, <font color="#666666">"-dm_view"</font>);
+<a name="line40"> 40: </a>  <font color="#4169E1">return</font>(0);
+<a name="line41"> 41: </a>}
+
+<a name="line43"> 43: </a><strong><font color="#4169E1"><a name="main"></a>int main(int argc, char **argv)</font></strong>
+<a name="line44"> 44: </a>{
+<a name="line45"> 45: </a>  <a href="../../../../../docs/manualpages/DM/DM.html#DM">DM</a>             dm;
+<a name="line46"> 46: </a>  <a href="../../../../../docs/manualpages/DM/DMLabel.html#DMLabel">DMLabel</a>        OQLabel;
+<a name="line47"> 47: </a>  <a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a>            OQ;
+<a name="line48"> 48: </a>  AppCtx         ctx;
+
+<a name="line51"> 51: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInitialize.html#PetscInitialize">PetscInitialize</a>(&amp;argc, &amp;argv, NULL,help);<font color="#4169E1">if</font> (ierr) <font color="#4169E1">return</font> ierr;
+<a name="line52"> 52: </a>  ProcessOptions(<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>, &amp;ctx);
+<a name="line53"> 53: </a>  CreateMesh(<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>, &amp;ctx, &amp;dm);
+<a name="line54"> 54: </a>  <a href="../../../../../docs/manualpages/DMPLEX/DMPlexCheckCellShape.html#DMPlexCheckCellShape">DMPlexCheckCellShape</a>(dm, ctx.report, ctx.condLimit);
+<a name="line55"> 55: </a>  <a href="../../../../../docs/manualpages/DMPLEX/DMPlexComputeOrthogonalQuality.html#DMPlexComputeOrthogonalQuality">DMPlexComputeOrthogonalQuality</a>(dm, NULL, ctx.tol, &amp;OQ, &amp;OQLabel);
+<a name="line56"> 56: </a>  <a href="../../../../../docs/manualpages/Vec/VecDestroy.html#VecDestroy">VecDestroy</a>(&amp;OQ);
+<a name="line57"> 57: </a>  <a href="../../../../../docs/manualpages/DM/DMDestroy.html#DMDestroy">DMDestroy</a>(&amp;dm);
+<a name="line58"> 58: </a>  <a href="../../../../../docs/manualpages/Sys/PetscFinalize.html#PetscFinalize">PetscFinalize</a>();
+<a name="line59"> 59: </a>  <font color="#4169E1">return</font> ierr;
+<a name="line60"> 60: </a>}
+
+<a name="line62"> 62: </a><font color="#B22222">/*TEST</font>
+
+<a name="line64"> 64: </a><font color="#B22222">  test:</font>
+<a name="line65"> 65: </a><font color="#B22222">    suffix: 0</font>
+<a name="line66"> 66: </a><font color="#B22222">    requires: exodusii</font>
+<a name="line67"> 67: </a><font color="#B22222">    nsize: {{1 2}}</font>
+<a name="line68"> 68: </a><font color="#B22222">    args: -dm_distribute -petscpartitioner_type simple -filename ${wPETSC_DIR}/share/petsc/datafiles/meshes/blockcylinder-50.exo -report</font>
+
+<a name="line70"> 70: </a><font color="#B22222">  test:</font>
+<a name="line71"> 71: </a><font color="#B22222">    suffix: 1</font>
+<a name="line72"> 72: </a><font color="#B22222">    args: -filename ${wPETSC_DIR}/share/petsc/datafiles/meshes/square.msh -report</font>
+
+<a name="line74"> 74: </a><font color="#B22222">  testset:</font>
+<a name="line75"> 75: </a><font color="#B22222">    requires: exodusii</font>
+<a name="line76"> 76: </a><font color="#B22222">    args: -dm_plex_orthogonal_quality_label_view -dm_plex_orthogonal_quality_vec_view</font>
+
+<a name="line78"> 78: </a><font color="#B22222">    test:</font>
+<a name="line79"> 79: </a><font color="#B22222">      suffix: box_1</font>
+<a name="line80"> 80: </a><font color="#B22222">      nsize: 1</font>
+<a name="line81"> 81: </a><font color="#B22222">      args: -dm_plex_box_simplex 0 -dm_plex_box_faces 2,2 -orth_qual_atol 1.0</font>
+
+<a name="line83"> 83: </a><font color="#B22222">    test:</font>
+<a name="line84"> 84: </a><font color="#B22222">      suffix: box_2</font>
+<a name="line85"> 85: </a><font color="#B22222">      nsize: 2</font>
+<a name="line86"> 86: </a><font color="#B22222">      args: -dm_distribute -petscpartitioner_type simple -dm_plex_box_simplex 0 -dm_plex_box_faces 2,2 -orth_qual_atol 1.0</font>
+
+<a name="line88"> 88: </a><font color="#B22222">    test:</font>
+<a name="line89"> 89: </a><font color="#B22222">      suffix: mesh_1</font>
+<a name="line90"> 90: </a><font color="#B22222">      nsize: 1</font>
+<a name="line91"> 91: </a><font color="#B22222">      args: -filename ${wPETSC_DIR}/share/petsc/datafiles/meshes/sevenside-quad-15.exo -orth_qual_atol 0.95</font>
+
+<a name="line93"> 93: </a><font color="#B22222">    test:</font>
+<a name="line94"> 94: </a><font color="#B22222">      suffix: mesh_2</font>
+<a name="line95"> 95: </a><font color="#B22222">      nsize: 2</font>
+<a name="line96"> 96: </a><font color="#B22222">      args: -dm_distribute -petscpartitioner_type simple -filename ${wPETSC_DIR}/share/petsc/datafiles/meshes/sevenside-quad-15.exo -orth_qual_atol 0.95</font>
+<a name="line97"> 97: </a><font color="#B22222">TEST*/</font>
+</pre>
+</body>
+
+</html>

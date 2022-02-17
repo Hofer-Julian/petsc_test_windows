@@ -1,0 +1,95 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DMPLEX/DMPlexRemapGeometry.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>DMPlexRemapGeometry</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/DMPLEX/DMPlexRemapGeometry.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="DMPlexRemapGeometry"><H1>DMPlexRemapGeometry</H1></A>
+This function maps the original <A HREF="../DM/DM.html#DM">DM</A> coordinates to new coordinates. 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscdmplex.h"   
+#include "petscfe.h"       
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../DMPLEX/DMPlexRemapGeometry.html#DMPlexRemapGeometry">DMPlexRemapGeometry</A>(<A HREF="../DM/DM.html#DM">DM</A> dm, <A HREF="../Sys/PetscReal.html#PetscReal">PetscReal</A> time,
+                                   void (*func)(<A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A>, <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A>, <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A>,
+                                                const <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A>[], const <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A>[], const <A HREF="../Sys/PetscScalar.html#PetscScalar">PetscScalar</A>[], const <A HREF="../Sys/PetscScalar.html#PetscScalar">PetscScalar</A>[], const <A HREF="../Sys/PetscScalar.html#PetscScalar">PetscScalar</A>[],
+                                                const <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A>[], const <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A>[], const <A HREF="../Sys/PetscScalar.html#PetscScalar">PetscScalar</A>[], const <A HREF="../Sys/PetscScalar.html#PetscScalar">PetscScalar</A>[], const <A HREF="../Sys/PetscScalar.html#PetscScalar">PetscScalar</A>[],
+                                                <A HREF="../Sys/PetscReal.html#PetscReal">PetscReal</A>, const <A HREF="../Sys/PetscReal.html#PetscReal">PetscReal</A>[], <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A>, const <A HREF="../Sys/PetscScalar.html#PetscScalar">PetscScalar</A>[], <A HREF="../Sys/PetscScalar.html#PetscScalar">PetscScalar</A>[]))
+</PRE>
+Not collective
+<P>
+<H3><FONT COLOR="#CC3333">Input Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>dm      </B></TD><TD>- The <A HREF="../DM/DM.html#DM">DM</A>
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>time    </B></TD><TD>- The time
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>func    </B></TD><TD>- The function transforming current coordinates to new coordaintes
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Calling sequence of func</FONT></H3>
+<pre>
+   func(<A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> dim, <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> Nf, <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> NfAux,
+</pre>
+<pre>
+        const <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> uOff[], const <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> uOff_x[], const <A HREF="../Sys/PetscScalar.html#PetscScalar">PetscScalar</A> u[], const <A HREF="../Sys/PetscScalar.html#PetscScalar">PetscScalar</A> u_t[], const <A HREF="../Sys/PetscScalar.html#PetscScalar">PetscScalar</A> u_x[],
+</pre>
+<pre>
+        const <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> aOff[], const <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> aOff_x[], const <A HREF="../Sys/PetscScalar.html#PetscScalar">PetscScalar</A> a[], const <A HREF="../Sys/PetscScalar.html#PetscScalar">PetscScalar</A> a_t[], const <A HREF="../Sys/PetscScalar.html#PetscScalar">PetscScalar</A> a_x[],
+</pre>
+<pre>
+        <A HREF="../Sys/PetscReal.html#PetscReal">PetscReal</A> t, const <A HREF="../Sys/PetscReal.html#PetscReal">PetscReal</A> x[], <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> numConstants, const <A HREF="../Sys/PetscScalar.html#PetscScalar">PetscScalar</A> constants[], <A HREF="../Sys/PetscScalar.html#PetscScalar">PetscScalar</A> f[]);
+</pre>
+<P>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>dim          </B></TD><TD>- The spatial dimension
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>Nf           </B></TD><TD>- The number of input fields (here 1)
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>NfAux        </B></TD><TD>- The number of input auxiliary fields
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>uOff         </B></TD><TD>- The offset of the coordinates in u[] (here 0)
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>uOff_x       </B></TD><TD>- The offset of the coordinates in u_x[] (here 0)
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>u            </B></TD><TD>- The coordinate values at this point in space
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>u_t          </B></TD><TD>- The coordinate time derivative at this point in space (here NULL)
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>u_x          </B></TD><TD>- The coordinate derivatives at this point in space
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>aOff         </B></TD><TD>- The offset of each auxiliary field in u[]
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>aOff_x       </B></TD><TD>- The offset of each auxiliary field in u_x[]
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>a            </B></TD><TD>- The auxiliary field values at this point in space
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>a_t          </B></TD><TD>- The auxiliary field time derivative at this point in space (or NULL)
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>a_x          </B></TD><TD>- The auxiliary field derivatives at this point in space
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>t            </B></TD><TD>- The current time
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>x            </B></TD><TD>- The coordinates of this point (here not used)
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>numConstants </B></TD><TD>- The number of constants
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>constants    </B></TD><TD>- The value of each constant
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>f            </B></TD><TD>- The new coordinates at this point in space
+</TD></TR></TABLE>
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../DM/DMGetCoordinates.html#DMGetCoordinates">DMGetCoordinates</A>(), <A HREF="../DM/DMGetCoordinatesLocal.html#DMGetCoordinatesLocal">DMGetCoordinatesLocal</A>(), <A HREF="../DM/DMGetCoordinateDM.html#DMGetCoordinateDM">DMGetCoordinateDM</A>(), <A HREF="../DM/DMProjectFieldLocal.html#DMProjectFieldLocal">DMProjectFieldLocal</A>(), <A HREF="../DM/DMProjectFieldLabelLocal.html#DMProjectFieldLabelLocal">DMProjectFieldLabelLocal</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>intermediate<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/dm/impls/plex/plexgeometry.c.html#DMPlexRemapGeometry">src/dm/impls/plex/plexgeometry.c</A>
+<BR><A HREF="./index.html">Index of all DMPLEX routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

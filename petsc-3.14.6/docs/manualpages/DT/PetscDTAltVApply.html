@@ -1,0 +1,43 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DT/PetscDTAltVApply.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>PetscDTAltVApply</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/DT/PetscDTAltVApply.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="PetscDTAltVApply"><H1>PetscDTAltVApply</H1></A>
+Apply an a k-form (an alternating k-linear map) to a set of k N-dimensional vectors 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscdt.h" 
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../DT/PetscDTAltVApply.html#PetscDTAltVApply">PetscDTAltVApply</A>(<A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> N, <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> k, const <A HREF="../Sys/PetscReal.html#PetscReal">PetscReal</A> *w, const <A HREF="../Sys/PetscReal.html#PetscReal">PetscReal</A> *v, <A HREF="../Sys/PetscReal.html#PetscReal">PetscReal</A> *wv)
+</PRE>
+<H3><FONT COLOR="#CC3333">Input Arguments</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>N </B></TD><TD>- the dimension of the vector space, N &gt;= 0
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>k </B></TD><TD>- the degree k of the k-form w, 0 &lt;= k &lt;= N
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>w </B></TD><TD>- a k-form, size [N choose k] (each degree of freedom of a k-form is associated with a subset of k coordinates of the N-dimensional vectors: the degrees of freedom are ordered lexicographically by their associated subsets)
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>v </B></TD><TD>- a set of k vectors of size N, size [k x N], each vector stored contiguously
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Output Arguments</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>wv </B></TD><TD>- w(v_1,...,v_k) = \sum_i w_i * det(V_i): the degree of freedom w_i is associated with coordinates [s_{i,1},...,s_{i,k}], and the square matrix V_i has entry (j,k) given by the s_{i,k}'th coordinate of v_j
+</TD></TR></TABLE>
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../DT/PetscDTAltV.html#PetscDTAltV">PetscDTAltV</A>, <A HREF="../DT/PetscDTAltVPullback.html#PetscDTAltVPullback">PetscDTAltVPullback</A>(), <A HREF="../DT/PetscDTAltVPullbackMatrix.html#PetscDTAltVPullbackMatrix">PetscDTAltVPullbackMatrix</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>intermediate<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/dm/dt/interface/dtaltv.c.html#PetscDTAltVApply">src/dm/dt/interface/dtaltv.c</A>
+<BR><A HREF="./index.html">Index of all DT routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

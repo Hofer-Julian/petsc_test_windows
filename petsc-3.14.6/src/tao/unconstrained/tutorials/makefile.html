@@ -1,0 +1,33 @@
+
+<html>
+<head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/src/tao/unconstrained/tutorials/makefile.html" />
+<title></title>
+<meta name="generator" content="c2html 0.9.4">
+<meta name="date" content="2021-03-30T16:52:04+00:00">
+</head>
+
+<body bgcolor="#FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 src/tao/unconstrained/tutorials/makefile.html "><small>Report Typos and Errors</small></a></div>
+<pre width="80">-include ../../../../petscdir.mk
+CFLAGS		 =
+FFLAGS		 =
+CPPFLAGS         =
+FPPFLAGS         =
+EXAMPLESC        = eptorsion1.c eptorsion2.c minsurf2.c rosenbrock1.c spectraladjointassimilation.c
+EXAMPLESF        = eptorsion2f.F rosenbrock1f.F90
+EXAMPLESCH       =
+EXAMPLESFH       = eptorsion2f.h rosenbrock1f.h
+LOCDIR		 = src/tao/unconstrained/tutorials/
+MANSEC		 =
+DOCS		 =
+DIRS		 =
+CLEANFILES       = eptorsion1 eptorsion2 minsurf2 rosenbrock1 eptorsion2f rosenbrock1f
+
+include ${PETSC_DIR}/lib/petsc/conf/variables
+include ${PETSC_DIR}/lib/petsc/conf/rules
+include ${PETSC_DIR}/lib/petsc/conf/test
+</pre>
+</body>
+
+</html>

@@ -1,0 +1,51 @@
+
+<html>
+<head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/src/sys/tests/makefile.html" />
+<title></title>
+<meta name="generator" content="c2html 0.9.4">
+<meta name="date" content="2021-03-30T16:49:36+00:00">
+</head>
+
+<body bgcolor="#FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 src/sys/tests/makefile.html "><small>Report Typos and Errors</small></a></div>
+<pre width="80">-include ../../../petscdir.mk
+CFLAGS	        =
+FFLAGS	        =
+CPPFLAGS        =
+FPPFLAGS        =
+LOCDIR          = src/sys/tests/
+EXAMPLESC       = ex1.c ex2.c ex3.c ex6.c ex7.c ex8.c ex9.c ex10.c ex11.c ex12.c \
+                  ex14.c ex16.c ex18.c ex19.c ex20.c ex21.c \
+                  ex22.c ex23.c ex24.c ex25.c ex26.c ex27.c ex28.c ex29.c ex30.c ex31.c ex32.c ex35.c ex37.c \
+                  ex44.cxx ex45.cxx ex46.cxx ex47.c ex49.c \
+                  ex50.c ex51.c ex52.c ex53.c
+EXAMPLESF       = ex1f.F90 ex5f.F ex6f.F ex17f.F ex36f.F90 ex38f.F90 ex47f.F90 ex48f90.F90 ex49f.F90
+MANSEC          = Sys
+
+include ${PETSC_DIR}/lib/petsc/conf/variables
+include ${PETSC_DIR}/lib/petsc/conf/rules
+include ${PETSC_DIR}/lib/petsc/conf/test
+
+<strong><font color="#FF0000">testex55:</font></strong>
+	-@<font color="#4169E1">if</font> [ <font color="#666666">"${PETSC_WITH_BATCH}"</font> != <font color="#666666">""</font> ]; then \
+           echo <font color="#666666">"Running with batch filesystem; to test run src/sys/tests/ex55.py with"</font> ; \
+           echo <font color="#666666">"your systems batch system"</font>; \
+        elif [ <font color="#666666">"${MPIEXEC}"</font> = <font color="#666666">"/bin/false"</font> ]; then \
+           echo <font color="#666666">"*mpiexec not found*. Please run src/sys/tests/ex55.py manually"</font>; \
+	<font color="#4169E1">else</font> \
+           <font color="#4169E1">if</font> [[ -d ${PETSC_DIR}/${PETSC_ARCH}/lib/mpi4py &amp;&amp;  <font color="#666666">"X${PYTHONPATH}"</font> == <font color="#666666">"X"</font> ]]; then \
+             export PYTHONPATH=${PETSC_DIR}/${PETSC_ARCH}/lib; \
+             echo <font color="#666666">"Setting PYTHONPATH to $${PYTHONPATH} to locate mpi4py for test"</font>; \
+           fi; \
+           ${MPIEXEC} -n 2 ${PYTHON} ./ex55.py &gt; ex55_1.tmp  2&gt;&amp;1;\
+	   <font color="#4169E1">if</font> (${DIFF} output/ex55_1.testout ex55_1.tmp &gt; /dev/null 2&gt;&amp;1) then \
+           echo <font color="#666666">"C/C++ mpi4py python example src/sys/tests/ex55.py run successfully with 2 MPI process"</font>; \
+	   <font color="#4169E1">else</font> echo <font color="#666666">"Possible error running Python src/sys/tests/ex55.py with 2 MPI processes"</font>; \
+           echo <font color="#666666">"See http://www.mcs.anl.gov/petsc/documentation/faq.html"</font>;\
+           cat ex55_1.tmp; fi; \
+        ${RM} -f ex55.tmp; fi
+</pre>
+</body>
+
+</html>

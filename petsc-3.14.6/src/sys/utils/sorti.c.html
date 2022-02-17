@@ -1,0 +1,1002 @@
+<center><a href="sorti.c">Actual source code: sorti.c</a></center><br>
+
+<html>
+<head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/src/sys/utils/sorti.c.html" />
+<title></title>
+<meta name="generator" content="c2html 0.9.4">
+<meta name="date" content="2021-03-30T16:49:29+00:00">
+</head>
+
+<body bgcolor="#FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 src/sys/utils/sorti.c.html "><small>Report Typos and Errors</small></a></div>
+<pre width="80">
+
+<a name="line2">  2: </a><font color="#B22222">/*</font>
+<a name="line3">  3: </a><font color="#B22222">   This file contains routines for sorting integers. Values are sorted in place.</font>
+<a name="line4">  4: </a><font color="#B22222">   One can use src/sys/tests/ex52.c for benchmarking.</font>
+<a name="line5">  5: </a><font color="#B22222"> */</font>
+<a name="line6">  6: </a>#include <A href="../../../include/petsc/private/petscimpl.h.html">&lt;petsc/private/petscimpl.h&gt;</A>
+<a name="line7">  7: </a>#include <A href="../../../include/petsc/private/hashseti.h.html">&lt;petsc/private/hashseti.h&gt;</A>
+
+<a name="line9">  9: </a><strong><font color="#228B22">#define MEDIAN3(v,a,b,c)                                                        \</font></strong>
+<a name="line10"> 10: </a><strong><font color="#228B22">  (v[a]&lt;v[b]                                                                    \</font></strong>
+<a name="line11"> 11: </a><strong><font color="#228B22">   ? (v[b]&lt;v[c]                                                                 \</font></strong>
+<a name="line12"> 12: </a><strong><font color="#228B22">      ? (b)                                                                     \</font></strong>
+<a name="line13"> 13: </a><strong><font color="#228B22">      : (v[a]&lt;v[c] ? (c) : (a)))                                                \</font></strong>
+<a name="line14"> 14: </a><strong><font color="#228B22">   : (v[c]&lt;v[b]                                                                 \</font></strong>
+<a name="line15"> 15: </a><strong><font color="#228B22">      ? (b)                                                                     \</font></strong>
+<a name="line16"> 16: </a><strong><font color="#228B22">      : (v[a]&lt;v[c] ? (a) : (c))))</font></strong>
+
+<a name="line18"> 18: </a><strong><font color="#228B22">#define MEDIAN(v,right) MEDIAN3(v,right/4,right/2,right/4*3)</font></strong>
+
+<a name="line20"> 20: </a><font color="#B22222">/* Swap one, two or three pairs. Each pair can have its own type */</font>
+<a name="line21"> 21: </a><strong><font color="#228B22">#define SWAP1(a,b,t1)               do {t1=a;a=b;b=t1;} while (0)</font></strong>
+<a name="line22"> 22: </a><strong><font color="#228B22">#define SWAP2(a,b,c,d,t1,t2)        do {t1=a;a=b;b=t1; t2=c;c=d;d=t2;} while (0)</font></strong>
+<a name="line23"> 23: </a><strong><font color="#228B22">#define SWAP3(a,b,c,d,e,f,t1,t2,t3) do {t1=a;a=b;b=t1; t2=c;c=d;d=t2; t3=e;e=f;f=t3;} while (0)</font></strong>
+
+<a name="line25"> 25: </a><font color="#B22222">/* Swap a &amp; b, *c &amp; *d. c, d, t2 are pointers to a type of size &lt;siz&gt; */</font>
+<a name="line26"> 26: </a><strong><font color="#228B22">#define SWAP2Data(a,b,c,d,t1,t2,siz)                                             \</font></strong>
+<a name="line27"> 27: </a><strong><font color="#228B22">  do {                                                                           \</font></strong>
+<a name="line29"> 29: </a><strong><font color="#228B22">    t1=a; a=b; b=t1;                                                             \</font></strong>
+<a name="line30"> 30: </a><strong><font color="#228B22">    <a href="../../../docs/manualpages/Sys/PetscMemcpy.html#PetscMemcpy">PetscMemcpy</a>(t2,c,siz);                                  \</font></strong>
+<a name="line31"> 31: </a><strong><font color="#228B22">    <a href="../../../docs/manualpages/Sys/PetscMemcpy.html#PetscMemcpy">PetscMemcpy</a>(c,d,siz);                                   \</font></strong>
+<a name="line32"> 32: </a><strong><font color="#228B22">    <a href="../../../docs/manualpages/Sys/PetscMemcpy.html#PetscMemcpy">PetscMemcpy</a>(d,t2,siz);                                  \</font></strong>
+<a name="line33"> 33: </a><strong><font color="#228B22">  } while (0)</font></strong>
+
+<a name="line35"> 35: </a><font color="#B22222">/*</font>
+<a name="line36"> 36: </a><font color="#B22222">   Partition X[lo,hi] into two parts: X[lo,l) &lt;= pivot; X[r,hi] &gt; pivot</font>
+
+<a name="line38"> 38: </a><font color="#B22222">   Input Parameters:</font>
+<a name="line39"> 39: </a><font color="#B22222">    + X         - array to partition</font>
+<a name="line40"> 40: </a><font color="#B22222">    . pivot     - a pivot of X[]</font>
+<a name="line41"> 41: </a><font color="#B22222">    . t1        - temp variable for X</font>
+<a name="line42"> 42: </a><font color="#B22222">    - lo,hi     - lower and upper bound of the array</font>
+
+<a name="line44"> 44: </a><font color="#B22222">   Output Parameters:</font>
+<a name="line45"> 45: </a><font color="#B22222">    + l,r       - of type <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></font>
+
+<a name="line47"> 47: </a><font color="#B22222">   Notes:</font>
+<a name="line48"> 48: </a><font color="#B22222">    The TwoWayPartition2/3 variants also partition other arrays along with X.</font>
+<a name="line49"> 49: </a><font color="#B22222">    These arrays can have different types, so they provide their own temp t2,t3</font>
+<a name="line50"> 50: </a><font color="#B22222"> */</font>
+<a name="line51"> 51: </a><strong><font color="#228B22">#define TwoWayPartition1(X,pivot,t1,lo,hi,l,r)                                   \</font></strong>
+<a name="line52"> 52: </a><strong><font color="#228B22">  do {                                                                           \</font></strong>
+<a name="line53"> 53: </a><strong><font color="#228B22">    l = lo;                                                                      \</font></strong>
+<a name="line54"> 54: </a><strong><font color="#228B22">    r = hi;                                                                      \</font></strong>
+<a name="line55"> 55: </a><strong><font color="#228B22">    while (1) {                                                                   \</font></strong>
+<a name="line56"> 56: </a><strong><font color="#228B22">      while (X[l] &lt; pivot) l++;                                                  \</font></strong>
+<a name="line57"> 57: </a><strong><font color="#228B22">      while (X[r] &gt; pivot) r--;                                                  \</font></strong>
+<a name="line58"> 58: </a><strong><font color="#228B22">      if (l &gt;= r) {r++; break;}                                                  \</font></strong>
+<a name="line59"> 59: </a><strong><font color="#228B22">      SWAP1(X[l],X[r],t1);                                                       \</font></strong>
+<a name="line60"> 60: </a><strong><font color="#228B22">      l++;                                                                       \</font></strong>
+<a name="line61"> 61: </a><strong><font color="#228B22">      r--;                                                                       \</font></strong>
+<a name="line62"> 62: </a><strong><font color="#228B22">    }                                                                            \</font></strong>
+<a name="line63"> 63: </a><strong><font color="#228B22">  } while (0)</font></strong>
+
+<a name="line65"> 65: </a><font color="#B22222">/*</font>
+<a name="line66"> 66: </a><font color="#B22222">   Partition X[lo,hi] into two parts: X[lo,l) &gt;= pivot; X[r,hi] &lt; pivot</font>
+
+<a name="line68"> 68: </a><font color="#B22222">   Input Parameters:</font>
+<a name="line69"> 69: </a><font color="#B22222">    + X         - array to partition</font>
+<a name="line70"> 70: </a><font color="#B22222">    . pivot     - a pivot of X[]</font>
+<a name="line71"> 71: </a><font color="#B22222">    . t1        - temp variable for X</font>
+<a name="line72"> 72: </a><font color="#B22222">    - lo,hi     - lower and upper bound of the array</font>
+
+<a name="line74"> 74: </a><font color="#B22222">   Output Parameters:</font>
+<a name="line75"> 75: </a><font color="#B22222">    + l,r       - of type <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></font>
+
+<a name="line77"> 77: </a><font color="#B22222">   Notes:</font>
+<a name="line78"> 78: </a><font color="#B22222">    The TwoWayPartition2/3 variants also partition other arrays along with X.</font>
+<a name="line79"> 79: </a><font color="#B22222">    These arrays can have different types, so they provide their own temp t2,t3</font>
+<a name="line80"> 80: </a><font color="#B22222"> */</font>
+<a name="line81"> 81: </a><strong><font color="#228B22">#define TwoWayPartitionReverse1(X,pivot,t1,lo,hi,l,r)                                   \</font></strong>
+<a name="line82"> 82: </a><strong><font color="#228B22">  do {                                                                           \</font></strong>
+<a name="line83"> 83: </a><strong><font color="#228B22">    l = lo;                                                                      \</font></strong>
+<a name="line84"> 84: </a><strong><font color="#228B22">    r = hi;                                                                      \</font></strong>
+<a name="line85"> 85: </a><strong><font color="#228B22">    while (1) {                                                                   \</font></strong>
+<a name="line86"> 86: </a><strong><font color="#228B22">      while (X[l] &gt; pivot) l++;                                                  \</font></strong>
+<a name="line87"> 87: </a><strong><font color="#228B22">      while (X[r] &lt; pivot) r--;                                                  \</font></strong>
+<a name="line88"> 88: </a><strong><font color="#228B22">      if (l &gt;= r) {r++; break;}                                                  \</font></strong>
+<a name="line89"> 89: </a><strong><font color="#228B22">      SWAP1(X[l],X[r],t1);                                                       \</font></strong>
+<a name="line90"> 90: </a><strong><font color="#228B22">      l++;                                                                       \</font></strong>
+<a name="line91"> 91: </a><strong><font color="#228B22">      r--;                                                                       \</font></strong>
+<a name="line92"> 92: </a><strong><font color="#228B22">    }                                                                            \</font></strong>
+<a name="line93"> 93: </a><strong><font color="#228B22">  } while (0)</font></strong>
+
+<a name="line95"> 95: </a><strong><font color="#228B22">#define TwoWayPartition2(X,Y,pivot,t1,t2,lo,hi,l,r)                              \</font></strong>
+<a name="line96"> 96: </a><strong><font color="#228B22">  do {                                                                           \</font></strong>
+<a name="line97"> 97: </a><strong><font color="#228B22">    l = lo;                                                                      \</font></strong>
+<a name="line98"> 98: </a><strong><font color="#228B22">    r = hi;                                                                      \</font></strong>
+<a name="line99"> 99: </a><strong><font color="#228B22">    while (1) {                                                                   \</font></strong>
+<a name="line100">100: </a><strong><font color="#228B22">      while (X[l] &lt; pivot) l++;                                                  \</font></strong>
+<a name="line101">101: </a><strong><font color="#228B22">      while (X[r] &gt; pivot) r--;                                                  \</font></strong>
+<a name="line102">102: </a><strong><font color="#228B22">      if (l &gt;= r) {r++; break;}                                                  \</font></strong>
+<a name="line103">103: </a><strong><font color="#228B22">      SWAP2(X[l],X[r],Y[l],Y[r],t1,t2);                                          \</font></strong>
+<a name="line104">104: </a><strong><font color="#228B22">      l++;                                                                       \</font></strong>
+<a name="line105">105: </a><strong><font color="#228B22">      r--;                                                                       \</font></strong>
+<a name="line106">106: </a><strong><font color="#228B22">    }                                                                            \</font></strong>
+<a name="line107">107: </a><strong><font color="#228B22">  } while (0)</font></strong>
+
+<a name="line109">109: </a><strong><font color="#228B22">#define TwoWayPartition3(X,Y,Z,pivot,t1,t2,t3,lo,hi,l,r)                         \</font></strong>
+<a name="line110">110: </a><strong><font color="#228B22">  do {                                                                           \</font></strong>
+<a name="line111">111: </a><strong><font color="#228B22">    l = lo;                                                                      \</font></strong>
+<a name="line112">112: </a><strong><font color="#228B22">    r = hi;                                                                      \</font></strong>
+<a name="line113">113: </a><strong><font color="#228B22">    while (1) {                                                                   \</font></strong>
+<a name="line114">114: </a><strong><font color="#228B22">      while (X[l] &lt; pivot) l++;                                                  \</font></strong>
+<a name="line115">115: </a><strong><font color="#228B22">      while (X[r] &gt; pivot) r--;                                                  \</font></strong>
+<a name="line116">116: </a><strong><font color="#228B22">      if (l &gt;= r) {r++; break;}                                                  \</font></strong>
+<a name="line117">117: </a><strong><font color="#228B22">      SWAP3(X[l],X[r],Y[l],Y[r],Z[l],Z[r],t1,t2,t3);                             \</font></strong>
+<a name="line118">118: </a><strong><font color="#228B22">      l++;                                                                       \</font></strong>
+<a name="line119">119: </a><strong><font color="#228B22">      r--;                                                                       \</font></strong>
+<a name="line120">120: </a><strong><font color="#228B22">    }                                                                            \</font></strong>
+<a name="line121">121: </a><strong><font color="#228B22">  } while (0)</font></strong>
+
+<a name="line123">123: </a><font color="#B22222">/* Templates for similar functions used below */</font>
+<a name="line124">124: </a><strong><font color="#228B22">#define QuickSort1(FuncName,X,n,pivot,t1,ierr)                                   \</font></strong>
+<a name="line125">125: </a><strong><font color="#228B22">  do {                                                                           \</font></strong>
+<a name="line126">126: </a><strong><font color="#228B22">    <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> i,j,p,l,r,hi=n-1;                                                   \</font></strong>
+<a name="line127">127: </a><strong><font color="#228B22">    if (n &lt; 8) {                                                                 \</font></strong>
+<a name="line128">128: </a><strong><font color="#228B22">      for (i=0; i&lt;n; i++) {                                                      \</font></strong>
+<a name="line129">129: </a><strong><font color="#228B22">        pivot = X[i];                                                            \</font></strong>
+<a name="line130">130: </a><strong><font color="#228B22">        for (j=i+1; j&lt;n; j++) {                                                  \</font></strong>
+<a name="line131">131: </a><strong><font color="#228B22">          if (pivot &gt; X[j]) {                                                    \</font></strong>
+<a name="line132">132: </a><strong><font color="#228B22">            SWAP1(X[i],X[j],t1);                                                 \</font></strong>
+<a name="line133">133: </a><strong><font color="#228B22">            pivot = X[i];                                                        \</font></strong>
+<a name="line134">134: </a><strong><font color="#228B22">          }                                                                      \</font></strong>
+<a name="line135">135: </a><strong><font color="#228B22">        }                                                                        \</font></strong>
+<a name="line136">136: </a><strong><font color="#228B22">      }                                                                          \</font></strong>
+<a name="line137">137: </a><strong><font color="#228B22">    } else {                                                                     \</font></strong>
+<a name="line138">138: </a><strong><font color="#228B22">      p     = MEDIAN(X,hi);                                                      \</font></strong>
+<a name="line139">139: </a><strong><font color="#228B22">      pivot = X[p];                                                              \</font></strong>
+<a name="line140">140: </a><strong><font color="#228B22">      TwoWayPartition1(X,pivot,t1,0,hi,l,r);                                     \</font></strong>
+<a name="line141">141: </a><strong><font color="#228B22">      FuncName(l,X);                                       \</font></strong>
+<a name="line142">142: </a><strong><font color="#228B22">      FuncName(hi-r+1,X+r);                                \</font></strong>
+<a name="line143">143: </a><strong><font color="#228B22">    }                                                                            \</font></strong>
+<a name="line144">144: </a><strong><font color="#228B22">  } while (0)</font></strong>
+
+<a name="line146">146: </a><font color="#B22222">/* Templates for similar functions used below */</font>
+<a name="line147">147: </a><strong><font color="#228B22">#define QuickSortReverse1(FuncName,X,n,pivot,t1,ierr)                            \</font></strong>
+<a name="line148">148: </a><strong><font color="#228B22">  do {                                                                           \</font></strong>
+<a name="line149">149: </a><strong><font color="#228B22">    <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> i,j,p,l,r,hi=n-1;                                                   \</font></strong>
+<a name="line150">150: </a><strong><font color="#228B22">    if (n &lt; 8) {                                                                 \</font></strong>
+<a name="line151">151: </a><strong><font color="#228B22">      for (i=0; i&lt;n; i++) {                                                      \</font></strong>
+<a name="line152">152: </a><strong><font color="#228B22">        pivot = X[i];                                                            \</font></strong>
+<a name="line153">153: </a><strong><font color="#228B22">        for (j=i+1; j&lt;n; j++) {                                                  \</font></strong>
+<a name="line154">154: </a><strong><font color="#228B22">          if (pivot &lt; X[j]) {                                                    \</font></strong>
+<a name="line155">155: </a><strong><font color="#228B22">            SWAP1(X[i],X[j],t1);                                                 \</font></strong>
+<a name="line156">156: </a><strong><font color="#228B22">            pivot = X[i];                                                        \</font></strong>
+<a name="line157">157: </a><strong><font color="#228B22">          }                                                                      \</font></strong>
+<a name="line158">158: </a><strong><font color="#228B22">        }                                                                        \</font></strong>
+<a name="line159">159: </a><strong><font color="#228B22">      }                                                                          \</font></strong>
+<a name="line160">160: </a><strong><font color="#228B22">    } else {                                                                     \</font></strong>
+<a name="line161">161: </a><strong><font color="#228B22">      p     = MEDIAN(X,hi);                                                      \</font></strong>
+<a name="line162">162: </a><strong><font color="#228B22">      pivot = X[p];                                                              \</font></strong>
+<a name="line163">163: </a><strong><font color="#228B22">      TwoWayPartitionReverse1(X,pivot,t1,0,hi,l,r);                              \</font></strong>
+<a name="line164">164: </a><strong><font color="#228B22">      FuncName(l,X);                                       \</font></strong>
+<a name="line165">165: </a><strong><font color="#228B22">      FuncName(hi-r+1,X+r);                                \</font></strong>
+<a name="line166">166: </a><strong><font color="#228B22">    }                                                                            \</font></strong>
+<a name="line167">167: </a><strong><font color="#228B22">  } while (0)</font></strong>
+
+<a name="line169">169: </a><strong><font color="#228B22">#define QuickSort2(FuncName,X,Y,n,pivot,t1,t2,ierr)                              \</font></strong>
+<a name="line170">170: </a><strong><font color="#228B22">  do {                                                                           \</font></strong>
+<a name="line171">171: </a><strong><font color="#228B22">    <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> i,j,p,l,r,hi=n-1;                                                   \</font></strong>
+<a name="line172">172: </a><strong><font color="#228B22">    if (n &lt; 8) {                                                                 \</font></strong>
+<a name="line173">173: </a><strong><font color="#228B22">      for (i=0; i&lt;n; i++) {                                                      \</font></strong>
+<a name="line174">174: </a><strong><font color="#228B22">        pivot = X[i];                                                            \</font></strong>
+<a name="line175">175: </a><strong><font color="#228B22">        for (j=i+1; j&lt;n; j++) {                                                  \</font></strong>
+<a name="line176">176: </a><strong><font color="#228B22">          if (pivot &gt; X[j]) {                                                    \</font></strong>
+<a name="line177">177: </a><strong><font color="#228B22">            SWAP2(X[i],X[j],Y[i],Y[j],t1,t2);                                    \</font></strong>
+<a name="line178">178: </a><strong><font color="#228B22">            pivot = X[i];                                                        \</font></strong>
+<a name="line179">179: </a><strong><font color="#228B22">          }                                                                      \</font></strong>
+<a name="line180">180: </a><strong><font color="#228B22">        }                                                                        \</font></strong>
+<a name="line181">181: </a><strong><font color="#228B22">      }                                                                          \</font></strong>
+<a name="line182">182: </a><strong><font color="#228B22">    } else {                                                                     \</font></strong>
+<a name="line183">183: </a><strong><font color="#228B22">      p     = MEDIAN(X,hi);                                                      \</font></strong>
+<a name="line184">184: </a><strong><font color="#228B22">      pivot = X[p];                                                              \</font></strong>
+<a name="line185">185: </a><strong><font color="#228B22">      TwoWayPartition2(X,Y,pivot,t1,t2,0,hi,l,r);                                \</font></strong>
+<a name="line186">186: </a><strong><font color="#228B22">      FuncName(l,X,Y);                                     \</font></strong>
+<a name="line187">187: </a><strong><font color="#228B22">      FuncName(hi-r+1,X+r,Y+r);                            \</font></strong>
+<a name="line188">188: </a><strong><font color="#228B22">    }                                                                            \</font></strong>
+<a name="line189">189: </a><strong><font color="#228B22">  } while (0)</font></strong>
+
+<a name="line191">191: </a><strong><font color="#228B22">#define QuickSort3(FuncName,X,Y,Z,n,pivot,t1,t2,t3,ierr)                         \</font></strong>
+<a name="line192">192: </a><strong><font color="#228B22">  do {                                                                           \</font></strong>
+<a name="line193">193: </a><strong><font color="#228B22">    <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> i,j,p,l,r,hi=n-1;                                                   \</font></strong>
+<a name="line194">194: </a><strong><font color="#228B22">    if (n &lt; 8) {                                                                 \</font></strong>
+<a name="line195">195: </a><strong><font color="#228B22">      for (i=0; i&lt;n; i++) {                                                      \</font></strong>
+<a name="line196">196: </a><strong><font color="#228B22">        pivot = X[i];                                                            \</font></strong>
+<a name="line197">197: </a><strong><font color="#228B22">        for (j=i+1; j&lt;n; j++) {                                                  \</font></strong>
+<a name="line198">198: </a><strong><font color="#228B22">          if (pivot &gt; X[j]) {                                                    \</font></strong>
+<a name="line199">199: </a><strong><font color="#228B22">            SWAP3(X[i],X[j],Y[i],Y[j],Z[i],Z[j],t1,t2,t3);                       \</font></strong>
+<a name="line200">200: </a><strong><font color="#228B22">            pivot = X[i];                                                        \</font></strong>
+<a name="line201">201: </a><strong><font color="#228B22">          }                                                                      \</font></strong>
+<a name="line202">202: </a><strong><font color="#228B22">        }                                                                        \</font></strong>
+<a name="line203">203: </a><strong><font color="#228B22">      }                                                                          \</font></strong>
+<a name="line204">204: </a><strong><font color="#228B22">    } else {                                                                     \</font></strong>
+<a name="line205">205: </a><strong><font color="#228B22">      p     = MEDIAN(X,hi);                                                      \</font></strong>
+<a name="line206">206: </a><strong><font color="#228B22">      pivot = X[p];                                                              \</font></strong>
+<a name="line207">207: </a><strong><font color="#228B22">      TwoWayPartition3(X,Y,Z,pivot,t1,t2,t3,0,hi,l,r);                           \</font></strong>
+<a name="line208">208: </a><strong><font color="#228B22">      FuncName(l,X,Y,Z);                                   \</font></strong>
+<a name="line209">209: </a><strong><font color="#228B22">      FuncName(hi-r+1,X+r,Y+r,Z+r);                        \</font></strong>
+<a name="line210">210: </a><strong><font color="#228B22">    }                                                                            \</font></strong>
+<a name="line211">211: </a><strong><font color="#228B22">  } while (0)</font></strong>
+
+<a name="line213">213: </a><font color="#B22222">/*@</font>
+<a name="line214">214: </a><font color="#B22222">   <a href="../../../docs/manualpages/Sys/PetscSortedInt.html#PetscSortedInt">PetscSortedInt</a> - Determines whether the array is sorted.</font>
+
+<a name="line216">216: </a><font color="#B22222">   Not Collective</font>
+
+<a name="line218">218: </a><font color="#B22222">   Input Parameters:</font>
+<a name="line219">219: </a><font color="#B22222">+  n  - number of values</font>
+<a name="line220">220: </a><font color="#B22222">-  X  - array of integers</font>
+
+<a name="line222">222: </a><font color="#B22222">   Output Parameters:</font>
+<a name="line223">223: </a><font color="#B22222">.  sorted - flag whether the array is sorted</font>
+
+<a name="line225">225: </a><font color="#B22222">   Level: intermediate</font>
+
+<a name="line227">227: </a><font color="#B22222">.seealso: <a href="../../../docs/manualpages/Sys/PetscSortInt.html#PetscSortInt">PetscSortInt</a>(), <a href="../../../docs/manualpages/Sys/PetscSortedMPIInt.html#PetscSortedMPIInt">PetscSortedMPIInt</a>(), <a href="../../../docs/manualpages/Sys/PetscSortedReal.html#PetscSortedReal">PetscSortedReal</a>()</font>
+<a name="line228">228: </a><font color="#B22222">@*/</font>
+<a name="line229">229: </a><strong><font color="#4169E1"><a name="PetscSortedInt"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  <a href="../../../docs/manualpages/Sys/PetscSortedInt.html#PetscSortedInt">PetscSortedInt</a>(<a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> n,const <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> X[],<a href="../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> *sorted)</font></strong>
+<a name="line230">230: </a>{
+<a name="line232">232: </a>  PetscSorted(n,X,*sorted);
+<a name="line233">233: </a>  <font color="#4169E1">return</font>(0);
+<a name="line234">234: </a>}
+
+<a name="line236">236: </a><font color="#B22222">/*@</font>
+<a name="line237">237: </a><font color="#B22222">   <a href="../../../docs/manualpages/Sys/PetscSortInt.html#PetscSortInt">PetscSortInt</a> - Sorts an array of integers in place in increasing order.</font>
+
+<a name="line239">239: </a><font color="#B22222">   Not Collective</font>
+
+<a name="line241">241: </a><font color="#B22222">   Input Parameters:</font>
+<a name="line242">242: </a><font color="#B22222">+  n  - number of values</font>
+<a name="line243">243: </a><font color="#B22222">-  X  - array of integers</font>
+
+<a name="line245">245: </a><font color="#B22222">   Notes:</font>
+<a name="line246">246: </a><font color="#B22222">   This function serves as an alternative to <a href="../../../docs/manualpages/Sys/PetscIntSortSemiOrdered.html#PetscIntSortSemiOrdered">PetscIntSortSemiOrdered</a>(), and may perform faster especially if the array</font>
+<a name="line247">247: </a><font color="#B22222">   is completely random. There are exceptions to this and so it is __highly__ recomended that the user benchmark their</font>
+<a name="line248">248: </a><font color="#B22222">   code to see which routine is fastest.</font>
+
+<a name="line250">250: </a><font color="#B22222">   Level: intermediate</font>
+
+<a name="line252">252: </a><font color="#B22222">.seealso: <a href="../../../docs/manualpages/Sys/PetscIntSortSemiOrdered.html#PetscIntSortSemiOrdered">PetscIntSortSemiOrdered</a>(), <a href="../../../docs/manualpages/Sys/PetscSortReal.html#PetscSortReal">PetscSortReal</a>(), <a href="../../../docs/manualpages/Sys/PetscSortIntWithPermutation.html#PetscSortIntWithPermutation">PetscSortIntWithPermutation</a>()</font>
+<a name="line253">253: </a><font color="#B22222">@*/</font>
+<a name="line254">254: </a><strong><font color="#4169E1"><a name="PetscSortInt"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  <a href="../../../docs/manualpages/Sys/PetscSortInt.html#PetscSortInt">PetscSortInt</a>(<a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> n,<a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> X[])</font></strong>
+<a name="line255">255: </a>{
+<a name="line257">257: </a>  <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       pivot,t1;
+
+<a name="line260">260: </a>  QuickSort1(<a href="../../../docs/manualpages/Sys/PetscSortInt.html#PetscSortInt">PetscSortInt</a>,X,n,pivot,t1,ierr);
+<a name="line261">261: </a>  <font color="#4169E1">return</font>(0);
+<a name="line262">262: </a>}
+
+<a name="line264">264: </a><font color="#B22222">/*@</font>
+<a name="line265">265: </a><font color="#B22222">   <a href="../../../docs/manualpages/Sys/PetscSortReverseInt.html#PetscSortReverseInt">PetscSortReverseInt</a> - Sorts an array of integers in place in decreasing order.</font>
+
+<a name="line267">267: </a><font color="#B22222">   Not Collective</font>
+
+<a name="line269">269: </a><font color="#B22222">   Input Parameters:</font>
+<a name="line270">270: </a><font color="#B22222">+  n  - number of values</font>
+<a name="line271">271: </a><font color="#B22222">-  X  - array of integers</font>
+
+<a name="line273">273: </a><font color="#B22222">   Level: intermediate</font>
+
+<a name="line275">275: </a><font color="#B22222">.seealso: <a href="../../../docs/manualpages/Sys/PetscIntSortSemiOrdered.html#PetscIntSortSemiOrdered">PetscIntSortSemiOrdered</a>(), <a href="../../../docs/manualpages/Sys/PetscSortInt.html#PetscSortInt">PetscSortInt</a>(), <a href="../../../docs/manualpages/Sys/PetscSortIntWithPermutation.html#PetscSortIntWithPermutation">PetscSortIntWithPermutation</a>()</font>
+<a name="line276">276: </a><font color="#B22222">@*/</font>
+<a name="line277">277: </a><strong><font color="#4169E1"><a name="PetscSortReverseInt"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  <a href="../../../docs/manualpages/Sys/PetscSortReverseInt.html#PetscSortReverseInt">PetscSortReverseInt</a>(<a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> n,<a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> X[])</font></strong>
+<a name="line278">278: </a>{
+<a name="line280">280: </a>  <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       pivot,t1;
+
+<a name="line283">283: </a>  QuickSortReverse1(<a href="../../../docs/manualpages/Sys/PetscSortReverseInt.html#PetscSortReverseInt">PetscSortReverseInt</a>,X,n,pivot,t1,ierr);
+<a name="line284">284: </a>  <font color="#4169E1">return</font>(0);
+<a name="line285">285: </a>}
+
+<a name="line287">287: </a><font color="#B22222">/*@</font>
+<a name="line288">288: </a><font color="#B22222">   <a href="../../../docs/manualpages/Sys/PetscSortedRemoveDupsInt.html#PetscSortedRemoveDupsInt">PetscSortedRemoveDupsInt</a> - Removes all duplicate entries of a sorted input array</font>
+
+<a name="line290">290: </a><font color="#B22222">   Not Collective</font>
+
+<a name="line292">292: </a><font color="#B22222">   Input Parameters:</font>
+<a name="line293">293: </a><font color="#B22222">+  n  - number of values</font>
+<a name="line294">294: </a><font color="#B22222">-  X  - sorted array of integers</font>
+
+<a name="line296">296: </a><font color="#B22222">   Output Parameter:</font>
+<a name="line297">297: </a><font color="#B22222">.  n - number of non-redundant values</font>
+
+<a name="line299">299: </a><font color="#B22222">   Level: intermediate</font>
+
+<a name="line301">301: </a><font color="#B22222">.seealso: <a href="../../../docs/manualpages/Sys/PetscSortInt.html#PetscSortInt">PetscSortInt</a>()</font>
+<a name="line302">302: </a><font color="#B22222">@*/</font>
+<a name="line303">303: </a><strong><font color="#4169E1"><a name="PetscSortedRemoveDupsInt"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  <a href="../../../docs/manualpages/Sys/PetscSortedRemoveDupsInt.html#PetscSortedRemoveDupsInt">PetscSortedRemoveDupsInt</a>(<a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *n,<a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> X[])</font></strong>
+<a name="line304">304: </a>{
+<a name="line305">305: </a>  <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> i,s = 0,N = *n, b = 0;
+
+<a name="line309">309: </a>  <font color="#4169E1">for</font> (i=0; i&lt;N-1; i++) {
+<a name="line310">310: </a>    <font color="#4169E1">if</font> (X[b+s+1] != X[b]) {
+<a name="line311">311: </a>      X[b+1] = X[b+s+1]; b++;
+<a name="line312">312: </a>    } <font color="#4169E1">else</font> s++;
+<a name="line313">313: </a>  }
+<a name="line314">314: </a>  *n = N - s;
+<a name="line315">315: </a>  <font color="#4169E1">return</font>(0);
+<a name="line316">316: </a>}
+
+<a name="line318">318: </a><font color="#B22222">/*@</font>
+<a name="line319">319: </a><font color="#B22222">   <a href="../../../docs/manualpages/Sys/PetscSortRemoveDupsInt.html#PetscSortRemoveDupsInt">PetscSortRemoveDupsInt</a> - Sorts an array of integers in place in increasing order removes all duplicate entries</font>
+
+<a name="line321">321: </a><font color="#B22222">   Not Collective</font>
+
+<a name="line323">323: </a><font color="#B22222">   Input Parameters:</font>
+<a name="line324">324: </a><font color="#B22222">+  n  - number of values</font>
+<a name="line325">325: </a><font color="#B22222">-  X  - array of integers</font>
+
+<a name="line327">327: </a><font color="#B22222">   Output Parameter:</font>
+<a name="line328">328: </a><font color="#B22222">.  n - number of non-redundant values</font>
+
+<a name="line330">330: </a><font color="#B22222">   Level: intermediate</font>
+
+<a name="line332">332: </a><font color="#B22222">.seealso: <a href="../../../docs/manualpages/Sys/PetscIntSortSemiOrdered.html#PetscIntSortSemiOrdered">PetscIntSortSemiOrdered</a>(), <a href="../../../docs/manualpages/Sys/PetscSortReal.html#PetscSortReal">PetscSortReal</a>(), <a href="../../../docs/manualpages/Sys/PetscSortIntWithPermutation.html#PetscSortIntWithPermutation">PetscSortIntWithPermutation</a>(), <a href="../../../docs/manualpages/Sys/PetscSortInt.html#PetscSortInt">PetscSortInt</a>(), <a href="../../../docs/manualpages/Sys/PetscSortedRemoveDupsInt.html#PetscSortedRemoveDupsInt">PetscSortedRemoveDupsInt</a>()</font>
+<a name="line333">333: </a><font color="#B22222">@*/</font>
+<a name="line334">334: </a><strong><font color="#4169E1"><a name="PetscSortRemoveDupsInt"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  <a href="../../../docs/manualpages/Sys/PetscSortRemoveDupsInt.html#PetscSortRemoveDupsInt">PetscSortRemoveDupsInt</a>(<a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *n,<a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> X[])</font></strong>
+<a name="line335">335: </a>{
+
+<a name="line339">339: </a>  <a href="../../../docs/manualpages/Sys/PetscSortInt.html#PetscSortInt">PetscSortInt</a>(*n,X);
+<a name="line340">340: </a>  <a href="../../../docs/manualpages/Sys/PetscSortedRemoveDupsInt.html#PetscSortedRemoveDupsInt">PetscSortedRemoveDupsInt</a>(n,X);
+<a name="line341">341: </a>  <font color="#4169E1">return</font>(0);
+<a name="line342">342: </a>}
+
+<a name="line344">344: </a><font color="#B22222">/*@</font>
+<a name="line345">345: </a><font color="#B22222">  <a href="../../../docs/manualpages/Sys/PetscFindInt.html#PetscFindInt">PetscFindInt</a> - Finds integer in a sorted array of integers</font>
+
+<a name="line347">347: </a><font color="#B22222">   Not Collective</font>
+
+<a name="line349">349: </a><font color="#B22222">   Input Parameters:</font>
+<a name="line350">350: </a><font color="#B22222">+  key - the integer to locate</font>
+<a name="line351">351: </a><font color="#B22222">.  n   - number of values in the array</font>
+<a name="line352">352: </a><font color="#B22222">-  X  - array of integers</font>
+
+<a name="line354">354: </a><font color="#B22222">   Output Parameter:</font>
+<a name="line355">355: </a><font color="#B22222">.  loc - the location if found, otherwise -(slot+1) where slot is the place the value would go</font>
+
+<a name="line357">357: </a><font color="#B22222">   Level: intermediate</font>
+
+<a name="line359">359: </a><font color="#B22222">.seealso: <a href="../../../docs/manualpages/Sys/PetscIntSortSemiOrdered.html#PetscIntSortSemiOrdered">PetscIntSortSemiOrdered</a>(), <a href="../../../docs/manualpages/Sys/PetscSortInt.html#PetscSortInt">PetscSortInt</a>(), <a href="../../../docs/manualpages/Sys/PetscSortIntWithArray.html#PetscSortIntWithArray">PetscSortIntWithArray</a>(), <a href="../../../docs/manualpages/Sys/PetscSortRemoveDupsInt.html#PetscSortRemoveDupsInt">PetscSortRemoveDupsInt</a>()</font>
+<a name="line360">360: </a><font color="#B22222">@*/</font>
+<a name="line361">361: </a><strong><font color="#4169E1"><a name="PetscFindInt"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../docs/manualpages/Sys/PetscFindInt.html#PetscFindInt">PetscFindInt</a>(<a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> key, <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> n, const <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> X[], <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *loc)</font></strong>
+<a name="line362">362: </a>{
+<a name="line363">363: </a>  <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> lo = 0,hi = n;
+
+<a name="line367">367: </a>  <font color="#4169E1">if</font> (!n) {*loc = -1; <font color="#4169E1">return</font>(0);}
+<a name="line370">370: </a>  <font color="#4169E1">while</font> (hi - lo &gt; 1) {
+<a name="line371">371: </a>    <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> mid = lo + (hi - lo)/2;
+<a name="line372">372: </a>    <font color="#4169E1">if</font> (key &lt; X[mid]) hi = mid;
+<a name="line373">373: </a>    <font color="#4169E1">else</font>               lo = mid;
+<a name="line374">374: </a>  }
+<a name="line375">375: </a>  *loc = key == X[lo] ? lo : -(lo + (key &gt; X[lo]) + 1);
+<a name="line376">376: </a>  <font color="#4169E1">return</font>(0);
+<a name="line377">377: </a>}
+
+<a name="line379">379: </a><font color="#B22222">/*@</font>
+
+<a name="line382">382: </a><font color="#B22222">   Not Collective</font>
+
+<a name="line384">384: </a><font color="#B22222">   Input Parameters:</font>
+<a name="line385">385: </a><font color="#B22222">+  n  - number of values in the array</font>
+<a name="line386">386: </a><font color="#B22222">-  X  - array of integers</font>
+
+
+<a name="line389">389: </a><font color="#B22222">   Output Parameter:</font>
+<a name="line390">390: </a><font color="#B22222">.  dups - True if the array has dups, otherwise false</font>
+
+<a name="line392">392: </a><font color="#B22222">   Level: intermediate</font>
+
+<a name="line394">394: </a><font color="#B22222">.seealso: <a href="../../../docs/manualpages/Sys/PetscSortRemoveDupsInt.html#PetscSortRemoveDupsInt">PetscSortRemoveDupsInt</a>()</font>
+<a name="line395">395: </a><font color="#B22222">@*/</font>
+<a name="line397">397: </a>{
+<a name="line399">399: </a>  <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       i;
+<a name="line400">400: </a>  PetscHSetI     ht;
+<a name="line401">401: </a>  <a href="../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>      missing;
+
+<a name="line405">405: </a>  *dups = <a href="../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line406">406: </a>  <font color="#4169E1">if</font> (n &gt; 1) {
+<a name="line407">407: </a>    PetscHSetICreate(&amp;ht);
+<a name="line408">408: </a>    PetscHSetIResize(ht,n);
+<a name="line409">409: </a>    <font color="#4169E1">for</font> (i=0; i&lt;n; i++) {
+<a name="line410">410: </a>      PetscHSetIQueryAdd(ht,X[i],&amp;missing);
+<a name="line411">411: </a>      <font color="#4169E1">if</font> (!missing) {*dups = <a href="../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>; <font color="#4169E1">break</font>;}
+<a name="line412">412: </a>    }
+<a name="line413">413: </a>    PetscHSetIDestroy(&amp;ht);
+<a name="line414">414: </a>  }
+<a name="line415">415: </a>  <font color="#4169E1">return</font>(0);
+<a name="line416">416: </a>}
+
+<a name="line418">418: </a><font color="#B22222">/*@</font>
+<a name="line419">419: </a><font color="#B22222">  <a href="../../../docs/manualpages/Sys/PetscFindMPIInt.html#PetscFindMPIInt">PetscFindMPIInt</a> - Finds MPI integer in a sorted array of integers</font>
+
+<a name="line421">421: </a><font color="#B22222">   Not Collective</font>
+
+<a name="line423">423: </a><font color="#B22222">   Input Parameters:</font>
+<a name="line424">424: </a><font color="#B22222">+  key - the integer to locate</font>
+<a name="line425">425: </a><font color="#B22222">.  n   - number of values in the array</font>
+<a name="line426">426: </a><font color="#B22222">-  X   - array of integers</font>
+
+<a name="line428">428: </a><font color="#B22222">   Output Parameter:</font>
+<a name="line429">429: </a><font color="#B22222">.  loc - the location if found, otherwise -(slot+1) where slot is the place the value would go</font>
+
+<a name="line431">431: </a><font color="#B22222">   Level: intermediate</font>
+
+<a name="line433">433: </a><font color="#B22222">.seealso: <a href="../../../docs/manualpages/Sys/PetscMPIIntSortSemiOrdered.html#PetscMPIIntSortSemiOrdered">PetscMPIIntSortSemiOrdered</a>(), <a href="../../../docs/manualpages/Sys/PetscSortInt.html#PetscSortInt">PetscSortInt</a>(), <a href="../../../docs/manualpages/Sys/PetscSortIntWithArray.html#PetscSortIntWithArray">PetscSortIntWithArray</a>(), <a href="../../../docs/manualpages/Sys/PetscSortRemoveDupsInt.html#PetscSortRemoveDupsInt">PetscSortRemoveDupsInt</a>()</font>
+<a name="line434">434: </a><font color="#B22222">@*/</font>
+<a name="line435">435: </a><strong><font color="#4169E1"><a name="PetscFindMPIInt"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../docs/manualpages/Sys/PetscFindMPIInt.html#PetscFindMPIInt">PetscFindMPIInt</a>(<a href="../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a> key, <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> n, const <a href="../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a> X[], <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *loc)</font></strong>
+<a name="line436">436: </a>{
+<a name="line437">437: </a>  <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> lo = 0,hi = n;
+
+<a name="line441">441: </a>  <font color="#4169E1">if</font> (!n) {*loc = -1; <font color="#4169E1">return</font>(0);}
+<a name="line444">444: </a>  <font color="#4169E1">while</font> (hi - lo &gt; 1) {
+<a name="line445">445: </a>    <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> mid = lo + (hi - lo)/2;
+<a name="line446">446: </a>    <font color="#4169E1">if</font> (key &lt; X[mid]) hi = mid;
+<a name="line447">447: </a>    <font color="#4169E1">else</font>               lo = mid;
+<a name="line448">448: </a>  }
+<a name="line449">449: </a>  *loc = key == X[lo] ? lo : -(lo + (key &gt; X[lo]) + 1);
+<a name="line450">450: </a>  <font color="#4169E1">return</font>(0);
+<a name="line451">451: </a>}
+
+<a name="line453">453: </a><font color="#B22222">/*@</font>
+<a name="line454">454: </a><font color="#B22222">   <a href="../../../docs/manualpages/Sys/PetscSortIntWithArray.html#PetscSortIntWithArray">PetscSortIntWithArray</a> - Sorts an array of integers in place in increasing order;</font>
+<a name="line455">455: </a><font color="#B22222">       changes a second array to match the sorted first array.</font>
+
+<a name="line457">457: </a><font color="#B22222">   Not Collective</font>
+
+<a name="line459">459: </a><font color="#B22222">   Input Parameters:</font>
+<a name="line460">460: </a><font color="#B22222">+  n  - number of values</font>
+<a name="line461">461: </a><font color="#B22222">.  X  - array of integers</font>
+<a name="line462">462: </a><font color="#B22222">-  Y  - second array of integers</font>
+
+<a name="line464">464: </a><font color="#B22222">   Level: intermediate</font>
+
+<a name="line466">466: </a><font color="#B22222">.seealso: <a href="../../../docs/manualpages/Sys/PetscIntSortSemiOrderedWithArray.html#PetscIntSortSemiOrderedWithArray">PetscIntSortSemiOrderedWithArray</a>(), <a href="../../../docs/manualpages/Sys/PetscSortReal.html#PetscSortReal">PetscSortReal</a>(), PetscSortIntPermutation(), <a href="../../../docs/manualpages/Sys/PetscSortInt.html#PetscSortInt">PetscSortInt</a>()</font>
+<a name="line467">467: </a><font color="#B22222">@*/</font>
+<a name="line468">468: </a><strong><font color="#4169E1"><a name="PetscSortIntWithArray"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  <a href="../../../docs/manualpages/Sys/PetscSortIntWithArray.html#PetscSortIntWithArray">PetscSortIntWithArray</a>(<a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> n,<a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> X[],<a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> Y[])</font></strong>
+<a name="line469">469: </a>{
+<a name="line471">471: </a>  <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       pivot,t1,t2;
+
+<a name="line474">474: </a>  QuickSort2(<a href="../../../docs/manualpages/Sys/PetscSortIntWithArray.html#PetscSortIntWithArray">PetscSortIntWithArray</a>,X,Y,n,pivot,t1,t2,ierr);
+<a name="line475">475: </a>  <font color="#4169E1">return</font>(0);
+<a name="line476">476: </a>}
+
+<a name="line478">478: </a><font color="#B22222">/*@</font>
+<a name="line479">479: </a><font color="#B22222">   <a href="../../../docs/manualpages/Sys/PetscSortIntWithArrayPair.html#PetscSortIntWithArrayPair">PetscSortIntWithArrayPair</a> - Sorts an array of integers in place in increasing order;</font>
+<a name="line480">480: </a><font color="#B22222">       changes a pair of integer arrays to match the sorted first array.</font>
+
+<a name="line482">482: </a><font color="#B22222">   Not Collective</font>
+
+<a name="line484">484: </a><font color="#B22222">   Input Parameters:</font>
+<a name="line485">485: </a><font color="#B22222">+  n  - number of values</font>
+<a name="line486">486: </a><font color="#B22222">.  X  - array of integers</font>
+<a name="line487">487: </a><font color="#B22222">.  Y  - second array of integers (first array of the pair)</font>
+<a name="line488">488: </a><font color="#B22222">-  Z  - third array of integers  (second array of the pair)</font>
+
+<a name="line490">490: </a><font color="#B22222">   Level: intermediate</font>
+
+<a name="line492">492: </a><font color="#B22222">.seealso: <a href="../../../docs/manualpages/Sys/PetscSortReal.html#PetscSortReal">PetscSortReal</a>(), PetscSortIntPermutation(), <a href="../../../docs/manualpages/Sys/PetscSortIntWithArray.html#PetscSortIntWithArray">PetscSortIntWithArray</a>(), <a href="../../../docs/manualpages/Sys/PetscIntSortSemiOrdered.html#PetscIntSortSemiOrdered">PetscIntSortSemiOrdered</a>()</font>
+<a name="line493">493: </a><font color="#B22222">@*/</font>
+<a name="line494">494: </a><strong><font color="#4169E1"><a name="PetscSortIntWithArrayPair"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  <a href="../../../docs/manualpages/Sys/PetscSortIntWithArrayPair.html#PetscSortIntWithArrayPair">PetscSortIntWithArrayPair</a>(<a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> n,<a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> X[],<a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> Y[],<a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> Z[])</font></strong>
+<a name="line495">495: </a>{
+<a name="line497">497: </a>  <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       pivot,t1,t2,t3;
+
+<a name="line500">500: </a>  QuickSort3(<a href="../../../docs/manualpages/Sys/PetscSortIntWithArrayPair.html#PetscSortIntWithArrayPair">PetscSortIntWithArrayPair</a>,X,Y,Z,n,pivot,t1,t2,t3,ierr);
+<a name="line501">501: </a>  <font color="#4169E1">return</font>(0);
+<a name="line502">502: </a>}
+
+<a name="line504">504: </a><font color="#B22222">/*@</font>
+<a name="line505">505: </a><font color="#B22222">   <a href="../../../docs/manualpages/Sys/PetscSortedMPIInt.html#PetscSortedMPIInt">PetscSortedMPIInt</a> - Determines whether the array is sorted.</font>
+
+<a name="line507">507: </a><font color="#B22222">   Not Collective</font>
+
+<a name="line509">509: </a><font color="#B22222">   Input Parameters:</font>
+<a name="line510">510: </a><font color="#B22222">+  n  - number of values</font>
+<a name="line511">511: </a><font color="#B22222">-  X  - array of integers</font>
+
+<a name="line513">513: </a><font color="#B22222">   Output Parameters:</font>
+<a name="line514">514: </a><font color="#B22222">.  sorted - flag whether the array is sorted</font>
+
+<a name="line516">516: </a><font color="#B22222">   Level: intermediate</font>
+
+<a name="line518">518: </a><font color="#B22222">.seealso: <a href="../../../docs/manualpages/Sys/PetscMPIIntSortSemiOrdered.html#PetscMPIIntSortSemiOrdered">PetscMPIIntSortSemiOrdered</a>(), <a href="../../../docs/manualpages/Sys/PetscSortMPIInt.html#PetscSortMPIInt">PetscSortMPIInt</a>(), <a href="../../../docs/manualpages/Sys/PetscSortedInt.html#PetscSortedInt">PetscSortedInt</a>(), <a href="../../../docs/manualpages/Sys/PetscSortedReal.html#PetscSortedReal">PetscSortedReal</a>()</font>
+<a name="line519">519: </a><font color="#B22222">@*/</font>
+<a name="line520">520: </a><strong><font color="#4169E1"><a name="PetscSortedMPIInt"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  <a href="../../../docs/manualpages/Sys/PetscSortedMPIInt.html#PetscSortedMPIInt">PetscSortedMPIInt</a>(<a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> n,const <a href="../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a> X[],<a href="../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> *sorted)</font></strong>
+<a name="line521">521: </a>{
+<a name="line523">523: </a>  PetscSorted(n,X,*sorted);
+<a name="line524">524: </a>  <font color="#4169E1">return</font>(0);
+<a name="line525">525: </a>}
+
+<a name="line527">527: </a><font color="#B22222">/*@</font>
+<a name="line528">528: </a><font color="#B22222">   <a href="../../../docs/manualpages/Sys/PetscSortMPIInt.html#PetscSortMPIInt">PetscSortMPIInt</a> - Sorts an array of MPI integers in place in increasing order.</font>
+
+<a name="line530">530: </a><font color="#B22222">   Not Collective</font>
+
+<a name="line532">532: </a><font color="#B22222">   Input Parameters:</font>
+<a name="line533">533: </a><font color="#B22222">+  n  - number of values</font>
+<a name="line534">534: </a><font color="#B22222">-  X  - array of integers</font>
+
+<a name="line536">536: </a><font color="#B22222">   Level: intermediate</font>
+
+<a name="line538">538: </a><font color="#B22222">   Notes:</font>
+<a name="line539">539: </a><font color="#B22222">   This function serves as an alternative to <a href="../../../docs/manualpages/Sys/PetscMPIIntSortSemiOrdered.html#PetscMPIIntSortSemiOrdered">PetscMPIIntSortSemiOrdered</a>(), and may perform faster especially if the array</font>
+<a name="line540">540: </a><font color="#B22222">   is completely random. There are exceptions to this and so it is __highly__ recomended that the user benchmark their</font>
+<a name="line541">541: </a><font color="#B22222">   code to see which routine is fastest.</font>
+
+<a name="line543">543: </a><font color="#B22222">.seealso: <a href="../../../docs/manualpages/Sys/PetscMPIIntSortSemiOrdered.html#PetscMPIIntSortSemiOrdered">PetscMPIIntSortSemiOrdered</a>(), <a href="../../../docs/manualpages/Sys/PetscSortReal.html#PetscSortReal">PetscSortReal</a>(), <a href="../../../docs/manualpages/Sys/PetscSortIntWithPermutation.html#PetscSortIntWithPermutation">PetscSortIntWithPermutation</a>()</font>
+<a name="line544">544: </a><font color="#B22222">@*/</font>
+<a name="line545">545: </a><strong><font color="#4169E1"><a name="PetscSortMPIInt"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  <a href="../../../docs/manualpages/Sys/PetscSortMPIInt.html#PetscSortMPIInt">PetscSortMPIInt</a>(<a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> n,<a href="../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a> X[])</font></strong>
+<a name="line546">546: </a>{
+<a name="line548">548: </a>  <a href="../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a>    pivot,t1;
+
+<a name="line551">551: </a>  QuickSort1(<a href="../../../docs/manualpages/Sys/PetscSortMPIInt.html#PetscSortMPIInt">PetscSortMPIInt</a>,X,n,pivot,t1,ierr);
+<a name="line552">552: </a>  <font color="#4169E1">return</font>(0);
+<a name="line553">553: </a>}
+
+<a name="line555">555: </a><font color="#B22222">/*@</font>
+<a name="line556">556: </a><font color="#B22222">   <a href="../../../docs/manualpages/Sys/PetscSortRemoveDupsMPIInt.html#PetscSortRemoveDupsMPIInt">PetscSortRemoveDupsMPIInt</a> - Sorts an array of MPI integers in place in increasing order removes all duplicate entries</font>
+
+<a name="line558">558: </a><font color="#B22222">   Not Collective</font>
+
+<a name="line560">560: </a><font color="#B22222">   Input Parameters:</font>
+<a name="line561">561: </a><font color="#B22222">+  n  - number of values</font>
+<a name="line562">562: </a><font color="#B22222">-  X  - array of integers</font>
+
+<a name="line564">564: </a><font color="#B22222">   Output Parameter:</font>
+<a name="line565">565: </a><font color="#B22222">.  n - number of non-redundant values</font>
+
+<a name="line567">567: </a><font color="#B22222">   Level: intermediate</font>
+
+<a name="line569">569: </a><font color="#B22222">.seealso: <a href="../../../docs/manualpages/Sys/PetscSortReal.html#PetscSortReal">PetscSortReal</a>(), <a href="../../../docs/manualpages/Sys/PetscSortIntWithPermutation.html#PetscSortIntWithPermutation">PetscSortIntWithPermutation</a>(), <a href="../../../docs/manualpages/Sys/PetscSortInt.html#PetscSortInt">PetscSortInt</a>()</font>
+<a name="line570">570: </a><font color="#B22222">@*/</font>
+<a name="line571">571: </a><strong><font color="#4169E1"><a name="PetscSortRemoveDupsMPIInt"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  <a href="../../../docs/manualpages/Sys/PetscSortRemoveDupsMPIInt.html#PetscSortRemoveDupsMPIInt">PetscSortRemoveDupsMPIInt</a>(<a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *n,<a href="../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a> X[])</font></strong>
+<a name="line572">572: </a>{
+<a name="line574">574: </a>  <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       i,s = 0,N = *n, b = 0;
+
+<a name="line577">577: </a>  <a href="../../../docs/manualpages/Sys/PetscSortMPIInt.html#PetscSortMPIInt">PetscSortMPIInt</a>(N,X);
+<a name="line578">578: </a>  <font color="#4169E1">for</font> (i=0; i&lt;N-1; i++) {
+<a name="line579">579: </a>    <font color="#4169E1">if</font> (X[b+s+1] != X[b]) {
+<a name="line580">580: </a>      X[b+1] = X[b+s+1]; b++;
+<a name="line581">581: </a>    } <font color="#4169E1">else</font> s++;
+<a name="line582">582: </a>  }
+<a name="line583">583: </a>  *n = N - s;
+<a name="line584">584: </a>  <font color="#4169E1">return</font>(0);
+<a name="line585">585: </a>}
+
+<a name="line587">587: </a><font color="#B22222">/*@</font>
+<a name="line588">588: </a><font color="#B22222">   <a href="../../../docs/manualpages/Sys/PetscSortMPIIntWithArray.html#PetscSortMPIIntWithArray">PetscSortMPIIntWithArray</a> - Sorts an array of integers in place in increasing order;</font>
+<a name="line589">589: </a><font color="#B22222">       changes a second array to match the sorted first array.</font>
+
+<a name="line591">591: </a><font color="#B22222">   Not Collective</font>
+
+<a name="line593">593: </a><font color="#B22222">   Input Parameters:</font>
+<a name="line594">594: </a><font color="#B22222">+  n  - number of values</font>
+<a name="line595">595: </a><font color="#B22222">.  X  - array of integers</font>
+<a name="line596">596: </a><font color="#B22222">-  Y  - second array of integers</font>
+
+<a name="line598">598: </a><font color="#B22222">   Level: intermediate</font>
+
+<a name="line600">600: </a><font color="#B22222">.seealso: <a href="../../../docs/manualpages/Sys/PetscMPIIntSortSemiOrderedWithArray.html#PetscMPIIntSortSemiOrderedWithArray">PetscMPIIntSortSemiOrderedWithArray</a>(), <a href="../../../docs/manualpages/Sys/PetscSortReal.html#PetscSortReal">PetscSortReal</a>(), PetscSortIntPermutation(), <a href="../../../docs/manualpages/Sys/PetscSortInt.html#PetscSortInt">PetscSortInt</a>()</font>
+<a name="line601">601: </a><font color="#B22222">@*/</font>
+<a name="line602">602: </a><strong><font color="#4169E1"><a name="PetscSortMPIIntWithArray"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  <a href="../../../docs/manualpages/Sys/PetscSortMPIIntWithArray.html#PetscSortMPIIntWithArray">PetscSortMPIIntWithArray</a>(<a href="../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a> n,<a href="../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a> X[],<a href="../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a> Y[])</font></strong>
+<a name="line603">603: </a>{
+<a name="line605">605: </a>  <a href="../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a>    pivot,t1,t2;
+
+<a name="line608">608: </a>  QuickSort2(<a href="../../../docs/manualpages/Sys/PetscSortMPIIntWithArray.html#PetscSortMPIIntWithArray">PetscSortMPIIntWithArray</a>,X,Y,n,pivot,t1,t2,ierr);
+<a name="line609">609: </a>  <font color="#4169E1">return</font>(0);
+<a name="line610">610: </a>}
+
+<a name="line612">612: </a><font color="#B22222">/*@</font>
+<a name="line613">613: </a><font color="#B22222">   <a href="../../../docs/manualpages/Sys/PetscSortMPIIntWithIntArray.html#PetscSortMPIIntWithIntArray">PetscSortMPIIntWithIntArray</a> - Sorts an array of MPI integers in place in increasing order;</font>
+<a name="line614">614: </a><font color="#B22222">       changes a second array of Petsc intergers to match the sorted first array.</font>
+
+<a name="line616">616: </a><font color="#B22222">   Not Collective</font>
+
+<a name="line618">618: </a><font color="#B22222">   Input Parameters:</font>
+<a name="line619">619: </a><font color="#B22222">+  n  - number of values</font>
+<a name="line620">620: </a><font color="#B22222">.  X  - array of MPI integers</font>
+<a name="line621">621: </a><font color="#B22222">-  Y  - second array of Petsc integers</font>
+
+<a name="line623">623: </a><font color="#B22222">   Level: intermediate</font>
+
+<a name="line625">625: </a><font color="#B22222">   Notes: this routine is useful when one needs to sort MPI ranks with other integer arrays.</font>
+
+<a name="line627">627: </a><font color="#B22222">.seealso: <a href="../../../docs/manualpages/Sys/PetscSortMPIIntWithArray.html#PetscSortMPIIntWithArray">PetscSortMPIIntWithArray</a>(), <a href="../../../docs/manualpages/Sys/PetscIntSortSemiOrderedWithArray.html#PetscIntSortSemiOrderedWithArray">PetscIntSortSemiOrderedWithArray</a>(), <a href="../../../docs/manualpages/Sys/PetscTimSortWithArray.html#PetscTimSortWithArray">PetscTimSortWithArray</a>()</font>
+<a name="line628">628: </a><font color="#B22222">@*/</font>
+<a name="line629">629: </a><strong><font color="#4169E1"><a name="PetscSortMPIIntWithIntArray"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../docs/manualpages/Sys/PetscSortMPIIntWithIntArray.html#PetscSortMPIIntWithIntArray">PetscSortMPIIntWithIntArray</a>(<a href="../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a> n,<a href="../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a> X[],<a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> Y[])</font></strong>
+<a name="line630">630: </a>{
+<a name="line632">632: </a>  <a href="../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a>    pivot,t1;
+<a name="line633">633: </a>  <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       t2;
+
+<a name="line636">636: </a>  QuickSort2(<a href="../../../docs/manualpages/Sys/PetscSortMPIIntWithIntArray.html#PetscSortMPIIntWithIntArray">PetscSortMPIIntWithIntArray</a>,X,Y,n,pivot,t1,t2,ierr);
+<a name="line637">637: </a>  <font color="#4169E1">return</font>(0);
+<a name="line638">638: </a>}
+
+<a name="line640">640: </a><font color="#B22222">/*@</font>
+<a name="line641">641: </a><font color="#B22222">   <a href="../../../docs/manualpages/Sys/PetscSortIntWithScalarArray.html#PetscSortIntWithScalarArray">PetscSortIntWithScalarArray</a> - Sorts an array of integers in place in increasing order;</font>
+<a name="line642">642: </a><font color="#B22222">       changes a second SCALAR array to match the sorted first INTEGER array.</font>
+
+<a name="line644">644: </a><font color="#B22222">   Not Collective</font>
+
+<a name="line646">646: </a><font color="#B22222">   Input Parameters:</font>
+<a name="line647">647: </a><font color="#B22222">+  n  - number of values</font>
+<a name="line648">648: </a><font color="#B22222">.  X  - array of integers</font>
+<a name="line649">649: </a><font color="#B22222">-  Y  - second array of scalars</font>
+
+<a name="line651">651: </a><font color="#B22222">   Level: intermediate</font>
+
+<a name="line653">653: </a><font color="#B22222">.seealso: <a href="../../../docs/manualpages/Sys/PetscTimSortWithArray.html#PetscTimSortWithArray">PetscTimSortWithArray</a>(), <a href="../../../docs/manualpages/Sys/PetscSortReal.html#PetscSortReal">PetscSortReal</a>(), PetscSortIntPermutation(), <a href="../../../docs/manualpages/Sys/PetscSortInt.html#PetscSortInt">PetscSortInt</a>(), <a href="../../../docs/manualpages/Sys/PetscSortIntWithArray.html#PetscSortIntWithArray">PetscSortIntWithArray</a>()</font>
+<a name="line654">654: </a><font color="#B22222">@*/</font>
+<a name="line655">655: </a><strong><font color="#4169E1"><a name="PetscSortIntWithScalarArray"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  <a href="../../../docs/manualpages/Sys/PetscSortIntWithScalarArray.html#PetscSortIntWithScalarArray">PetscSortIntWithScalarArray</a>(<a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> n,<a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> X[],<a href="../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> Y[])</font></strong>
+<a name="line656">656: </a>{
+<a name="line658">658: </a>  <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       pivot,t1;
+<a name="line659">659: </a>  <a href="../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>    t2;
+
+<a name="line662">662: </a>  QuickSort2(<a href="../../../docs/manualpages/Sys/PetscSortIntWithScalarArray.html#PetscSortIntWithScalarArray">PetscSortIntWithScalarArray</a>,X,Y,n,pivot,t1,t2,ierr);
+<a name="line663">663: </a>  <font color="#4169E1">return</font>(0);
+<a name="line664">664: </a>}
+
+<a name="line666">666: </a><font color="#B22222">/*@C</font>
+<a name="line667">667: </a><font color="#B22222">   <a href="../../../docs/manualpages/Sys/PetscSortIntWithDataArray.html#PetscSortIntWithDataArray">PetscSortIntWithDataArray</a> - Sorts an array of integers in place in increasing order;</font>
+<a name="line668">668: </a><font color="#B22222">       changes a second array to match the sorted first INTEGER array.  Unlike other sort routines, the user must</font>
+<a name="line669">669: </a><font color="#B22222">       provide workspace (the size of an element in the data array) to use when sorting.</font>
+
+<a name="line671">671: </a><font color="#B22222">   Not Collective</font>
+
+<a name="line673">673: </a><font color="#B22222">   Input Parameters:</font>
+<a name="line674">674: </a><font color="#B22222">+  n  - number of values</font>
+<a name="line675">675: </a><font color="#B22222">.  X  - array of integers</font>
+<a name="line676">676: </a><font color="#B22222">.  Y  - second array of data</font>
+<a name="line677">677: </a><font color="#B22222">.  size - sizeof elements in the data array in bytes</font>
+<a name="line678">678: </a><font color="#B22222">-  t2   - workspace of "size" bytes used when sorting</font>
+
+<a name="line680">680: </a><font color="#B22222">   Level: intermediate</font>
+
+<a name="line682">682: </a><font color="#B22222">.seealso: <a href="../../../docs/manualpages/Sys/PetscTimSortWithArray.html#PetscTimSortWithArray">PetscTimSortWithArray</a>(), <a href="../../../docs/manualpages/Sys/PetscSortReal.html#PetscSortReal">PetscSortReal</a>(), PetscSortIntPermutation(), <a href="../../../docs/manualpages/Sys/PetscSortInt.html#PetscSortInt">PetscSortInt</a>(), <a href="../../../docs/manualpages/Sys/PetscSortIntWithArray.html#PetscSortIntWithArray">PetscSortIntWithArray</a>()</font>
+<a name="line683">683: </a><font color="#B22222">@*/</font>
+<a name="line684">684: </a><strong><font color="#4169E1"><a name="PetscSortIntWithDataArray"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  <a href="../../../docs/manualpages/Sys/PetscSortIntWithDataArray.html#PetscSortIntWithDataArray">PetscSortIntWithDataArray</a>(<a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> n,<a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> X[],void *Y,size_t size,void *t2)</font></strong>
+<a name="line685">685: </a>{
+<a name="line687">687: </a>  char           *YY = (char*)Y;
+<a name="line688">688: </a>  <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       i,j,p,t1,pivot,hi=n-1,l,r;
+
+<a name="line691">691: </a>  <font color="#4169E1">if</font> (n&lt;8) {
+<a name="line692">692: </a>    <font color="#4169E1">for</font> (i=0; i&lt;n; i++) {
+<a name="line693">693: </a>      pivot = X[i];
+<a name="line694">694: </a>      <font color="#4169E1">for</font> (j=i+1; j&lt;n; j++) {
+<a name="line695">695: </a>        <font color="#4169E1">if</font> (pivot &gt; X[j]) {
+<a name="line696">696: </a>          SWAP2Data(X[i],X[j],YY+size*i,YY+size*j,t1,t2,size);
+<a name="line697">697: </a>          pivot = X[i];
+<a name="line698">698: </a>        }
+<a name="line699">699: </a>      }
+<a name="line700">700: </a>    }
+<a name="line701">701: </a>  } <font color="#4169E1">else</font> {
+<a name="line702">702: </a>    <font color="#B22222">/* Two way partition */</font>
+<a name="line703">703: </a>    p     = MEDIAN(X,hi);
+<a name="line704">704: </a>    pivot = X[p];
+<a name="line705">705: </a>    l     = 0;
+<a name="line706">706: </a>    r     = hi;
+<a name="line707">707: </a>    <font color="#4169E1">while</font> (1) {
+<a name="line708">708: </a>      <font color="#4169E1">while</font> (X[l] &lt; pivot) l++;
+<a name="line709">709: </a>      <font color="#4169E1">while</font> (X[r] &gt; pivot) r--;
+<a name="line710">710: </a>      <font color="#4169E1">if</font> (l &gt;= r) {r++; <font color="#4169E1">break</font>;}
+<a name="line711">711: </a>      SWAP2Data(X[l],X[r],YY+size*l,YY+size*r,t1,t2,size);
+<a name="line712">712: </a>      l++;
+<a name="line713">713: </a>      r--;
+<a name="line714">714: </a>    }
+<a name="line715">715: </a>    <a href="../../../docs/manualpages/Sys/PetscSortIntWithDataArray.html#PetscSortIntWithDataArray">PetscSortIntWithDataArray</a>(l,X,Y,size,t2);
+<a name="line716">716: </a>    <a href="../../../docs/manualpages/Sys/PetscSortIntWithDataArray.html#PetscSortIntWithDataArray">PetscSortIntWithDataArray</a>(hi-r+1,X+r,YY+size*r,size,t2);
+<a name="line717">717: </a>  }
+<a name="line718">718: </a>  <font color="#4169E1">return</font>(0);
+<a name="line719">719: </a>}
+
+<a name="line721">721: </a><font color="#B22222">/*@</font>
+<a name="line722">722: </a><font color="#B22222">   <a href="../../../docs/manualpages/Sys/PetscMergeIntArray.html#PetscMergeIntArray">PetscMergeIntArray</a> -     Merges two SORTED integer arrays, removes duplicate elements.</font>
+
+<a name="line724">724: </a><font color="#B22222">   Not Collective</font>
+
+<a name="line726">726: </a><font color="#B22222">   Input Parameters:</font>
+<a name="line727">727: </a><font color="#B22222">+  an  - number of values in the first array</font>
+<a name="line728">728: </a><font color="#B22222">.  aI  - first sorted array of integers</font>
+<a name="line729">729: </a><font color="#B22222">.  bn  - number of values in the second array</font>
+<a name="line730">730: </a><font color="#B22222">-  bI  - second array of integers</font>
+
+<a name="line732">732: </a><font color="#B22222">   Output Parameters:</font>
+<a name="line733">733: </a><font color="#B22222">+  n   - number of values in the merged array</font>
+<a name="line734">734: </a><font color="#B22222">-  L   - merged sorted array, this is allocated if an array is not provided</font>
+
+<a name="line736">736: </a><font color="#B22222">   Level: intermediate</font>
+
+<a name="line738">738: </a><font color="#B22222">.seealso: <a href="../../../docs/manualpages/Sys/PetscSortReal.html#PetscSortReal">PetscSortReal</a>(), PetscSortIntPermutation(), <a href="../../../docs/manualpages/Sys/PetscSortInt.html#PetscSortInt">PetscSortInt</a>(), <a href="../../../docs/manualpages/Sys/PetscSortIntWithArray.html#PetscSortIntWithArray">PetscSortIntWithArray</a>()</font>
+<a name="line739">739: </a><font color="#B22222">@*/</font>
+<a name="line740">740: </a><strong><font color="#4169E1"><a name="PetscMergeIntArray"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  <a href="../../../docs/manualpages/Sys/PetscMergeIntArray.html#PetscMergeIntArray">PetscMergeIntArray</a>(<a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> an,const <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> aI[], <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> bn, const <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> bI[], <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *n, <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> **L)</font></strong>
+<a name="line741">741: </a>{
+<a name="line743">743: </a>  <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       *L_ = *L, ak, bk, k;
+
+<a name="line745">745: </a>  <font color="#4169E1">if</font> (!L_) {
+<a name="line746">746: </a>    <a href="../../../docs/manualpages/Sys/PetscMalloc1.html#PetscMalloc1">PetscMalloc1</a>(an+bn, L);
+<a name="line747">747: </a>    L_   = *L;
+<a name="line748">748: </a>  }
+<a name="line749">749: </a>  k = ak = bk = 0;
+<a name="line750">750: </a>  <font color="#4169E1">while</font> (ak &lt; an &amp;&amp; bk &lt; bn) {
+<a name="line751">751: </a>    <font color="#4169E1">if</font> (aI[ak] == bI[bk]) {
+<a name="line752">752: </a>      L_[k] = aI[ak];
+<a name="line753">753: </a>      ++ak;
+<a name="line754">754: </a>      ++bk;
+<a name="line755">755: </a>      ++k;
+<a name="line756">756: </a>    } <font color="#4169E1">else</font> <font color="#4169E1">if</font> (aI[ak] &lt; bI[bk]) {
+<a name="line757">757: </a>      L_[k] = aI[ak];
+<a name="line758">758: </a>      ++ak;
+<a name="line759">759: </a>      ++k;
+<a name="line760">760: </a>    } <font color="#4169E1">else</font> {
+<a name="line761">761: </a>      L_[k] = bI[bk];
+<a name="line762">762: </a>      ++bk;
+<a name="line763">763: </a>      ++k;
+<a name="line764">764: </a>    }
+<a name="line765">765: </a>  }
+<a name="line766">766: </a>  <font color="#4169E1">if</font> (ak &lt; an) {
+<a name="line767">767: </a>    <a href="../../../docs/manualpages/Sys/PetscArraycpy.html#PetscArraycpy">PetscArraycpy</a>(L_+k,aI+ak,an-ak);
+<a name="line768">768: </a>    k   += (an-ak);
+<a name="line769">769: </a>  }
+<a name="line770">770: </a>  <font color="#4169E1">if</font> (bk &lt; bn) {
+<a name="line771">771: </a>    <a href="../../../docs/manualpages/Sys/PetscArraycpy.html#PetscArraycpy">PetscArraycpy</a>(L_+k,bI+bk,bn-bk);
+<a name="line772">772: </a>    k   += (bn-bk);
+<a name="line773">773: </a>  }
+<a name="line774">774: </a>  *n = k;
+<a name="line775">775: </a>  <font color="#4169E1">return</font>(0);
+<a name="line776">776: </a>}
+
+<a name="line778">778: </a><font color="#B22222">/*@</font>
+<a name="line779">779: </a><font color="#B22222">   <a href="../../../docs/manualpages/Sys/PetscMergeIntArrayPair.html#PetscMergeIntArrayPair">PetscMergeIntArrayPair</a> -     Merges two SORTED integer arrays that share NO common values along with an additional array of integers.</font>
+<a name="line780">780: </a><font color="#B22222">                                The additional arrays are the same length as sorted arrays and are merged</font>
+<a name="line781">781: </a><font color="#B22222">                                in the order determined by the merging of the sorted pair.</font>
+
+<a name="line783">783: </a><font color="#B22222">   Not Collective</font>
+
+<a name="line785">785: </a><font color="#B22222">   Input Parameters:</font>
+<a name="line786">786: </a><font color="#B22222">+  an  - number of values in the first array</font>
+<a name="line787">787: </a><font color="#B22222">.  aI  - first sorted array of integers</font>
+<a name="line788">788: </a><font color="#B22222">.  aJ  - first additional array of integers</font>
+<a name="line789">789: </a><font color="#B22222">.  bn  - number of values in the second array</font>
+<a name="line790">790: </a><font color="#B22222">.  bI  - second array of integers</font>
+<a name="line791">791: </a><font color="#B22222">-  bJ  - second additional of integers</font>
+
+<a name="line793">793: </a><font color="#B22222">   Output Parameters:</font>
+<a name="line794">794: </a><font color="#B22222">+  n   - number of values in the merged array (== an + bn)</font>
+<a name="line795">795: </a><font color="#B22222">.  L   - merged sorted array</font>
+<a name="line796">796: </a><font color="#B22222">-  J   - merged additional array</font>
+
+<a name="line798">798: </a><font color="#B22222">   Notes:</font>
+<a name="line799">799: </a><font color="#B22222">    if L or J point to non-null arrays then this routine will assume they are of the approproate size and use them, otherwise this routine will allocate space for them</font>
+<a name="line800">800: </a><font color="#B22222">   Level: intermediate</font>
+
+<a name="line802">802: </a><font color="#B22222">.seealso: <a href="../../../docs/manualpages/Sys/PetscIntSortSemiOrdered.html#PetscIntSortSemiOrdered">PetscIntSortSemiOrdered</a>(), <a href="../../../docs/manualpages/Sys/PetscSortReal.html#PetscSortReal">PetscSortReal</a>(), PetscSortIntPermutation(), <a href="../../../docs/manualpages/Sys/PetscSortInt.html#PetscSortInt">PetscSortInt</a>(), <a href="../../../docs/manualpages/Sys/PetscSortIntWithArray.html#PetscSortIntWithArray">PetscSortIntWithArray</a>()</font>
+<a name="line803">803: </a><font color="#B22222">@*/</font>
+<a name="line804">804: </a><strong><font color="#4169E1"><a name="PetscMergeIntArrayPair"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  <a href="../../../docs/manualpages/Sys/PetscMergeIntArrayPair.html#PetscMergeIntArrayPair">PetscMergeIntArrayPair</a>(<a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> an,const <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> aI[], const <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> aJ[], <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> bn, const <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> bI[], const <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> bJ[], <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *n, <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> **L, <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> **J)</font></strong>
+<a name="line805">805: </a>{
+<a name="line807">807: </a>  <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       n_, *L_, *J_, ak, bk, k;
+
+<a name="line812">812: </a>  n_ = an + bn;
+<a name="line813">813: </a>  *n = n_;
+<a name="line814">814: </a>  <font color="#4169E1">if</font> (!*L) {
+<a name="line815">815: </a>    <a href="../../../docs/manualpages/Sys/PetscMalloc1.html#PetscMalloc1">PetscMalloc1</a>(n_, L);
+<a name="line816">816: </a>  }
+<a name="line817">817: </a>  L_ = *L;
+<a name="line818">818: </a>  <font color="#4169E1">if</font> (!*J) {
+<a name="line819">819: </a>    <a href="../../../docs/manualpages/Sys/PetscMalloc1.html#PetscMalloc1">PetscMalloc1</a>(n_, J);
+<a name="line820">820: </a>  }
+<a name="line821">821: </a>  J_   = *J;
+<a name="line822">822: </a>  k = ak = bk = 0;
+<a name="line823">823: </a>  <font color="#4169E1">while</font> (ak &lt; an &amp;&amp; bk &lt; bn) {
+<a name="line824">824: </a>    <font color="#4169E1">if</font> (aI[ak] &lt;= bI[bk]) {
+<a name="line825">825: </a>      L_[k] = aI[ak];
+<a name="line826">826: </a>      J_[k] = aJ[ak];
+<a name="line827">827: </a>      ++ak;
+<a name="line828">828: </a>      ++k;
+<a name="line829">829: </a>    } <font color="#4169E1">else</font> {
+<a name="line830">830: </a>      L_[k] = bI[bk];
+<a name="line831">831: </a>      J_[k] = bJ[bk];
+<a name="line832">832: </a>      ++bk;
+<a name="line833">833: </a>      ++k;
+<a name="line834">834: </a>    }
+<a name="line835">835: </a>  }
+<a name="line836">836: </a>  <font color="#4169E1">if</font> (ak &lt; an) {
+<a name="line837">837: </a>    <a href="../../../docs/manualpages/Sys/PetscArraycpy.html#PetscArraycpy">PetscArraycpy</a>(L_+k,aI+ak,an-ak);
+<a name="line838">838: </a>    <a href="../../../docs/manualpages/Sys/PetscArraycpy.html#PetscArraycpy">PetscArraycpy</a>(J_+k,aJ+ak,an-ak);
+<a name="line839">839: </a>    k   += (an-ak);
+<a name="line840">840: </a>  }
+<a name="line841">841: </a>  <font color="#4169E1">if</font> (bk &lt; bn) {
+<a name="line842">842: </a>    <a href="../../../docs/manualpages/Sys/PetscArraycpy.html#PetscArraycpy">PetscArraycpy</a>(L_+k,bI+bk,bn-bk);
+<a name="line843">843: </a>    <a href="../../../docs/manualpages/Sys/PetscArraycpy.html#PetscArraycpy">PetscArraycpy</a>(J_+k,bJ+bk,bn-bk);
+<a name="line844">844: </a>  }
+<a name="line845">845: </a>  <font color="#4169E1">return</font>(0);
+<a name="line846">846: </a>}
+
+<a name="line848">848: </a><font color="#B22222">/*@</font>
+<a name="line849">849: </a><font color="#B22222">   <a href="../../../docs/manualpages/Sys/PetscMergeMPIIntArray.html#PetscMergeMPIIntArray">PetscMergeMPIIntArray</a> -     Merges two SORTED integer arrays.</font>
+
+<a name="line851">851: </a><font color="#B22222">   Not Collective</font>
+
+<a name="line853">853: </a><font color="#B22222">   Input Parameters:</font>
+<a name="line854">854: </a><font color="#B22222">+  an  - number of values in the first array</font>
+<a name="line855">855: </a><font color="#B22222">.  aI  - first sorted array of integers</font>
+<a name="line856">856: </a><font color="#B22222">.  bn  - number of values in the second array</font>
+<a name="line857">857: </a><font color="#B22222">-  bI  - second array of integers</font>
+
+<a name="line859">859: </a><font color="#B22222">   Output Parameters:</font>
+<a name="line860">860: </a><font color="#B22222">+  n   - number of values in the merged array (&lt;= an + bn)</font>
+<a name="line861">861: </a><font color="#B22222">-  L   - merged sorted array, allocated if address of NULL pointer is passed</font>
+
+<a name="line863">863: </a><font color="#B22222">   Level: intermediate</font>
+
+<a name="line865">865: </a><font color="#B22222">.seealso: <a href="../../../docs/manualpages/Sys/PetscIntSortSemiOrdered.html#PetscIntSortSemiOrdered">PetscIntSortSemiOrdered</a>(), <a href="../../../docs/manualpages/Sys/PetscSortReal.html#PetscSortReal">PetscSortReal</a>(), PetscSortIntPermutation(), <a href="../../../docs/manualpages/Sys/PetscSortInt.html#PetscSortInt">PetscSortInt</a>(), <a href="../../../docs/manualpages/Sys/PetscSortIntWithArray.html#PetscSortIntWithArray">PetscSortIntWithArray</a>()</font>
+<a name="line866">866: </a><font color="#B22222">@*/</font>
+<a name="line867">867: </a><strong><font color="#4169E1"><a name="PetscMergeMPIIntArray"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../docs/manualpages/Sys/PetscMergeMPIIntArray.html#PetscMergeMPIIntArray">PetscMergeMPIIntArray</a>(<a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> an,const <a href="../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a> aI[],<a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> bn,const <a href="../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a> bI[],<a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *n,<a href="../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a> **L)</font></strong>
+<a name="line868">868: </a>{
+<a name="line870">870: </a>  <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       ai,bi,k;
+
+<a name="line873">873: </a>  <font color="#4169E1">if</font> (!*L) {<a href="../../../docs/manualpages/Sys/PetscMalloc1.html#PetscMalloc1">PetscMalloc1</a>((an+bn),L);}
+<a name="line874">874: </a>  <font color="#4169E1">for</font> (ai=0,bi=0,k=0; ai&lt;an || bi&lt;bn;) {
+<a name="line875">875: </a>    <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> t = -1;
+<a name="line876">876: </a>    <font color="#4169E1">for</font> (; ai&lt;an &amp;&amp; (!bn || aI[ai] &lt;= bI[bi]); ai++) (*L)[k++] = t = aI[ai];
+<a name="line877">877: </a>    <font color="#4169E1">for</font> (; bi&lt;bn &amp;&amp; bI[bi] == t; bi++);
+<a name="line878">878: </a>    <font color="#4169E1">for</font> (; bi&lt;bn &amp;&amp; (!an || bI[bi] &lt;= aI[ai]); bi++) (*L)[k++] = t = bI[bi];
+<a name="line879">879: </a>    <font color="#4169E1">for</font> (; ai&lt;an &amp;&amp; aI[ai] == t; ai++);
+<a name="line880">880: </a>  }
+<a name="line881">881: </a>  *n = k;
+<a name="line882">882: </a>  <font color="#4169E1">return</font>(0);
+<a name="line883">883: </a>}
+
+<a name="line885">885: </a><font color="#B22222">/*@C</font>
+<a name="line886">886: </a><font color="#B22222">   <a href="../../../docs/manualpages/Sys/PetscProcessTree.html#PetscProcessTree">PetscProcessTree</a> - Prepares tree data to be displayed graphically</font>
+
+<a name="line888">888: </a><font color="#B22222">   Not Collective</font>
+
+<a name="line890">890: </a><font color="#B22222">   Input Parameters:</font>
+<a name="line891">891: </a><font color="#B22222">+  n  - number of values</font>
+<a name="line892">892: </a><font color="#B22222">.  mask - indicates those entries in the tree, location 0 is always masked</font>
+<a name="line893">893: </a><font color="#B22222">-  parentid - indicates the parent of each entry</font>
+
+<a name="line895">895: </a><font color="#B22222">   Output Parameters:</font>
+<a name="line896">896: </a><font color="#B22222">+  Nlevels - the number of levels</font>
+<a name="line897">897: </a><font color="#B22222">.  Level - for each node tells its level</font>
+<a name="line898">898: </a><font color="#B22222">.  Levelcnts - the number of nodes on each level</font>
+<a name="line899">899: </a><font color="#B22222">.  Idbylevel - a list of ids on each of the levels, first level followed by second etc</font>
+<a name="line900">900: </a><font color="#B22222">-  Column - for each id tells its column index</font>
+
+<a name="line902">902: </a><font color="#B22222">   Level: developer</font>
+
+<a name="line904">904: </a><font color="#B22222">   Notes:</font>
+<a name="line905">905: </a><font color="#B22222">    This code is not currently used</font>
+
+<a name="line907">907: </a><font color="#B22222">.seealso: <a href="../../../docs/manualpages/Sys/PetscSortReal.html#PetscSortReal">PetscSortReal</a>(), <a href="../../../docs/manualpages/Sys/PetscSortIntWithPermutation.html#PetscSortIntWithPermutation">PetscSortIntWithPermutation</a>()</font>
+<a name="line908">908: </a><font color="#B22222">@*/</font>
+<a name="line909">909: </a><strong><font color="#4169E1"><a name="PetscProcessTree"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  <a href="../../../docs/manualpages/Sys/PetscProcessTree.html#PetscProcessTree">PetscProcessTree</a>(<a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> n,const <a href="../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> mask[],const <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> parentid[],<a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *Nlevels,<a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> **Level,<a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> **Levelcnt,<a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> **Idbylevel,<a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> **Column)</font></strong>
+<a name="line910">910: </a>{
+<a name="line911">911: </a>  <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       i,j,cnt,nmask = 0,nlevels = 0,*level,*levelcnt,levelmax = 0,*workid,*workparentid,tcnt = 0,*idbylevel,*column;
+<a name="line913">913: </a>  <a href="../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>      done = <a href="../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+
+<a name="line916">916: </a>  <font color="#4169E1">if</font> (!mask[0]) <a href="../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_SUP,<font color="#666666">"Mask of 0th location must be set"</font>);
+<a name="line917">917: </a>  <font color="#4169E1">for</font> (i=0; i&lt;n; i++) {
+<a name="line918">918: </a>    <font color="#4169E1">if</font> (mask[i]) <font color="#4169E1">continue</font>;
+<a name="line919">919: </a>    <font color="#4169E1">if</font> (parentid[i]  == i) <a href="../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_ARG_OUTOFRANGE,<font color="#666666">"Node labeled as own parent"</font>);
+<a name="line920">920: </a>    <font color="#4169E1">if</font> (parentid[i] &amp;&amp; mask[parentid[i]]) <a href="../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_ARG_OUTOFRANGE,<font color="#666666">"Parent is masked"</font>);
+<a name="line921">921: </a>  }
+
+<a name="line923">923: </a>  <font color="#4169E1">for</font> (i=0; i&lt;n; i++) {
+<a name="line924">924: </a>    <font color="#4169E1">if</font> (!mask[i]) nmask++;
+<a name="line925">925: </a>  }
+
+<a name="line927">927: </a>  <font color="#B22222">/* determine the level in the tree of each node */</font>
+<a name="line928">928: </a>  <a href="../../../docs/manualpages/Sys/PetscCalloc1.html#PetscCalloc1">PetscCalloc1</a>(n,&amp;level);
+
+<a name="line930">930: </a>  level[0] = 1;
+<a name="line931">931: </a>  <font color="#4169E1">while</font> (!done) {
+<a name="line932">932: </a>    done = <a href="../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>;
+<a name="line933">933: </a>    <font color="#4169E1">for</font> (i=0; i&lt;n; i++) {
+<a name="line934">934: </a>      <font color="#4169E1">if</font> (mask[i]) <font color="#4169E1">continue</font>;
+<a name="line935">935: </a>      <font color="#4169E1">if</font> (!level[i] &amp;&amp; level[parentid[i]]) level[i] = level[parentid[i]] + 1;
+<a name="line936">936: </a>      <font color="#4169E1">else</font> <font color="#4169E1">if</font> (!level[i]) done = <a href="../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line937">937: </a>    }
+<a name="line938">938: </a>  }
+<a name="line939">939: </a>  <font color="#4169E1">for</font> (i=0; i&lt;n; i++) {
+<a name="line940">940: </a>    level[i]--;
+<a name="line941">941: </a>    nlevels = <a href="../../../docs/manualpages/Sys/PetscMax.html#PetscMax">PetscMax</a>(nlevels,level[i]);
+<a name="line942">942: </a>  }
+
+<a name="line944">944: </a>  <font color="#B22222">/* count the number of nodes on each level and its max */</font>
+<a name="line945">945: </a>  <a href="../../../docs/manualpages/Sys/PetscCalloc1.html#PetscCalloc1">PetscCalloc1</a>(nlevels,&amp;levelcnt);
+<a name="line946">946: </a>  <font color="#4169E1">for</font> (i=0; i&lt;n; i++) {
+<a name="line947">947: </a>    <font color="#4169E1">if</font> (mask[i]) <font color="#4169E1">continue</font>;
+<a name="line948">948: </a>    levelcnt[level[i]-1]++;
+<a name="line949">949: </a>  }
+<a name="line950">950: </a>  <font color="#4169E1">for</font> (i=0; i&lt;nlevels;i++) levelmax = <a href="../../../docs/manualpages/Sys/PetscMax.html#PetscMax">PetscMax</a>(levelmax,levelcnt[i]);
+
+<a name="line952">952: </a>  <font color="#B22222">/* for each level sort the ids by the parent id */</font>
+<a name="line953">953: </a>  <a href="../../../docs/manualpages/Sys/PetscMalloc2.html#PetscMalloc2">PetscMalloc2</a>(levelmax,&amp;workid,levelmax,&amp;workparentid);
+<a name="line954">954: </a>  <a href="../../../docs/manualpages/Sys/PetscMalloc1.html#PetscMalloc1">PetscMalloc1</a>(nmask,&amp;idbylevel);
+<a name="line955">955: </a>  <font color="#4169E1">for</font> (j=1; j&lt;=nlevels;j++) {
+<a name="line956">956: </a>    cnt = 0;
+<a name="line957">957: </a>    <font color="#4169E1">for</font> (i=0; i&lt;n; i++) {
+<a name="line958">958: </a>      <font color="#4169E1">if</font> (mask[i]) <font color="#4169E1">continue</font>;
+<a name="line959">959: </a>      <font color="#4169E1">if</font> (level[i] != j) <font color="#4169E1">continue</font>;
+<a name="line960">960: </a>      workid[cnt]         = i;
+<a name="line961">961: </a>      workparentid[cnt++] = parentid[i];
+<a name="line962">962: </a>    }
+<a name="line963">963: </a>    <font color="#B22222">/*  <a href="../../../docs/manualpages/Sys/PetscIntView.html#PetscIntView">PetscIntView</a>(cnt,workparentid,0);</font>
+<a name="line964">964: </a><font color="#B22222">    <a href="../../../docs/manualpages/Sys/PetscIntView.html#PetscIntView">PetscIntView</a>(cnt,workid,0);</font>
+<a name="line965">965: </a><font color="#B22222">    <a href="../../../docs/manualpages/Sys/PetscSortIntWithArray.html#PetscSortIntWithArray">PetscSortIntWithArray</a>(cnt,workparentid,workid);</font>
+<a name="line966">966: </a><font color="#B22222">    <a href="../../../docs/manualpages/Sys/PetscIntView.html#PetscIntView">PetscIntView</a>(cnt,workparentid,0);</font>
+<a name="line967">967: </a><font color="#B22222">    <a href="../../../docs/manualpages/Sys/PetscIntView.html#PetscIntView">PetscIntView</a>(cnt,workid,0);*/</font>
+<a name="line968">968: </a>    <a href="../../../docs/manualpages/Sys/PetscArraycpy.html#PetscArraycpy">PetscArraycpy</a>(idbylevel+tcnt,workid,cnt);
+<a name="line969">969: </a>    tcnt += cnt;
+<a name="line970">970: </a>  }
+<a name="line971">971: </a>  <font color="#4169E1">if</font> (tcnt != nmask) <a href="../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_PLIB,<font color="#666666">"Inconsistent count of unmasked nodes"</font>);
+<a name="line972">972: </a>  <a href="../../../docs/manualpages/Sys/PetscFree2.html#PetscFree2">PetscFree2</a>(workid,workparentid);
+
+<a name="line974">974: </a>  <font color="#B22222">/* for each node list its column */</font>
+<a name="line975">975: </a>  <a href="../../../docs/manualpages/Sys/PetscMalloc1.html#PetscMalloc1">PetscMalloc1</a>(n,&amp;column);
+<a name="line976">976: </a>  cnt = 0;
+<a name="line977">977: </a>  <font color="#4169E1">for</font> (j=0; j&lt;nlevels; j++) {
+<a name="line978">978: </a>    <font color="#4169E1">for</font> (i=0; i&lt;levelcnt[j]; i++) {
+<a name="line979">979: </a>      column[idbylevel[cnt++]] = i;
+<a name="line980">980: </a>    }
+<a name="line981">981: </a>  }
+
+<a name="line983">983: </a>  *Nlevels   = nlevels;
+<a name="line984">984: </a>  *Level     = level;
+<a name="line985">985: </a>  *Levelcnt  = levelcnt;
+<a name="line986">986: </a>  *Idbylevel = idbylevel;
+<a name="line987">987: </a>  *Column    = column;
+<a name="line988">988: </a>  <font color="#4169E1">return</font>(0);
+<a name="line989">989: </a>}
+
+<a name="line991">991: </a><font color="#B22222">/*@</font>
+<a name="line992">992: </a><font color="#B22222">  <a href="../../../docs/manualpages/Sys/PetscParallelSortedInt.html#PetscParallelSortedInt">PetscParallelSortedInt</a> - Check whether an integer array, distributed over a communicator, is globally sorted.</font>
+
+<a name="line994">994: </a><font color="#B22222">  Collective</font>
+
+<a name="line996">996: </a><font color="#B22222">  Input Parameters:</font>
+<a name="line997">997: </a><font color="#B22222">+ comm - the MPI communicator</font>
+<a name="line998">998: </a><font color="#B22222">. n - the local number of integers</font>
+<a name="line999">999: </a><font color="#B22222">- keys - the local array of integers</font>
+
+<a name="line1001">1001: </a><font color="#B22222">  Output Parameters:</font>
+<a name="line1002">1002: </a><font color="#B22222">. is_sorted - whether the array is globally sorted</font>
+
+<a name="line1004">1004: </a><font color="#B22222">  Level: developer</font>
+
+<a name="line1006">1006: </a><font color="#B22222">.seealso: <a href="../../../docs/manualpages/IS/PetscParallelSortInt.html#PetscParallelSortInt">PetscParallelSortInt</a>()</font>
+<a name="line1007">1007: </a><font color="#B22222">@*/</font>
+<a name="line1008">1008: </a><strong><font color="#4169E1"><a name="PetscParallelSortedInt"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../docs/manualpages/Sys/PetscParallelSortedInt.html#PetscParallelSortedInt">PetscParallelSortedInt</a>(<a href="../../../docs/manualpages/Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</a> comm, <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> n, const <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> keys[], <a href="../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> *is_sorted)</font></strong>
+<a name="line1009">1009: </a>{
+<a name="line1010">1010: </a>  <a href="../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>      sorted;
+<a name="line1011">1011: </a>  <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       i, min, max, prevmax;
+<a name="line1012">1012: </a>  <a href="../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a>    rank;
+
+<a name="line1016">1016: </a>  sorted = <a href="../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>;
+<a name="line1017">1017: </a>  min    = PETSC_MAX_INT;
+<a name="line1018">1018: </a>  max    = PETSC_MIN_INT;
+<a name="line1019">1019: </a>  <font color="#4169E1">if</font> (n) {
+<a name="line1020">1020: </a>    min = keys[0];
+<a name="line1021">1021: </a>    max = keys[0];
+<a name="line1022">1022: </a>  }
+<a name="line1023">1023: </a>  <font color="#4169E1">for</font> (i = 1; i &lt; n; i++) {
+<a name="line1024">1024: </a>    <font color="#4169E1">if</font> (keys[i] &lt; keys[i - 1]) <font color="#4169E1">break</font>;
+<a name="line1025">1025: </a>    min = <a href="../../../docs/manualpages/Sys/PetscMin.html#PetscMin">PetscMin</a>(min,keys[i]);
+<a name="line1026">1026: </a>    max = <a href="../../../docs/manualpages/Sys/PetscMax.html#PetscMax">PetscMax</a>(max,keys[i]);
+<a name="line1027">1027: </a>  }
+<a name="line1028">1028: </a>  <font color="#4169E1">if</font> (i &lt; n) sorted = <a href="../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line1029">1029: </a>  prevmax = PETSC_MIN_INT;
+<a name="line1030">1030: </a>  <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Exscan.html#MPI_Exscan">MPI_Exscan</a>(&amp;max, &amp;prevmax, 1, <a href="../../../docs/manualpages/Sys/MPIU_INT.html#MPIU_INT">MPIU_INT</a>, MPI_MAX, comm);
+<a name="line1031">1031: </a>  <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_rank.html#MPI_Comm_rank">MPI_Comm_rank</a>(comm, &amp;rank);
+<a name="line1032">1032: </a>  <font color="#4169E1">if</font> (!rank) prevmax = PETSC_MIN_INT;
+<a name="line1033">1033: </a>  <font color="#4169E1">if</font> (prevmax &gt; min) sorted = <a href="../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line1034">1034: </a>  <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Allreduce.html#MPI_Allreduce">MPI_Allreduce</a>(&amp;sorted, is_sorted, 1, MPIU_BOOL, MPI_LAND, comm);
+<a name="line1035">1035: </a>  <font color="#4169E1">return</font>(0);
+<a name="line1036">1036: </a>}
+</pre>
+</body>
+
+</html>

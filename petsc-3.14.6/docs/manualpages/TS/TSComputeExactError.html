@@ -1,0 +1,38 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/TS/TSComputeExactError.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>TSComputeExactError</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/TS/TSComputeExactError.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="TSComputeExactError"><H1>TSComputeExactError</H1></A>
+Compute the solution error for the timestepping using the function previously set. 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscts.h"  
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../TS/TSComputeExactError.html#TSComputeExactError">TSComputeExactError</A>(<A HREF="../TS/TS.html#TS">TS</A> ts, <A HREF="../Vec/Vec.html#Vec">Vec</A> u, <A HREF="../Vec/Vec.html#Vec">Vec</A> e)
+</PRE>
+Collective on ts
+<P>
+<H3><FONT COLOR="#CC3333">Input Arguments</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>ts </B></TD><TD>- time stepping context
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>u  </B></TD><TD>- The approximate solution
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>e  </B></TD><TD>- The <A HREF="../Vec/Vec.html#Vec">Vec</A> used to store the error
+</TD></TR></TABLE>
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../TS/TSGetComputeInitialCondition.html#TSGetComputeInitialCondition">TSGetComputeInitialCondition</A>(), <A HREF="../TS/TSSetComputeInitialCondition.html#TSSetComputeInitialCondition">TSSetComputeInitialCondition</A>(), <A HREF="../TS/TSSolve.html#TSSolve">TSSolve</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>advanced<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/ts/interface/ts.c.html#TSComputeExactError">src/ts/interface/ts.c</A>
+<BR><A HREF="./index.html">Index of all TS routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

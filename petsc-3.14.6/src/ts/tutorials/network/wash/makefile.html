@@ -1,0 +1,33 @@
+
+<html>
+<head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/src/ts/tutorials/network/wash/makefile.html" />
+<title></title>
+<meta name="generator" content="c2html 0.9.4">
+<meta name="date" content="2021-03-30T16:51:58+00:00">
+</head>
+
+<body bgcolor="#FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 src/ts/tutorials/network/wash/makefile.html "><small>Report Typos and Errors</small></a></div>
+<pre width="80">-include ../../../../../petscdir.mk
+CFLAGS	         =
+FFLAGS	         =
+CPPFLAGS         =
+FPPFLAGS         =
+EXAMPLESC        = pipes1.c pipeInterface.c pipeImpls.c
+LOCDIR           = src/ts/tutorials/network/wash/
+
+OBJECTS_PIPE = pipeInterface.o pipeImpls.o
+
+include ${PETSC_DIR}/lib/petsc/conf/variables
+include ${PETSC_DIR}/lib/petsc/conf/rules
+
+<strong><font color="#FF0000">pipes1:</font></strong> pipes1.o $(OBJECTS_PIPE)
+	-${CLINKER} -o pipes1 pipes1.o $(OBJECTS_PIPE) ${PETSC_TS_LIB}
+	${RM} pipes1.o $(OBJECTS_PIPE)
+
+include ${PETSC_DIR}/lib/petsc/conf/test
+</pre>
+</body>
+
+</html>

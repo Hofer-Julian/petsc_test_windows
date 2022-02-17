@@ -1,0 +1,198 @@
+<center><a href="ex5.c">Actual source code: ex5.c</a></center><br>
+
+<html>
+<head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/src/vec/is/sf/tests/ex5.c.html" />
+<title></title>
+<meta name="generator" content="c2html 0.9.4">
+<meta name="date" content="2021-03-30T16:49:55+00:00">
+</head>
+
+<body bgcolor="#FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 src/vec/is/sf/tests/ex5.c.html "><small>Report Typos and Errors</small></a></div>
+<pre width="80">
+<a name="line1">  1: </a>static char help[]= <font color="#666666">"Test PetscSFFCompose when the ilocal arrays are not identity nor dense\n\n"</font>;
+
+<a name="line3">  3: </a>#include <A href="../../../../../include/petsc.h.html">&lt;petsc.h&gt;</A>
+<a name="line4">  4: </a>#include <A href="../../../../../include/petscsf.h.html">&lt;petscsf.h&gt;</A>
+
+<a name="line6">  6: </a><strong><font color="#4169E1"><a name="main"></a>int main(int argc, char **argv)</font></strong>
+<a name="line7">  7: </a>{
+<a name="line9">  9: </a>  <a href="../../../../../docs/manualpages/PetscSF/PetscSF.html#PetscSF">PetscSF</a>        sfA, sfB, sfBA, sfAAm, sfBBm, sfAm, sfBm;
+<a name="line10"> 10: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       nrootsA, nleavesA, nrootsB, nleavesB;
+<a name="line11"> 11: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       *ilocalA, *ilocalB;
+<a name="line12"> 12: </a>  <a href="../../../../../docs/manualpages/PetscSF/PetscSFNode.html#PetscSFNode">PetscSFNode</a>    *iremoteA, *iremoteB;
+<a name="line13"> 13: </a>  <a href="../../../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a>    rank,size;
+<a name="line14"> 14: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       i,m,n,k,nl = 2,mA,mB,nldataA,nldataB;
+<a name="line15"> 15: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       *rdA,*rdB,*ldA,*ldB;
+<a name="line16"> 16: </a>  <a href="../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>      inverse = <a href="../../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+
+<a name="line18"> 18: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInitialize.html#PetscInitialize">PetscInitialize</a>(&amp;argc,&amp;argv,NULL,help);<font color="#4169E1">if</font> (ierr) <font color="#4169E1">return</font> ierr;
+<a name="line19"> 19: </a>  <a href="../../../../../docs/manualpages/Sys/PetscOptionsGetInt.html#PetscOptionsGetInt">PetscOptionsGetInt</a>(NULL,NULL,<font color="#666666">"-nl"</font>,&amp;nl,NULL);
+<a name="line20"> 20: </a>  <a href="../../../../../docs/manualpages/Sys/PetscOptionsGetBool.html#PetscOptionsGetBool">PetscOptionsGetBool</a>(NULL,NULL,<font color="#666666">"-explicit_inverse"</font>,&amp;inverse,NULL);
+<a name="line21"> 21: </a>  <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_size.html#MPI_Comm_size">MPI_Comm_size</a>(<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,&amp;size);
+<a name="line22"> 22: </a>  <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_rank.html#MPI_Comm_rank">MPI_Comm_rank</a>(<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,&amp;rank);
+
+<a name="line24"> 24: </a>  <a href="../../../../../docs/manualpages/PetscSF/PetscSFCreate.html#PetscSFCreate">PetscSFCreate</a>(<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>, &amp;sfA);
+<a name="line25"> 25: </a>  <a href="../../../../../docs/manualpages/PetscSF/PetscSFCreate.html#PetscSFCreate">PetscSFCreate</a>(<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>, &amp;sfB);
+<a name="line26"> 26: </a>  <a href="../../../../../docs/manualpages/PetscSF/PetscSFSetFromOptions.html#PetscSFSetFromOptions">PetscSFSetFromOptions</a>(sfA);
+<a name="line27"> 27: </a>  <a href="../../../../../docs/manualpages/PetscSF/PetscSFSetFromOptions.html#PetscSFSetFromOptions">PetscSFSetFromOptions</a>(sfB);
+
+<a name="line29"> 29: </a>  n = 4*nl*size;
+<a name="line30"> 30: </a>  m = 2*nl;
+<a name="line31"> 31: </a>  k = nl;
+
+<a name="line33"> 33: </a>  nldataA = !rank ? n : 0;
+<a name="line34"> 34: </a>  nldataB = 3*nl;
+
+<a name="line36"> 36: </a>  nrootsA  = m;
+<a name="line37"> 37: </a>  nleavesA = !rank ? size*m : 0;
+<a name="line38"> 38: </a>  nrootsB  = !rank ? n : 0;
+<a name="line39"> 39: </a>  nleavesB = k;
+
+<a name="line41"> 41: </a>  <a href="../../../../../docs/manualpages/Sys/PetscMalloc1.html#PetscMalloc1">PetscMalloc1</a>(nleavesA, &amp;ilocalA);
+<a name="line42"> 42: </a>  <a href="../../../../../docs/manualpages/Sys/PetscMalloc1.html#PetscMalloc1">PetscMalloc1</a>(nleavesA, &amp;iremoteA);
+<a name="line43"> 43: </a>  <a href="../../../../../docs/manualpages/Sys/PetscMalloc1.html#PetscMalloc1">PetscMalloc1</a>(nleavesB, &amp;ilocalB);
+<a name="line44"> 44: </a>  <a href="../../../../../docs/manualpages/Sys/PetscMalloc1.html#PetscMalloc1">PetscMalloc1</a>(nleavesB, &amp;iremoteB);
+
+<a name="line46"> 46: </a>  <font color="#B22222">/* sf A bcast is equivalent to a sparse gather on process 0</font>
+<a name="line47"> 47: </a><font color="#B22222">     process 0 receives data in the middle [nl,3*nl] of the leaf data array for A */</font>
+<a name="line48"> 48: </a>  <font color="#4169E1">for</font> (i = 0; i &lt; nleavesA; i++) {
+<a name="line49"> 49: </a>    iremoteA[i].rank = i/m;
+<a name="line50"> 50: </a>    iremoteA[i].index = i%m;
+<a name="line51"> 51: </a>    ilocalA[i] = nl + i/m * 4*nl + i%m;
+<a name="line52"> 52: </a>  }
+
+<a name="line54"> 54: </a>  <font color="#B22222">/* sf B bcast is equivalent to a sparse scatter from process 0</font>
+<a name="line55"> 55: </a><font color="#B22222">     process 0 sends data from [nl,2*nl] of the leaf data array for A</font>
+<a name="line56"> 56: </a><font color="#B22222">     each process receives, in reverse order, in the middle [nl,2*nl] of the leaf data array for B */</font>
+<a name="line57"> 57: </a>  <font color="#4169E1">for</font> (i = 0; i &lt; nleavesB; i++) {
+<a name="line58"> 58: </a>    iremoteB[i].rank = 0;
+<a name="line59"> 59: </a>    iremoteB[i].index = rank * 4*nl + nl + i%m;
+<a name="line60"> 60: </a>    ilocalB[i] = 2*nl - i - 1;
+<a name="line61"> 61: </a>  }
+<a name="line62"> 62: </a>  <a href="../../../../../docs/manualpages/PetscSF/PetscSFSetGraph.html#PetscSFSetGraph">PetscSFSetGraph</a>(sfA, nrootsA, nleavesA, ilocalA, <a href="../../../../../docs/manualpages/Sys/PetscCopyMode.html#PetscCopyMode">PETSC_OWN_POINTER</a>, iremoteA, <a href="../../../../../docs/manualpages/Sys/PetscCopyMode.html#PetscCopyMode">PETSC_OWN_POINTER</a>);
+<a name="line63"> 63: </a>  <a href="../../../../../docs/manualpages/PetscSF/PetscSFSetGraph.html#PetscSFSetGraph">PetscSFSetGraph</a>(sfB, nrootsB, nleavesB, ilocalB, <a href="../../../../../docs/manualpages/Sys/PetscCopyMode.html#PetscCopyMode">PETSC_OWN_POINTER</a>, iremoteB, <a href="../../../../../docs/manualpages/Sys/PetscCopyMode.html#PetscCopyMode">PETSC_OWN_POINTER</a>);
+<a name="line64"> 64: </a>  <a href="../../../../../docs/manualpages/PetscSF/PetscSFSetUp.html#PetscSFSetUp">PetscSFSetUp</a>(sfA);
+<a name="line65"> 65: </a>  <a href="../../../../../docs/manualpages/PetscSF/PetscSFSetUp.html#PetscSFSetUp">PetscSFSetUp</a>(sfB);
+<a name="line66"> 66: </a>  <a href="../../../../../docs/manualpages/Sys/PetscObjectSetName.html#PetscObjectSetName">PetscObjectSetName</a>((<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)sfA, <font color="#666666">"sfA"</font>);
+<a name="line67"> 67: </a>  <a href="../../../../../docs/manualpages/Sys/PetscObjectSetName.html#PetscObjectSetName">PetscObjectSetName</a>((<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)sfB, <font color="#666666">"sfB"</font>);
+<a name="line68"> 68: </a>  <a href="../../../../../docs/manualpages/PetscSF/PetscSFViewFromOptions.html#PetscSFViewFromOptions">PetscSFViewFromOptions</a>(sfA, NULL, <font color="#666666">"-view"</font>);
+<a name="line69"> 69: </a>  <a href="../../../../../docs/manualpages/PetscSF/PetscSFViewFromOptions.html#PetscSFViewFromOptions">PetscSFViewFromOptions</a>(sfB, NULL, <font color="#666666">"-view"</font>);
+
+<a name="line71"> 71: </a>  <a href="../../../../../docs/manualpages/PetscSF/PetscSFGetLeafRange.html#PetscSFGetLeafRange">PetscSFGetLeafRange</a>(sfA, NULL, &amp;mA);
+<a name="line72"> 72: </a>  <a href="../../../../../docs/manualpages/PetscSF/PetscSFGetLeafRange.html#PetscSFGetLeafRange">PetscSFGetLeafRange</a>(sfB, NULL, &amp;mB);
+<a name="line73"> 73: </a>  <a href="../../../../../docs/manualpages/Sys/PetscMalloc2.html#PetscMalloc2">PetscMalloc2</a>(nrootsA, &amp;rdA, nldataA, &amp;ldA);
+<a name="line74"> 74: </a>  <a href="../../../../../docs/manualpages/Sys/PetscMalloc2.html#PetscMalloc2">PetscMalloc2</a>(nrootsB, &amp;rdB, nldataB, &amp;ldB);
+<a name="line75"> 75: </a>  <font color="#4169E1">for</font> (i = 0; i &lt; nrootsA; i++) rdA[i] = m*rank + i;
+<a name="line76"> 76: </a>  <font color="#4169E1">for</font> (i = 0; i &lt; nldataA; i++) ldA[i] = -1;
+<a name="line77"> 77: </a>  <font color="#4169E1">for</font> (i = 0; i &lt; nldataB; i++) ldB[i] = -1;
+
+<a name="line79"> 79: </a>  <a href="../../../../../docs/manualpages/Viewer/PetscViewerASCIIPrintf.html#PetscViewerASCIIPrintf">PetscViewerASCIIPrintf</a>(<a href="../../../../../docs/manualpages/Viewer/PETSC_VIEWER_STDOUT_WORLD.html#PETSC_VIEWER_STDOUT_WORLD">PETSC_VIEWER_STDOUT_WORLD</a>, <font color="#666666">"BcastB(BcastA)\n"</font>);
+<a name="line80"> 80: </a>  <a href="../../../../../docs/manualpages/Viewer/PetscViewerASCIIPrintf.html#PetscViewerASCIIPrintf">PetscViewerASCIIPrintf</a>(<a href="../../../../../docs/manualpages/Viewer/PETSC_VIEWER_STDOUT_WORLD.html#PETSC_VIEWER_STDOUT_WORLD">PETSC_VIEWER_STDOUT_WORLD</a>, <font color="#666666">"A: root data\n"</font>);
+<a name="line81"> 81: </a>  <a href="../../../../../docs/manualpages/Sys/PetscIntView.html#PetscIntView">PetscIntView</a>(nrootsA, rdA, <a href="../../../../../docs/manualpages/Viewer/PETSC_VIEWER_STDOUT_WORLD.html#PETSC_VIEWER_STDOUT_WORLD">PETSC_VIEWER_STDOUT_WORLD</a>);
+<a name="line82"> 82: </a>  <a href="../../../../../docs/manualpages/PetscSF/PetscSFBcastBegin.html#PetscSFBcastBegin">PetscSFBcastBegin</a>(sfA, <a href="../../../../../docs/manualpages/Sys/MPIU_INT.html#MPIU_INT">MPIU_INT</a>, rdA, ldA);
+<a name="line83"> 83: </a>  <a href="../../../../../docs/manualpages/PetscSF/PetscSFBcastEnd.html#PetscSFBcastEnd">PetscSFBcastEnd</a>(sfA, <a href="../../../../../docs/manualpages/Sys/MPIU_INT.html#MPIU_INT">MPIU_INT</a>, rdA, ldA);
+<a name="line84"> 84: </a>  <a href="../../../../../docs/manualpages/Viewer/PetscViewerASCIIPrintf.html#PetscViewerASCIIPrintf">PetscViewerASCIIPrintf</a>(<a href="../../../../../docs/manualpages/Viewer/PETSC_VIEWER_STDOUT_WORLD.html#PETSC_VIEWER_STDOUT_WORLD">PETSC_VIEWER_STDOUT_WORLD</a>, <font color="#666666">"A: leaf data (all)\n"</font>);
+<a name="line85"> 85: </a>  <a href="../../../../../docs/manualpages/Sys/PetscIntView.html#PetscIntView">PetscIntView</a>(nldataA, ldA, <a href="../../../../../docs/manualpages/Viewer/PETSC_VIEWER_STDOUT_WORLD.html#PETSC_VIEWER_STDOUT_WORLD">PETSC_VIEWER_STDOUT_WORLD</a>);
+<a name="line86"> 86: </a>  <a href="../../../../../docs/manualpages/PetscSF/PetscSFBcastBegin.html#PetscSFBcastBegin">PetscSFBcastBegin</a>(sfB, <a href="../../../../../docs/manualpages/Sys/MPIU_INT.html#MPIU_INT">MPIU_INT</a>, ldA, ldB);
+<a name="line87"> 87: </a>  <a href="../../../../../docs/manualpages/PetscSF/PetscSFBcastEnd.html#PetscSFBcastEnd">PetscSFBcastEnd</a>(sfB, <a href="../../../../../docs/manualpages/Sys/MPIU_INT.html#MPIU_INT">MPIU_INT</a>, ldA, ldB);
+<a name="line88"> 88: </a>  <a href="../../../../../docs/manualpages/Viewer/PetscViewerASCIIPrintf.html#PetscViewerASCIIPrintf">PetscViewerASCIIPrintf</a>(<a href="../../../../../docs/manualpages/Viewer/PETSC_VIEWER_STDOUT_WORLD.html#PETSC_VIEWER_STDOUT_WORLD">PETSC_VIEWER_STDOUT_WORLD</a>, <font color="#666666">"B: leaf data (all)\n"</font>);
+<a name="line89"> 89: </a>  <a href="../../../../../docs/manualpages/Sys/PetscIntView.html#PetscIntView">PetscIntView</a>(nldataB, ldB, <a href="../../../../../docs/manualpages/Viewer/PETSC_VIEWER_STDOUT_WORLD.html#PETSC_VIEWER_STDOUT_WORLD">PETSC_VIEWER_STDOUT_WORLD</a>);
+
+<a name="line91"> 91: </a>  <a href="../../../../../docs/manualpages/PetscSF/PetscSFCompose.html#PetscSFCompose">PetscSFCompose</a>(sfA, sfB, &amp;sfBA);
+<a name="line92"> 92: </a>  <a href="../../../../../docs/manualpages/PetscSF/PetscSFSetFromOptions.html#PetscSFSetFromOptions">PetscSFSetFromOptions</a>(sfBA);
+<a name="line93"> 93: </a>  <a href="../../../../../docs/manualpages/PetscSF/PetscSFSetUp.html#PetscSFSetUp">PetscSFSetUp</a>(sfBA);
+<a name="line94"> 94: </a>  <a href="../../../../../docs/manualpages/Sys/PetscObjectSetName.html#PetscObjectSetName">PetscObjectSetName</a>((<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)sfBA, <font color="#666666">"sfBA"</font>);
+<a name="line95"> 95: </a>  <a href="../../../../../docs/manualpages/PetscSF/PetscSFViewFromOptions.html#PetscSFViewFromOptions">PetscSFViewFromOptions</a>(sfBA, NULL, <font color="#666666">"-view"</font>);
+
+<a name="line97"> 97: </a>  <font color="#4169E1">for</font> (i = 0; i &lt; nldataB; i++) ldB[i] = -1;
+<a name="line98"> 98: </a>  <a href="../../../../../docs/manualpages/Viewer/PetscViewerASCIIPrintf.html#PetscViewerASCIIPrintf">PetscViewerASCIIPrintf</a>(<a href="../../../../../docs/manualpages/Viewer/PETSC_VIEWER_STDOUT_WORLD.html#PETSC_VIEWER_STDOUT_WORLD">PETSC_VIEWER_STDOUT_WORLD</a>, <font color="#666666">"BcastBA\n"</font>);
+<a name="line99"> 99: </a>  <a href="../../../../../docs/manualpages/Viewer/PetscViewerASCIIPrintf.html#PetscViewerASCIIPrintf">PetscViewerASCIIPrintf</a>(<a href="../../../../../docs/manualpages/Viewer/PETSC_VIEWER_STDOUT_WORLD.html#PETSC_VIEWER_STDOUT_WORLD">PETSC_VIEWER_STDOUT_WORLD</a>, <font color="#666666">"BA: root data\n"</font>);
+<a name="line100">100: </a>  <a href="../../../../../docs/manualpages/Sys/PetscIntView.html#PetscIntView">PetscIntView</a>(nrootsA, rdA, <a href="../../../../../docs/manualpages/Viewer/PETSC_VIEWER_STDOUT_WORLD.html#PETSC_VIEWER_STDOUT_WORLD">PETSC_VIEWER_STDOUT_WORLD</a>);
+<a name="line101">101: </a>  <a href="../../../../../docs/manualpages/PetscSF/PetscSFBcastBegin.html#PetscSFBcastBegin">PetscSFBcastBegin</a>(sfBA, <a href="../../../../../docs/manualpages/Sys/MPIU_INT.html#MPIU_INT">MPIU_INT</a>, rdA, ldB);
+<a name="line102">102: </a>  <a href="../../../../../docs/manualpages/PetscSF/PetscSFBcastEnd.html#PetscSFBcastEnd">PetscSFBcastEnd</a>(sfBA, <a href="../../../../../docs/manualpages/Sys/MPIU_INT.html#MPIU_INT">MPIU_INT</a>, rdA, ldB);
+<a name="line103">103: </a>  <a href="../../../../../docs/manualpages/Viewer/PetscViewerASCIIPrintf.html#PetscViewerASCIIPrintf">PetscViewerASCIIPrintf</a>(<a href="../../../../../docs/manualpages/Viewer/PETSC_VIEWER_STDOUT_WORLD.html#PETSC_VIEWER_STDOUT_WORLD">PETSC_VIEWER_STDOUT_WORLD</a>, <font color="#666666">"BA: leaf data (all)\n"</font>);
+<a name="line104">104: </a>  <a href="../../../../../docs/manualpages/Sys/PetscIntView.html#PetscIntView">PetscIntView</a>(nldataB, ldB, <a href="../../../../../docs/manualpages/Viewer/PETSC_VIEWER_STDOUT_WORLD.html#PETSC_VIEWER_STDOUT_WORLD">PETSC_VIEWER_STDOUT_WORLD</a>);
+
+<a name="line106">106: </a>  <a href="../../../../../docs/manualpages/PetscSF/PetscSFCreateInverseSF.html#PetscSFCreateInverseSF">PetscSFCreateInverseSF</a>(sfA, &amp;sfAm);
+<a name="line107">107: </a>  <a href="../../../../../docs/manualpages/PetscSF/PetscSFSetFromOptions.html#PetscSFSetFromOptions">PetscSFSetFromOptions</a>(sfAm);
+<a name="line108">108: </a>  <a href="../../../../../docs/manualpages/Sys/PetscObjectSetName.html#PetscObjectSetName">PetscObjectSetName</a>((<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)sfAm, <font color="#666666">"sfAm"</font>);
+<a name="line109">109: </a>  <a href="../../../../../docs/manualpages/PetscSF/PetscSFViewFromOptions.html#PetscSFViewFromOptions">PetscSFViewFromOptions</a>(sfAm, NULL, <font color="#666666">"-view"</font>);
+
+<a name="line111">111: </a>  <font color="#4169E1">if</font> (!inverse) {
+<a name="line112">112: </a>    <a href="../../../../../docs/manualpages/PetscSF/PetscSFComposeInverse.html#PetscSFComposeInverse">PetscSFComposeInverse</a>(sfA, sfA, &amp;sfAAm);
+<a name="line113">113: </a>  } <font color="#4169E1">else</font> {
+<a name="line114">114: </a>    <a href="../../../../../docs/manualpages/PetscSF/PetscSFCompose.html#PetscSFCompose">PetscSFCompose</a>(sfA, sfAm, &amp;sfAAm);
+<a name="line115">115: </a>  }
+<a name="line116">116: </a>  <a href="../../../../../docs/manualpages/PetscSF/PetscSFSetFromOptions.html#PetscSFSetFromOptions">PetscSFSetFromOptions</a>(sfAAm);
+<a name="line117">117: </a>  <a href="../../../../../docs/manualpages/PetscSF/PetscSFSetUp.html#PetscSFSetUp">PetscSFSetUp</a>(sfAAm);
+<a name="line118">118: </a>  <a href="../../../../../docs/manualpages/Sys/PetscObjectSetName.html#PetscObjectSetName">PetscObjectSetName</a>((<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)sfAAm, <font color="#666666">"sfAAm"</font>);
+<a name="line119">119: </a>  <a href="../../../../../docs/manualpages/PetscSF/PetscSFViewFromOptions.html#PetscSFViewFromOptions">PetscSFViewFromOptions</a>(sfAAm, NULL, <font color="#666666">"-view"</font>);
+
+<a name="line121">121: </a>  <a href="../../../../../docs/manualpages/PetscSF/PetscSFCreateInverseSF.html#PetscSFCreateInverseSF">PetscSFCreateInverseSF</a>(sfB, &amp;sfBm);
+<a name="line122">122: </a>  <a href="../../../../../docs/manualpages/PetscSF/PetscSFSetFromOptions.html#PetscSFSetFromOptions">PetscSFSetFromOptions</a>(sfBm);
+<a name="line123">123: </a>  <a href="../../../../../docs/manualpages/Sys/PetscObjectSetName.html#PetscObjectSetName">PetscObjectSetName</a>((<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)sfBm, <font color="#666666">"sfBm"</font>);
+<a name="line124">124: </a>  <a href="../../../../../docs/manualpages/PetscSF/PetscSFViewFromOptions.html#PetscSFViewFromOptions">PetscSFViewFromOptions</a>(sfBm, NULL, <font color="#666666">"-view"</font>);
+
+<a name="line126">126: </a>  <font color="#4169E1">if</font> (!inverse) {
+<a name="line127">127: </a>    <a href="../../../../../docs/manualpages/PetscSF/PetscSFComposeInverse.html#PetscSFComposeInverse">PetscSFComposeInverse</a>(sfB, sfB, &amp;sfBBm);
+<a name="line128">128: </a>  } <font color="#4169E1">else</font> {
+<a name="line129">129: </a>    <a href="../../../../../docs/manualpages/PetscSF/PetscSFCompose.html#PetscSFCompose">PetscSFCompose</a>(sfB, sfBm, &amp;sfBBm);
+<a name="line130">130: </a>  }
+<a name="line131">131: </a>  <a href="../../../../../docs/manualpages/PetscSF/PetscSFSetFromOptions.html#PetscSFSetFromOptions">PetscSFSetFromOptions</a>(sfBBm);
+<a name="line132">132: </a>  <a href="../../../../../docs/manualpages/PetscSF/PetscSFSetUp.html#PetscSFSetUp">PetscSFSetUp</a>(sfBBm);
+<a name="line133">133: </a>  <a href="../../../../../docs/manualpages/Sys/PetscObjectSetName.html#PetscObjectSetName">PetscObjectSetName</a>((<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)sfBBm, <font color="#666666">"sfBBm"</font>);
+<a name="line134">134: </a>  <a href="../../../../../docs/manualpages/PetscSF/PetscSFViewFromOptions.html#PetscSFViewFromOptions">PetscSFViewFromOptions</a>(sfBBm, NULL, <font color="#666666">"-view"</font>);
+
+<a name="line136">136: </a>  <a href="../../../../../docs/manualpages/Sys/PetscFree2.html#PetscFree2">PetscFree2</a>(rdA, ldA);
+<a name="line137">137: </a>  <a href="../../../../../docs/manualpages/Sys/PetscFree2.html#PetscFree2">PetscFree2</a>(rdB, ldB);
+
+<a name="line139">139: </a>  <a href="../../../../../docs/manualpages/PetscSF/PetscSFDestroy.html#PetscSFDestroy">PetscSFDestroy</a>(&amp;sfA);
+<a name="line140">140: </a>  <a href="../../../../../docs/manualpages/PetscSF/PetscSFDestroy.html#PetscSFDestroy">PetscSFDestroy</a>(&amp;sfB);
+<a name="line141">141: </a>  <a href="../../../../../docs/manualpages/PetscSF/PetscSFDestroy.html#PetscSFDestroy">PetscSFDestroy</a>(&amp;sfBA);
+<a name="line142">142: </a>  <a href="../../../../../docs/manualpages/PetscSF/PetscSFDestroy.html#PetscSFDestroy">PetscSFDestroy</a>(&amp;sfAm);
+<a name="line143">143: </a>  <a href="../../../../../docs/manualpages/PetscSF/PetscSFDestroy.html#PetscSFDestroy">PetscSFDestroy</a>(&amp;sfBm);
+<a name="line144">144: </a>  <a href="../../../../../docs/manualpages/PetscSF/PetscSFDestroy.html#PetscSFDestroy">PetscSFDestroy</a>(&amp;sfAAm);
+<a name="line145">145: </a>  <a href="../../../../../docs/manualpages/PetscSF/PetscSFDestroy.html#PetscSFDestroy">PetscSFDestroy</a>(&amp;sfBBm);
+
+<a name="line147">147: </a>  <a href="../../../../../docs/manualpages/Sys/PetscFinalize.html#PetscFinalize">PetscFinalize</a>();
+
+<a name="line149">149: </a>  <font color="#4169E1">return</font> ierr;
+<a name="line150">150: </a>}
+
+<a name="line152">152: </a><font color="#B22222">/*TEST</font>
+
+<a name="line154">154: </a><font color="#B22222">   test:</font>
+<a name="line155">155: </a><font color="#B22222">     suffix: 1</font>
+<a name="line156">156: </a><font color="#B22222">     args: -view -explicit_inverse {{0 1}}</font>
+
+<a name="line158">158: </a><font color="#B22222">   test:</font>
+<a name="line159">159: </a><font color="#B22222">     nsize: 7</font>
+<a name="line160">160: </a><font color="#B22222">     filter: grep -v "type" | grep -v "sort"</font>
+<a name="line161">161: </a><font color="#B22222">     suffix: 2</font>
+<a name="line162">162: </a><font color="#B22222">     args: -view -nl 5 -explicit_inverse {{0 1}}</font>
+
+<a name="line164">164: </a><font color="#B22222">   # we cannot test for -sf_window_flavor dynamic because SFCompose with sparse leaves may change the root data pointer only locally, and this is not supported by the dynamic case</font>
+<a name="line165">165: </a><font color="#B22222">   test:</font>
+<a name="line166">166: </a><font color="#B22222">     nsize: 7</font>
+<a name="line167">167: </a><font color="#B22222">     suffix: 2_window</font>
+<a name="line168">168: </a><font color="#B22222">     filter: grep -v "type" | grep -v "sort"</font>
+<a name="line169">169: </a><font color="#B22222">     output_file: output/ex5_2.out</font>
+<a name="line170">170: </a><font color="#B22222">     args: -view -nl 5 -explicit_inverse {{0 1}} -sf_type window -sf_window_sync {{fence lock active}} -sf_window_flavor {{create allocate}}</font>
+<a name="line171">171: </a><font color="#B22222">     requires: define(PETSC_HAVE_MPI_ONE_SIDED)</font>
+
+<a name="line173">173: </a><font color="#B22222">   # The nightly test suite with MPICH uses ch3:sock, which is broken when winsize == 0 in some of the processes</font>
+<a name="line174">174: </a><font color="#B22222">   test:</font>
+<a name="line175">175: </a><font color="#B22222">     nsize: 7</font>
+<a name="line176">176: </a><font color="#B22222">     suffix: 2_window_shared</font>
+<a name="line177">177: </a><font color="#B22222">     filter: grep -v "type" | grep -v "sort"</font>
+<a name="line178">178: </a><font color="#B22222">     output_file: output/ex5_2.out</font>
+<a name="line179">179: </a><font color="#B22222">     args: -view -nl 5 -explicit_inverse {{0 1}} -sf_type window -sf_window_sync {{fence lock active}} -sf_window_flavor shared</font>
+<a name="line180">180: </a><font color="#B22222">     requires: define(PETSC_HAVE_MPI_PROCESS_SHARED_MEMORY) !define(PETSC_HAVE_MPICH_NUMVERSION) define(PETSC_HAVE_MPI_ONE_SIDED)</font>
+
+<a name="line182">182: </a><font color="#B22222">TEST*/</font>
+</pre>
+</body>
+
+</html>

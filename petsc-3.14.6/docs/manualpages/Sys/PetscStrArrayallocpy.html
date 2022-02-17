@@ -1,0 +1,49 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscStrArrayallocpy.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>PetscStrArrayallocpy</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/Sys/PetscStrArrayallocpy.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="PetscStrArrayallocpy"><H1>PetscStrArrayallocpy</H1></A>
+Allocates space to hold a copy of an array of strings then copies the strings 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscsys.h"   
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A>  <A HREF="../Sys/PetscStrArrayallocpy.html#PetscStrArrayallocpy">PetscStrArrayallocpy</A>(const char *const *list,char ***t)
+</PRE>
+Not Collective
+<P>
+<H3><FONT COLOR="#CC3333">Input Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>s </B></TD><TD>- pointer to array of strings (final string is a null)
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Output Parameter</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>t </B></TD><TD>- the copied array string
+</TD></TR></TABLE>
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">Note</FONT></H3>
+Not for use in Fortran
+<P>
+Warning: If t has previously been allocated then that memory is lost, you may need to <A HREF="../Sys/PetscStrArrayDestroy.html#PetscStrArrayDestroy">PetscStrArrayDestroy</A>()
+the array before calling this routine.
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../Sys/PetscStrallocpy.html#PetscStrallocpy">PetscStrallocpy</A>(), <A HREF="../Sys/PetscStrArrayDestroy.html#PetscStrArrayDestroy">PetscStrArrayDestroy</A>(), <A HREF="../Sys/PetscStrNArrayallocpy.html#PetscStrNArrayallocpy">PetscStrNArrayallocpy</A>()
+<BR>
+<P>
+<P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>intermediate<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/sys/utils/str.c.html#PetscStrArrayallocpy">src/sys/utils/str.c</A>
+<P><H3><FONT COLOR="#CC3333">Examples</FONT></H3>
+<A HREF="../../../src/ts/tutorials/extchem.c.html">src/ts/tutorials/extchem.c.html</A><BR>
+<BR><A HREF="./index.html">Index of all Sys routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

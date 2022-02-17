@@ -1,0 +1,74 @@
+<center><a href="petscpartitioner.h">Actual source code: petscpartitioner.h</a></center><br>
+
+<html>
+<head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/include/petscpartitioner.h.html" />
+<title></title>
+<meta name="generator" content="c2html 0.9.4">
+<meta name="date" content="2021-03-30T16:50:41+00:00">
+</head>
+
+<body bgcolor="#FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 include/petscpartitioner.h.html "><small>Report Typos and Errors</small></a></div>
+<pre width="80">
+<a name="line1">  1: </a><font color="#A020F0">#if !defined(PETSCPARTITIONER_H)</font>
+<a name="line2">  2: </a><strong><font color="#228B22">#define PETSCPARTITIONER_H</font></strong>
+
+<a name="line4">  4: </a>#include <A href="../include/petscsection.h.html">&lt;petscsection.h&gt;</A>
+
+<a name="line6">  6: </a><font color="#B22222">/*S</font>
+<a name="line7">  7: </a><font color="#B22222">  <a href="../docs/manualpages/DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</a> - PETSc object that manages a graph partitioner</font>
+
+<a name="line9">  9: </a><font color="#B22222">  Level: intermediate</font>
+
+<a name="line11"> 11: </a><font color="#B22222">.seealso: <a href="../docs/manualpages/DM/PetscPartitionerCreate.html#PetscPartitionerCreate">PetscPartitionerCreate</a>(), <a href="../docs/manualpages/DM/PetscPartitionerSetType.html#PetscPartitionerSetType">PetscPartitionerSetType</a>(), <a href="../docs/manualpages/DM/PetscPartitionerType.html#PetscPartitionerType">PetscPartitionerType</a></font>
+<a name="line12"> 12: </a><font color="#B22222">S*/</font>
+<a name="line13"> 13: </a><font color="#4169E1">typedef struct _p_PetscPartitioner *<a href="../docs/manualpages/DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</a>;</font>
+
+<a name="line15"> 15: </a>PETSC_EXTERN <a href="../docs/manualpages/Sys/PetscClassId.html#PetscClassId">PetscClassId</a> PETSCPARTITIONER_CLASSID;
+<a name="line16"> 16: </a><strong><font color="#4169E1">PETSC_EXTERN <a href="../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../docs/manualpages/DM/PetscPartitionerInitializePackage.html#PetscPartitionerInitializePackage">PetscPartitionerInitializePackage</a>(void)</font></strong>;
+<a name="line17"> 17: </a><strong><font color="#4169E1">PETSC_EXTERN <a href="../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../docs/manualpages/DM/PetscPartitionerFinalizePackage.html#PetscPartitionerFinalizePackage">PetscPartitionerFinalizePackage</a>(void)</font></strong>;
+
+<a name="line19"> 19: </a><font color="#B22222">/*J</font>
+<a name="line20"> 20: </a><font color="#B22222">  <a href="../docs/manualpages/DM/PetscPartitionerType.html#PetscPartitionerType">PetscPartitionerType</a> - String with the name of a PETSc graph partitioner</font>
+
+<a name="line22"> 22: </a><font color="#B22222">  Level: beginner</font>
+
+<a name="line24"> 24: </a><font color="#B22222">.seealso: <a href="../docs/manualpages/DM/PetscPartitionerSetType.html#PetscPartitionerSetType">PetscPartitionerSetType</a>(), <a href="../docs/manualpages/DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</a></font>
+<a name="line25"> 25: </a><font color="#B22222">J*/</font>
+<a name="line26"> 26: </a><font color="#4169E1">typedef const char *<a href="../docs/manualpages/DM/PetscPartitionerType.html#PetscPartitionerType">PetscPartitionerType</a>;</font>
+<a name="line27"> 27: </a><strong><font color="#228B22">#define <a href="../docs/manualpages/DM/PETSCPARTITIONERPARMETIS.html#PETSCPARTITIONERPARMETIS">PETSCPARTITIONERPARMETIS</a> </font><font color="#666666">"parmetis"</font><font color="#228B22"></font></strong>
+<a name="line28"> 28: </a><strong><font color="#228B22">#define <a href="../docs/manualpages/DM/PETSCPARTITIONERPTSCOTCH.html#PETSCPARTITIONERPTSCOTCH">PETSCPARTITIONERPTSCOTCH</a> </font><font color="#666666">"ptscotch"</font><font color="#228B22"></font></strong>
+<a name="line29"> 29: </a><strong><font color="#228B22">#define <a href="../docs/manualpages/DM/PETSCPARTITIONERCHACO.html#PETSCPARTITIONERCHACO">PETSCPARTITIONERCHACO</a>    </font><font color="#666666">"chaco"</font><font color="#228B22"></font></strong>
+<a name="line30"> 30: </a><strong><font color="#228B22">#define <a href="../docs/manualpages/DM/PETSCPARTITIONERSIMPLE.html#PETSCPARTITIONERSIMPLE">PETSCPARTITIONERSIMPLE</a>   </font><font color="#666666">"simple"</font><font color="#228B22"></font></strong>
+<a name="line31"> 31: </a><strong><font color="#228B22">#define <a href="../docs/manualpages/DM/PETSCPARTITIONERSHELL.html#PETSCPARTITIONERSHELL">PETSCPARTITIONERSHELL</a>    </font><font color="#666666">"shell"</font><font color="#228B22"></font></strong>
+<a name="line32"> 32: </a><strong><font color="#228B22">#define <a href="../docs/manualpages/DM/PETSCPARTITIONERGATHER.html#PETSCPARTITIONERGATHER">PETSCPARTITIONERGATHER</a>   </font><font color="#666666">"gather"</font><font color="#228B22"></font></strong>
+
+<a name="line34"> 34: </a>PETSC_EXTERN <a href="../docs/manualpages/Sys/PetscFunctionList.html#PetscFunctionList">PetscFunctionList</a> PetscPartitionerList;
+<a name="line35"> 35: </a><strong><font color="#4169E1"><a name="PetscPartitionerRegister"></a>PETSC_EXTERN <a href="../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../docs/manualpages/DM/PetscPartitionerRegister.html#PetscPartitionerRegister">PetscPartitionerRegister</a>(const char[], <a href="../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> (*)(<a href="../docs/manualpages/DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</a>)</font></strong>);
+
+<a name="line37"> 37: </a><strong><font color="#4169E1">PETSC_EXTERN <a href="../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../docs/manualpages/DM/PetscPartitionerCreate.html#PetscPartitionerCreate">PetscPartitionerCreate</a>(<a href="../docs/manualpages/Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</a>, <a href="../docs/manualpages/DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</a>*)</font></strong>;
+<a name="line38"> 38: </a><strong><font color="#4169E1">PETSC_EXTERN <a href="../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../docs/manualpages/DM/PetscPartitionerDestroy.html#PetscPartitionerDestroy">PetscPartitionerDestroy</a>(<a href="../docs/manualpages/DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</a>*)</font></strong>;
+<a name="line39"> 39: </a><strong><font color="#4169E1">PETSC_EXTERN <a href="../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../docs/manualpages/DM/PetscPartitionerSetType.html#PetscPartitionerSetType">PetscPartitionerSetType</a>(<a href="../docs/manualpages/DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</a>, <a href="../docs/manualpages/DM/PetscPartitionerType.html#PetscPartitionerType">PetscPartitionerType</a>)</font></strong>;
+<a name="line40"> 40: </a><strong><font color="#4169E1">PETSC_EXTERN <a href="../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../docs/manualpages/DM/PetscPartitionerGetType.html#PetscPartitionerGetType">PetscPartitionerGetType</a>(<a href="../docs/manualpages/DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</a>, <a href="../docs/manualpages/DM/PetscPartitionerType.html#PetscPartitionerType">PetscPartitionerType</a>*)</font></strong>;
+<a name="line41"> 41: </a><strong><font color="#4169E1">PETSC_EXTERN <a href="../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../docs/manualpages/DM/PetscPartitionerSetUp.html#PetscPartitionerSetUp">PetscPartitionerSetUp</a>(<a href="../docs/manualpages/DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</a>)</font></strong>;
+<a name="line42"> 42: </a><strong><font color="#4169E1">PETSC_EXTERN <a href="../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../docs/manualpages/DM/PetscPartitionerReset.html#PetscPartitionerReset">PetscPartitionerReset</a>(<a href="../docs/manualpages/DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</a>)</font></strong>;
+<a name="line43"> 43: </a><strong><font color="#4169E1">PETSC_EXTERN <a href="../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../docs/manualpages/DM/PetscPartitionerSetFromOptions.html#PetscPartitionerSetFromOptions">PetscPartitionerSetFromOptions</a>(<a href="../docs/manualpages/DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</a>)</font></strong>;
+<a name="line44"> 44: </a><strong><font color="#4169E1">PETSC_EXTERN <a href="../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../docs/manualpages/DM/PetscPartitionerViewFromOptions.html#PetscPartitionerViewFromOptions">PetscPartitionerViewFromOptions</a>(<a href="../docs/manualpages/DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</a>, <a href="../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>, const char[])</font></strong>;
+<a name="line45"> 45: </a><strong><font color="#4169E1">PETSC_EXTERN <a href="../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../docs/manualpages/DM/PetscPartitionerView.html#PetscPartitionerView">PetscPartitionerView</a>(<a href="../docs/manualpages/DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</a>, <a href="../docs/manualpages/Viewer/PetscViewer.html#PetscViewer">PetscViewer</a>)</font></strong>;
+<a name="line46"> 46: </a><strong><font color="#4169E1">PETSC_EXTERN <a href="../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../docs/manualpages/DM/PetscPartitionerPartition.html#PetscPartitionerPartition">PetscPartitionerPartition</a>(<a href="../docs/manualpages/DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</a>, <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>, <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>, <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>[], <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>[], <a href="../docs/manualpages/PetscSection/PetscSection.html#PetscSection">PetscSection</a>, <a href="../docs/manualpages/PetscSection/PetscSection.html#PetscSection">PetscSection</a>, <a href="../docs/manualpages/PetscSection/PetscSection.html#PetscSection">PetscSection</a>, <a href="../docs/manualpages/IS/IS.html#IS">IS</a>*)</font></strong>;
+
+<a name="line48"> 48: </a><strong><font color="#4169E1">PETSC_EXTERN <a href="../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../docs/manualpages/DM/PetscPartitionerShellSetPartition.html#PetscPartitionerShellSetPartition">PetscPartitionerShellSetPartition</a>(<a href="../docs/manualpages/DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</a>, <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>, const <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>[], const <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>[])</font></strong>;
+<a name="line49"> 49: </a><strong><font color="#4169E1">PETSC_EXTERN <a href="../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../docs/manualpages/DM/PetscPartitionerShellSetRandom.html#PetscPartitionerShellSetRandom">PetscPartitionerShellSetRandom</a>(<a href="../docs/manualpages/DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</a>, <a href="../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>)</font></strong>;
+<a name="line50"> 50: </a><strong><font color="#4169E1">PETSC_EXTERN <a href="../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../docs/manualpages/DM/PetscPartitionerShellGetRandom.html#PetscPartitionerShellGetRandom">PetscPartitionerShellGetRandom</a>(<a href="../docs/manualpages/DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</a>, <a href="../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>*)</font></strong>;
+
+<a name="line52"> 52: </a><font color="#B22222">/* We should implement <a href="../docs/manualpages/Mat/MatPartitioning.html#MatPartitioning">MatPartitioning</a> with <a href="../docs/manualpages/DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</a> */</font>
+<a name="line53"> 53: </a>#include <A href="../include/petscmat.h.html">&lt;petscmat.h&gt;</A>
+<a name="line54"> 54: </a><strong><font color="#228B22">#define <a href="../docs/manualpages/DM/PETSCPARTITIONERMATPARTITIONING.html#PETSCPARTITIONERMATPARTITIONING">PETSCPARTITIONERMATPARTITIONING</a> </font><font color="#666666">"matpartitioning"</font><font color="#228B22"></font></strong>
+<a name="line55"> 55: </a><strong><font color="#4169E1">PETSC_EXTERN <a href="../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../docs/manualpages/DM/PetscPartitionerMatPartitioningGetMatPartitioning.html#PetscPartitionerMatPartitioningGetMatPartitioning">PetscPartitionerMatPartitioningGetMatPartitioning</a>(<a href="../docs/manualpages/DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</a>, <a href="../docs/manualpages/Mat/MatPartitioning.html#MatPartitioning">MatPartitioning</a>*)</font></strong>;
+
+<a name="line57"> 57: </a><font color="#A020F0">#endif</font>
+</pre>
+</body>
+
+</html>

@@ -1,0 +1,128 @@
+<center><a href="plexegads.c">Actual source code: plexegads.c</a></center><br>
+
+<html>
+<head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/src/dm/impls/plex/plexegads.c.html" />
+<title></title>
+<meta name="generator" content="c2html 0.9.4">
+<meta name="date" content="2021-03-30T16:50:46+00:00">
+</head>
+
+<body bgcolor="#FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 src/dm/impls/plex/plexegads.c.html "><small>Report Typos and Errors</small></a></div>
+<pre width="80">
+<a name="line1">  1: </a>#include <A href="../../../../include/petsc/private/dmpleximpl.h.html">&lt;petsc/private/dmpleximpl.h&gt;</A>
+
+<a name="line3">  3: </a><font color="#A020F0">#ifdef PETSC_HAVE_EGADS</font>
+<a name="line4">  4: </a><font color="#A020F0">#include &lt;egads.h&gt;</font>
+<a name="line5">  5: </a><font color="#A020F0">#endif</font>
+
+<a name="line7">  7: </a><font color="#B22222">/* We need to understand how to natively parse STEP files. There seems to be only one open source implementation of</font>
+<a name="line8">  8: </a><font color="#B22222">   the STEP parser contained in the OpenCASCADE package. It is enough to make a strong man weep:</font>
+
+<a name="line10"> 10: </a><font color="#B22222">     https://github.com/tpaviot/oce/tree/master/src/STEPControl</font>
+
+<a name="line12"> 12: </a><font color="#B22222">   The STEP, and inner EXPRESS, formats are ISO standards, so they are documented</font>
+
+<a name="line14"> 14: </a><font color="#B22222">     https://stackoverflow.com/questions/26774037/documentation-or-specification-for-step-and-stp-files</font>
+<a name="line15"> 15: </a><font color="#B22222">     http://stepmod.sourceforge.net/express_model_spec/</font>
+
+<a name="line17"> 17: </a><font color="#B22222">   but again it seems that there has been a deliberate effort at obfuscation, probably to raise the bar for entrants.</font>
+<a name="line18"> 18: </a><font color="#B22222">*/</font>
+
+
+<a name="line21"> 21: </a><font color="#B22222">/*@</font>
+<a name="line22"> 22: </a><font color="#B22222">  <a href="../../../../docs/manualpages/DMPLEX/DMPlexSnapToGeomModel.html#DMPlexSnapToGeomModel">DMPlexSnapToGeomModel</a> - Given a coordinate point 'mcoords' on the mesh point 'p', return the closest coordinate point 'gcoords' on the geometry model associated with that point.</font>
+
+<a name="line24"> 24: </a><font color="#B22222">  Not collective</font>
+
+<a name="line26"> 26: </a><font color="#B22222">  Input Parameters:</font>
+<a name="line27"> 27: </a><font color="#B22222">+ dm      - The DMPlex object</font>
+<a name="line28"> 28: </a><font color="#B22222">. p       - The mesh point</font>
+<a name="line29"> 29: </a><font color="#B22222">- mcoords - A coordinate point lying on the mesh point</font>
+
+<a name="line31"> 31: </a><font color="#B22222">  Output Parameter:</font>
+<a name="line32"> 32: </a><font color="#B22222">. gcoords - The closest coordinate point on the geometry model associated with 'p' to the given point</font>
+
+<a name="line34"> 34: </a><font color="#B22222">  Note: Returns the original coordinates if no geometry model is found. Right now the only supported geometry model is EGADS.</font>
+
+<a name="line36"> 36: </a><font color="#B22222">  Level: intermediate</font>
+
+<a name="line38"> 38: </a><font color="#B22222">.seealso: <a href="../../../../docs/manualpages/DM/DMRefine.html#DMRefine">DMRefine</a>(), <a href="../../../../docs/manualpages/DMPLEX/DMPlexCreate.html#DMPlexCreate">DMPlexCreate</a>(), <a href="../../../../docs/manualpages/DMPLEX/DMPlexSetRefinementUniform.html#DMPlexSetRefinementUniform">DMPlexSetRefinementUniform</a>()</font>
+<a name="line39"> 39: </a><font color="#B22222">@*/</font>
+<a name="line40"> 40: </a><strong><font color="#4169E1"><a name="DMPlexSnapToGeomModel"></a><a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../../docs/manualpages/DMPLEX/DMPlexSnapToGeomModel.html#DMPlexSnapToGeomModel">DMPlexSnapToGeomModel</a>(<a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> dm, <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> p, const <a href="../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> mcoords[], <a href="../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> gcoords[])</font></strong>
+<a name="line41"> 41: </a>{
+<a name="line42"> 42: </a><font color="#A020F0">#ifdef PETSC_HAVE_EGADS</font>
+<a name="line43"> 43: </a>  <a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a>             cdm;
+<a name="line44"> 44: </a>  <a href="../../../../docs/manualpages/DM/DMLabel.html#DMLabel">DMLabel</a>        bodyLabel, faceLabel, edgeLabel;
+<a name="line45"> 45: </a>  <a href="../../../../docs/manualpages/Sys/PetscContainer.html#PetscContainer">PetscContainer</a> modelObj;
+<a name="line46"> 46: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       bodyID, faceID, edgeID;
+<a name="line47"> 47: </a>  ego           *bodies;
+<a name="line48"> 48: </a>  ego            model, geom, body, obj;
+<a name="line49"> 49: </a>  <font color="#B22222">/* result has to hold derviatives, along with the value */</font>
+<a name="line50"> 50: </a>  double         params[3], result[18], paramsV[16*3], resultV[16*3];
+<a name="line51"> 51: </a>  int            Nb, oclass, mtype, *senses;
+<a name="line52"> 52: </a>  <a href="../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a>            coordinatesLocal;
+<a name="line53"> 53: </a>  <a href="../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>   *coords = NULL;
+<a name="line54"> 54: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       Nv, v, Np = 0, pm;
+<a name="line55"> 55: </a><font color="#A020F0">#endif</font>
+<a name="line56"> 56: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       dE, d;
+
+<a name="line60"> 60: </a>  <a href="../../../../docs/manualpages/DM/DMGetCoordinateDim.html#DMGetCoordinateDim">DMGetCoordinateDim</a>(dm, &amp;dE);
+<a name="line61"> 61: </a><font color="#A020F0">#ifdef PETSC_HAVE_EGADS</font>
+<a name="line62"> 62: </a>  <a href="../../../../docs/manualpages/DM/DMGetLabel.html#DMGetLabel">DMGetLabel</a>(dm, <font color="#666666">"EGADS Body ID"</font>,   &amp;bodyLabel);
+<a name="line63"> 63: </a>  <a href="../../../../docs/manualpages/DM/DMGetLabel.html#DMGetLabel">DMGetLabel</a>(dm, <font color="#666666">"EGADS Face ID"</font>,   &amp;faceLabel);
+<a name="line64"> 64: </a>  <a href="../../../../docs/manualpages/DM/DMGetLabel.html#DMGetLabel">DMGetLabel</a>(dm, <font color="#666666">"EGADS Edge ID"</font>,   &amp;edgeLabel);
+<a name="line65"> 65: </a>  <font color="#4169E1">if</font> (!bodyLabel || !faceLabel || !edgeLabel) {
+<a name="line66"> 66: </a>    <font color="#4169E1">for</font> (d = 0; d &lt; dE; ++d) gcoords[d] = mcoords[d];
+<a name="line67"> 67: </a>    <font color="#4169E1">return</font>(0);
+<a name="line68"> 68: </a>  }
+<a name="line69"> 69: </a>  <a href="../../../../docs/manualpages/DM/DMGetCoordinateDM.html#DMGetCoordinateDM">DMGetCoordinateDM</a>(dm, &amp;cdm);
+<a name="line70"> 70: </a>  <a href="../../../../docs/manualpages/DM/DMGetCoordinatesLocal.html#DMGetCoordinatesLocal">DMGetCoordinatesLocal</a>(dm, &amp;coordinatesLocal);
+<a name="line71"> 71: </a>  <a href="../../../../docs/manualpages/DMLABEL/DMLabelGetValue.html#DMLabelGetValue">DMLabelGetValue</a>(bodyLabel,   p, &amp;bodyID);
+<a name="line72"> 72: </a>  <a href="../../../../docs/manualpages/DMLABEL/DMLabelGetValue.html#DMLabelGetValue">DMLabelGetValue</a>(faceLabel,   p, &amp;faceID);
+<a name="line73"> 73: </a>  <a href="../../../../docs/manualpages/DMLABEL/DMLabelGetValue.html#DMLabelGetValue">DMLabelGetValue</a>(edgeLabel,   p, &amp;edgeID);
+<a name="line74"> 74: </a>  <a href="../../../../docs/manualpages/Sys/PetscObjectQuery.html#PetscObjectQuery">PetscObjectQuery</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>) dm, <font color="#666666">"EGADS Model"</font>, (<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a> *) &amp;modelObj);
+<a name="line75"> 75: </a>  <a href="../../../../docs/manualpages/Sys/PetscContainerGetPointer.html#PetscContainerGetPointer">PetscContainerGetPointer</a>(modelObj, (void **) &amp;model);
+<a name="line76"> 76: </a>  EG_getTopology(model, &amp;geom, &amp;oclass, &amp;mtype, NULL, &amp;Nb, &amp;bodies, &amp;senses);
+<a name="line77"> 77: </a>  <font color="#4169E1">if</font> (bodyID &lt; 0 || bodyID &gt;= Nb) <a href="../../../../docs/manualpages/Sys/SETERRQ2.html#SETERRQ2">SETERRQ2</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, PETSC_ERR_ARG_OUTOFRANGE, <font color="#666666">"Body %D is not in [0, %d)"</font>, bodyID, Nb);
+<a name="line78"> 78: </a>  body = bodies[bodyID];
+
+<a name="line80"> 80: </a>  <font color="#4169E1">if</font> (edgeID &gt;= 0)      {EG_objectBodyTopo(body, EDGE, edgeID, &amp;obj); Np = 1;}
+<a name="line81"> 81: </a>  <font color="#4169E1">else</font> <font color="#4169E1">if</font> (faceID &gt;= 0) {EG_objectBodyTopo(body, FACE, faceID, &amp;obj); Np = 2;}
+<a name="line82"> 82: </a>  <font color="#4169E1">else</font> <a href="../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, PETSC_ERR_ARG_WRONG, <font color="#666666">"Point %D is not in edge or face label for EGADS"</font>, p);
+<a name="line83"> 83: </a>  <font color="#B22222">/* Calculate parameters (t or u,v) for vertices */</font>
+<a name="line84"> 84: </a>  <a href="../../../../docs/manualpages/DMPLEX/DMPlexVecGetClosure.html#DMPlexVecGetClosure">DMPlexVecGetClosure</a>(cdm, NULL, coordinatesLocal, p, &amp;Nv, &amp;coords);
+<a name="line85"> 85: </a>  Nv  /= dE;
+<a name="line86"> 86: </a>  <font color="#4169E1">if</font> (Nv == 1) {
+<a name="line87"> 87: </a>    <a href="../../../../docs/manualpages/DMPLEX/DMPlexVecRestoreClosure.html#DMPlexVecRestoreClosure">DMPlexVecRestoreClosure</a>(cdm, NULL, coordinatesLocal, p, &amp;Nv, &amp;coords);
+<a name="line88"> 88: </a>    <font color="#4169E1">for</font> (d = 0; d &lt; dE; ++d) gcoords[d] = mcoords[d];
+<a name="line89"> 89: </a>    <font color="#4169E1">return</font>(0);
+<a name="line90"> 90: </a>  }
+<a name="line91"> 91: </a>  <font color="#4169E1">if</font> (Nv &gt; 16) <a href="../../../../docs/manualpages/Sys/SETERRQ2.html#SETERRQ2">SETERRQ2</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, PETSC_ERR_ARG_OUTOFRANGE, <font color="#666666">"Cannot handle %D coordinates associated to point %D"</font>, Nv, p);
+<a name="line92"> 92: </a>  <font color="#4169E1">for</font> (v = 0; v &lt; Nv; ++v) {EG_invEvaluate(obj, &amp;coords[v*dE], &amp;paramsV[v*3], &amp;resultV[v*3]);}
+<a name="line93"> 93: </a>  <a href="../../../../docs/manualpages/DMPLEX/DMPlexVecRestoreClosure.html#DMPlexVecRestoreClosure">DMPlexVecRestoreClosure</a>(cdm, NULL, coordinatesLocal, p, &amp;Nv, &amp;coords);
+<a name="line94"> 94: </a>  <font color="#B22222">/* Calculate parameters (t or u,v) for new vertex at edge midpoint */</font>
+<a name="line95"> 95: </a>  <font color="#4169E1">for</font> (pm = 0; pm &lt; Np; ++pm) {
+<a name="line96"> 96: </a>    params[pm] = 0.;
+<a name="line97"> 97: </a>    <font color="#4169E1">for</font> (v = 0; v &lt; Nv; ++v) {params[pm] += paramsV[v*3+pm];}
+<a name="line98"> 98: </a>    params[pm] /= Nv;
+<a name="line99"> 99: </a>  }
+<a name="line100">100: </a>  <font color="#B22222">/* TODO Check</font>
+<a name="line101">101: </a><font color="#B22222">    double range[4]; // [umin, umax, vmin, vmax]</font>
+<a name="line102">102: </a><font color="#B22222">    int    peri;</font>
+<a name="line103">103: </a><font color="#B22222">    EG_getRange(face, range, &amp;peri);</font>
+<a name="line104">104: </a><font color="#B22222">    if ((paramsNew[0] &lt; range[0]) || (paramsNew[0] &gt; range[1]) || (paramsNew[1] &lt; range[2]) || (paramsNew[1] &gt; range[3])) <a href="../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>();</font>
+<a name="line105">105: </a><font color="#B22222">  */</font>
+<a name="line106">106: </a>  <font color="#B22222">/* Put coordinates for new vertex in result[] */</font>
+<a name="line107">107: </a>  EG_evaluate(obj, params, result);
+<a name="line108">108: </a>  <font color="#4169E1">for</font> (d = 0; d &lt; dE; ++d) gcoords[d] = result[d];
+<a name="line109">109: </a><font color="#A020F0">#else</font>
+<a name="line110">110: </a>  <font color="#4169E1">for</font> (d = 0; d &lt; dE; ++d) gcoords[d] = mcoords[d];
+<a name="line111">111: </a><font color="#A020F0">#endif</font>
+<a name="line112">112: </a>  <font color="#4169E1">return</font>(0);
+<a name="line113">113: </a>}
+</pre>
+</body>
+
+</html>

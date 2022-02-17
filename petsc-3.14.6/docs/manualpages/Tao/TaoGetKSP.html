@@ -1,0 +1,48 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Tao/TaoGetKSP.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>TaoGetKSP</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/Tao/TaoGetKSP.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="TaoGetKSP"><H1>TaoGetKSP</H1></A>
+Gets the linear solver used by the optimization solver. Application writers should use <A HREF="../Tao/TaoGetKSP.html#TaoGetKSP">TaoGetKSP</A> if they need direct access to the PETSc <A HREF="../KSP/KSP.html#KSP">KSP</A> object. 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petsctao.h" 
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../Tao/TaoGetKSP.html#TaoGetKSP">TaoGetKSP</A>(<A HREF="../Tao/Tao.html#Tao">Tao</A> tao, <A HREF="../KSP/KSP.html#KSP">KSP</A> *ksp)
+</PRE>
+Not Collective
+<P>
+<H3><FONT COLOR="#CC3333">Input Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>tao </B></TD><TD>- the TAO solver
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Output Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>ksp </B></TD><TD>- the <A HREF="../KSP/KSP.html#KSP">KSP</A> linear solver used in the optimization solver
+</TD></TR></TABLE>
+<P>
+
+<P>
+<P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>intermediate<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/tao/interface/taosolver.c.html#TaoGetKSP">src/tao/interface/taosolver.c</A>
+<P><H3><FONT COLOR="#CC3333">Examples</FONT></H3>
+<A HREF="../../../src/ts/tutorials/ex20opt_p.c.html">src/ts/tutorials/ex20opt_p.c.html</A><BR>
+<A HREF="../../../src/ts/tutorials/ex20opt_ic.c.html">src/ts/tutorials/ex20opt_ic.c.html</A><BR>
+<A HREF="../../../src/tao/unconstrained/tutorials/eptorsion1.c.html">src/tao/unconstrained/tutorials/eptorsion1.c.html</A><BR>
+<A HREF="../../../src/tao/unconstrained/tutorials/eptorsion2.c.html">src/tao/unconstrained/tutorials/eptorsion2.c.html</A><BR>
+<A HREF="../../../src/tao/unconstrained/tutorials/rosenbrock1.c.html">src/tao/unconstrained/tutorials/rosenbrock1.c.html</A><BR>
+<A HREF="../../../src/tao/constrained/tutorials/maros.c.html">src/tao/constrained/tutorials/maros.c.html</A><BR>
+<A HREF="../../../src/tao/constrained/tutorials/toy.c.html">src/tao/constrained/tutorials/toy.c.html</A><BR>
+<A HREF="../../../src/tao/constrained/tutorials/ex1.c.html">src/tao/constrained/tutorials/ex1.c.html</A><BR>
+<A HREF="../../../src/tao/constrained/tutorials/toyf.F90.html">src/tao/constrained/tutorials/toyf.F90.html</A><BR>
+<A HREF="../../../src/tao/bound/tutorials/jbearing2.c.html">src/tao/bound/tutorials/jbearing2.c.html</A><BR>
+<BR><A HREF="./index.html">Index of all Tao routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

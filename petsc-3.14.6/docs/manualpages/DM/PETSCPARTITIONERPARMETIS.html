@@ -1,0 +1,34 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DM/PETSCPARTITIONERPARMETIS.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>PETSCPARTITIONERPARMETIS</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/DM/PETSCPARTITIONERPARMETIS.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="PETSCPARTITIONERPARMETIS"><H1>PETSCPARTITIONERPARMETIS</H1></A>
+"parmetis" - A <A HREF="../DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</A> object using the ParMETIS library 
+<P>
+<H3><FONT COLOR="#CC3333">Options Database Keys</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>-petscpartitioner_parmetis_type &lt;string&gt; </B></TD><TD>- ParMETIS partitioning type. Either "kway" or "rb" (recursive bisection)
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>-petscpartitioner_parmetis_imbalance_ratio &lt;value&gt; </B></TD><TD>- Load imbalance ratio limit
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>-petscpartitioner_parmetis_debug &lt;int&gt; </B></TD><TD>- Debugging flag passed to ParMETIS/METIS routines
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>-petscpartitioner_parmetis_seed &lt;int&gt; </B></TD><TD>- Random seed
+</TD></TR></TABLE>
+<P>
+Notes: when the graph is on a single process, this partitioner actually calls METIS and not ParMETIS
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../DM/PetscPartitionerType.html#PetscPartitionerType">PetscPartitionerType</A>, <A HREF="../DM/PetscPartitionerCreate.html#PetscPartitionerCreate">PetscPartitionerCreate</A>(), <A HREF="../DM/PetscPartitionerSetType.html#PetscPartitionerSetType">PetscPartitionerSetType</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>intermediate<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/dm/partitioner/impls/parmetis/partparmetis.c.html#PETSCPARTITIONERPARMETIS">src/dm/partitioner/impls/parmetis/partparmetis.c</A>
+<BR><A HREF="./index.html">Index of all DM routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

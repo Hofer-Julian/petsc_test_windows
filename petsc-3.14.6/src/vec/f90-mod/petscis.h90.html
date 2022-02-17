@@ -1,0 +1,164 @@
+<center><a href="petscis.h90">Actual source code: petscis.h90</a></center><br>
+
+<html>
+<head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/src/vec/f90-mod/petscis.h90.html" />
+<title></title>
+<meta name="generator" content="c2html 0.9.4">
+<meta name="date" content="2021-03-30T16:49:59+00:00">
+</head>
+
+<body bgcolor="#FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 src/vec/f90-mod/petscis.h90.html "><small>Report Typos and Errors</small></a></div>
+<pre width="80">
+<a name="line1">  1: </a>!
+<a name="line2">  2: </a>!  These are Fortran interfaces that are custom hand coded because
+<a name="line3">  3: </a>!  they cannot currently be generated automatically
+<a name="line4">  4: </a>!
+
+<a name="line6">  6: </a>      Interface
+<a name="line7">  7: </a>        Subroutine <a href="../..90-mod/../docs/manualpages/IS/PetscLayoutFindOwner.html#PetscLayoutFindOwner">PetscLayoutFindOwner</a>(a,b,z)
+<a name="line8">  8: </a>          use petscisdef
+<a name="line9">  9: </a>          <a href="../..90-mod/../docs/manualpages/IS/PetscLayout.html#PetscLayout">PetscLayout</a> a
+<a name="line10"> 10: </a>          <a href="../..90-mod/../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a> b
+<a name="line11"> 11: </a>          <a href="../..90-mod/../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  z
+<a name="line12"> 12: </a>        End Subroutine
+<a name="line13"> 13: </a>      End Interface
+
+<a name="line15"> 15: </a>      Interface
+<a name="line16"> 16: </a>        Subroutine <a href="../..90-mod/../docs/manualpages/IS/PetscLayoutFindOwnerIndex.html#PetscLayoutFindOwnerIndex">PetscLayoutFindOwnerIndex</a>(a,b,c,z)
+<a name="line17"> 17: </a>          use petscisdef
+<a name="line18"> 18: </a>          <a href="../..90-mod/../docs/manualpages/IS/PetscLayout.html#PetscLayout">PetscLayout</a> a
+<a name="line19"> 19: </a>          <a href="../..90-mod/../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a> b
+<a name="line20"> 20: </a>          <a href="../..90-mod/../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> c
+<a name="line21"> 21: </a>          <a href="../..90-mod/../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  z
+<a name="line22"> 22: </a>        End Subroutine
+<a name="line23"> 23: </a>      End Interface
+
+<a name="line25"> 25: </a>      Interface
+<a name="line26"> 26: </a>        Subroutine <a href="../..90-mod/../docs/manualpages/IS/ISGetIndicesF90.html#ISGetIndicesF90">ISGetIndicesF90</a>(i,array,ierr)
+<a name="line27"> 27: </a>          use petscisdef
+<a name="line28"> 28: </a>          <a href="../..90-mod/../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>, pointer :: array(:)
+<a name="line29"> 29: </a>          <a href="../..90-mod/../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  ierr
+<a name="line30"> 30: </a>         <a href="../..90-mod/../docs/manualpages/IS/IS.html#IS">IS</a>       i
+<a name="line31"> 31: </a>        End Subroutine
+<a name="line32"> 32: </a>      End Interface
+
+<a name="line34"> 34: </a>      Interface
+<a name="line35"> 35: </a>        Subroutine <a href="../..90-mod/../docs/manualpages/IS/ISRestoreIndicesF90.html#ISRestoreIndicesF90">ISRestoreIndicesF90</a>(i,array,ierr)
+<a name="line36"> 36: </a>          use petscisdef
+<a name="line37"> 37: </a>          <a href="../..90-mod/../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>, pointer :: array(:)
+<a name="line38"> 38: </a>          <a href="../..90-mod/../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> ierr
+<a name="line39"> 39: </a>         <a href="../..90-mod/../docs/manualpages/IS/IS.html#IS">IS</a>      i
+<a name="line40"> 40: </a>        End Subroutine
+<a name="line41"> 41: </a>      End Interface
+
+<a name="line43"> 43: </a>      Interface
+<a name="line44"> 44: </a>        Subroutine ISLocalToGlobalMappingGetIndicesF90(i,array,ierr)
+<a name="line45"> 45: </a>          use petscisdef
+<a name="line46"> 46: </a>          <a href="../..90-mod/../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>, pointer :: array(:)
+<a name="line47"> 47: </a>          <a href="../..90-mod/../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  ierr
+<a name="line48"> 48: </a>         <a href="../..90-mod/../docs/manualpages/IS/ISLocalToGlobalMapping.html#ISLocalToGlobalMapping">ISLocalToGlobalMapping</a>       i
+<a name="line49"> 49: </a>        End Subroutine
+<a name="line50"> 50: </a>      End Interface
+
+<a name="line52"> 52: </a>      Interface
+<a name="line53"> 53: </a>        Subroutine ISLocalToGlobalMappingRestoreIndicesF90(i,array,ierr)
+<a name="line54"> 54: </a>          use petscisdef
+<a name="line55"> 55: </a>          <a href="../..90-mod/../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>, pointer :: array(:)
+<a name="line56"> 56: </a>          <a href="../..90-mod/../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  ierr
+<a name="line57"> 57: </a>         <a href="../..90-mod/../docs/manualpages/IS/ISLocalToGlobalMapping.html#ISLocalToGlobalMapping">ISLocalToGlobalMapping</a>       i
+<a name="line58"> 58: </a>        End Subroutine
+<a name="line59"> 59: </a>      End Interface
+
+<a name="line61"> 61: </a>! ------------------------------------------------------
+
+<a name="line63"> 63: </a>      Interface
+<a name="line64"> 64: </a>        Subroutine <a href="../..90-mod/../docs/manualpages/IS/ISBlockGetIndicesF90.html#ISBlockGetIndicesF90">ISBlockGetIndicesF90</a>(i,array,ierr)
+<a name="line65"> 65: </a>          use petscisdef
+<a name="line66"> 66: </a>          <a href="../..90-mod/../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>, pointer :: array(:)
+<a name="line67"> 67: </a>          <a href="../..90-mod/../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  ierr
+<a name="line68"> 68: </a>         <a href="../..90-mod/../docs/manualpages/IS/IS.html#IS">IS</a>       i
+<a name="line69"> 69: </a>        End Subroutine
+<a name="line70"> 70: </a>      End Interface
+
+
+<a name="line73"> 73: </a>      Interface
+<a name="line74"> 74: </a>        Subroutine <a href="../..90-mod/../docs/manualpages/IS/ISBlockRestoreIndicesF90.html#ISBlockRestoreIndicesF90">ISBlockRestoreIndicesF90</a>(i,array,ierr)
+<a name="line75"> 75: </a>          use petscisdef
+<a name="line76"> 76: </a>          <a href="../..90-mod/../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>, pointer :: array(:)
+<a name="line77"> 77: </a>          <a href="../..90-mod/../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> ierr
+<a name="line78"> 78: </a>         <a href="../..90-mod/../docs/manualpages/IS/IS.html#IS">IS</a>      i
+<a name="line79"> 79: </a>        End Subroutine
+<a name="line80"> 80: </a>      End Interface
+
+<a name="line82"> 82: </a>! ------------------------------------------------------
+<a name="line83"> 83: </a>      Interface
+<a name="line84"> 84: </a>        Subroutine ISColoringGetISF90(ic,n,isa,ierr)
+<a name="line85"> 85: </a>          use petscisdef
+<a name="line86"> 86: </a>          <a href="../..90-mod/../docs/manualpages/IS/IS.html#IS">IS</a>, pointer :: isa(:)
+<a name="line87"> 87: </a>          <a href="../..90-mod/../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>     n
+<a name="line88"> 88: </a>          <a href="../..90-mod/../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> ierr
+<a name="line89"> 89: </a>          <a href="../..90-mod/../docs/manualpages/IS/ISColoring.html#ISColoring">ISColoring</a> ic
+<a name="line90"> 90: </a>        End Subroutine
+<a name="line91"> 91: </a>      End Interface
+
+<a name="line93"> 93: </a>      Interface
+<a name="line94"> 94: </a>        Subroutine ISColoringRestoreISF90(ic,isa,ierr)
+<a name="line95"> 95: </a>          use petscisdef
+<a name="line96"> 96: </a>          <a href="../..90-mod/../docs/manualpages/IS/IS.html#IS">IS</a>, pointer :: isa(:)
+<a name="line97"> 97: </a>          <a href="../..90-mod/../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>     ierr
+<a name="line98"> 98: </a>          <a href="../..90-mod/../docs/manualpages/IS/ISColoring.html#ISColoring">ISColoring</a> ic
+<a name="line99"> 99: </a>        End Subroutine
+<a name="line100">100: </a>      End Interface
+
+<a name="line102">102: </a>      Interface
+<a name="line103">103: </a>        Subroutine PetscSectionGetConstraintIndicesF90(s,p,a,ierr)
+<a name="line104">104: </a>          use petscisdef
+<a name="line105">105: </a>          <a href="../..90-mod/../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> p
+<a name="line106">106: </a>          <a href="../..90-mod/../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>, pointer :: a(:)
+<a name="line107">107: </a>          <a href="../..90-mod/../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  ierr
+<a name="line108">108: </a>          <a href="../..90-mod/../docs/manualpages/PetscSection/PetscSection.html#PetscSection">PetscSection</a>       s
+<a name="line109">109: </a>        End Subroutine
+<a name="line110">110: </a>      End Interface
+
+<a name="line112">112: </a>      Interface
+<a name="line113">113: </a>        Subroutine PetscSectionRestoreConstraintIndicesF90(s,p,a,ierr)
+<a name="line114">114: </a>          use petscisdef
+<a name="line115">115: </a>          <a href="../..90-mod/../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> p
+<a name="line116">116: </a>          <a href="../..90-mod/../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>, pointer :: a(:)
+<a name="line117">117: </a>          <a href="../..90-mod/../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  ierr
+<a name="line118">118: </a>          <a href="../..90-mod/../docs/manualpages/PetscSection/PetscSection.html#PetscSection">PetscSection</a>       s
+<a name="line119">119: </a>        End Subroutine
+<a name="line120">120: </a>      End Interface
+
+<a name="line122">122: </a>      Interface
+<a name="line123">123: </a>        Subroutine PetscSectionSetConstraintIndicesF90(s,p,a,ierr)
+<a name="line124">124: </a>          use petscisdef
+<a name="line125">125: </a>          <a href="../..90-mod/../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> p
+<a name="line126">126: </a>          <a href="../..90-mod/../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>, pointer :: a(:)
+<a name="line127">127: </a>          <a href="../..90-mod/../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  ierr
+<a name="line128">128: </a>          <a href="../..90-mod/../docs/manualpages/PetscSection/PetscSection.html#PetscSection">PetscSection</a>       s
+<a name="line129">129: </a>        End Subroutine
+<a name="line130">130: </a>      End Interface
+
+<a name="line132">132: </a>      Interface
+<a name="line133">133: </a>      subroutine <a href="../..90-mod/../docs/manualpages/IS/ISSetType.html#ISSetType">ISSetType</a>(a,b,z)
+<a name="line134">134: </a>      use petscisdef
+<a name="line135">135: </a>       <a href="../..90-mod/../docs/manualpages/IS/IS.html#IS">IS</a> a
+<a name="line136">136: </a>       character(*) b
+<a name="line137">137: </a>       integer z
+<a name="line138">138: </a>       end subroutine
+<a name="line139">139: </a>      end Interface
+
+<a name="line141">141: </a>      Interface
+<a name="line142">142: </a>      subroutine <a href="../..90-mod/../docs/manualpages/IS/ISView.html#ISView">ISView</a>(a,b,z)
+<a name="line143">143: </a>      use petscisdef
+<a name="line144">144: </a>       <a href="../..90-mod/../docs/manualpages/IS/IS.html#IS">IS</a> a
+<a name="line145">145: </a>       <a href="../..90-mod/../docs/manualpages/Viewer/PetscViewer.html#PetscViewer">PetscViewer</a> b
+<a name="line146">146: </a>       <a href="../..90-mod/../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> z
+<a name="line147">147: </a>       end subroutine
+<a name="line148">148: </a>      end Interface</pre>
+</body>
+
+</html>

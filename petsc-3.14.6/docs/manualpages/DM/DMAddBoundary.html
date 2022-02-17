@@ -1,0 +1,135 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DM/DMAddBoundary.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>DMAddBoundary</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/DM/DMAddBoundary.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="DMAddBoundary"><H1>DMAddBoundary</H1></A>
+Add a boundary condition to the model 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscdm.h"          
+#include "petscdmlabel.h"     
+#include "petscds.h"     
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../DM/DMAddBoundary.html#DMAddBoundary">DMAddBoundary</A>(<A HREF="../DM/DM.html#DM">DM</A> dm, <A HREF="../DM/DMBoundaryConditionType.html#DMBoundaryConditionType">DMBoundaryConditionType</A> type, const char name[], const char labelname[], <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> field, <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> numcomps, const <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> *comps, void (*bcFunc)(void), void (*bcFunc_t)(void), <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> numids, const <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> *ids, void *ctx)
+</PRE>
+Collective on dm
+<P>
+<H3><FONT COLOR="#CC3333">Input Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>dm          </B></TD><TD>- The <A HREF="../DM/DM.html#DM">DM</A>, with a <A HREF="../DM/PetscDS.html#PetscDS">PetscDS</A> that matches the problem being constrained
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>type        </B></TD><TD>- The type of condition, e.g. DM_BC_ESSENTIAL_ANALYTIC/<A HREF="../DM/DMBoundaryConditionType.html#DMBoundaryConditionType">DM_BC_ESSENTIAL_FIELD</A> (Dirichlet), or <A HREF="../DM/DMBoundaryConditionType.html#DMBoundaryConditionType">DM_BC_NATURAL</A> (Neumann)
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>name        </B></TD><TD>- The BC name
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>labelname   </B></TD><TD>- The label defining constrained points
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>field       </B></TD><TD>- The field to constrain
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>numcomps    </B></TD><TD>- The number of constrained field components (0 will constrain all fields)
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>comps       </B></TD><TD>- An array of constrained component numbers
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>bcFunc      </B></TD><TD>- A pointwise function giving boundary values
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>bcFunc_t    </B></TD><TD>- A pointwise function giving the time deriative of the boundary values, or NULL
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>numids      </B></TD><TD>- The number of <A HREF="../DM/DMLabel.html#DMLabel">DMLabel</A> ids for constrained points
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>ids         </B></TD><TD>- An array of ids for constrained points
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>ctx         </B></TD><TD>- An optional user context for bcFunc
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Options Database Keys</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>-bc_&lt;boundary name&gt; &lt;num&gt; </B></TD><TD>- Overrides the boundary ids
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>-bc_&lt;boundary name&gt;_comp &lt;num&gt; </B></TD><TD>- Overrides the boundary components
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Note</FONT></H3>
+<H3><FONT COLOR="#CC3333">Both bcFunc abd bcFunc_t will depend on the boundary condition type. If the type if DM_BC_ESSENTIAL, Then the calling sequence is</FONT></H3>
+<P>
+<pre>
+bcFunc(<A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> dim, <A HREF="../Sys/PetscReal.html#PetscReal">PetscReal</A> time, const <A HREF="../Sys/PetscReal.html#PetscReal">PetscReal</A> x[], <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> Nc, <A HREF="../Sys/PetscScalar.html#PetscScalar">PetscScalar</A> bcval[])
+</pre>
+<P>
+<H3><FONT COLOR="#CC3333">If the type is DM_BC_ESSENTIAL_FIELD or other _FIELD value, then the calling sequence is</FONT></H3>
+<P>
+<pre>
+bcFunc(<A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> dim, <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> Nf, <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> NfAux,
+</pre>
+<pre>
+       const <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> uOff[], const <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> uOff_x[], const <A HREF="../Sys/PetscScalar.html#PetscScalar">PetscScalar</A> u[], const <A HREF="../Sys/PetscScalar.html#PetscScalar">PetscScalar</A> u_t[], const <A HREF="../Sys/PetscScalar.html#PetscScalar">PetscScalar</A> u_x[],
+</pre>
+<pre>
+       const <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> aOff[], const <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> aOff_x[], const <A HREF="../Sys/PetscScalar.html#PetscScalar">PetscScalar</A> a[], const <A HREF="../Sys/PetscScalar.html#PetscScalar">PetscScalar</A> a_t[], const <A HREF="../Sys/PetscScalar.html#PetscScalar">PetscScalar</A> a_x[],
+</pre>
+<pre>
+       <A HREF="../Sys/PetscReal.html#PetscReal">PetscReal</A> time, const <A HREF="../Sys/PetscReal.html#PetscReal">PetscReal</A> x[], <A HREF="../Sys/PetscScalar.html#PetscScalar">PetscScalar</A> bcval[])
+</pre>
+<P>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>dim </B></TD><TD>- the spatial dimension
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>Nf </B></TD><TD>- the number of fields
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>uOff </B></TD><TD>- the offset into u[] and u_t[] for each field
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>uOff_x </B></TD><TD>- the offset into u_x[] for each field
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>u </B></TD><TD>- each field evaluated at the current point
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>u_t </B></TD><TD>- the time derivative of each field evaluated at the current point
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>u_x </B></TD><TD>- the gradient of each field evaluated at the current point
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>aOff </B></TD><TD>- the offset into a[] and a_t[] for each auxiliary field
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>aOff_x </B></TD><TD>- the offset into a_x[] for each auxiliary field
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>a </B></TD><TD>- each auxiliary field evaluated at the current point
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>a_t </B></TD><TD>- the time derivative of each auxiliary field evaluated at the current point
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>a_x </B></TD><TD>- the gradient of auxiliary each field evaluated at the current point
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>t </B></TD><TD>- current time
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>x </B></TD><TD>- coordinates of the current point
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>numConstants </B></TD><TD>- number of constant parameters
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>constants </B></TD><TD>- constant parameters
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>bcval </B></TD><TD>- output values at the current point
+</TD></TR></TABLE>
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../DM/DMGetBoundary.html#DMGetBoundary">DMGetBoundary</A>(), <A HREF="../DT/PetscDSAddBoundary.html#PetscDSAddBoundary">PetscDSAddBoundary</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>developer<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/dm/interface/dm.c.html#DMAddBoundary">src/dm/interface/dm.c</A>
+<P><H3><FONT COLOR="#CC3333">Examples</FONT></H3>
+<A HREF="../../../src/dm/impls/plex/tutorials/ex2.c.html">src/dm/impls/plex/tutorials/ex2.c.html</A><BR>
+<A HREF="../../../src/snes/tutorials/ex12.c.html">src/snes/tutorials/ex12.c.html</A><BR>
+<A HREF="../../../src/snes/tutorials/ex17.c.html">src/snes/tutorials/ex17.c.html</A><BR>
+<A HREF="../../../src/snes/tutorials/ex56.c.html">src/snes/tutorials/ex56.c.html</A><BR>
+<A HREF="../../../src/snes/tutorials/ex62.c.html">src/snes/tutorials/ex62.c.html</A><BR>
+<A HREF="../../../src/snes/tutorials/ex77.c.html">src/snes/tutorials/ex77.c.html</A><BR>
+<A HREF="../../../src/ts/tutorials/ex45.c.html">src/ts/tutorials/ex45.c.html</A><BR>
+<A HREF="../../../src/ts/tutorials/ex46.c.html">src/ts/tutorials/ex46.c.html</A><BR>
+<A HREF="../../../src/ts/tutorials/ex48.c.html">src/ts/tutorials/ex48.c.html</A><BR>
+<A HREF="../../../src/tao/tutorials/ex1.c.html">src/tao/tutorials/ex1.c.html</A><BR>
+<A HREF="../../../src/tao/tutorials/ex2.c.html">src/tao/tutorials/ex2.c.html</A><BR>
+<BR><A HREF="./index.html">Index of all DM routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

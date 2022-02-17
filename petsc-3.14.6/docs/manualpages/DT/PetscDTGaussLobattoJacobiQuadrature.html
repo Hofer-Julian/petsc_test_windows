@@ -1,0 +1,48 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DT/PetscDTGaussLobattoJacobiQuadrature.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>PetscDTGaussLobattoJacobiQuadrature</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/DT/PetscDTGaussLobattoJacobiQuadrature.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="PetscDTGaussLobattoJacobiQuadrature"><H1>PetscDTGaussLobattoJacobiQuadrature</H1></A>
+quadrature for the interval [a, b] with the weight function $(x-a)^\alpha (x-b)^\beta$, with endpoints a and b included as quadrature points. 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscdt.h" 
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../DT/PetscDTGaussLobattoJacobiQuadrature.html#PetscDTGaussLobattoJacobiQuadrature">PetscDTGaussLobattoJacobiQuadrature</A>(<A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> npoints,<A HREF="../Sys/PetscReal.html#PetscReal">PetscReal</A> a, <A HREF="../Sys/PetscReal.html#PetscReal">PetscReal</A> b, <A HREF="../Sys/PetscReal.html#PetscReal">PetscReal</A> alpha, <A HREF="../Sys/PetscReal.html#PetscReal">PetscReal</A> beta, <A HREF="../Sys/PetscReal.html#PetscReal">PetscReal</A> x[], <A HREF="../Sys/PetscReal.html#PetscReal">PetscReal</A> w[])
+</PRE>
+Not collective
+<P>
+<H3><FONT COLOR="#CC3333">Input Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>npoints </B></TD><TD>- the number of points in the quadrature rule
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>a </B></TD><TD>- the left endpoint of the interval
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>b </B></TD><TD>- the right endpoint of the interval
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>alpha </B></TD><TD>- the left exponent
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>beta </B></TD><TD>- the right exponent
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Output Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>x </B></TD><TD>- array of length npoints, the locations of the quadrature points
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>w </B></TD><TD>- array of length npoints, the weights of the quadrature points
+</TD></TR></TABLE>
+<P>
+
+<P>
+Note: this quadrature rule is exact for polynomials up to degree 2*npoints - 3.
+<P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>intermediate<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/dm/dt/interface/dt.c.html#PetscDTGaussLobattoJacobiQuadrature">src/dm/dt/interface/dt.c</A>
+<BR><A HREF="./index.html">Index of all DT routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

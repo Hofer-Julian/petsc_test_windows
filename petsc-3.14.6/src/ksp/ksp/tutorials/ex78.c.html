@@ -1,0 +1,60 @@
+<center><a href="ex78.c">Actual source code: ex78.c</a></center><br>
+
+<html>
+<head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/src/ksp/ksp/tutorials/ex78.c.html" />
+<title></title>
+<meta name="generator" content="c2html 0.9.4">
+<meta name="date" content="2021-03-30T16:51:31+00:00">
+</head>
+
+<body bgcolor="#FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 src/ksp/ksp/tutorials/ex78.c.html "><small>Report Typos and Errors</small></a></div>
+<pre width="80">
+<a name="line1">  1: </a>#include <A href="../../../../include/petsc.h.html">&lt;petsc.h&gt;</A>
+
+<a name="line3">  3: </a>static char help[] = <font color="#666666">"Exercises switching back and forth between different <a href="../../../../docs/manualpages/KSP/KSP.html#KSP">KSP</a> and <a href="../../../../docs/manualpages/KSP/KSPHPDDM.html#KSPHPDDM">KSPHPDDM</a> types.\n\n"</font>;
+
+<a name="line5">  5: </a><strong><font color="#4169E1"><a name="main"></a>int main(int argc,char **args)</font></strong>
+<a name="line6">  6: </a>{
+<a name="line7">  7: </a>  <a href="../../../../docs/manualpages/KSP/KSP.html#KSP">KSP</a>            ksp;
+<a name="line8">  8: </a><font color="#A020F0">#if defined(PETSC_HAVE_HPDDM)</font>
+<a name="line9">  9: </a>  <a href="../../../../docs/manualpages/KSP/KSPHPDDMType.html#KSPHPDDMType">KSPHPDDMType</a>   type;
+<a name="line10"> 10: </a>  <a href="../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>      flg;
+<a name="line11"> 11: </a><font color="#A020F0">#endif</font>
+<a name="line12"> 12: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       i;
+<a name="line13"> 13: </a>  const char     *common[] = {<a href="../../../../docs/manualpages/KSP/KSPGMRES.html#KSPGMRES">KSPGMRES</a>,<a href="../../../../docs/manualpages/KSP/KSPCG.html#KSPCG">KSPCG</a>,<a href="../../../../docs/manualpages/KSP/KSPPREONLY.html#KSPPREONLY">KSPPREONLY</a>};
+
+<a name="line16"> 16: </a>  <a href="../../../../docs/manualpages/Sys/PetscInitialize.html#PetscInitialize">PetscInitialize</a>(&amp;argc,&amp;args,NULL,help);<font color="#4169E1">if</font> (ierr) <font color="#4169E1">return</font> ierr;
+<a name="line17"> 17: </a>  <a href="../../../../docs/manualpages/KSP/KSPCreate.html#KSPCreate">KSPCreate</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,&amp;ksp);
+<a name="line18"> 18: </a>  <font color="#4169E1">for</font> (i=0; i&lt;3; i++) {
+<a name="line19"> 19: </a>    <a href="../../../../docs/manualpages/KSP/KSPSetType.html#KSPSetType">KSPSetType</a>(ksp,common[i]);
+<a name="line20"> 20: </a>    <a href="../../../../docs/manualpages/KSP/KSPSetType.html#KSPSetType">KSPSetType</a>(ksp,<a href="../../../../docs/manualpages/KSP/KSPHPDDM.html#KSPHPDDM">KSPHPDDM</a>);
+<a name="line21"> 21: </a><font color="#A020F0">#if defined(PETSC_HAVE_HPDDM)</font>
+<a name="line22"> 22: </a>    <a href="../../../../docs/manualpages/KSP/KSPHPDDMGetType.html#KSPHPDDMGetType">KSPHPDDMGetType</a>(ksp,&amp;type);
+<a name="line23"> 23: </a>    <a href="../../../../docs/manualpages/Sys/PetscStrcmp.html#PetscStrcmp">PetscStrcmp</a>(KSPHPDDMTypes[type],common[i],&amp;flg);
+<a name="line24"> 24: </a>    <font color="#4169E1">if</font> (!flg) <a href="../../../../docs/manualpages/Sys/SETERRQ2.html#SETERRQ2">SETERRQ2</a>(<a href="../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)ksp),PETSC_ERR_PLIB,<font color="#666666">"<a href="../../../../docs/manualpages/KSP/KSPType.html#KSPType">KSPType</a> and <a href="../../../../docs/manualpages/KSP/KSPHPDDMType.html#KSPHPDDMType">KSPHPDDMType</a> do not match: %s != %s"</font>, common[i], type);
+<a name="line25"> 25: </a>    <a href="../../../../docs/manualpages/KSP/KSPSetFromOptions.html#KSPSetFromOptions">KSPSetFromOptions</a>(ksp);
+<a name="line26"> 26: </a>    <a href="../../../../docs/manualpages/KSP/KSPHPDDMGetType.html#KSPHPDDMGetType">KSPHPDDMGetType</a>(ksp,&amp;type);
+<a name="line27"> 27: </a>    <font color="#4169E1">if</font> (type != <a href="../../../../docs/manualpages/KSP/KSPHPDDMType.html#KSPHPDDMType">KSP_HPDDM_TYPE_GCRODR</a>) <a href="../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)ksp),PETSC_ERR_PLIB,<font color="#666666">"-ksp_hpddm_type gcrodr and <a href="../../../../docs/manualpages/KSP/KSPHPDDMType.html#KSPHPDDMType">KSPHPDDMType</a> do not match: gcrodr != %s"</font>, KSPHPDDMTypes[type]);
+<a name="line28"> 28: </a><font color="#A020F0">#endif</font>
+<a name="line29"> 29: </a>  }
+<a name="line30"> 30: </a>  <a href="../../../../docs/manualpages/KSP/KSPDestroy.html#KSPDestroy">KSPDestroy</a>(&amp;ksp);
+<a name="line31"> 31: </a>  <a href="../../../../docs/manualpages/Sys/PetscFinalize.html#PetscFinalize">PetscFinalize</a>();
+<a name="line32"> 32: </a>  <font color="#4169E1">return</font> ierr;
+<a name="line33"> 33: </a>}
+
+<a name="line35"> 35: </a><font color="#B22222">/*TEST</font>
+
+<a name="line37"> 37: </a><font color="#B22222">   test:</font>
+<a name="line38"> 38: </a><font color="#B22222">      requires: hpddm</font>
+<a name="line39"> 39: </a><font color="#B22222">      nsize: 1</font>
+<a name="line40"> 40: </a><font color="#B22222">      suffix: 1</font>
+<a name="line41"> 41: </a><font color="#B22222">      output_file: output/ex77_preonly.out</font>
+<a name="line42"> 42: </a><font color="#B22222">      args: -ksp_type hpddm -ksp_hpddm_type gcrodr</font>
+
+<a name="line44"> 44: </a><font color="#B22222">TEST*/</font>
+</pre>
+</body>
+
+</html>

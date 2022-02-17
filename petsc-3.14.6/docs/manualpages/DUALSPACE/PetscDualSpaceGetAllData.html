@@ -1,0 +1,39 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DUALSPACE/PetscDualSpaceGetAllData.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>PetscDualSpaceGetAllData</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/DUALSPACE/PetscDualSpaceGetAllData.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="PetscDualSpaceGetAllData"><H1>PetscDualSpaceGetAllData</H1></A>
+Get all quadrature nodes from this space, and the matrix that sends quadrature node values to degree-of-freedom values 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscfe.h" 
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../DUALSPACE/PetscDualSpaceGetAllData.html#PetscDualSpaceGetAllData">PetscDualSpaceGetAllData</A>(<A HREF="../FE/PetscDualSpace.html#PetscDualSpace">PetscDualSpace</A> sp, <A HREF="../FE/PetscQuadrature.html#PetscQuadrature">PetscQuadrature</A> *allNodes, <A HREF="../Mat/Mat.html#Mat">Mat</A> *allMat)
+</PRE>
+<H3><FONT COLOR="#CC3333">Input Parameter</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>sp </B></TD><TD>- The dualspace
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Output Parameter</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>allNodes </B></TD><TD>- A <A HREF="../FE/PetscQuadrature.html#PetscQuadrature">PetscQuadrature</A> object containing all evaluation nodes
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>allMat </B></TD><TD>- A <A HREF="../Mat/Mat.html#Mat">Mat</A> for the node-to-dof transformation
+</TD></TR></TABLE>
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../DUALSPACE/PetscDualSpaceCreate.html#PetscDualSpaceCreate">PetscDualSpaceCreate</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>advanced<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/dm/dt/dualspace/interface/dualspace.c.html#PetscDualSpaceGetAllData">src/dm/dt/dualspace/interface/dualspace.c</A>
+<BR><A HREF="./index.html">Index of all DUALSPACE routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

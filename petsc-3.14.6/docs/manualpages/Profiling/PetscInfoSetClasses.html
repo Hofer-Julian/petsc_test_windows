@@ -1,0 +1,51 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Profiling/PetscInfoSetClasses.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>PetscInfoSetClasses</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/Profiling/PetscInfoSetClasses.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="PetscInfoSetClasses"><H1>PetscInfoSetClasses</H1></A>
+Sets the classes which <A HREF="../Profiling/PetscInfo.html#PetscInfo">PetscInfo</A>() is filtered for/against 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscsys.h"   
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../Profiling/PetscInfoSetClasses.html#PetscInfoSetClasses">PetscInfoSetClasses</A>(<A HREF="../Sys/PetscBool.html#PetscBool">PetscBool</A> exclude, <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> N, const char *const *classnames)
+</PRE>
+Not Collective
+<P>
+<H3><FONT COLOR="#CC3333">Input Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>exclude </B></TD><TD>- Whether or not to invert the filter, i.e. if exclude is true, <A HREF="../Profiling/PetscInfo.html#PetscInfo">PetscInfo</A>() will print from every class that
+is NOT one of the classes specified
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>N </B></TD><TD>- Number of classes to filter for (size of classnames)
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>classnames </B></TD><TD>- String array containing the names of classes to filter for, e.g. "vec"
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Notes</FONT></H3>
+Not for use in Fortran
+<P>
+This function CANNOT be called after <A HREF="../Profiling/PetscInfoGetClass.html#PetscInfoGetClass">PetscInfoGetClass</A>() or <A HREF="../Profiling/PetscInfoProcessClass.html#PetscInfoProcessClass">PetscInfoProcessClass</A>() has been called.
+<P>
+Names in the classnames list should correspond to the names returned by <A HREF="../Sys/PetscObjectGetClassName.html#PetscObjectGetClassName">PetscObjectGetClassName</A>().
+<P>
+This function only sets the list of class names.
+The actual filtering is deferred to <A HREF="../Profiling/PetscInfoProcessClass.html#PetscInfoProcessClass">PetscInfoProcessClass</A>(), except of sys which is processed right away.
+The reason for this is that we need to set the list of included/excluded classes before their classids are known.
+Typically the classid is assigned and <A HREF="../Profiling/PetscInfoProcessClass.html#PetscInfoProcessClass">PetscInfoProcessClass</A>() called in &lt;Class&gt;InitializePackage() (e.g. <A HREF="../Vec/VecInitializePackage.html#VecInitializePackage">VecInitializePackage</A>()).
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../Profiling/PetscInfo.html#PetscInfo">PetscInfo</A>(), <A HREF="../Profiling/PetscInfoGetClass.html#PetscInfoGetClass">PetscInfoGetClass</A>(), <A HREF="../Profiling/PetscInfoProcessClass.html#PetscInfoProcessClass">PetscInfoProcessClass</A>(), <A HREF="../Profiling/PetscInfoSetFromOptions.html#PetscInfoSetFromOptions">PetscInfoSetFromOptions</A>(), <A HREF="../Sys/PetscStrToArray.html#PetscStrToArray">PetscStrToArray</A>(), <A HREF="../Sys/PetscObjectGetName.html#PetscObjectGetName">PetscObjectGetName</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>developer<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/sys/info/verboseinfo.c.html#PetscInfoSetClasses">src/sys/info/verboseinfo.c</A>
+<BR><A HREF="./index.html">Index of all Profiling routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

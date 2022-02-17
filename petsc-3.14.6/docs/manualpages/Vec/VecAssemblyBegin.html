@@ -1,0 +1,50 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/VecAssemblyBegin.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>VecAssemblyBegin</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/Vec/VecAssemblyBegin.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="VecAssemblyBegin"><H1>VecAssemblyBegin</H1></A>
+Begins assembling the vector.  This routine should be called after completing all calls to <A HREF="../Vec/VecSetValues.html#VecSetValues">VecSetValues</A>(). 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscvec.h"   
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A>  <A HREF="../Vec/VecAssemblyBegin.html#VecAssemblyBegin">VecAssemblyBegin</A>(<A HREF="../Vec/Vec.html#Vec">Vec</A> vec)
+</PRE>
+Collective on <A HREF="../Vec/Vec.html#Vec">Vec</A>
+<P>
+<H3><FONT COLOR="#CC3333">Input Parameter</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>vec </B></TD><TD>- the vector
+</TD></TR></TABLE>
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../Vec/VecAssemblyEnd.html#VecAssemblyEnd">VecAssemblyEnd</A>(), <A HREF="../Vec/VecSetValues.html#VecSetValues">VecSetValues</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>beginner<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/vec/vec/interface/vector.c.html#VecAssemblyBegin">src/vec/vec/interface/vector.c</A>
+<P><H3><FONT COLOR="#CC3333">Examples</FONT></H3>
+<A HREF="../../../src/vec/vec/tutorials/ex2.c.html">src/vec/vec/tutorials/ex2.c.html</A><BR>
+<A HREF="../../../src/vec/vec/tutorials/ex3.c.html">src/vec/vec/tutorials/ex3.c.html</A><BR>
+<A HREF="../../../src/vec/vec/tutorials/ex5.c.html">src/vec/vec/tutorials/ex5.c.html</A><BR>
+<A HREF="../../../src/vec/vec/tutorials/ex8.c.html">src/vec/vec/tutorials/ex8.c.html</A><BR>
+<A HREF="../../../src/vec/vec/tutorials/ex9.c.html">src/vec/vec/tutorials/ex9.c.html</A><BR>
+<A HREF="../../../src/vec/vec/tutorials/ex10.c.html">src/vec/vec/tutorials/ex10.c.html</A><BR>
+<A HREF="../../../src/vec/vec/tutorials/ex15.c.html">src/vec/vec/tutorials/ex15.c.html</A><BR>
+<A HREF="../../../src/vec/vec/tutorials/ex18.c.html">src/vec/vec/tutorials/ex18.c.html</A><BR>
+<A HREF="../../../src/vec/vec/tutorials/ex2f.F.html">src/vec/vec/tutorials/ex2f.F.html</A><BR>
+<A HREF="../../../src/vec/vec/tutorials/ex3f.F.html">src/vec/vec/tutorials/ex3f.F.html</A><BR>
+<A HREF="../../../src/vec/vec/tutorials/ex4f.F.html">src/vec/vec/tutorials/ex4f.F.html</A><BR>
+<P><H3><FONT COLOR="CC3333">Implementations</FONT></H3><A HREF="../../../src/vec/vec/impls/mpi/pbvec.c.html#VecAssemblyBegin_MPI_BTS">VecAssemblyBegin_MPI_BTS in src/vec/vec/impls/mpi/pbvec.c</A><BR>
+<A HREF="../../../src/vec/vec/impls/mpi/pdvec.c.html#VecAssemblyBegin_MPI">VecAssemblyBegin_MPI in src/vec/vec/impls/mpi/pdvec.c</A><BR>
+<A HREF="../../../src/vec/vec/impls/nest/vecnest.c.html#VecAssemblyBegin_Nest">VecAssemblyBegin_Nest in src/vec/vec/impls/nest/vecnest.c</A><BR>
+<A HREF="../../../src/vec/vec/impls/node/vecnode.c.html#VecAssemblyBegin_Node">VecAssemblyBegin_Node in src/vec/vec/impls/node/vecnode.c</A><BR>
+<BR><A HREF="./index.html">Index of all Vec routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

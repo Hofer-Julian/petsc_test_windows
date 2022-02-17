@@ -1,0 +1,244 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DM/DMSetNullSpaceConstructor.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>DMSetNullSpaceConstructor</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/DM/DMSetNullSpaceConstructor.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="DMSetNullSpaceConstructor"><H1>DMSetNullSpaceConstructor</H1></A>
+Provide a callback function which constructs the nullspace for a given field 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscdm.h"          
+#include "petscdmlabel.h"     
+#include "petscds.h"     
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> DMCreateFieldIS(<A HREF="../DM/DM.html#DM">DM</A> dm, <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> *numFields, char ***fieldNames, <A HREF="../IS/IS.html#IS">IS</A> **fields)
+</PRE>
+Logically collective on <A HREF="../DM/DM.html#DM">DM</A>
+<P>
+<H3><FONT COLOR="#CC3333">Input Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>dm     </B></TD><TD>- The <A HREF="../DM/DM.html#DM">DM</A>
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>field  </B></TD><TD>- The field number for the nullspace
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>nullsp </B></TD><TD>- A callback to create the nullspace
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Notes</FONT></H3>
+The callback is intended to provide nullspaces when function spaces are joined or split, such as in <A HREF="../DM/DMCreateSubDM.html#DMCreateSubDM">DMCreateSubDM</A>(). The calling sequence is
+<pre>
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> nullsp(<A HREF="../DM/DM.html#DM">DM</A> dm, <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> origField, <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> field, <A HREF="../Mat/MatNullSpace.html#MatNullSpace">MatNullSpace</A> *nullSpace)
+</pre>
+<pre>
+dm        - The present <A HREF="../DM/DM.html#DM">DM</A>
+</pre>
+<pre>
+origField - The field number given above, in the original <A HREF="../DM/DM.html#DM">DM</A>
+</pre>
+<pre>
+field     - The field number in dm
+</pre>
+<pre>
+nullSpace - The nullspace for the given field
+</pre>
+<P>
+This function is currently not available from Fortran.
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ DMGetNullSpaceConstructor(), DMSetNearNullSpaceConstructor(), DMGetNearNullSpaceConstructor(), <A HREF="../DM/DMCreateSubDM.html#DMCreateSubDM">DMCreateSubDM</A>(), <A HREF="../DM/DMCreateSuperDM.html#DMCreateSuperDM">DMCreateSuperDM</A>()
+<BR>*/
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../DM/DMSetNullSpaceConstructor.html#DMSetNullSpaceConstructor">DMSetNullSpaceConstructor</A>(<A HREF="../DM/DM.html#DM">DM</A> dm, <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> field, <A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> (*nullsp)(<A HREF="../DM/DM.html#DM">DM</A> dm, <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> origField, <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> field, <A HREF="../Mat/MatNullSpace.html#MatNullSpace">MatNullSpace</A> *nullSpace))
+{
+<A HREF="../Sys/PetscFunctionBegin.html#PetscFunctionBegin">PetscFunctionBegin</A>;
+PetscValidHeaderSpecific(dm, DM_CLASSID, 1);
+if (field &gt;= 10) <A HREF="../Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</A>(<A HREF="../Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</A>((<A HREF="../Sys/PetscObject.html#PetscObject">PetscObject</A>)dm), PETSC_ERR_ARG_OUTOFRANGE, "Cannot handle %d &gt;= 10 fields", field);
+dm-&gt;nullspaceConstructors[field] = nullsp;
+<A HREF="../Sys/PetscFunctionReturn.html#PetscFunctionReturn">PetscFunctionReturn</A>(0);
+}
+<P>
+/*@C
+DMGetNullSpaceConstructor - Return the callback function which constructs the nullspace for a given field, or NULL
+<P>
+Not collective
+<P>
+<H3><FONT COLOR="#CC3333">Input Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>dm     </B></TD><TD>- The <A HREF="../DM/DM.html#DM">DM</A>
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>field  </B></TD><TD>- The field number for the nullspace
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Output Parameter</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>nullsp </B></TD><TD>- A callback to create the nullspace
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Notes</FONT></H3>
+The callback is intended to provide nullspaces when function spaces are joined or split, such as in <A HREF="../DM/DMCreateSubDM.html#DMCreateSubDM">DMCreateSubDM</A>(). The calling sequence is
+<pre>
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> nullsp(<A HREF="../DM/DM.html#DM">DM</A> dm, <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> origField, <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> field, <A HREF="../Mat/MatNullSpace.html#MatNullSpace">MatNullSpace</A> *nullSpace)
+</pre>
+<pre>
+dm        - The present <A HREF="../DM/DM.html#DM">DM</A>
+</pre>
+<pre>
+origField - The field number given above, in the original <A HREF="../DM/DM.html#DM">DM</A>
+</pre>
+<pre>
+field     - The field number in dm
+</pre>
+<pre>
+nullSpace - The nullspace for the given field
+</pre>
+<P>
+This function is currently not available from Fortran.
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../DM/DMSetNullSpaceConstructor.html#DMSetNullSpaceConstructor">DMSetNullSpaceConstructor</A>(), DMSetNearNullSpaceConstructor(), DMGetNearNullSpaceConstructor(), <A HREF="../DM/DMCreateSubDM.html#DMCreateSubDM">DMCreateSubDM</A>(), <A HREF="../DM/DMCreateSuperDM.html#DMCreateSuperDM">DMCreateSuperDM</A>()
+<BR>*/
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> DMGetNullSpaceConstructor(<A HREF="../DM/DM.html#DM">DM</A> dm, <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> field, <A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> (**nullsp)(<A HREF="../DM/DM.html#DM">DM</A> dm, <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> origField, <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> field, <A HREF="../Mat/MatNullSpace.html#MatNullSpace">MatNullSpace</A> *nullSpace))
+{
+<A HREF="../Sys/PetscFunctionBegin.html#PetscFunctionBegin">PetscFunctionBegin</A>;
+PetscValidHeaderSpecific(dm, DM_CLASSID, 1);
+PetscValidPointer(nullsp, 3);
+if (field &gt;= 10) <A HREF="../Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</A>(<A HREF="../Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</A>((<A HREF="../Sys/PetscObject.html#PetscObject">PetscObject</A>)dm), PETSC_ERR_ARG_OUTOFRANGE, "Cannot handle %d &gt;= 10 fields", field);
+*nullsp = dm-&gt;nullspaceConstructors[field];
+<A HREF="../Sys/PetscFunctionReturn.html#PetscFunctionReturn">PetscFunctionReturn</A>(0);
+}
+<P>
+/*@C
+DMSetNearNullSpaceConstructor - Provide a callback function which constructs the near-nullspace for a given field
+<P>
+Logically collective on <A HREF="../DM/DM.html#DM">DM</A>
+<P>
+<H3><FONT COLOR="#CC3333">Input Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>dm     </B></TD><TD>- The <A HREF="../DM/DM.html#DM">DM</A>
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>field  </B></TD><TD>- The field number for the nullspace
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>nullsp </B></TD><TD>- A callback to create the near-nullspace
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Notes</FONT></H3>
+The callback is intended to provide nullspaces when function spaces are joined or split, such as in <A HREF="../DM/DMCreateSubDM.html#DMCreateSubDM">DMCreateSubDM</A>(). The calling sequence is
+<pre>
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> nullsp(<A HREF="../DM/DM.html#DM">DM</A> dm, <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> origField, <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> field, <A HREF="../Mat/MatNullSpace.html#MatNullSpace">MatNullSpace</A> *nullSpace)
+</pre>
+<pre>
+dm        - The present <A HREF="../DM/DM.html#DM">DM</A>
+</pre>
+<pre>
+origField - The field number given above, in the original <A HREF="../DM/DM.html#DM">DM</A>
+</pre>
+<pre>
+field     - The field number in dm
+</pre>
+<pre>
+nullSpace - The nullspace for the given field
+</pre>
+<P>
+This function is currently not available from Fortran.
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ DMGetNearNullSpaceConstructor(), <A HREF="../DM/DMSetNullSpaceConstructor.html#DMSetNullSpaceConstructor">DMSetNullSpaceConstructor</A>(), DMGetNullSpaceConstructor(), <A HREF="../DM/DMCreateSubDM.html#DMCreateSubDM">DMCreateSubDM</A>(), <A HREF="../DM/DMCreateSuperDM.html#DMCreateSuperDM">DMCreateSuperDM</A>()
+<BR>*/
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> DMSetNearNullSpaceConstructor(<A HREF="../DM/DM.html#DM">DM</A> dm, <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> field, <A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> (*nullsp)(<A HREF="../DM/DM.html#DM">DM</A> dm, <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> origField, <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> field, <A HREF="../Mat/MatNullSpace.html#MatNullSpace">MatNullSpace</A> *nullSpace))
+{
+<A HREF="../Sys/PetscFunctionBegin.html#PetscFunctionBegin">PetscFunctionBegin</A>;
+PetscValidHeaderSpecific(dm, DM_CLASSID, 1);
+if (field &gt;= 10) <A HREF="../Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</A>(<A HREF="../Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</A>((<A HREF="../Sys/PetscObject.html#PetscObject">PetscObject</A>)dm), PETSC_ERR_ARG_OUTOFRANGE, "Cannot handle %d &gt;= 10 fields", field);
+dm-&gt;nearnullspaceConstructors[field] = nullsp;
+<A HREF="../Sys/PetscFunctionReturn.html#PetscFunctionReturn">PetscFunctionReturn</A>(0);
+}
+<P>
+/*@C
+DMGetNearNullSpaceConstructor - Return the callback function which constructs the near-nullspace for a given field, or NULL
+<P>
+Not collective
+<P>
+<H3><FONT COLOR="#CC3333">Input Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>dm     </B></TD><TD>- The <A HREF="../DM/DM.html#DM">DM</A>
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>field  </B></TD><TD>- The field number for the nullspace
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Output Parameter</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>nullsp </B></TD><TD>- A callback to create the near-nullspace
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Notes</FONT></H3>
+The callback is intended to provide nullspaces when function spaces are joined or split, such as in <A HREF="../DM/DMCreateSubDM.html#DMCreateSubDM">DMCreateSubDM</A>(). The calling sequence is
+<pre>
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> nullsp(<A HREF="../DM/DM.html#DM">DM</A> dm, <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> origField, <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> field, <A HREF="../Mat/MatNullSpace.html#MatNullSpace">MatNullSpace</A> *nullSpace)
+</pre>
+<pre>
+dm        - The present <A HREF="../DM/DM.html#DM">DM</A>
+</pre>
+<pre>
+origField - The field number given above, in the original <A HREF="../DM/DM.html#DM">DM</A>
+</pre>
+<pre>
+field     - The field number in dm
+</pre>
+<pre>
+nullSpace - The nullspace for the given field
+</pre>
+<P>
+This function is currently not available from Fortran.
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ DMSetNearNullSpaceConstructor(), <A HREF="../DM/DMSetNullSpaceConstructor.html#DMSetNullSpaceConstructor">DMSetNullSpaceConstructor</A>(), DMGetNullSpaceConstructor(), <A HREF="../DM/DMCreateSubDM.html#DMCreateSubDM">DMCreateSubDM</A>(), <A HREF="../DM/DMCreateSuperDM.html#DMCreateSuperDM">DMCreateSuperDM</A>()
+<BR>*/
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> DMGetNearNullSpaceConstructor(<A HREF="../DM/DM.html#DM">DM</A> dm, <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> field, <A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> (**nullsp)(<A HREF="../DM/DM.html#DM">DM</A> dm, <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> origField, <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> field, <A HREF="../Mat/MatNullSpace.html#MatNullSpace">MatNullSpace</A> *nullSpace))
+{
+<A HREF="../Sys/PetscFunctionBegin.html#PetscFunctionBegin">PetscFunctionBegin</A>;
+PetscValidHeaderSpecific(dm, DM_CLASSID, 1);
+PetscValidPointer(nullsp, 3);
+if (field &gt;= 10) <A HREF="../Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</A>(<A HREF="../Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</A>((<A HREF="../Sys/PetscObject.html#PetscObject">PetscObject</A>)dm), PETSC_ERR_ARG_OUTOFRANGE, "Cannot handle %d &gt;= 10 fields", field);
+*nullsp = dm-&gt;nearnullspaceConstructors[field];
+<A HREF="../Sys/PetscFunctionReturn.html#PetscFunctionReturn">PetscFunctionReturn</A>(0);
+}
+<P>
+/*@C
+DMCreateFieldIS - Creates a set of <A HREF="../IS/IS.html#IS">IS</A> objects with the global indices of dofs for each field
+<P>
+Not collective
+<P>
+<H3><FONT COLOR="#CC3333">Input Parameter</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>dm </B></TD><TD>- the <A HREF="../DM/DM.html#DM">DM</A> object
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Output Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>numFields  </B></TD><TD>- The number of fields (or NULL if not requested)
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>fieldNames </B></TD><TD>- The name for each field (or NULL if not requested)
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>fields     </B></TD><TD>- The global indices for each field (or NULL if not requested)
+</TD></TR></TABLE>
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">Notes</FONT></H3>
+The user is responsible for freeing all requested arrays. In particular, every entry of names should be freed with
+<A HREF="../Sys/PetscFree.html#PetscFree">PetscFree</A>(), every entry of fields should be destroyed with <A HREF="../IS/ISDestroy.html#ISDestroy">ISDestroy</A>(), and both arrays should be freed with
+<A HREF="../Sys/PetscFree.html#PetscFree">PetscFree</A>().
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+<A HREF="../DM/DMDestroy.html#DMDestroy">DMDestroy</A>(), <A HREF="../DM/DMView.html#DMView">DMView</A>(), <A HREF="../DM/DMCreateInterpolation.html#DMCreateInterpolation">DMCreateInterpolation</A>(), <A HREF="../DM/DMCreateColoring.html#DMCreateColoring">DMCreateColoring</A>(), <A HREF="../DM/DMCreateMatrix.html#DMCreateMatrix">DMCreateMatrix</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>intermediate<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/dm/interface/dm.c.html#DMSetNullSpaceConstructor">src/dm/interface/dm.c</A>
+<P><H3><FONT COLOR="#CC3333">Examples</FONT></H3>
+<A HREF="../../../src/snes/tutorials/ex62.c.html">src/snes/tutorials/ex62.c.html</A><BR>
+<BR><A HREF="./index.html">Index of all DM routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

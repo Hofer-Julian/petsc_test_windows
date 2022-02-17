@@ -1,0 +1,495 @@
+<center><a href="ao.c">Actual source code: ao.c</a></center><br>
+
+<html>
+<head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/src/vec/is/ao/interface/ao.c.html" />
+<title></title>
+<meta name="generator" content="c2html 0.9.4">
+<meta name="date" content="2021-03-30T16:49:55+00:00">
+</head>
+
+<body bgcolor="#FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 src/vec/is/ao/interface/ao.c.html "><small>Report Typos and Errors</small></a></div>
+<pre width="80">
+
+<a name="line2">  2: </a><font color="#B22222">/*</font>
+<a name="line3">  3: </a><font color="#B22222">   Defines the abstract operations on <a href="../../../../../docs/manualpages/AO/AO.html#AO">AO</a> (application orderings)</font>
+<a name="line4">  4: </a><font color="#B22222">*/</font>
+<a name="line5">  5: </a>#include <A href="../aoimpl.h.html">&lt;../src/vec/is/ao/aoimpl.h&gt;</A>
+
+<a name="line7">  7: </a><font color="#B22222">/* Logging support */</font>
+<a name="line8">  8: </a><a href="../../../../../docs/manualpages/Sys/PetscClassId.html#PetscClassId">PetscClassId</a>  AO_CLASSID;
+<a name="line9">  9: </a><a href="../../../../../docs/manualpages/Profiling/PetscLogEvent.html#PetscLogEvent">PetscLogEvent</a> AO_PetscToApplication, AO_ApplicationToPetsc;
+
+<a name="line11"> 11: </a><font color="#B22222">/*@C</font>
+<a name="line12"> 12: </a><font color="#B22222">   <a href="../../../../../docs/manualpages/AO/AOView.html#AOView">AOView</a> - Displays an application ordering.</font>
+
+<a name="line14"> 14: </a><font color="#B22222">   Collective on <a href="../../../../../docs/manualpages/AO/AO.html#AO">AO</a></font>
+
+<a name="line16"> 16: </a><font color="#B22222">   Input Parameters:</font>
+<a name="line17"> 17: </a><font color="#B22222">+  ao - the application ordering context</font>
+<a name="line18"> 18: </a><font color="#B22222">-  viewer - viewer used for display</font>
+
+<a name="line20"> 20: </a><font color="#B22222">   Level: intermediate</font>
+
+<a name="line22"> 22: </a><font color="#B22222">    Options Database Key:</font>
+<a name="line23"> 23: </a><font color="#B22222">.   -ao_view - calls <a href="../../../../../docs/manualpages/AO/AOView.html#AOView">AOView</a>() at end of <a href="../../../../../docs/manualpages/AO/AOCreate.html#AOCreate">AOCreate</a>()</font>
+
+<a name="line25"> 25: </a><font color="#B22222">   Note:</font>
+<a name="line26"> 26: </a><font color="#B22222">   The available visualization contexts include</font>
+<a name="line27"> 27: </a><font color="#B22222">+     <a href="../../../../../docs/manualpages/Viewer/PETSC_VIEWER_STDOUT_SELF.html#PETSC_VIEWER_STDOUT_SELF">PETSC_VIEWER_STDOUT_SELF</a> - standard output (default)</font>
+<a name="line28"> 28: </a><font color="#B22222">-     <a href="../../../../../docs/manualpages/Viewer/PETSC_VIEWER_STDOUT_WORLD.html#PETSC_VIEWER_STDOUT_WORLD">PETSC_VIEWER_STDOUT_WORLD</a> - synchronized standard</font>
+<a name="line29"> 29: </a><font color="#B22222">         output where only the first processor opens</font>
+<a name="line30"> 30: </a><font color="#B22222">         the file.  All other processors send their</font>
+<a name="line31"> 31: </a><font color="#B22222">         data to the first processor to print.</font>
+
+<a name="line33"> 33: </a><font color="#B22222">   The user can open an alternative visualization context with</font>
+<a name="line34"> 34: </a><font color="#B22222">   <a href="../../../../../docs/manualpages/Viewer/PetscViewerASCIIOpen.html#PetscViewerASCIIOpen">PetscViewerASCIIOpen</a>() - output to a specified file.</font>
+
+<a name="line36"> 36: </a><font color="#B22222">.seealso: <a href="../../../../../docs/manualpages/Viewer/PetscViewerASCIIOpen.html#PetscViewerASCIIOpen">PetscViewerASCIIOpen</a>()</font>
+<a name="line37"> 37: </a><font color="#B22222">@*/</font>
+<a name="line38"> 38: </a><strong><font color="#4169E1"><a name="AOView"></a><a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  <a href="../../../../../docs/manualpages/AO/AOView.html#AOView">AOView</a>(<a href="../../../../../docs/manualpages/AO/AO.html#AO">AO</a> ao,<a href="../../../../../docs/manualpages/Viewer/PetscViewer.html#PetscViewer">PetscViewer</a> viewer)</font></strong>
+<a name="line39"> 39: </a>{
+
+<a name="line44"> 44: </a>  <font color="#4169E1">if</font> (!viewer) {
+<a name="line45"> 45: </a>    <a href="../../../../../docs/manualpages/Viewer/PetscViewerASCIIGetStdout.html#PetscViewerASCIIGetStdout">PetscViewerASCIIGetStdout</a>(<a href="../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)ao),&amp;viewer);
+<a name="line46"> 46: </a>  }
+
+<a name="line49"> 49: </a>  <a href="../../../../../docs/manualpages/Sys/PetscObjectPrintClassNamePrefixType.html#PetscObjectPrintClassNamePrefixType">PetscObjectPrintClassNamePrefixType</a>((<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)ao,viewer);
+<a name="line50"> 50: </a>  (*ao-&gt;ops-&gt;view)(ao,viewer);
+<a name="line51"> 51: </a>  <font color="#4169E1">return</font>(0);
+<a name="line52"> 52: </a>}
+
+<a name="line54"> 54: </a><font color="#B22222">/*@C</font>
+<a name="line55"> 55: </a><font color="#B22222">   <a href="../../../../../docs/manualpages/AO/AOViewFromOptions.html#AOViewFromOptions">AOViewFromOptions</a> - View from Options</font>
+
+<a name="line57"> 57: </a><font color="#B22222">   Collective on <a href="../../../../../docs/manualpages/AO/AO.html#AO">AO</a></font>
+
+<a name="line59"> 59: </a><font color="#B22222">   Input Parameters:</font>
+<a name="line60"> 60: </a><font color="#B22222">+  ao - the application ordering context</font>
+<a name="line61"> 61: </a><font color="#B22222">.  obj - Optional object</font>
+<a name="line62"> 62: </a><font color="#B22222">-  name - command line option</font>
+
+<a name="line64"> 64: </a><font color="#B22222">   Level: intermediate</font>
+<a name="line65"> 65: </a><font color="#B22222">.seealso:  <a href="../../../../../docs/manualpages/AO/AO.html#AO">AO</a>, <a href="../../../../../docs/manualpages/AO/AOView.html#AOView">AOView</a>, <a href="../../../../../docs/manualpages/Sys/PetscObjectViewFromOptions.html#PetscObjectViewFromOptions">PetscObjectViewFromOptions</a>(), <a href="../../../../../docs/manualpages/AO/AOCreate.html#AOCreate">AOCreate</a>()</font>
+<a name="line66"> 66: </a><font color="#B22222">@*/</font>
+<a name="line67"> 67: </a><strong><font color="#4169E1"><a name="AOViewFromOptions"></a><a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  <a href="../../../../../docs/manualpages/AO/AOViewFromOptions.html#AOViewFromOptions">AOViewFromOptions</a>(<a href="../../../../../docs/manualpages/AO/AO.html#AO">AO</a> ao,<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a> obj,const char name[])</font></strong>
+<a name="line68"> 68: </a>{
+
+<a name="line73"> 73: </a>  <a href="../../../../../docs/manualpages/Sys/PetscObjectViewFromOptions.html#PetscObjectViewFromOptions">PetscObjectViewFromOptions</a>((<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)ao,obj,name);
+<a name="line74"> 74: </a>  <font color="#4169E1">return</font>(0);
+<a name="line75"> 75: </a>}
+
+<a name="line77"> 77: </a><font color="#B22222">/*@</font>
+<a name="line78"> 78: </a><font color="#B22222">   <a href="../../../../../docs/manualpages/AO/AODestroy.html#AODestroy">AODestroy</a> - Destroys an application ordering.</font>
+
+<a name="line80"> 80: </a><font color="#B22222">   Collective on <a href="../../../../../docs/manualpages/AO/AO.html#AO">AO</a></font>
+
+<a name="line82"> 82: </a><font color="#B22222">   Input Parameters:</font>
+<a name="line83"> 83: </a><font color="#B22222">.  ao - the application ordering context</font>
+
+<a name="line85"> 85: </a><font color="#B22222">   Level: beginner</font>
+
+<a name="line87"> 87: </a><font color="#B22222">.seealso: <a href="../../../../../docs/manualpages/AO/AOCreate.html#AOCreate">AOCreate</a>()</font>
+<a name="line88"> 88: </a><font color="#B22222">@*/</font>
+<a name="line89"> 89: </a><strong><font color="#4169E1"><a name="AODestroy"></a><a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  <a href="../../../../../docs/manualpages/AO/AODestroy.html#AODestroy">AODestroy</a>(<a href="../../../../../docs/manualpages/AO/AO.html#AO">AO</a> *ao)</font></strong>
+<a name="line90"> 90: </a>{
+
+<a name="line94"> 94: </a>  <font color="#4169E1">if</font> (!*ao) <font color="#4169E1">return</font>(0);
+<a name="line96"> 96: </a>  <font color="#4169E1">if</font> (--((<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)(*ao))-&gt;refct &gt; 0) {*ao = NULL; <font color="#4169E1">return</font>(0);}
+<a name="line97"> 97: </a>  <font color="#B22222">/* if memory was published with SAWs then destroy it */</font>
+<a name="line98"> 98: </a>  PetscObjectSAWsViewOff((<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)*ao);
+<a name="line99"> 99: </a>  <a href="../../../../../docs/manualpages/IS/ISDestroy.html#ISDestroy">ISDestroy</a>(&amp;(*ao)-&gt;isapp);
+<a name="line100">100: </a>  <a href="../../../../../docs/manualpages/IS/ISDestroy.html#ISDestroy">ISDestroy</a>(&amp;(*ao)-&gt;ispetsc);
+<a name="line101">101: </a>  <font color="#B22222">/* destroy the internal part */</font>
+<a name="line102">102: </a>  <font color="#4169E1">if</font> ((*ao)-&gt;ops-&gt;destroy) {
+<a name="line103">103: </a>    (*(*ao)-&gt;ops-&gt;destroy)(*ao);
+<a name="line104">104: </a>  }
+<a name="line105">105: </a>  <a href="../../../../../docs/manualpages/Sys/PetscHeaderDestroy.html#PetscHeaderDestroy">PetscHeaderDestroy</a>(ao);
+<a name="line106">106: </a>  <font color="#4169E1">return</font>(0);
+<a name="line107">107: </a>}
+
+
+<a name="line110">110: </a>#include <A href="../../is/impls/general/general.h.html">&lt;../src/vec/is/is/impls/general/general.h&gt;</A>
+<a name="line111">111: </a><font color="#B22222">/* ---------------------------------------------------------------------*/</font>
+
+<a name="line113">113: </a><strong><font color="#4169E1">PETSC_INTERN <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> ISSetUp_General(<a href="../../../../../docs/manualpages/IS/IS.html#IS">IS</a>)</font></strong>;
+
+<a name="line115">115: </a><font color="#B22222">/*@</font>
+<a name="line116">116: </a><font color="#B22222">   <a href="../../../../../docs/manualpages/AO/AOPetscToApplicationIS.html#AOPetscToApplicationIS">AOPetscToApplicationIS</a> - Maps an index set in the PETSc ordering to</font>
+<a name="line117">117: </a><font color="#B22222">   the application-defined ordering.</font>
+
+<a name="line119">119: </a><font color="#B22222">   Collective on <a href="../../../../../docs/manualpages/AO/AO.html#AO">AO</a></font>
+
+<a name="line121">121: </a><font color="#B22222">   Input Parameters:</font>
+<a name="line122">122: </a><font color="#B22222">+  ao - the application ordering context</font>
+<a name="line123">123: </a><font color="#B22222">-  is - the index set; this is replaced with its mapped values</font>
+
+<a name="line125">125: </a><font color="#B22222">   Output Parameter:</font>
+<a name="line126">126: </a><font color="#B22222">.  is - the mapped index set</font>
+
+<a name="line128">128: </a><font color="#B22222">   Level: intermediate</font>
+
+<a name="line130">130: </a><font color="#B22222">   Notes:</font>
+<a name="line131">131: </a><font color="#B22222">   The index set cannot be of type stride or block</font>
+
+<a name="line133">133: </a><font color="#B22222">   Any integers in ia[] that are negative are left unchanged. This</font>
+<a name="line134">134: </a><font color="#B22222">         allows one to convert, for example, neighbor lists that use negative</font>
+<a name="line135">135: </a><font color="#B22222">         entries to indicate nonexistent neighbors due to boundary conditions</font>
+<a name="line136">136: </a><font color="#B22222">         etc.</font>
+
+<a name="line138">138: </a><font color="#B22222">.seealso: <a href="../../../../../docs/manualpages/AO/AOCreateBasic.html#AOCreateBasic">AOCreateBasic</a>(), <a href="../../../../../docs/manualpages/AO/AOView.html#AOView">AOView</a>(),<a href="../../../../../docs/manualpages/AO/AOApplicationToPetsc.html#AOApplicationToPetsc">AOApplicationToPetsc</a>(),</font>
+<a name="line139">139: </a><font color="#B22222">          <a href="../../../../../docs/manualpages/AO/AOApplicationToPetscIS.html#AOApplicationToPetscIS">AOApplicationToPetscIS</a>(),<a href="../../../../../docs/manualpages/AO/AOPetscToApplication.html#AOPetscToApplication">AOPetscToApplication</a>()</font>
+<a name="line140">140: </a><font color="#B22222">@*/</font>
+<a name="line141">141: </a><strong><font color="#4169E1"><a name="AOPetscToApplicationIS"></a><a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  <a href="../../../../../docs/manualpages/AO/AOPetscToApplicationIS.html#AOPetscToApplicationIS">AOPetscToApplicationIS</a>(<a href="../../../../../docs/manualpages/AO/AO.html#AO">AO</a> ao,<a href="../../../../../docs/manualpages/IS/IS.html#IS">IS</a> is)</font></strong>
+<a name="line142">142: </a>{
+<a name="line144">144: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       n;
+<a name="line145">145: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       *ia;
+
+<a name="line150">150: </a>  <a href="../../../../../docs/manualpages/IS/ISToGeneral.html#ISToGeneral">ISToGeneral</a>(is);
+<a name="line151">151: </a>  <font color="#B22222">/* we cheat because we know the is is general and that we can change the indices */</font>
+<a name="line152">152: </a>  <a href="../../../../../docs/manualpages/IS/ISGetIndices.html#ISGetIndices">ISGetIndices</a>(is,(const <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>**)&amp;ia);
+<a name="line153">153: </a>  <a href="../../../../../docs/manualpages/IS/ISGetLocalSize.html#ISGetLocalSize">ISGetLocalSize</a>(is,&amp;n);
+<a name="line154">154: </a>  (*ao-&gt;ops-&gt;petsctoapplication)(ao,n,ia);
+<a name="line155">155: </a>  <a href="../../../../../docs/manualpages/IS/ISRestoreIndices.html#ISRestoreIndices">ISRestoreIndices</a>(is,(const <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>**)&amp;ia);
+<a name="line156">156: </a>  <font color="#B22222">/* updated cached values (sorted, min, max, etc.)*/</font>
+<a name="line157">157: </a>  ISSetUp_General(is);
+<a name="line158">158: </a>  <font color="#4169E1">return</font>(0);
+<a name="line159">159: </a>}
+
+<a name="line161">161: </a><font color="#B22222">/*@</font>
+<a name="line162">162: </a><font color="#B22222">   <a href="../../../../../docs/manualpages/AO/AOApplicationToPetscIS.html#AOApplicationToPetscIS">AOApplicationToPetscIS</a> - Maps an index set in the application-defined</font>
+<a name="line163">163: </a><font color="#B22222">   ordering to the PETSc ordering.</font>
+
+<a name="line165">165: </a><font color="#B22222">   Collective on <a href="../../../../../docs/manualpages/AO/AO.html#AO">AO</a></font>
+
+<a name="line167">167: </a><font color="#B22222">   Input Parameters:</font>
+<a name="line168">168: </a><font color="#B22222">+  ao - the application ordering context</font>
+<a name="line169">169: </a><font color="#B22222">-  is - the index set; this is replaced with its mapped values</font>
+
+<a name="line171">171: </a><font color="#B22222">   Output Parameter:</font>
+<a name="line172">172: </a><font color="#B22222">.  is - the mapped index set</font>
+
+<a name="line174">174: </a><font color="#B22222">   Level: beginner</font>
+
+<a name="line176">176: </a><font color="#B22222">   Note:</font>
+<a name="line177">177: </a><font color="#B22222">   The index set cannot be of type stride or block</font>
+
+<a name="line179">179: </a><font color="#B22222">   Any integers in ia[] that are negative are left unchanged. This</font>
+<a name="line180">180: </a><font color="#B22222">   allows one to convert, for example, neighbor lists that use negative</font>
+<a name="line181">181: </a><font color="#B22222">   entries to indicate nonexistent neighbors due to boundary conditions, etc.</font>
+
+<a name="line183">183: </a><font color="#B22222">.seealso: <a href="../../../../../docs/manualpages/AO/AOCreateBasic.html#AOCreateBasic">AOCreateBasic</a>(), <a href="../../../../../docs/manualpages/AO/AOView.html#AOView">AOView</a>(), <a href="../../../../../docs/manualpages/AO/AOPetscToApplication.html#AOPetscToApplication">AOPetscToApplication</a>(),</font>
+<a name="line184">184: </a><font color="#B22222">          <a href="../../../../../docs/manualpages/AO/AOPetscToApplicationIS.html#AOPetscToApplicationIS">AOPetscToApplicationIS</a>(), <a href="../../../../../docs/manualpages/AO/AOApplicationToPetsc.html#AOApplicationToPetsc">AOApplicationToPetsc</a>()</font>
+<a name="line185">185: </a><font color="#B22222">@*/</font>
+<a name="line186">186: </a><strong><font color="#4169E1"><a name="AOApplicationToPetscIS"></a><a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  <a href="../../../../../docs/manualpages/AO/AOApplicationToPetscIS.html#AOApplicationToPetscIS">AOApplicationToPetscIS</a>(<a href="../../../../../docs/manualpages/AO/AO.html#AO">AO</a> ao,<a href="../../../../../docs/manualpages/IS/IS.html#IS">IS</a> is)</font></strong>
+<a name="line187">187: </a>{
+<a name="line189">189: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       n,*ia;
+
+<a name="line194">194: </a>  <a href="../../../../../docs/manualpages/IS/ISToGeneral.html#ISToGeneral">ISToGeneral</a>(is);
+<a name="line195">195: </a>  <font color="#B22222">/* we cheat because we know the is is general and that we can change the indices */</font>
+<a name="line196">196: </a>  <a href="../../../../../docs/manualpages/IS/ISGetIndices.html#ISGetIndices">ISGetIndices</a>(is,(const <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>**)&amp;ia);
+<a name="line197">197: </a>  <a href="../../../../../docs/manualpages/IS/ISGetLocalSize.html#ISGetLocalSize">ISGetLocalSize</a>(is,&amp;n);
+<a name="line198">198: </a>  (*ao-&gt;ops-&gt;applicationtopetsc)(ao,n,ia);
+<a name="line199">199: </a>  <a href="../../../../../docs/manualpages/IS/ISRestoreIndices.html#ISRestoreIndices">ISRestoreIndices</a>(is,(const <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>**)&amp;ia);
+<a name="line200">200: </a>  <font color="#B22222">/* updated cached values (sorted, min, max, etc.)*/</font>
+<a name="line201">201: </a>  ISSetUp_General(is);
+<a name="line202">202: </a>  <font color="#4169E1">return</font>(0);
+<a name="line203">203: </a>}
+
+<a name="line205">205: </a><font color="#B22222">/*@</font>
+<a name="line206">206: </a><font color="#B22222">   <a href="../../../../../docs/manualpages/AO/AOPetscToApplication.html#AOPetscToApplication">AOPetscToApplication</a> - Maps a set of integers in the PETSc ordering to</font>
+<a name="line207">207: </a><font color="#B22222">   the application-defined ordering.</font>
+
+<a name="line209">209: </a><font color="#B22222">   Collective on <a href="../../../../../docs/manualpages/AO/AO.html#AO">AO</a></font>
+
+<a name="line211">211: </a><font color="#B22222">   Input Parameters:</font>
+<a name="line212">212: </a><font color="#B22222">+  ao - the application ordering context</font>
+<a name="line213">213: </a><font color="#B22222">.  n - the number of integers</font>
+<a name="line214">214: </a><font color="#B22222">-  ia - the integers; these are replaced with their mapped value</font>
+
+<a name="line216">216: </a><font color="#B22222">   Output Parameter:</font>
+<a name="line217">217: </a><font color="#B22222">.   ia - the mapped integers</font>
+
+<a name="line219">219: </a><font color="#B22222">   Level: beginner</font>
+
+<a name="line221">221: </a><font color="#B22222">   Note:</font>
+<a name="line222">222: </a><font color="#B22222">   Any integers in ia[] that are negative are left unchanged. This</font>
+<a name="line223">223: </a><font color="#B22222">   allows one to convert, for example, neighbor lists that use negative</font>
+<a name="line224">224: </a><font color="#B22222">   entries to indicate nonexistent neighbors due to boundary conditions, etc.</font>
+
+<a name="line226">226: </a><font color="#B22222">   Integers that are out of range are mapped to -1</font>
+
+<a name="line228">228: </a><font color="#B22222">.seealso: <a href="../../../../../docs/manualpages/AO/AOCreateBasic.html#AOCreateBasic">AOCreateBasic</a>(), <a href="../../../../../docs/manualpages/AO/AOView.html#AOView">AOView</a>(),<a href="../../../../../docs/manualpages/AO/AOApplicationToPetsc.html#AOApplicationToPetsc">AOApplicationToPetsc</a>(),</font>
+<a name="line229">229: </a><font color="#B22222">          <a href="../../../../../docs/manualpages/AO/AOPetscToApplicationIS.html#AOPetscToApplicationIS">AOPetscToApplicationIS</a>(), <a href="../../../../../docs/manualpages/AO/AOApplicationToPetsc.html#AOApplicationToPetsc">AOApplicationToPetsc</a>()</font>
+<a name="line230">230: </a><font color="#B22222">@*/</font>
+<a name="line231">231: </a><strong><font color="#4169E1"><a name="AOPetscToApplication"></a><a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  <a href="../../../../../docs/manualpages/AO/AOPetscToApplication.html#AOPetscToApplication">AOPetscToApplication</a>(<a href="../../../../../docs/manualpages/AO/AO.html#AO">AO</a> ao,<a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> n,<a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> ia[])</font></strong>
+<a name="line232">232: </a>{
+
+<a name="line238">238: </a>  (*ao-&gt;ops-&gt;petsctoapplication)(ao,n,ia);
+<a name="line239">239: </a>  <font color="#4169E1">return</font>(0);
+<a name="line240">240: </a>}
+
+<a name="line242">242: </a><font color="#B22222">/*@</font>
+<a name="line243">243: </a><font color="#B22222">   <a href="../../../../../docs/manualpages/AO/AOApplicationToPetsc.html#AOApplicationToPetsc">AOApplicationToPetsc</a> - Maps a set of integers in the application-defined</font>
+<a name="line244">244: </a><font color="#B22222">   ordering to the PETSc ordering.</font>
+
+<a name="line246">246: </a><font color="#B22222">   Collective on <a href="../../../../../docs/manualpages/AO/AO.html#AO">AO</a></font>
+
+<a name="line248">248: </a><font color="#B22222">   Input Parameters:</font>
+<a name="line249">249: </a><font color="#B22222">+  ao - the application ordering context</font>
+<a name="line250">250: </a><font color="#B22222">.  n - the number of integers</font>
+<a name="line251">251: </a><font color="#B22222">-  ia - the integers; these are replaced with their mapped value</font>
+
+<a name="line253">253: </a><font color="#B22222">   Output Parameter:</font>
+<a name="line254">254: </a><font color="#B22222">.   ia - the mapped integers</font>
+
+<a name="line256">256: </a><font color="#B22222">   Level: beginner</font>
+
+<a name="line258">258: </a><font color="#B22222">   Note:</font>
+<a name="line259">259: </a><font color="#B22222">   Any integers in ia[] that are negative are left unchanged. This</font>
+<a name="line260">260: </a><font color="#B22222">   allows one to convert, for example, neighbor lists that use negative</font>
+<a name="line261">261: </a><font color="#B22222">   entries to indicate nonexistent neighbors due to boundary conditions, etc.</font>
+
+<a name="line263">263: </a><font color="#B22222">   Integers that are out of range are mapped to -1</font>
+
+<a name="line265">265: </a><font color="#B22222">.seealso: <a href="../../../../../docs/manualpages/AO/AOCreateBasic.html#AOCreateBasic">AOCreateBasic</a>(), <a href="../../../../../docs/manualpages/AO/AOView.html#AOView">AOView</a>(), <a href="../../../../../docs/manualpages/AO/AOPetscToApplication.html#AOPetscToApplication">AOPetscToApplication</a>(),</font>
+<a name="line266">266: </a><font color="#B22222">          <a href="../../../../../docs/manualpages/AO/AOPetscToApplicationIS.html#AOPetscToApplicationIS">AOPetscToApplicationIS</a>(), <a href="../../../../../docs/manualpages/AO/AOApplicationToPetsc.html#AOApplicationToPetsc">AOApplicationToPetsc</a>()</font>
+<a name="line267">267: </a><font color="#B22222">@*/</font>
+<a name="line268">268: </a><strong><font color="#4169E1"><a name="AOApplicationToPetsc"></a><a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  <a href="../../../../../docs/manualpages/AO/AOApplicationToPetsc.html#AOApplicationToPetsc">AOApplicationToPetsc</a>(<a href="../../../../../docs/manualpages/AO/AO.html#AO">AO</a> ao,<a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> n,<a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> ia[])</font></strong>
+<a name="line269">269: </a>{
+
+<a name="line275">275: </a>  (*ao-&gt;ops-&gt;applicationtopetsc)(ao,n,ia);
+<a name="line276">276: </a>  <font color="#4169E1">return</font>(0);
+<a name="line277">277: </a>}
+
+<a name="line279">279: </a><font color="#B22222">/*@</font>
+<a name="line280">280: </a><font color="#B22222">  <a href="../../../../../docs/manualpages/AO/AOPetscToApplicationPermuteInt.html#AOPetscToApplicationPermuteInt">AOPetscToApplicationPermuteInt</a> - Permutes an array of blocks of integers</font>
+<a name="line281">281: </a><font color="#B22222">  in the PETSc ordering to the application-defined ordering.</font>
+
+<a name="line283">283: </a><font color="#B22222">  Collective on <a href="../../../../../docs/manualpages/AO/AO.html#AO">AO</a></font>
+
+<a name="line285">285: </a><font color="#B22222">  Input Parameters:</font>
+<a name="line286">286: </a><font color="#B22222">+ ao    - The application ordering context</font>
+<a name="line287">287: </a><font color="#B22222">. block - The block size</font>
+<a name="line288">288: </a><font color="#B22222">- array - The integer array</font>
+
+<a name="line290">290: </a><font color="#B22222">  Output Parameter:</font>
+<a name="line291">291: </a><font color="#B22222">. array - The permuted array</font>
+
+<a name="line293">293: </a><font color="#B22222">  Note: The length of the array should be block*N, where N is length</font>
+<a name="line294">294: </a><font color="#B22222">  provided to the <a href="../../../../../docs/manualpages/AO/AOCreate.html#AOCreate">AOCreate</a>*() method that created the <a href="../../../../../docs/manualpages/AO/AO.html#AO">AO</a>.</font>
+
+<a name="line296">296: </a><font color="#B22222">  The permutation takes array[i_pet] --&gt; array[i_app], where i_app is</font>
+<a name="line297">297: </a><font color="#B22222">  the index of 'i' in the application ordering and i_pet is the index</font>
+<a name="line298">298: </a><font color="#B22222">  of 'i' in the petsc ordering.</font>
+
+<a name="line300">300: </a><font color="#B22222">  Level: beginner</font>
+
+<a name="line302">302: </a><font color="#B22222">.seealso: <a href="../../../../../docs/manualpages/AO/AOCreateBasic.html#AOCreateBasic">AOCreateBasic</a>(), <a href="../../../../../docs/manualpages/AO/AOView.html#AOView">AOView</a>(), <a href="../../../../../docs/manualpages/AO/AOApplicationToPetsc.html#AOApplicationToPetsc">AOApplicationToPetsc</a>(), <a href="../../../../../docs/manualpages/AO/AOPetscToApplicationIS.html#AOPetscToApplicationIS">AOPetscToApplicationIS</a>()</font>
+<a name="line303">303: </a><font color="#B22222">@*/</font>
+<a name="line304">304: </a><strong><font color="#4169E1"><a name="AOPetscToApplicationPermuteInt"></a><a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  <a href="../../../../../docs/manualpages/AO/AOPetscToApplicationPermuteInt.html#AOPetscToApplicationPermuteInt">AOPetscToApplicationPermuteInt</a>(<a href="../../../../../docs/manualpages/AO/AO.html#AO">AO</a> ao, <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> block, <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> array[])</font></strong>
+<a name="line305">305: </a>{
+
+<a name="line311">311: </a>  (*ao-&gt;ops-&gt;petsctoapplicationpermuteint)(ao, block, array);
+<a name="line312">312: </a>  <font color="#4169E1">return</font>(0);
+<a name="line313">313: </a>}
+
+<a name="line315">315: </a><font color="#B22222">/*@</font>
+<a name="line316">316: </a><font color="#B22222">  <a href="../../../../../docs/manualpages/AO/AOApplicationToPetscPermuteInt.html#AOApplicationToPetscPermuteInt">AOApplicationToPetscPermuteInt</a> - Permutes an array of blocks of integers</font>
+<a name="line317">317: </a><font color="#B22222">  in the application-defined ordering to the PETSc ordering.</font>
+
+<a name="line319">319: </a><font color="#B22222">  Collective on <a href="../../../../../docs/manualpages/AO/AO.html#AO">AO</a></font>
+
+<a name="line321">321: </a><font color="#B22222">  Input Parameters:</font>
+<a name="line322">322: </a><font color="#B22222">+ ao    - The application ordering context</font>
+<a name="line323">323: </a><font color="#B22222">. block - The block size</font>
+<a name="line324">324: </a><font color="#B22222">- array - The integer array</font>
+
+<a name="line326">326: </a><font color="#B22222">  Output Parameter:</font>
+<a name="line327">327: </a><font color="#B22222">. array - The permuted array</font>
+
+<a name="line329">329: </a><font color="#B22222">  Note: The length of the array should be block*N, where N is length</font>
+<a name="line330">330: </a><font color="#B22222">  provided to the <a href="../../../../../docs/manualpages/AO/AOCreate.html#AOCreate">AOCreate</a>*() method that created the <a href="../../../../../docs/manualpages/AO/AO.html#AO">AO</a>.</font>
+
+<a name="line332">332: </a><font color="#B22222">  The permutation takes array[i_app] --&gt; array[i_pet], where i_app is</font>
+<a name="line333">333: </a><font color="#B22222">  the index of 'i' in the application ordering and i_pet is the index</font>
+<a name="line334">334: </a><font color="#B22222">  of 'i' in the petsc ordering.</font>
+
+<a name="line336">336: </a><font color="#B22222">  Level: beginner</font>
+
+<a name="line338">338: </a><font color="#B22222">.seealso: <a href="../../../../../docs/manualpages/AO/AOCreateBasic.html#AOCreateBasic">AOCreateBasic</a>(), <a href="../../../../../docs/manualpages/AO/AOView.html#AOView">AOView</a>(), <a href="../../../../../docs/manualpages/AO/AOPetscToApplicationIS.html#AOPetscToApplicationIS">AOPetscToApplicationIS</a>(), <a href="../../../../../docs/manualpages/AO/AOApplicationToPetsc.html#AOApplicationToPetsc">AOApplicationToPetsc</a>()</font>
+<a name="line339">339: </a><font color="#B22222">@*/</font>
+<a name="line340">340: </a><strong><font color="#4169E1"><a name="AOApplicationToPetscPermuteInt"></a><a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  <a href="../../../../../docs/manualpages/AO/AOApplicationToPetscPermuteInt.html#AOApplicationToPetscPermuteInt">AOApplicationToPetscPermuteInt</a>(<a href="../../../../../docs/manualpages/AO/AO.html#AO">AO</a> ao, <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> block, <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> array[])</font></strong>
+<a name="line341">341: </a>{
+
+<a name="line347">347: </a>  (*ao-&gt;ops-&gt;applicationtopetscpermuteint)(ao, block, array);
+<a name="line348">348: </a>  <font color="#4169E1">return</font>(0);
+<a name="line349">349: </a>}
+
+<a name="line351">351: </a><font color="#B22222">/*@</font>
+<a name="line352">352: </a><font color="#B22222">  <a href="../../../../../docs/manualpages/AO/AOPetscToApplicationPermuteReal.html#AOPetscToApplicationPermuteReal">AOPetscToApplicationPermuteReal</a> - Permutes an array of blocks of reals</font>
+<a name="line353">353: </a><font color="#B22222">  in the PETSc ordering to the application-defined ordering.</font>
+
+<a name="line355">355: </a><font color="#B22222">  Collective on <a href="../../../../../docs/manualpages/AO/AO.html#AO">AO</a></font>
+
+<a name="line357">357: </a><font color="#B22222">  Input Parameters:</font>
+<a name="line358">358: </a><font color="#B22222">+ ao    - The application ordering context</font>
+<a name="line359">359: </a><font color="#B22222">. block - The block size</font>
+<a name="line360">360: </a><font color="#B22222">- array - The integer array</font>
+
+<a name="line362">362: </a><font color="#B22222">  Output Parameter:</font>
+<a name="line363">363: </a><font color="#B22222">. array - The permuted array</font>
+
+<a name="line365">365: </a><font color="#B22222">  Note: The length of the array should be block*N, where N is length</font>
+<a name="line366">366: </a><font color="#B22222">  provided to the <a href="../../../../../docs/manualpages/AO/AOCreate.html#AOCreate">AOCreate</a>*() method that created the <a href="../../../../../docs/manualpages/AO/AO.html#AO">AO</a>.</font>
+
+<a name="line368">368: </a><font color="#B22222">  The permutation takes array[i_pet] --&gt; array[i_app], where i_app is</font>
+<a name="line369">369: </a><font color="#B22222">  the index of 'i' in the application ordering and i_pet is the index</font>
+<a name="line370">370: </a><font color="#B22222">  of 'i' in the petsc ordering.</font>
+
+<a name="line372">372: </a><font color="#B22222">  Level: beginner</font>
+
+<a name="line374">374: </a><font color="#B22222">.seealso: <a href="../../../../../docs/manualpages/AO/AOCreateBasic.html#AOCreateBasic">AOCreateBasic</a>(), <a href="../../../../../docs/manualpages/AO/AOView.html#AOView">AOView</a>(), <a href="../../../../../docs/manualpages/AO/AOApplicationToPetsc.html#AOApplicationToPetsc">AOApplicationToPetsc</a>(), <a href="../../../../../docs/manualpages/AO/AOPetscToApplicationIS.html#AOPetscToApplicationIS">AOPetscToApplicationIS</a>()</font>
+<a name="line375">375: </a><font color="#B22222">@*/</font>
+<a name="line376">376: </a><strong><font color="#4169E1"><a name="AOPetscToApplicationPermuteReal"></a><a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  <a href="../../../../../docs/manualpages/AO/AOPetscToApplicationPermuteReal.html#AOPetscToApplicationPermuteReal">AOPetscToApplicationPermuteReal</a>(<a href="../../../../../docs/manualpages/AO/AO.html#AO">AO</a> ao, <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> block, <a href="../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> array[])</font></strong>
+<a name="line377">377: </a>{
+
+<a name="line383">383: </a>  (*ao-&gt;ops-&gt;petsctoapplicationpermutereal)(ao, block, array);
+<a name="line384">384: </a>  <font color="#4169E1">return</font>(0);
+<a name="line385">385: </a>}
+
+<a name="line387">387: </a><font color="#B22222">/*@</font>
+<a name="line388">388: </a><font color="#B22222">  <a href="../../../../../docs/manualpages/AO/AOApplicationToPetscPermuteReal.html#AOApplicationToPetscPermuteReal">AOApplicationToPetscPermuteReal</a> - Permutes an array of blocks of reals</font>
+<a name="line389">389: </a><font color="#B22222">  in the application-defined ordering to the PETSc ordering.</font>
+
+<a name="line391">391: </a><font color="#B22222">  Collective on <a href="../../../../../docs/manualpages/AO/AO.html#AO">AO</a></font>
+
+<a name="line393">393: </a><font color="#B22222">  Input Parameters:</font>
+<a name="line394">394: </a><font color="#B22222">+ ao    - The application ordering context</font>
+<a name="line395">395: </a><font color="#B22222">. block - The block size</font>
+<a name="line396">396: </a><font color="#B22222">- array - The integer array</font>
+
+<a name="line398">398: </a><font color="#B22222">  Output Parameter:</font>
+<a name="line399">399: </a><font color="#B22222">. array - The permuted array</font>
+
+<a name="line401">401: </a><font color="#B22222">  Note: The length of the array should be block*N, where N is length</font>
+<a name="line402">402: </a><font color="#B22222">  provided to the <a href="../../../../../docs/manualpages/AO/AOCreate.html#AOCreate">AOCreate</a>*() method that created the <a href="../../../../../docs/manualpages/AO/AO.html#AO">AO</a>.</font>
+
+<a name="line404">404: </a><font color="#B22222">  The permutation takes array[i_app] --&gt; array[i_pet], where i_app is</font>
+<a name="line405">405: </a><font color="#B22222">  the index of 'i' in the application ordering and i_pet is the index</font>
+<a name="line406">406: </a><font color="#B22222">  of 'i' in the petsc ordering.</font>
+
+<a name="line408">408: </a><font color="#B22222">  Level: beginner</font>
+
+<a name="line410">410: </a><font color="#B22222">.seealso: <a href="../../../../../docs/manualpages/AO/AOCreateBasic.html#AOCreateBasic">AOCreateBasic</a>(), <a href="../../../../../docs/manualpages/AO/AOView.html#AOView">AOView</a>(),<a href="../../../../../docs/manualpages/AO/AOApplicationToPetsc.html#AOApplicationToPetsc">AOApplicationToPetsc</a>(), <a href="../../../../../docs/manualpages/AO/AOPetscToApplicationIS.html#AOPetscToApplicationIS">AOPetscToApplicationIS</a>()</font>
+<a name="line411">411: </a><font color="#B22222">@*/</font>
+<a name="line412">412: </a><strong><font color="#4169E1"><a name="AOApplicationToPetscPermuteReal"></a><a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  <a href="../../../../../docs/manualpages/AO/AOApplicationToPetscPermuteReal.html#AOApplicationToPetscPermuteReal">AOApplicationToPetscPermuteReal</a>(<a href="../../../../../docs/manualpages/AO/AO.html#AO">AO</a> ao, <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> block, <a href="../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> array[])</font></strong>
+<a name="line413">413: </a>{
+
+<a name="line419">419: </a>  (*ao-&gt;ops-&gt;applicationtopetscpermutereal)(ao, block, array);
+<a name="line420">420: </a>  <font color="#4169E1">return</font>(0);
+<a name="line421">421: </a>}
+
+<a name="line423">423: </a><font color="#B22222">/*@</font>
+<a name="line424">424: </a><font color="#B22222">    <a href="../../../../../docs/manualpages/AO/AOSetFromOptions.html#AOSetFromOptions">AOSetFromOptions</a> - Sets <a href="../../../../../docs/manualpages/AO/AO.html#AO">AO</a> options from the options database.</font>
+
+<a name="line426">426: </a><font color="#B22222">   Collective on <a href="../../../../../docs/manualpages/AO/AO.html#AO">AO</a></font>
+
+<a name="line428">428: </a><font color="#B22222">   Input Parameter:</font>
+<a name="line429">429: </a><font color="#B22222">.  ao - the application ordering</font>
+
+<a name="line431">431: </a><font color="#B22222">   Level: beginner</font>
+
+<a name="line433">433: </a><font color="#B22222">.seealso: <a href="../../../../../docs/manualpages/AO/AOCreate.html#AOCreate">AOCreate</a>(), <a href="../../../../../docs/manualpages/AO/AOSetType.html#AOSetType">AOSetType</a>(), <a href="../../../../../docs/manualpages/AO/AODestroy.html#AODestroy">AODestroy</a>(), <a href="../../../../../docs/manualpages/AO/AOPetscToApplication.html#AOPetscToApplication">AOPetscToApplication</a>(), <a href="../../../../../docs/manualpages/AO/AOApplicationToPetsc.html#AOApplicationToPetsc">AOApplicationToPetsc</a>()</font>
+<a name="line434">434: </a><font color="#B22222">@*/</font>
+<a name="line435">435: </a><strong><font color="#4169E1"><a name="AOSetFromOptions"></a><a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../../../docs/manualpages/AO/AOSetFromOptions.html#AOSetFromOptions">AOSetFromOptions</a>(<a href="../../../../../docs/manualpages/AO/AO.html#AO">AO</a> ao)</font></strong>
+<a name="line436">436: </a>{
+<a name="line438">438: </a>  char           type[256];
+<a name="line439">439: </a>  const char     *def=AOBASIC;
+<a name="line440">440: </a>  <a href="../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>      flg;
+
+
+<a name="line445">445: </a>  <a href="../../../../../docs/manualpages/Sys/PetscObjectOptionsBegin.html#PetscObjectOptionsBegin">PetscObjectOptionsBegin</a>((<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)ao);
+<a name="line446">446: </a>  <a href="../../../../../docs/manualpages/Sys/PetscOptionsFList.html#PetscOptionsFList">PetscOptionsFList</a>(<font color="#666666">"-ao_type"</font>,<font color="#666666">"<a href="../../../../../docs/manualpages/AO/AO.html#AO">AO</a> type"</font>,<font color="#666666">"<a href="../../../../../docs/manualpages/AO/AOSetType.html#AOSetType">AOSetType</a>"</font>,AOList,def,type,256,&amp;flg);
+<a name="line447">447: </a>  <font color="#4169E1">if</font> (flg) {
+<a name="line448">448: </a>    <a href="../../../../../docs/manualpages/AO/AOSetType.html#AOSetType">AOSetType</a>(ao,type);
+<a name="line449">449: </a>  } <font color="#4169E1">else</font> <font color="#4169E1">if</font> (!((<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)ao)-&gt;type_name) {
+<a name="line450">450: </a>    <a href="../../../../../docs/manualpages/AO/AOSetType.html#AOSetType">AOSetType</a>(ao,def);
+<a name="line451">451: </a>  }
+<a name="line452">452: </a>  <a href="../../../../../docs/manualpages/Sys/PetscOptionsEnd.html#PetscOptionsEnd">PetscOptionsEnd</a>();
+<a name="line453">453: </a>  <font color="#4169E1">return</font>(0);
+<a name="line454">454: </a>}
+
+<a name="line456">456: </a><font color="#B22222">/*@</font>
+<a name="line457">457: </a><font color="#B22222">   <a href="../../../../../docs/manualpages/AO/AOSetIS.html#AOSetIS">AOSetIS</a> - Sets the <a href="../../../../../docs/manualpages/IS/IS.html#IS">IS</a> associated with the application ordering.</font>
+
+<a name="line459">459: </a><font color="#B22222">   Collective</font>
+
+<a name="line461">461: </a><font color="#B22222">   Input Parameters:</font>
+<a name="line462">462: </a><font color="#B22222">+  ao - the application ordering</font>
+<a name="line463">463: </a><font color="#B22222">.  isapp -  index set that defines an ordering</font>
+<a name="line464">464: </a><font color="#B22222">-  ispetsc - index set that defines another ordering (may be NULL to use the</font>
+<a name="line465">465: </a><font color="#B22222">             natural ordering)</font>
+
+<a name="line467">467: </a><font color="#B22222">   Notes:</font>
+<a name="line468">468: </a><font color="#B22222">   The index sets isapp and ispetsc are used only for creation of ao.</font>
+
+<a name="line470">470: </a><font color="#B22222">   This routine increases the reference count of isapp and ispetsc so you may/should destroy these arguments after this call if you no longer need them</font>
+
+<a name="line472">472: </a><font color="#B22222">   Level: beginner</font>
+
+<a name="line474">474: </a><font color="#B22222">.seealso: <a href="../../../../../docs/manualpages/AO/AOCreate.html#AOCreate">AOCreate</a>(), <a href="../../../../../docs/manualpages/AO/AODestroy.html#AODestroy">AODestroy</a>(), <a href="../../../../../docs/manualpages/AO/AOPetscToApplication.html#AOPetscToApplication">AOPetscToApplication</a>(), <a href="../../../../../docs/manualpages/AO/AOApplicationToPetsc.html#AOApplicationToPetsc">AOApplicationToPetsc</a>()</font>
+<a name="line475">475: </a><font color="#B22222">@*/</font>
+<a name="line476">476: </a><strong><font color="#4169E1"><a name="AOSetIS"></a><a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../../../docs/manualpages/AO/AOSetIS.html#AOSetIS">AOSetIS</a>(<a href="../../../../../docs/manualpages/AO/AO.html#AO">AO</a> ao,<a href="../../../../../docs/manualpages/IS/IS.html#IS">IS</a> isapp,<a href="../../../../../docs/manualpages/IS/IS.html#IS">IS</a> ispetsc)</font></strong>
+<a name="line477">477: </a>{
+
+<a name="line481">481: </a>  <font color="#4169E1">if</font> (ispetsc) {
+<a name="line482">482: </a>    <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> napp,npetsc;
+<a name="line483">483: </a>    <a href="../../../../../docs/manualpages/IS/ISGetLocalSize.html#ISGetLocalSize">ISGetLocalSize</a>(isapp,&amp;napp);
+<a name="line484">484: </a>    <a href="../../../../../docs/manualpages/IS/ISGetLocalSize.html#ISGetLocalSize">ISGetLocalSize</a>(ispetsc,&amp;npetsc);
+<a name="line485">485: </a>    <font color="#4169E1">if</font> (napp != npetsc) <a href="../../../../../docs/manualpages/Sys/SETERRQ2.html#SETERRQ2">SETERRQ2</a>(<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_ARG_SIZ,<font color="#666666">"napp %D != npetsc %D. Local <a href="../../../../../docs/manualpages/IS/IS.html#IS">IS</a> lengths must match"</font>,napp,npetsc);
+<a name="line486">486: </a>  }
+<a name="line487">487: </a>  <font color="#4169E1">if</font> (isapp) {<a href="../../../../../docs/manualpages/Sys/PetscObjectReference.html#PetscObjectReference">PetscObjectReference</a>((<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)isapp);}
+<a name="line488">488: </a>  <font color="#4169E1">if</font> (ispetsc) {<a href="../../../../../docs/manualpages/Sys/PetscObjectReference.html#PetscObjectReference">PetscObjectReference</a>((<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)ispetsc);}
+<a name="line489">489: </a>  <a href="../../../../../docs/manualpages/IS/ISDestroy.html#ISDestroy">ISDestroy</a>(&amp;ao-&gt;isapp);
+<a name="line490">490: </a>  <a href="../../../../../docs/manualpages/IS/ISDestroy.html#ISDestroy">ISDestroy</a>(&amp;ao-&gt;ispetsc);
+<a name="line491">491: </a>  ao-&gt;isapp   = isapp;
+<a name="line492">492: </a>  ao-&gt;ispetsc = ispetsc;
+<a name="line493">493: </a>  <font color="#4169E1">return</font>(0);
+<a name="line494">494: </a>}
+
+<a name="line496">496: </a><font color="#B22222">/*@</font>
+<a name="line497">497: </a><font color="#B22222">   <a href="../../../../../docs/manualpages/AO/AOCreate.html#AOCreate">AOCreate</a> - Creates an application ordering.</font>
+
+<a name="line499">499: </a><font color="#B22222">   Collective</font>
+
+<a name="line501">501: </a><font color="#B22222">   Input Parameters:</font>
+<a name="line502">502: </a><font color="#B22222">.  comm - MPI communicator that is to share <a href="../../../../../docs/manualpages/AO/AO.html#AO">AO</a></font>
+
+<a name="line504">504: </a><font color="#B22222">   Output Parameter:</font>
+<a name="line505">505: </a><font color="#B22222">.  ao - the new application ordering</font>
+
+<a name="line507">507: </a><font color="#B22222">   Options Database Key:</font>
+<a name="line508">508: </a><font color="#B22222">+   -ao_type &lt;aotype&gt; - create ao with particular format</font>
+<a name="line509">509: </a><font color="#B22222">-   -ao_view - call <a href="../../../../../docs/manualpages/AO/AOView.html#AOView">AOView</a>() at the conclusion of <a href="../../../../../docs/manualpages/AO/AOCreate.html#AOCreate">AOCreate</a>()</font>
+
+<a name="line511">511: </a><font color="#B22222">   Level: beginner</font>
+
+<a name="line513">513: </a><font color="#B22222">.seealso: <a href="../../../../../docs/manualpages/AO/AOSetIS.html#AOSetIS">AOSetIS</a>(), <a href="../../../../../docs/manualpages/AO/AODestroy.html#AODestroy">AODestroy</a>(), <a href="../../../../../docs/manualpages/AO/AOPetscToApplication.html#AOPetscToApplication">AOPetscToApplication</a>(), <a href="../../../../../docs/manualpages/AO/AOApplicationToPetsc.html#AOApplicationToPetsc">AOApplicationToPetsc</a>()</font>
+<a name="line514">514: </a><font color="#B22222">@*/</font>
+<a name="line515">515: </a><strong><font color="#4169E1"><a name="AOCreate"></a><a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  <a href="../../../../../docs/manualpages/AO/AOCreate.html#AOCreate">AOCreate</a>(<a href="../../../../../docs/manualpages/Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</a> comm,<a href="../../../../../docs/manualpages/AO/AO.html#AO">AO</a> *ao)</font></strong>
+<a name="line516">516: </a>{
+<a name="line518">518: </a>  <a href="../../../../../docs/manualpages/AO/AO.html#AO">AO</a>             aonew;
+
+<a name="line522">522: </a>  *ao = NULL;
+<a name="line523">523: </a>  <a href="../../../../../docs/manualpages/AO/AOInitializePackage.html#AOInitializePackage">AOInitializePackage</a>();
+
+<a name="line525">525: </a>  <a href="../../../../../docs/manualpages/Sys/PetscHeaderCreate.html#PetscHeaderCreate">PetscHeaderCreate</a>(aonew,AO_CLASSID,<font color="#666666">"<a href="../../../../../docs/manualpages/AO/AO.html#AO">AO</a>"</font>,<font color="#666666">"Application Ordering"</font>,<font color="#666666">"<a href="../../../../../docs/manualpages/AO/AO.html#AO">AO</a>"</font>,comm,<a href="../../../../../docs/manualpages/AO/AODestroy.html#AODestroy">AODestroy</a>,<a href="../../../../../docs/manualpages/AO/AOView.html#AOView">AOView</a>);
+<a name="line526">526: </a>  *ao  = aonew;
+<a name="line527">527: </a>  <font color="#4169E1">return</font>(0);
+<a name="line528">528: </a>}
+</pre>
+</body>
+
+</html>

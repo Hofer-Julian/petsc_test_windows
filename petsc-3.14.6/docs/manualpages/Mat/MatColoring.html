@@ -1,0 +1,34 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatColoring.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>MatColoring</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/Mat/MatColoring.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="MatColoring"><H1>MatColoring</H1></A>
+Object for managing the coloring of matrices. 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+typedef struct _p_MatColoring* <A HREF="../Mat/MatColoring.html#MatColoring">MatColoring</A>;
+</PRE>
+
+<P>
+<H3><FONT COLOR="#CC3333">Notes</FONT></H3>
+Coloring of matrices can be computed directly from the sparse matrix nonzero structure via the <A HREF="../Mat/MatColoring.html#MatColoring">MatColoring</A> object or from the mesh from which the
+matrix comes from via <A HREF="../DM/DMCreateColoring.html#DMCreateColoring">DMCreateColoring</A>(). In general using the mesh produces a more optimal coloring (fewer colors).
+<P>
+Once a coloring is available <A HREF="../MatFD/MatFDColoringCreate.html#MatFDColoringCreate">MatFDColoringCreate</A>() creates an object that can be used to efficiently compute Jacobians using that coloring. This
+same object can also be used to efficiently convert data created by Automatic Differentation tools to PETSc sparse matrices.
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+  <A HREF="../MatFD/MatFDColoringCreate.html#MatFDColoringCreate">MatFDColoringCreate</A>(), <A HREF="../Mat/MatColoringWeightType.html#MatColoringWeightType">MatColoringWeightType</A>, <A HREF="../IS/ISColoring.html#ISColoring">ISColoring</A>, <A HREF="../Mat/MatFDColoring.html#MatFDColoring">MatFDColoring</A>, <A HREF="../DM/DMCreateColoring.html#DMCreateColoring">DMCreateColoring</A>(), <A HREF="../MatOrderings/MatColoringCreate.html#MatColoringCreate">MatColoringCreate</A>(), MatOrdering, <A HREF="../Mat/MatPartitioning.html#MatPartitioning">MatPartitioning</A>
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>beginner<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/mat/../../include/petscmat.h.html#MatColoring">src/mat/../../include/petscmat.h</A>
+<P><H3><FONT COLOR="CC3333">Implementations</FONT></H3><A HREF="../../../include/petsc/private/matimpl.h.html#_p_MatColoring">_p_MatColoring in include/petsc/private/matimpl.h</A><BR>
+<BR><A HREF="./index.html">Index of all Mat routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

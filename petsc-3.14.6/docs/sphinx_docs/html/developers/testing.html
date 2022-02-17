@@ -1,0 +1,961 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/sphinx_docs/html/developers/testing.html" />
+    <meta charset="utf-8" />
+    <title>PETSc Testing System &#8212; PETSc 3.14.6 documentation</title>
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/katex-math.css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/contrib/auto-render.min.js"></script>
+    <script src="../_static/katex_autorenderer.js"></script>
+    <link rel="shortcut icon" href="../_static/PETSc_RGB-logo.png"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Developing PETSc Documentation" href="documentation.html" />
+    <link rel="prev" title="BuildSystem" href="buildsystem.html" /> 
+  </head><body>
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/sphinx_docs/html/developers/testing.html "><small>Report Typos and Errors</small></a></div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="documentation.html" title="Developing PETSc Documentation"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="buildsystem.html" title="BuildSystem"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">PETSc 3.14.6 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">PETSc Developer’s Documentation</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/PETSc-TAO_RGB.svg" alt="Logo"/>
+            </a></p>
+  <h3><a href="../index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">PETSc Testing System</a><ul>
+<li><a class="reference internal" href="#determining-the-failed-jobs-of-a-given-run">Determining the failed jobs of a given run</a></li>
+<li><a class="reference internal" href="#introduction-to-debugging-workflows">Introduction to debugging workflows</a></li>
+<li><a class="reference internal" href="#debugging-a-petsc-test-using-shell-scripts">Debugging a PETSc test using shell scripts</a></li>
+<li><a class="reference internal" href="#debugging-a-single-petsc-test-using-makefile">Debugging a single PETSc test using makefile</a></li>
+<li><a class="reference internal" href="#advanced-searching">Advanced searching</a><ul>
+<li><a class="reference internal" href="#query-based-searching">Query-based searching</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#debugging-for-loops">Debugging for loops</a></li>
+<li><a class="reference internal" href="#petsc-test-description-language">PETSc Test Description Language</a><ul>
+<li><a class="reference internal" href="#runtime-language-options">Runtime Language Options</a></li>
+<li><a class="reference internal" href="#additional-specifications">Additional Specifications</a></li>
+<li><a class="reference internal" href="#test-block-examples">Test Block Examples</a></li>
+<li><a class="reference internal" href="#build-language-options">Build Language Options</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#petsc-test-harness">PETSC Test Harness</a><ul>
+<li><a class="reference internal" href="#testing-the-parsing">Testing the Parsing</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#test-output-standards-tap">Test Output Standards: TAP</a></li>
+<li><a class="reference internal" href="#test-harness-implementation">Test Harness Implementation</a><ul>
+<li><a class="reference internal" href="#additional-tips">Additional Tips</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="buildsystem.html"
+                        title="previous chapter">BuildSystem</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="documentation.html"
+                        title="next chapter">Developing PETSc Documentation</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/developers/testing.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="petsc-testing-system">
+<h1>PETSc Testing System<a class="headerlink" href="#petsc-testing-system" title="Permalink to this headline">¶</a></h1>
+<p>The PETSc test system consists of</p>
+<ul class="simple">
+<li><p>A language contained within the example source files that describes the tests to be run</p></li>
+<li><p>The <em>test generator</em> (<code class="docutils literal notranslate"><span class="pre">config/gmakegentest.py</span></code>) that at the <code class="docutils literal notranslate"><span class="pre">make</span></code> step parses the example source files and generates the makefiles and shell scripts.</p></li>
+<li><p>The <em>petsc test harness</em> that consists of makefile and shell scripts that runs the executables with several logging and reporting features.</p></li>
+</ul>
+<p>Details on using the harness may be found in the <a class="reference internal" href="../manual/index.html"><span class="doc">PETSc Users Manual</span></a>.</p>
+<p>In the examples below, we often make use of this command:  <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">-f</span> <span class="pre">gmakefile</span> <span class="pre">...</span></code> or
+when testing, we have the equivalent of <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">-f</span> <span class="pre">gmakefile.test</span> <span class="pre">...</span></code>.  Here is a useful alias:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">alias</span> <span class="nv">ptmake</span><span class="o">=</span><span class="s1">&#39;make -f gmakefile.test&#39;</span>
+</pre></div>
+</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">ptmake</span></code> stands for “petsc test make”.  We will use this syntax below to make
+the commands nicer.</p>
+<div class="section" id="determining-the-failed-jobs-of-a-given-run">
+<h2>Determining the failed jobs of a given run<a class="headerlink" href="#determining-the-failed-jobs-of-a-given-run" title="Permalink to this headline">¶</a></h2>
+<p>The running of the test harness will show which tests fail, but you may not have
+logged the output or run without showing the full error.  The best way of
+examining the errors is with this command:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">$EDITOR</span> <span class="nv">$PETSC_ARCH</span>/tests/test*err.log
+</pre></div>
+</div>
+<p>This method can also be used for pipeline jobs. Failed jobs can have all of the
+log files downloaded from the artifacts download tab on the right side:</p>
+<div class="figure align-default" id="id1">
+<img alt="Test Artifacts at Gitlab" src="../_images/test-artifacts.png" />
+<p class="caption"><span class="caption-number">Fig. 10 </span><span class="caption-text">Test artifacts can be downloaded from gitlab.</span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></p>
+</div>
+<p>To see the list of all tests that failed from the last run, you can also run this command:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>ptmake print-test test-fail<span class="o">=</span><span class="m">1</span>
+</pre></div>
+</div>
+<p>To print it out in a column format:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>ptmake print-test test-fail<span class="o">=</span><span class="m">1</span> <span class="p">|</span> tr <span class="s1">&#39; &#39;</span> <span class="s1">&#39;\n&#39;</span> <span class="p">|</span> sort
+</pre></div>
+</div>
+<p>Once you know which tests failed, the question is how to debug them.</p>
+</div>
+<div class="section" id="introduction-to-debugging-workflows">
+<h2>Introduction to debugging workflows<a class="headerlink" href="#introduction-to-debugging-workflows" title="Permalink to this headline">¶</a></h2>
+<p>Here, two different workflows on developing with the test harness are presented,
+and then the language for adding a new test is described.  Before describing the
+workflow, we first discuss the output of the test harness and how it maps onto
+makefile targets and shell scripts.</p>
+<p>Consider this line from running the PETSc test system:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">TEST</span> <span class="n">arch</span><span class="o">-</span><span class="n">ci</span><span class="o">-</span><span class="n">linux</span><span class="o">-</span><span class="n">uni</span><span class="o">-</span><span class="n">pkgs</span><span class="o">/</span><span class="n">tests</span><span class="o">/</span><span class="n">counts</span><span class="o">/</span><span class="n">vec_is_sf_tests</span><span class="o">-</span><span class="n">ex1_basic_1</span><span class="p">.</span><span class="n">counts</span>
+</pre></div>
+</div>
+<p>The string <cite>vec_is_sf_tests-ex1_basic_1</cite> gives the following information:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>The file generating the tests is found in <cite>$PETSC_DIR/src/vec/is/sf/tests/ex1.c</cite></p></li>
+<li><p>The makefile target for the <em>test</em> is <cite>vec_is_sf_tests-ex1_basic_1</cite></p></li>
+<li><p>The makefile target for the <em>executable</em> is <cite>$PETSC_ARCH/tests/vec/is/sf/tests/ex1</cite></p></li>
+<li><p>The shell script running the test is located at: <cite>$PETSC_DIR/$PETSC_ARCH/tests/vec/is/sf/tests/runex1_basic_1.sh</cite></p></li>
+</ul>
+</div></blockquote>
+<p>Let’s say that you want to debug a single test as part of development.  There
+are two basic methods of doing this:  1)  use shell script directly in test
+directory, or 2) use makefile from the top level directory.  We present both
+workflows.   There are many permutations of this and a developer should always
+find the method that makes them the most productive.</p>
+</div>
+<div class="section" id="debugging-a-petsc-test-using-shell-scripts">
+<h2>Debugging a PETSc test using shell scripts<a class="headerlink" href="#debugging-a-petsc-test-using-shell-scripts" title="Permalink to this headline">¶</a></h2>
+<p>First, suggest looking at the working directory and look at the options to the
+scripts:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>&gt; <span class="nb">cd</span> <span class="nv">$PETSC_ARCH</span>/tests/vec/is/sf/tests
+&gt; ./runex1_basic_1.sh -h
+Usage: ./runex1_basic_1.sh <span class="o">[</span>options<span class="o">]</span>
+
+OPTIONS
+  -a &lt;args&gt; ......... Override default arguments
+  -c ................ Cleanup <span class="o">(</span>remove generated files<span class="o">)</span>
+  -C ................ Compile
+  -d ................ Launch <span class="k">in</span> debugger
+  -e &lt;args&gt; ......... Add extra arguments to default
+  -f ................ force attempt to run <span class="nb">test</span> that would otherwise be skipped
+  -h ................ help: print this message
+  -n &lt;integer&gt; ...... Override the number of processors to use
+  -j ................ Pass -j to petscdiff <span class="o">(</span>just use diff<span class="o">)</span>
+  -J &lt;arg&gt; .......... Pass -J to petscdiff <span class="o">(</span>just use diff with arg<span class="o">)</span>
+  -m ................ Update results using petscdiff
+  -M ................ Update alt files using petscdiff
+  -o &lt;arg&gt; .......... Output format: <span class="s1">&#39;interactive&#39;</span>, <span class="s1">&#39;err_only&#39;</span>
+  -p ................ Print command:  Print first <span class="nb">command</span> and <span class="nb">exit</span>
+  -t ................ Override the default timeout <span class="o">(</span><span class="nv">default</span><span class="o">=</span><span class="m">60</span> sec<span class="o">)</span>
+  -U ................ run cUda-memcheck
+  -V ................ run Valgrind
+  -v ................ Verbose: Print commands
+</pre></div>
+</div>
+<p>We will be using the <cite>-C</cite>, <cite>-V</cite>, and <cite>-p</cite> flags.</p>
+<p>A basic workflow is something similar to:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>&lt;edit&gt;
+runex1_basic_1.sh -C
+&lt;edit&gt;
+...
+runex1_basic_1.sh -m  <span class="c1"># If need to update results</span>
+...
+runex1_basic_1.sh -V  <span class="c1"># Make sure valgrind clean</span>
+<span class="nb">cd</span> <span class="nv">$PETSC_DIR</span>
+git commit -a
+</pre></div>
+</div>
+<p>For loops sometimes can become onerous to run the whole test.
+In this case, you can use the <cite>-p</cite> flag to print just the first
+command.  It will print a command suitable for running from
+<cite>$PETSC_DIR</cite>, but it is easy to modify for execution in the test
+directory:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">runex1_basic_1</span><span class="p">.</span><span class="n">sh</span> <span class="o">-</span><span class="n">p</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="debugging-a-single-petsc-test-using-makefile">
+<h2>Debugging a single PETSc test using makefile<a class="headerlink" href="#debugging-a-single-petsc-test-using-makefile" title="Permalink to this headline">¶</a></h2>
+<p>First recall how to find help for the options:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>ptmake help-test
+</pre></div>
+</div>
+<p>To compile the test and run it:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>ptmake <span class="nb">test</span> <span class="nv">search</span><span class="o">=</span>vec_is_sf_tests-ex1_basic_1
+</pre></div>
+</div>
+<p>This can consist of your basic workflow.  However,
+for the normal compile and edit, running the entire harness with search can be
+cumbersome.  So first get the command:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>ptmake vec_is_sf_tests-ex1_basic_1 <span class="nv">PRINTONLY</span><span class="o">=</span><span class="m">1</span>
+&lt;copy command&gt;
+&lt;edit&gt;
+ptmake <span class="nv">$PETSC_ARCH</span>/tests/vec/is/sf/tests/ex1
+/scratch/kruger/contrib/petsc-mpich-cxx/bin/mpiexec -n <span class="m">1</span> arch-mpich-cxx-py3/tests/vec/is/sf/tests/ex1
+...
+<span class="nb">cd</span> <span class="nv">$PETSC_DIR</span>
+git commit -a
+</pre></div>
+</div>
+</div>
+<div class="section" id="advanced-searching">
+<h2>Advanced searching<a class="headerlink" href="#advanced-searching" title="Permalink to this headline">¶</a></h2>
+<p>For forming a search, it is recommended to always use <cite>print-test</cite> instead of
+test to make sure it is returning the values that you want.</p>
+<p>The three basic and recommended arguments are:</p>
+<blockquote>
+<div><ul class="simple">
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">search</span></code> (or <code class="docutils literal notranslate"><span class="pre">s</span></code>)</dt><dd><ul>
+<li><p>Searches based on name of test target (see above)</p></li>
+<li><p>Use the familiar glob syntax (like the Unix <cite>ls</cite> command)</p></li>
+<li><p>Example: <code class="docutils literal notranslate"><span class="pre">ptmake</span> <span class="pre">print-test</span> <span class="pre">search='vec_is*ex1*basic*1'</span></code></p></li>
+<li><p>Equivalently: <code class="docutils literal notranslate"><span class="pre">ptmake</span> <span class="pre">print-test</span> <span class="pre">s='vec_is*ex1*basic*1'</span></code></p></li>
+<li><p>It also takes full paths</p></li>
+<li><p>Example: <code class="docutils literal notranslate"><span class="pre">ptmake</span> <span class="pre">print-test</span> <span class="pre">s='src/vec/is/tests/ex1.c'</span></code></p></li>
+<li><p>Example: <code class="docutils literal notranslate"><span class="pre">ptmake</span> <span class="pre">print-test</span> <span class="pre">s='src/dm/impls/plex/tests/'</span></code></p></li>
+<li><p>Example: <code class="docutils literal notranslate"><span class="pre">ptmake</span> <span class="pre">print-test</span> <span class="pre">s='src/dm/impls/plex/tests/ex1.c'</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">query</span></code> and <code class="docutils literal notranslate"><span class="pre">queryval</span></code> (or <code class="docutils literal notranslate"><span class="pre">q</span></code> and <code class="docutils literal notranslate"><span class="pre">qv</span></code>)</dt><dd><ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">query</span></code> corresponds to test harness keyword, <code class="docutils literal notranslate"><span class="pre">queryval</span></code> to the value.</p></li>
+<li><p>Example: <code class="docutils literal notranslate"><span class="pre">ptmake</span> <span class="pre">print-test</span> <span class="pre">query='suffix'</span> <span class="pre">queryval='basic_1'</span></code></p></li>
+<li><p>Invokes <code class="docutils literal notranslate"><span class="pre">config/query_tests.py</span></code> to query the tests (see
+<code class="docutils literal notranslate"><span class="pre">config/query_tests.py</span> <span class="pre">--help</span></code> for more information).</p></li>
+<li><p>See below for how to use as it has many features</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">searchin</span></code> (or <code class="docutils literal notranslate"><span class="pre">i</span></code>)</dt><dd><ul>
+<li><p>Filters results of above searches</p></li>
+<li><p>Example: <code class="docutils literal notranslate"><span class="pre">ptmake</span> <span class="pre">print-test</span> <span class="pre">s='src/dm/impls/plex/tests/ex1.c'</span> <span class="pre">i='*refine_overlap_2d*'</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</div></blockquote>
+<p>Searching using gmake’s native regexp functionality is kept for people who like it, but most developers will likely prefer the above methods:</p>
+<blockquote>
+<div><ul class="simple">
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">gmakesearch</span></code></dt><dd><ul>
+<li><p>Use gmake’s own filter capability.</p></li>
+<li><p>Fast, but requires knowing gmake regex syntax which uses <cite>%</cite> instead of <cite>*</cite></p></li>
+<li><p>Also very limited (cannot use two <cite>%</cite>’s for example)</p></li>
+<li><p>Example: <code class="docutils literal notranslate"><span class="pre">ptmake</span> <span class="pre">test</span> <span class="pre">gmakesearch='vec_is%ex1_basic_1'</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">gmakesearchin</span></code></dt><dd><ul>
+<li><p>Use gmake’s own filter capability to search in previous results</p></li>
+<li><p>Example: <code class="docutils literal notranslate"><span class="pre">ptmake</span> <span class="pre">test</span> <span class="pre">gmakesearch='vec_is%1'</span> <span class="pre">gmakesearchin='basic'</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">argsearch</span></code></dt><dd><ul>
+<li><p>search on arguments using gmake.  This is deprecated in favor of the query/queryval method as described below.</p></li>
+<li><p>Example: <code class="docutils literal notranslate"><span class="pre">ptmake</span> <span class="pre">test</span> <span class="pre">argsearch='sf_type'</span></code></p></li>
+<li><p>Not very powerful</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</div></blockquote>
+<div class="section" id="query-based-searching">
+<h3>Query-based searching<a class="headerlink" href="#query-based-searching" title="Permalink to this headline">¶</a></h3>
+<p>Basic examples.  Note the the use of glob style matching is also accepted in the value field:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Example: <code class="docutils literal notranslate"><span class="pre">ptmake</span> <span class="pre">print-test</span> <span class="pre">query='suffix'</span> <span class="pre">queryval='basic_1'</span></code></p></li>
+<li><p>Example: <code class="docutils literal notranslate"><span class="pre">ptmake</span> <span class="pre">print-test</span> <span class="pre">query='requires'</span> <span class="pre">queryval='cuda'</span></code></p></li>
+<li><p>Example: <code class="docutils literal notranslate"><span class="pre">ptmake</span> <span class="pre">print-test</span> <span class="pre">query='requires'</span> <span class="pre">queryval='define(PETSC_HAVE_MPI_GPU_AWARE)'</span></code></p></li>
+<li><p>Example: <code class="docutils literal notranslate"><span class="pre">ptmake</span> <span class="pre">print-test</span> <span class="pre">query='requires'</span> <span class="pre">queryval='*GPU_AWARE*'</span></code></p></li>
+</ul>
+</div></blockquote>
+<p>Using the <code class="docutils literal notranslate"><span class="pre">name</span></code> field is equivalent to the search above:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Example: <code class="docutils literal notranslate"><span class="pre">ptmake</span> <span class="pre">print-test</span> <span class="pre">query='name'</span> <span class="pre">queryval='vec_is*ex1*basic*1'</span></code></p></li>
+<li><p>Useful because this can be combined with union/intersect queries as discussed below</p></li>
+</ul>
+</div></blockquote>
+<p>Arguments are tricky to search for.  Consider:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="nl">args</span><span class="p">:</span>  <span class="o">-</span><span class="n">ksp_monitor_short</span> <span class="o">-</span><span class="n">pc_type</span> <span class="n">ml</span> <span class="o">-</span><span class="n">ksp_max_it</span> <span class="mi">3</span>
+</pre></div>
+</div>
+<p>Search terms are:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span>ksp_monitor, &#39;pc_type ml&#39;, ksp_max_it
+</pre></div>
+</div>
+<p>Certain items are ignored:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Numbers (see <code class="docutils literal notranslate"><span class="pre">ksp_max_it</span></code> above), but floats are ignored as well.</p></li>
+<li><dl class="simple">
+<dt>Loops:</dt><dd><p><code class="docutils literal notranslate"><span class="pre">args:</span> <span class="pre">-pc_fieldsplit_diag_use_amat</span> <span class="pre">{{0</span> <span class="pre">1}}</span></code> gives <code class="docutils literal notranslate"><span class="pre">pc_fieldsplit_diag_use_amat</span></code> as the search term</p>
+</dd>
+</dl>
+</li>
+<li><p>Input files: <code class="docutils literal notranslate"><span class="pre">-f</span> <span class="pre">*</span></code></p></li>
+</ul>
+</div></blockquote>
+<p>Examples of argument searching:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">ptmake</span> <span class="pre">print-test</span> <span class="pre">query='args'</span> <span class="pre">queryval='ksp_monitor'</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ptmake</span> <span class="pre">print-test</span> <span class="pre">query='args'</span> <span class="pre">queryval='*monitor*'</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ptmake</span> <span class="pre">print-test</span> <span class="pre">query='args'</span> <span class="pre">queryval='pc_type</span> <span class="pre">ml'</span></code></p></li>
+</ul>
+</div></blockquote>
+<p>Multiple simultaneous queries can be performed with union (<code class="docutils literal notranslate"><span class="pre">,</span></code>), and intesection (<code class="docutils literal notranslate"><span class="pre">|</span></code>)  operators in the <code class="docutils literal notranslate"><span class="pre">query</span></code> field.  Examples:</p>
+<blockquote>
+<div><ul class="simple">
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">ptmake</span> <span class="pre">print-test</span> <span class="pre">query='requires,requires'</span> <span class="pre">queryval='cuda,hip'</span></code></dt><dd><ul>
+<li><p>All examples using cuda + all examples using hip</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">ptmake</span> <span class="pre">print-test</span> <span class="pre">query='requires|requires'</span> <span class="pre">queryval='ctetgen,triangle'</span></code></dt><dd><ul>
+<li><p>Examples that require both triangle and ctetgen (intersection of tests)</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">ptmake</span> <span class="pre">print-test</span> <span class="pre">query='requires,requires'</span> <span class="pre">queryval='ctetgen,triangle'</span></code></dt><dd><ul>
+<li><p>Tests that require either ctetgen or triangle</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">ptmake</span> <span class="pre">print-test</span> <span class="pre">query='requires|name'</span> <span class="pre">queryval='cuda,dm*'</span></code></dt><dd><ul>
+<li><p>Find cuda examples in the <cite>dm</cite> package.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</div></blockquote>
+<p>Here is a way of getting a feel for how the union and intersect operators work:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>&gt; ptmake print-test <span class="nv">query</span><span class="o">=</span><span class="s1">&#39;requires&#39;</span> <span class="nv">queryval</span><span class="o">=</span><span class="s1">&#39;ctetgen&#39;</span> <span class="p">|</span> tr <span class="s1">&#39; &#39;</span> <span class="s1">&#39;\n&#39;</span> <span class="p">|</span> wc -l
+<span class="m">170</span>
+&gt; ptmake print-test <span class="nv">query</span><span class="o">=</span><span class="s1">&#39;requires&#39;</span> <span class="nv">queryval</span><span class="o">=</span><span class="s1">&#39;triangle&#39;</span> <span class="p">|</span> tr <span class="s1">&#39; &#39;</span> <span class="s1">&#39;\n&#39;</span> <span class="p">|</span> wc -l
+<span class="m">330</span>
+&gt; ptmake print-test <span class="nv">query</span><span class="o">=</span><span class="s1">&#39;requires,requires&#39;</span> <span class="nv">queryval</span><span class="o">=</span><span class="s1">&#39;ctetgen,triangle&#39;</span> <span class="p">|</span> tr <span class="s1">&#39; &#39;</span> <span class="s1">&#39;\n&#39;</span> <span class="p">|</span> wc -l
+<span class="m">478</span>
+&gt; ptmake print-test <span class="nv">query</span><span class="o">=</span><span class="s1">&#39;requires|requires&#39;</span> <span class="nv">queryval</span><span class="o">=</span><span class="s1">&#39;ctetgen,triangle&#39;</span> <span class="p">|</span> tr <span class="s1">&#39; &#39;</span> <span class="s1">&#39;\n&#39;</span> <span class="p">|</span> wc -l
+<span class="m">22</span>
+</pre></div>
+</div>
+<p>The total number of tests for running only ctetgen or triangle is 500.  They have 22 tests in common, and 478 that
+run independently of each other.</p>
+<blockquote>
+<div><ul>
+<li><p>The union and intersection have fixed grouping.  So this string argument:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span>query=&#39;requires,requires|args&#39; queryval=&#39;cuda,hip,*log*&#39;
+</pre></div>
+</div>
+<p>will can be read as:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="nl">requires</span><span class="p">:</span><span class="n">cuda</span> <span class="o">&amp;&amp;</span> <span class="p">(</span><span class="nl">requires</span><span class="p">:</span><span class="n">hip</span> <span class="o">||</span> <span class="nl">args</span><span class="p">:</span><span class="o">*</span><span class="n">log</span><span class="o">*</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>which is probably not what is intended.</p>
+</li>
+</ul>
+</div></blockquote>
+<dl>
+<dt><code class="docutils literal notranslate"><span class="pre">query/queryval</span></code> also support negation (<code class="docutils literal notranslate"><span class="pre">!</span></code>), but is limited.  The negation only applies to tests that have a related field in it.  So for</dt><dd><p>example, the arguments of:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span>query=requires queryval=&#39;!cuda&#39;
+</pre></div>
+</div>
+<p>will only match if they explicitly have:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="nl">requires</span><span class="p">:</span> <span class="o">!</span><span class="n">cuda</span>
+</pre></div>
+</div>
+<p>It does not match all cases that do not require cuda.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="section" id="debugging-for-loops">
+<h2>Debugging for loops<a class="headerlink" href="#debugging-for-loops" title="Permalink to this headline">¶</a></h2>
+<p>One of the more difficult issues is how to debug for loops when a subset of the
+arguments are the ones that cause a code crash.  The default naming scheme is
+not always helpful for figuring out the argument combination.</p>
+<p>For example:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>&gt; ptmake <span class="nb">test</span> <span class="nv">s</span><span class="o">=</span><span class="s1">&#39;src/ksp/ksp/tests/ex9.c&#39;</span> <span class="nv">i</span><span class="o">=</span><span class="s1">&#39;*1&#39;</span>
+Using MAKEFLAGS: <span class="nv">i</span><span class="o">=</span>*1 <span class="nv">s</span><span class="o">=</span>src/ksp/ksp/tests/ex9.c
+        TEST arch-osx-pkgs-opt-new/tests/counts/ksp_ksp_tests-ex9_1.counts
+ ok ksp_ksp_tests-ex9_1+pc_fieldsplit_diag_use_amat-0_pc_fieldsplit_diag_use_amat-0_pc_fieldsplit_type-additive
+ not ok diff-ksp_ksp_tests-ex9_1+pc_fieldsplit_diag_use_amat-0_pc_fieldsplit_diag_use_amat-0_pc_fieldsplit_type-additive
+ ok ksp_ksp_tests-ex9_1+pc_fieldsplit_diag_use_amat-0_pc_fieldsplit_diag_use_amat-0_pc_fieldsplit_type-multiplicative
+ ...
+</pre></div>
+</div>
+<p>In this case, the trick is to use the verbose option, <cite>V=1</cite> (or for the shell script workflows, <cite>-v</cite>) to have it show the commands:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>&gt; ptmake <span class="nb">test</span> <span class="nv">s</span><span class="o">=</span><span class="s1">&#39;src/ksp/ksp/tests/ex9.c&#39;</span> <span class="nv">i</span><span class="o">=</span><span class="s1">&#39;*1&#39;</span> <span class="nv">V</span><span class="o">=</span><span class="m">1</span>
+Using MAKEFLAGS: <span class="nv">V</span><span class="o">=</span><span class="m">1</span> <span class="nv">i</span><span class="o">=</span>*1 <span class="nv">s</span><span class="o">=</span>src/ksp/ksp/tests/ex9.c
+arch-osx-pkgs-opt-new/tests/ksp/ksp/tests/runex9_1.sh  -v
+ ok ksp_ksp_tests-ex9_1+pc_fieldsplit_diag_use_amat-0_pc_fieldsplit_diag_use_amat-0_pc_fieldsplit_type-additive <span class="c1"># mpiexec  -n 1 ../ex9 -ksp_converged_reason -ksp_error_if_not_converged  -pc_fieldsplit_diag_use_amat 0 -pc_fieldsplit_diag_use_amat 0 -pc_fieldsplit_type additive &gt; ex9_1.tmp 2&gt; runex9_1.err</span>
+...
+</pre></div>
+</div>
+<p>This can still be hard to read and pick out what you want.  So use the fact that you want`not ok`
+combined with the fact that <cite>#</cite> is the delimiter:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>&gt; ptmake <span class="nb">test</span> <span class="nv">s</span><span class="o">=</span><span class="s1">&#39;src/ksp/ksp/tests/ex9.c&#39;</span> <span class="nv">i</span><span class="o">=</span><span class="s1">&#39;*1&#39;</span> <span class="nv">v</span><span class="o">=</span><span class="m">1</span> <span class="p">|</span> grep <span class="s1">&#39;not ok&#39;</span> <span class="p">|</span> cut -d# -f2
+mpiexec  -n <span class="m">1</span> ../ex9 -ksp_converged_reason -ksp_error_if_not_converged  -pc_fieldsplit_diag_use_amat <span class="m">0</span> -pc_fieldsplit_diag_use_amat <span class="m">0</span> -pc_fieldsplit_type multiplicative &gt; ex9_1.tmp <span class="m">2</span>&gt; runex9_1.err
+</pre></div>
+</div>
+</div>
+<div class="section" id="petsc-test-description-language">
+<h2>PETSc Test Description Language<a class="headerlink" href="#petsc-test-description-language" title="Permalink to this headline">¶</a></h2>
+<p>PETSc tests and tutorials contain within their file a simple language to
+describe tests and subtests required to run executables associated with
+compilation of that file. The general skeleton of the file is</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">static</span> <span class="kt">char</span> <span class="n">help</span><span class="p">[]</span> <span class="o">=</span> <span class="s">&quot;A simple MOAB example</span><span class="se">\n</span><span class="s">\</span>
+
+<span class="p">...</span>
+<span class="o">&lt;</span><span class="n">source</span> <span class="n">code</span><span class="o">&gt;</span>
+<span class="p">...</span>
+
+<span class="cm">/*TEST</span>
+<span class="cm">   build:</span>
+<span class="cm">     requires: moab</span>
+<span class="cm">   testset:</span>
+<span class="cm">     suffix: 1</span>
+<span class="cm">     requires: !complex</span>
+<span class="cm">   testset:</span>
+<span class="cm">     suffix: 2</span>
+<span class="cm">     args: -debug -fields v1,v2,v3</span>
+<span class="cm">     test:</span>
+<span class="cm">     test:</span>
+<span class="cm">       args: -foo bar</span>
+<span class="cm">TEST*/</span>
+</pre></div>
+</div>
+<p>For our language, a <em>test</em> is associated with the following</p>
+<ul class="simple">
+<li><p>A single shell script</p></li>
+<li><p>A single makefile</p></li>
+<li><p>A single output file that represents the <em>expected esults</em></p></li>
+</ul>
+<p>Two or more command tests, usually, one or more mpiexec tests that run
+the executable, and one or more diff tests to compare output with the
+expected result.</p>
+<p>Our language also supports a <em>testset</em> that specifies either a new test
+entirely or multiple executable/diff tests within a single test. At the
+core, the executable/diff test combination will look something like
+this:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">mpiexec</span> <span class="o">-</span><span class="n">n</span> <span class="mi">1</span> <span class="p">..</span><span class="o">/</span><span class="n">ex1</span> <span class="mi">1</span><span class="o">&gt;</span> <span class="n">ex1</span><span class="p">.</span><span class="n">tmp</span> <span class="mi">2</span><span class="o">&gt;</span> <span class="n">ex1</span><span class="p">.</span><span class="n">err</span>
+<span class="n">diff</span> <span class="n">ex1</span><span class="p">.</span><span class="n">tmp</span> <span class="n">output</span><span class="o">/</span><span class="n">ex1</span><span class="p">.</span><span class="n">out</span> <span class="mi">1</span><span class="o">&gt;</span> <span class="n">diff</span><span class="o">-</span><span class="n">ex1</span><span class="p">.</span><span class="n">tmp</span> <span class="mi">2</span><span class="o">&gt;</span> <span class="n">diff</span><span class="o">-</span><span class="n">ex1</span><span class="p">.</span><span class="n">err</span>
+</pre></div>
+</div>
+<p>In practice, we want to do various logging and counting by the test
+harness; as are explained further below. The input language supports
+simple yet flexible test control, and we begin by describing this
+language.</p>
+<div class="section" id="runtime-language-options">
+<h3>Runtime Language Options<a class="headerlink" href="#runtime-language-options" title="Permalink to this headline">¶</a></h3>
+<p>At the end of each test file, a marked comment block is
+inserted to describe the test(s) to be run. The elements of the test are
+done with a set of supported key words that sets up the test.</p>
+<p>The goals of the language are to be</p>
+<ul class="simple">
+<li><p>as minimal as possible with the simplest test requiring only one keyword,</p></li>
+<li><p>independent of the filename such that a file can be renamed without rewriting the tests, and</p></li>
+<li><p>intuitive.</p></li>
+</ul>
+<p>In order to enable the second goal, the <em>basestring</em> of the filename is
+defined as the filename without the extension; for example, if the
+filename is <code class="docutils literal notranslate"><span class="pre">ex1.c</span></code>, then <code class="docutils literal notranslate"><span class="pre">basestring=ex1</span></code>.</p>
+<p>With this background, these keywords are as follows.</p>
+<ul class="simple">
+<li><p><strong>testset</strong> or <strong>test</strong>: (<em>Required</em>)</p>
+<ul>
+<li><p>At the top level either a single test or a test set must be
+specified. All other keywords are sub-entries of this keyword.</p></li>
+</ul>
+</li>
+<li><p><strong>suffix</strong>: (<em>Optional</em>; <em>Default:</em> <code class="docutils literal notranslate"><span class="pre">suffix=&quot;&quot;</span></code>)</p>
+<ul>
+<li><p>The test name is given by <code class="docutils literal notranslate"><span class="pre">testname</span> <span class="pre">=</span> <span class="pre">basestring</span></code> if the suffix
+is set to an empty string, and by
+<code class="docutils literal notranslate"><span class="pre">testname</span> <span class="pre">=</span> <span class="pre">basestring</span> <span class="pre">+</span> <span class="pre">&quot;_&quot;</span> <span class="pre">+</span> <span class="pre">suffix</span></code> otherwise.</p></li>
+<li><p>This can be specified only for top level test nodes.</p></li>
+</ul>
+</li>
+<li><p><strong>output_file</strong>: (<em>Optional</em>; <em>Default:</em>
+<code class="docutils literal notranslate"><span class="pre">output_file</span> <span class="pre">=</span> <span class="pre">&quot;output/&quot;</span> <span class="pre">+</span> <span class="pre">testname</span> <span class="pre">+</span> <span class="pre">&quot;.out&quot;</span></code>)</p>
+<ul>
+<li><p>The output of the test is to be compared with an <em>expected result</em>
+whose name is given by <code class="docutils literal notranslate"><span class="pre">output_file</span></code>.</p></li>
+<li><p>This file is described relative to the source directory of the
+source file and should be in the output subdirectory (for example,
+<code class="docutils literal notranslate"><span class="pre">output/ex1.out</span></code>)</p></li>
+</ul>
+</li>
+<li><p><strong>nsize</strong>: (<em>Optional</em>; <em>Default:</em> <code class="docutils literal notranslate"><span class="pre">nsize=1</span></code>)</p>
+<ul>
+<li><p>This integer is passed to mpiexec; i.e., <code class="docutils literal notranslate"><span class="pre">mpiexec</span> <span class="pre">-n</span> <span class="pre">nsize</span></code></p></li>
+</ul>
+</li>
+<li><p><strong>args</strong>: (<em>Optional</em>; <em>Default:</em> <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code>)</p>
+<ul>
+<li><p>These arguments are passed to the executable.</p></li>
+</ul>
+</li>
+<li><p><strong>diff_args</strong>: (<em>Optional</em>; <em>Default:</em> <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code>)</p>
+<ul>
+<li><p>These arguments are passed to the <code class="docutils literal notranslate"><span class="pre">lib/petsc/bin/petscdiff</span></code> script that
+is used in the diff part of the test.  For example, <code class="docutils literal notranslate"><span class="pre">-j</span></code> enables testing
+the floating point numbers.</p></li>
+</ul>
+</li>
+<li><p><strong>TODO</strong>: (<em>Optional</em>; <em>Default:</em> <code class="docutils literal notranslate"><span class="pre">False</span></code>)</p>
+<ul>
+<li><p>Setting this Boolean to True will tell the test to appear in the
+test harness but report only TODO per the TAP standard.</p></li>
+<li><p>A runscript will be generated and can easily be modified by hand
+to run.</p></li>
+</ul>
+</li>
+<li><p><strong>filter</strong>: (<em>Optional</em>; <em>Default:</em> <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code>)</p>
+<ul>
+<li><p>Sometimes only a subset of the output is meant to be tested
+against the expected result. If this keyword is used, it processes
+the executable output and puts it into the file to be actually
+compared with <code class="docutils literal notranslate"><span class="pre">output_file</span></code>.</p></li>
+<li><p>The value of this is the command to be run, for example,
+<code class="docutils literal notranslate"><span class="pre">grep</span> <span class="pre">foo</span></code> or <code class="docutils literal notranslate"><span class="pre">sort</span> <span class="pre">-nr</span></code>.</p></li>
+<li><p>If the filter begins with <code class="docutils literal notranslate"><span class="pre">Error:</span></code>, then the test is assumed to
+be testing the <code class="docutils literal notranslate"><span class="pre">stderr</span></code> output, and the error code and output
+are set up to be tested.</p></li>
+</ul>
+</li>
+<li><p><strong>filter_output</strong>: (<em>Optional</em>; <em>Default:</em> <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code>)</p>
+<ul>
+<li><p>Sometimes filtering the output file is useful for standardizing
+tests. For example, in order to handle the issues related to
+parallel output, both the output from the test example and the
+output file need to be sorted (since sort does not produce the
+same output on all machines). This works the same as filter to
+implement this feature</p></li>
+</ul>
+</li>
+<li><p><strong>localrunfiles</strong>: (<em>Optional</em>; <em>Default:</em> <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code>)</p>
+<ul>
+<li><p>The tests are run under <code class="docutils literal notranslate"><span class="pre">PETSC_ARCH/tests</span></code>, but some tests
+require runtime files that are maintained in the source tree.
+Files in this (space-delimited) list will be copied over. If you
+list a directory instead of files, it will copy the entire
+directory (this is limited currently to a single directory)</p></li>
+<li><p>The copying is done by the test generator and not by creating
+makefile dependencies.</p></li>
+</ul>
+</li>
+<li><p><strong>requires</strong>: (<em>Optional</em>; <em>Default:</em> <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code>)</p>
+<ul>
+<li><p>This is a space-delimited list of run requirements (not build
+requirements; see Build requirements below).</p></li>
+<li><p>In general, the language supports <code class="docutils literal notranslate"><span class="pre">and</span></code> and <code class="docutils literal notranslate"><span class="pre">not</span></code> constructs
+using <code class="docutils literal notranslate"><span class="pre">!</span> <span class="pre">=&gt;</span> <span class="pre">not</span></code> and <code class="docutils literal notranslate"><span class="pre">,</span> <span class="pre">=&gt;</span> <span class="pre">and</span></code>.</p></li>
+<li><p>MPIUNI should work for all -n 1 examples so this need not be in
+the requirements list.</p></li>
+<li><p>Inputs sometimes require external matrices that are found in the
+DATAFILES path. For these tests <code class="docutils literal notranslate"><span class="pre">requires:</span> <span class="pre">datafilespath</span></code> can be
+specifed.</p></li>
+<li><p>Packages are indicated with lower-case specification, for example,
+<code class="docutils literal notranslate"><span class="pre">requires:</span> <span class="pre">superlu_dist</span></code>.</p></li>
+<li><p>Any defined variable in petscconf.h can be specified with the
+<code class="docutils literal notranslate"><span class="pre">defined(...)</span></code> syntax, for example, <code class="docutils literal notranslate"><span class="pre">defined(PETSC_USE_INFO)</span></code>.</p></li>
+<li><p>Any definition of the form <code class="docutils literal notranslate"><span class="pre">PETSC_HAVE_FOO</span></code> can just use
+<code class="docutils literal notranslate"><span class="pre">requires:</span> <span class="pre">foo</span></code> similar to how third-party packages are handled.</p></li>
+</ul>
+</li>
+<li><p><strong>timeoutfactor</strong>: (<em>Optional</em>; <em>Default:</em> <code class="docutils literal notranslate"><span class="pre">&quot;1&quot;</span></code>)</p>
+<ul>
+<li><p>This parameter allows you to extend the default timeout for an
+individual test such that the new timeout time is
+<code class="docutils literal notranslate"><span class="pre">timeout=(default</span> <span class="pre">timeout)</span> <span class="pre">x</span> <span class="pre">(timeoutfactor)</span></code>.</p></li>
+<li><p>Tests are limited to a set time that is found at the top of
+<code class="docutils literal notranslate"><span class="pre">&quot;config/petsc_harness.sh&quot;</span></code> and can be overwritten by passing in
+the <code class="docutils literal notranslate"><span class="pre">TIMEOUT</span></code> argument to <code class="docutils literal notranslate"><span class="pre">gmakefile</span></code> (see
+<code class="docutils literal notranslate"><span class="pre">ptmake</span> <span class="pre">help</span></code>.</p></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="additional-specifications">
+<h3>Additional Specifications<a class="headerlink" href="#additional-specifications" title="Permalink to this headline">¶</a></h3>
+<p>In addition to the above keywords, other language features are
+supported.</p>
+<ul>
+<li><p><strong>for loops</strong>: Specifying <code class="docutils literal notranslate"><span class="pre">{{list</span> <span class="pre">of</span> <span class="pre">values}}</span></code> will generate a loop over
+an enclosed space-delimited list of values.
+It is supported within <code class="docutils literal notranslate"><span class="pre">nsize</span></code> and <code class="docutils literal notranslate"><span class="pre">args</span></code>. For example,</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="nl">nsize</span><span class="p">:</span> <span class="p">{{</span><span class="mi">1</span> <span class="mi">2</span> <span class="mi">4</span><span class="p">}}</span>
+<span class="nl">args</span><span class="p">:</span> <span class="o">-</span><span class="n">matload_block_size</span> <span class="p">{{</span><span class="mi">2</span> <span class="mi">3</span><span class="p">}}</span>
+</pre></div>
+</div>
+<p>Here the output for each <code class="docutils literal notranslate"><span class="pre">-matload_block_size</span></code> value is assumed to give
+the same output so that only one output file is needed.</p>
+<p>If the loop causes a different output, then separate output needs to be used:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="nl">args</span><span class="p">:</span> <span class="o">-</span><span class="n">matload_block_size</span> <span class="p">{{</span><span class="mi">2</span> <span class="mi">3</span><span class="p">}</span><span class="n">separate</span> <span class="n">output</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>In this case, each loop value generates a separate script,
+and a separate output file is needed.</p>
+<p>Note that <code class="docutils literal notranslate"><span class="pre">{{...}shared</span> <span class="pre">output}</span></code> is equivalent to <code class="docutils literal notranslate"><span class="pre">{{...}}</span></code>.</p>
+<p>See examples below for how it works in practice.</p>
+</li>
+</ul>
+</div>
+<div class="section" id="test-block-examples">
+<h3>Test Block Examples<a class="headerlink" href="#test-block-examples" title="Permalink to this headline">¶</a></h3>
+<p>The following is the simplest test block:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="l l-Scalar l-Scalar-Plain">/*TEST</span>
+  <span class="l l-Scalar l-Scalar-Plain">test</span><span class="p p-Indicator">:</span>
+<span class="l l-Scalar l-Scalar-Plain">TEST*/</span>
+</pre></div>
+</div>
+<p>If this block is in <code class="docutils literal notranslate"><span class="pre">src/a/b/examples/tutorials/ex1.c</span></code>, then it will
+create <code class="docutils literal notranslate"><span class="pre">a_b_tutorials-ex1</span></code> test that requires only one
+processor/thread, with no arguments, and diff the resultant output with
+<code class="docutils literal notranslate"><span class="pre">src/a/b/examples/tutorials/output/ex1.out</span></code>.</p>
+<p>For Fortran, the equivalent is</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="c">!/*TEST</span>
+<span class="c">!  test:</span>
+<span class="c">!TEST*/</span>
+</pre></div>
+</div>
+<p>A more complete example showing just the part within the <cite>/*TEST</cite>:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">test</span><span class="p">:</span>
+<span class="nt">test</span><span class="p">:</span>
+  <span class="nt">suffix</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>
+  <span class="nt">nsize</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">2</span>
+  <span class="nt">args</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">-t 2 -pc_type jacobi -ksp_monitor_short -ksp_type gmres</span>
+  <span class="nt">args</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">-ksp_gmres_cgs_refinement_type refine_always -s2_ksp_type bcgs</span>
+  <span class="nt">args</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">-s2_pc_type jacobi -s2_ksp_monitor_short</span>
+  <span class="nt">requires</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">x</span>
+</pre></div>
+</div>
+<p>This creates two tests. Assuming that this is
+<code class="docutils literal notranslate"><span class="pre">src/a/b/examples/tutorials/ex1.c</span></code>, the tests would be
+<code class="docutils literal notranslate"><span class="pre">a_b_tutorials-ex1</span></code> and <code class="docutils literal notranslate"><span class="pre">a_b_tutorials-ex1_1</span></code>.</p>
+<p>Following is an example of how to test a permutuation of arguments
+against the same output file:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">testset</span><span class="p">:</span>
+  <span class="nt">suffix</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">19</span>
+  <span class="nt">requires</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">datafilespath</span>
+  <span class="nt">args</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">-f0 ${DATAFILESPATH}/matrices/poisson1</span>
+  <span class="nt">args</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">-ksp_type cg -pc_type icc -pc_factor_levels 2</span>
+  <span class="nt">test</span><span class="p">:</span>
+  <span class="nt">test</span><span class="p">:</span>
+    <span class="nt">args</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">-mat_type seqsbaij</span>
+</pre></div>
+</div>
+<p>Assuming that this is <code class="docutils literal notranslate"><span class="pre">ex10.c</span></code>, there would be two mpiexec/diff
+invocations in <code class="docutils literal notranslate"><span class="pre">runex10_19.sh</span></code>.</p>
+<p>Here is a similar example, but the permutation of arguments creates
+different output:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">testset</span><span class="p">:</span>
+  <span class="nt">requires</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">datafilespath</span>
+  <span class="nt">args</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">-f0 ${DATAFILESPATH}/matrices/medium</span>
+  <span class="nt">args</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">-ksp_type bicg</span>
+  <span class="nt">test</span><span class="p">:</span>
+    <span class="nt">suffix</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">4</span>
+    <span class="nt">args</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">-pc_type lu</span>
+  <span class="nt">test</span><span class="p">:</span>
+    <span class="nt">suffix</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">5</span>
+</pre></div>
+</div>
+<p>Assuming that this is <code class="docutils literal notranslate"><span class="pre">ex10.c</span></code>, two shell scripts will be created:
+<code class="docutils literal notranslate"><span class="pre">runex10_4.sh</span></code> and <code class="docutils literal notranslate"><span class="pre">runex10_5.sh</span></code>.</p>
+<p>An example using a for loop is:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">testset</span><span class="p">:</span>
+  <span class="nt">suffix</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">1</span>
+  <span class="nt">args</span><span class="p">:</span>   <span class="l l-Scalar l-Scalar-Plain">-f ${DATAFILESPATH}/matrices/small -mat_type aij</span>
+  <span class="nt">requires</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">datafilespath</span>
+<span class="nt">testset</span><span class="p">:</span>
+  <span class="nt">suffix</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">2</span>
+  <span class="nt">output_file</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">output/ex138_1.out</span>
+  <span class="nt">args</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">-f ${DATAFILESPATH}/matrices/small</span>
+  <span class="nt">args</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">-mat_type baij -matload_block_size {{2 3}shared output}</span>
+  <span class="nt">requires</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">datafilespath</span>
+</pre></div>
+</div>
+<p>In this example, <code class="docutils literal notranslate"><span class="pre">ex138_2</span></code> will invoke <code class="docutils literal notranslate"><span class="pre">runex138_2.sh</span></code> twice with
+two different arguments, but both are diffed with the same file.</p>
+<p>Following is an example showing the hierarchical nature of the test
+specification.</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">testset</span><span class="p">:</span>
+  <span class="l l-Scalar l-Scalar-Plain">suffix:2</span>
+  <span class="l l-Scalar l-Scalar-Plain">output_file</span><span class="p p-Indicator">:</span> <span class="l l-Scalar l-Scalar-Plain">output/ex138_1.out</span>
+  <span class="nt">args</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">-f ${DATAFILESPATH}/matrices/small -mat_type baij</span>
+  <span class="nt">test</span><span class="p">:</span>
+    <span class="nt">args</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">-matload_block_size 2</span>
+  <span class="nt">test</span><span class="p">:</span>
+    <span class="nt">args</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">-matload_block_size 3</span>
+</pre></div>
+</div>
+<p>This is functionally equivalent to the for loop shown above.</p>
+<p>Here is a more complex example using for loops:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">testset</span><span class="p">:</span>
+  <span class="nt">suffix</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">19</span>
+  <span class="nt">requires</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">datafilespath</span>
+  <span class="nt">args</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">-f0 ${DATAFILESPATH}/matrices/poisson1</span>
+  <span class="nt">args</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">-ksp_type cg -pc_type icc</span>
+  <span class="nt">args</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">-pc_factor_levels {{0 2 4}separate output}</span>
+  <span class="nt">test</span><span class="p">:</span>
+  <span class="nt">test</span><span class="p">:</span>
+    <span class="nt">args</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">-mat_type seqsbaij</span>
+</pre></div>
+</div>
+<p>If this is in <code class="docutils literal notranslate"><span class="pre">ex10.c</span></code>, then the shell scripts generated would be</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">runex10_19_pc_factor_levels-0.sh</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">runex10_19_pc_factor_levels-2.sh</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">runex10_19_pc_factor_levels-4.sh</span></code></p></li>
+</ul>
+<p>Each shell script would invoke twice.</p>
+</div>
+<div class="section" id="build-language-options">
+<h3>Build Language Options<a class="headerlink" href="#build-language-options" title="Permalink to this headline">¶</a></h3>
+<p>You can specify issues related to the compilation of the source file
+with the <code class="docutils literal notranslate"><span class="pre">build:</span></code> block. The language is as follows.</p>
+<ul class="simple">
+<li><p><strong>requires:</strong> (<em>Optional</em>; <em>Default:</em> <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code>)</p>
+<ul>
+<li><p>Same as the runtime requirements (for example, can include
+<code class="docutils literal notranslate"><span class="pre">requires:</span> <span class="pre">fftw</span></code>) but also requirements related to types:</p>
+<ol class="arabic simple">
+<li><p>Precision types: <code class="docutils literal notranslate"><span class="pre">single</span></code>, <code class="docutils literal notranslate"><span class="pre">double</span></code>, <code class="docutils literal notranslate"><span class="pre">quad</span></code>, <code class="docutils literal notranslate"><span class="pre">int32</span></code></p></li>
+<li><p>Scalar types: <code class="docutils literal notranslate"><span class="pre">complex</span></code> (and <code class="docutils literal notranslate"><span class="pre">!complex</span></code>)</p></li>
+</ol>
+</li>
+<li><p>In addition, <code class="docutils literal notranslate"><span class="pre">TODO</span></code> is available to allow you to skip the build
+of this file but still maintain it in the source tree.</p></li>
+</ul>
+</li>
+<li><p><strong>depends:</strong> (<em>Optional</em>; <em>Default:</em> <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code>)</p>
+<ul>
+<li><p>List any dependencies required to compile the file</p></li>
+</ul>
+</li>
+</ul>
+<p>A typical example for compiling for only real numbers is</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cm">/*TEST</span>
+<span class="cm">  build:</span>
+<span class="cm">    requires: !complex</span>
+<span class="cm">  test:</span>
+<span class="cm">TEST*/</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="petsc-test-harness">
+<h2>PETSC Test Harness<a class="headerlink" href="#petsc-test-harness" title="Permalink to this headline">¶</a></h2>
+<p>The goals of the PETSc test harness are threefold.</p>
+<ol class="arabic simple">
+<li><p>Provide standard output used by other testing tools</p></li>
+<li><p>Be as lightweight as possible and easily fit within the PETSc build chain</p></li>
+<li><p>Provide information on all tests, even those that are not built or run because they do not meet the configuration requirements</p></li>
+</ol>
+<p>Before understanding the test harness, you should first understand the
+desired requirements for reporting and logging.</p>
+<div class="section" id="testing-the-parsing">
+<h3>Testing the Parsing<a class="headerlink" href="#testing-the-parsing" title="Permalink to this headline">¶</a></h3>
+<p>After inserting the language into the file, you can test the parsing by
+executing</p>
+<p>A dictionary will be pretty-printed. From this dictionary printout, any
+problems in the parsing are is usually obvious. This python file is used
+by</p>
+<p>in generating the test harness.</p>
+</div>
+</div>
+<div class="section" id="test-output-standards-tap">
+<h2>Test Output Standards: TAP<a class="headerlink" href="#test-output-standards-tap" title="Permalink to this headline">¶</a></h2>
+<p>The PETSc test system is designed to be compliant with the Test Anything
+Protocal (TAP); see <a class="reference external" href="https://testanything.org/tap-specification.html">https://testanything.org/tap-specification.html</a></p>
+<p>This is a simple standard designed to allow testing tools to work
+together easily. There are libraries to enable the output to be used
+easily, including sharness, which is used by the git team. However, the
+simplicity of the PETSc tests and TAP specification means that we use
+our own simple harness given by a single shell script that each file
+sources: <code class="docutils literal notranslate"><span class="pre">$PETSC_DIR/config/petsc_harness.sh</span></code>.</p>
+<p>As an example, consider this test input:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">test</span><span class="p">:</span>
+  <span class="nt">suffix</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">2</span>
+  <span class="nt">output_file</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">output/ex138.out</span>
+  <span class="nt">args</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">-f ${DATAFILESPATH}/matrices/small -mat_type {{aij baij sbaij}} -matload_block_size {{2 3}}</span>
+  <span class="nt">requires</span><span class="p">:</span> <span class="l l-Scalar l-Scalar-Plain">datafilespath</span>
+</pre></div>
+</div>
+<p>A sample output from this would be:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">ok</span> <span class="mi">1</span> <span class="n">In</span> <span class="n">mat</span><span class="p">...</span><span class="nl">tests</span><span class="p">:</span> <span class="s">&quot;./ex138 -f ${DATAFILESPATH}/matrices/small -mat_type aij -matload_block_size 2&quot;</span>
+<span class="n">ok</span> <span class="mi">2</span> <span class="n">In</span> <span class="n">mat</span><span class="p">...</span><span class="nl">tests</span><span class="p">:</span> <span class="s">&quot;Diff of ./ex138 -f ${DATAFILESPATH}/matrices/small -mat_type aij -matload_block_size 2&quot;</span>
+<span class="n">ok</span> <span class="mi">3</span> <span class="n">In</span> <span class="n">mat</span><span class="p">...</span><span class="nl">tests</span><span class="p">:</span> <span class="s">&quot;./ex138 -f ${DATAFILESPATH}/matrices/small -mat_type aij -matload_block_size 3&quot;</span>
+<span class="n">ok</span> <span class="mi">4</span> <span class="n">In</span> <span class="n">mat</span><span class="p">...</span><span class="nl">tests</span><span class="p">:</span> <span class="s">&quot;Diff of ./ex138 -f ${DATAFILESPATH}/matrices/small -mat_type aij -matload_block_size 3&quot;</span>
+<span class="n">ok</span> <span class="mi">5</span> <span class="n">In</span> <span class="n">mat</span><span class="p">...</span><span class="nl">tests</span><span class="p">:</span> <span class="s">&quot;./ex138 -f ${DATAFILESPATH}/matrices/small -mat_type baij -matload_block_size 2&quot;</span>
+<span class="n">ok</span> <span class="mi">6</span> <span class="n">In</span> <span class="n">mat</span><span class="p">...</span><span class="nl">tests</span><span class="p">:</span> <span class="s">&quot;Diff of ./ex138 -f ${DATAFILESPATH}/matrices/small -mat_type baij -matload_block_size 2&quot;</span>
+<span class="p">...</span>
+
+<span class="n">ok</span> <span class="mi">11</span> <span class="n">In</span> <span class="n">mat</span><span class="p">...</span><span class="nl">tests</span><span class="p">:</span> <span class="s">&quot;./ex138 -f ${DATAFILESPATH}/matrices/small -mat_type saij -matload_block_size 2&quot;</span>
+<span class="n">ok</span> <span class="mi">12</span> <span class="n">In</span> <span class="n">mat</span><span class="p">...</span><span class="nl">tests</span><span class="p">:</span> <span class="s">&quot;Diff of ./ex138 -f ${DATAFILESPATH}/matrices/small -mat_type aij -matload_block_size 2&quot;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="test-harness-implementation">
+<h2>Test Harness Implementation<a class="headerlink" href="#test-harness-implementation" title="Permalink to this headline">¶</a></h2>
+<p>Most of the requirements for being TAP-compliant lie in the shell
+scripts, so we focus on that description.</p>
+<p>A sample shell script is given the following.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/bin/sh</span>
+. petsc_harness.sh
+
+petsc_testrun ./ex1 ex1.tmp ex1.err
+petsc_testrun <span class="s1">&#39;diff ex1.tmp output/ex1.out&#39;</span> diff-ex1.tmp diff-ex1.err
+
+petsc_testend
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">petsc_harness.sh</span></code> is a small shell script that provides the logging and reporting
+functions <code class="docutils literal notranslate"><span class="pre">petsc_testrun</span></code> and <code class="docutils literal notranslate"><span class="pre">petsc_testend</span></code>.</p>
+<p>A small sample of the output from the test harness is as follows.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>ok 1 ./ex1
+ok 2 diff ex1.tmp output/ex1.out
+not ok 4 ./ex2
+#   ex2: Error: cannot read file
+not ok 5 diff ex2.tmp output/ex2.out
+ok 7 ./ex3 -f /matrices/small -mat_type aij -matload_block_size 2
+ok 8 diff ex3.tmp output/ex3.out
+ok 9 ./ex3 -f /matrices/small -mat_type aij -matload_block_size 3
+ok 10 diff ex3.tmp output/ex3.out
+ok 11 ./ex3 -f /matrices/small -mat_type baij -matload_block_size 2
+ok 12 diff ex3.tmp output/ex3.out
+ok 13 ./ex3 -f /matrices/small -mat_type baij -matload_block_size 3
+ok 14 diff ex3.tmp output/ex3.out
+ok 15 ./ex3 -f /matrices/small -mat_type sbaij -matload_block_size 2
+ok 16 diff ex3.tmp output/ex3.out
+ok 17 ./ex3 -f /matrices/small -mat_type sbaij -matload_block_size 3
+ok 18 diff ex3.tmp output/ex3.out
+# FAILED   4 5
+# failed 2/16 tests; 87.500% ok
+</pre></div>
+</div>
+<p>For developers, modifying the lines that get written to the file can be
+done by modifying <code class="docutils literal notranslate"><span class="pre">${PETSC_DIR}/config/example_template.py</span></code>.</p>
+<p>To modify the test harness, you can modify <code class="docutils literal notranslate"><span class="pre">${PETSC_DIR}/config/petsc_harness.sh</span></code>.</p>
+<div class="section" id="additional-tips">
+<h3>Additional Tips<a class="headerlink" href="#additional-tips" title="Permalink to this headline">¶</a></h3>
+<p>To rerun just the reporting use</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">config</span><span class="o">/</span><span class="n">report_tests</span><span class="p">.</span><span class="n">py</span>
+</pre></div>
+</div>
+<p>To see the full options use</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">config</span><span class="o">/</span><span class="n">report_tests</span><span class="p">.</span><span class="n">py</span> <span class="o">-</span><span class="n">h</span>
+</pre></div>
+</div>
+<p>To see the full timing information for the five most expensive tests use</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">config</span><span class="o">/</span><span class="n">report_tests</span><span class="p">.</span><span class="n">py</span> <span class="o">-</span><span class="n">t</span> <span class="mi">5</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="documentation.html" title="Developing PETSc Documentation"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="buildsystem.html" title="BuildSystem"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">PETSc 3.14.6 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >PETSc Developer’s Documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 1991-2021, UChicago Argonne, LLC and the PETSc Development Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.4.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,122 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DM/DMProjectFieldLabelLocal.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>DMProjectFieldLabelLocal</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/DM/DMProjectFieldLabelLocal.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="DMProjectFieldLabelLocal"><H1>DMProjectFieldLabelLocal</H1></A>
+This projects the given function of the input fields into the function space provided, putting the coefficients in a local vector, calculating only over the portion of the domain specified by the label. 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscdm.h"          
+#include "petscdmlabel.h"     
+#include "petscds.h"     
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../DM/DMProjectFieldLabelLocal.html#DMProjectFieldLabelLocal">DMProjectFieldLabelLocal</A>(<A HREF="../DM/DM.html#DM">DM</A> dm, <A HREF="../Sys/PetscReal.html#PetscReal">PetscReal</A> time, <A HREF="../DM/DMLabel.html#DMLabel">DMLabel</A> label, <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> numIds, const <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> ids[], <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> Nc, const <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> comps[], <A HREF="../Vec/Vec.html#Vec">Vec</A> localU,
+                                        void (**funcs)(<A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A>, <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A>, <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A>,
+                                                       const <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A>[], const <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A>[], const <A HREF="../Sys/PetscScalar.html#PetscScalar">PetscScalar</A>[], const <A HREF="../Sys/PetscScalar.html#PetscScalar">PetscScalar</A>[], const <A HREF="../Sys/PetscScalar.html#PetscScalar">PetscScalar</A>[],
+                                                       const <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A>[], const <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A>[], const <A HREF="../Sys/PetscScalar.html#PetscScalar">PetscScalar</A>[], const <A HREF="../Sys/PetscScalar.html#PetscScalar">PetscScalar</A>[], const <A HREF="../Sys/PetscScalar.html#PetscScalar">PetscScalar</A>[],
+                                                       <A HREF="../Sys/PetscReal.html#PetscReal">PetscReal</A>, const <A HREF="../Sys/PetscReal.html#PetscReal">PetscReal</A>[], <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A>, const <A HREF="../Sys/PetscScalar.html#PetscScalar">PetscScalar</A>[], <A HREF="../Sys/PetscScalar.html#PetscScalar">PetscScalar</A>[]),
+                                        <A HREF="../Sys/InsertMode.html#InsertMode">InsertMode</A> mode, <A HREF="../Vec/Vec.html#Vec">Vec</A> localX)
+</PRE>
+Not collective
+<P>
+<H3><FONT COLOR="#CC3333">Input Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>dm      </B></TD><TD>- The <A HREF="../DM/DM.html#DM">DM</A>
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>time    </B></TD><TD>- The time
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>label   </B></TD><TD>- The <A HREF="../DM/DMLabel.html#DMLabel">DMLabel</A> marking the portion of the domain to output
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>numIds  </B></TD><TD>- The number of label ids to use
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>ids     </B></TD><TD>- The label ids to use for marking
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>Nc      </B></TD><TD>- The number of components to set in the output, or <A HREF="../Sys/PETSC_DETERMINE.html#PETSC_DETERMINE">PETSC_DETERMINE</A> for all components
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>comps   </B></TD><TD>- The components to set in the output, or NULL for all components
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>localU  </B></TD><TD>- The input field vector
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>funcs   </B></TD><TD>- The functions to evaluate, one per field
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>mode    </B></TD><TD>- The insertion mode for values
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Output Parameter</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>localX  </B></TD><TD>- The output vector
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Calling sequence of func</FONT></H3>
+<pre>
+   func(<A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> dim, <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> Nf, <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> NfAux,
+</pre>
+<pre>
+        const <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> uOff[], const <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> uOff_x[], const <A HREF="../Sys/PetscScalar.html#PetscScalar">PetscScalar</A> u[], const <A HREF="../Sys/PetscScalar.html#PetscScalar">PetscScalar</A> u_t[], const <A HREF="../Sys/PetscScalar.html#PetscScalar">PetscScalar</A> u_x[],
+</pre>
+<pre>
+        const <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> aOff[], const <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> aOff_x[], const <A HREF="../Sys/PetscScalar.html#PetscScalar">PetscScalar</A> a[], const <A HREF="../Sys/PetscScalar.html#PetscScalar">PetscScalar</A> a_t[], const <A HREF="../Sys/PetscScalar.html#PetscScalar">PetscScalar</A> a_x[],
+</pre>
+<pre>
+        <A HREF="../Sys/PetscReal.html#PetscReal">PetscReal</A> t, const <A HREF="../Sys/PetscReal.html#PetscReal">PetscReal</A> x[], <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> numConstants, const <A HREF="../Sys/PetscScalar.html#PetscScalar">PetscScalar</A> constants[], <A HREF="../Sys/PetscScalar.html#PetscScalar">PetscScalar</A> f[]);
+</pre>
+<P>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>dim          </B></TD><TD>- The spatial dimension
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>Nf           </B></TD><TD>- The number of input fields
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>NfAux        </B></TD><TD>- The number of input auxiliary fields
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>uOff         </B></TD><TD>- The offset of each field in u[]
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>uOff_x       </B></TD><TD>- The offset of each field in u_x[]
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>u            </B></TD><TD>- The field values at this point in space
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>u_t          </B></TD><TD>- The field time derivative at this point in space (or NULL)
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>u_x          </B></TD><TD>- The field derivatives at this point in space
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>aOff         </B></TD><TD>- The offset of each auxiliary field in u[]
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>aOff_x       </B></TD><TD>- The offset of each auxiliary field in u_x[]
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>a            </B></TD><TD>- The auxiliary field values at this point in space
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>a_t          </B></TD><TD>- The auxiliary field time derivative at this point in space (or NULL)
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>a_x          </B></TD><TD>- The auxiliary field derivatives at this point in space
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>t            </B></TD><TD>- The current time
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>x            </B></TD><TD>- The coordinates of this point
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>numConstants </B></TD><TD>- The number of constants
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>constants    </B></TD><TD>- The value of each constant
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>f            </B></TD><TD>- The value of the function at this point in space
+</TD></TR></TABLE>
+<P>
+Note: There are three different DMs that potentially interact in this function. The output <A HREF="../DM/DM.html#DM">DM</A>, dm, specifies the layout of the values calculates by funcs.
+The input <A HREF="../DM/DM.html#DM">DM</A>, attached to U, may be different. For example, you can input the solution over the full domain, but output over a piece of the boundary, or
+a subdomain. You can also output a different number of fields than the input, with different discretizations. Last the auxiliary <A HREF="../DM/DM.html#DM">DM</A>, attached to the
+auxiliary field vector, which is attached to dm, can also be different. It can have a different topology, number of fields, and discretizations.
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../KSP/DMProjectField.html#DMProjectField">DMProjectField</A>(), <A HREF="../DM/DMProjectFieldLabelLocal.html#DMProjectFieldLabelLocal">DMProjectFieldLabelLocal</A>(), <A HREF="../DM/DMProjectFunction.html#DMProjectFunction">DMProjectFunction</A>(), <A HREF="../DM/DMComputeL2Diff.html#DMComputeL2Diff">DMComputeL2Diff</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>intermediate<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/dm/interface/dm.c.html#DMProjectFieldLabelLocal">src/dm/interface/dm.c</A>
+<P><H3><FONT COLOR="CC3333">Implementations</FONT></H3>src/dm/impls/plex/plexproject.c:871:PetscErrorCode DMProjectFieldLabelLocal_Plex(DM dm, PetscReal time, DMLabel label, PetscInt numIds, const PetscInt ids[], PetscInt Ncc, const PetscInt comps[], Vec localU,
+<BR><A HREF="./index.html">Index of all DM routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

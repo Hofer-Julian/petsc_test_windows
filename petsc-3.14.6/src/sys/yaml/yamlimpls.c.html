@@ -1,0 +1,175 @@
+<center><a href="yamlimpls.c">Actual source code: yamlimpls.c</a></center><br>
+
+<html>
+<head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/src/sys/yaml/yamlimpls.c.html" />
+<title></title>
+<meta name="generator" content="c2html 0.9.4">
+<meta name="date" content="2021-03-30T16:49:38+00:00">
+</head>
+
+<body bgcolor="#FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 src/sys/yaml/yamlimpls.c.html "><small>Report Typos and Errors</small></a></div>
+<pre width="80">
+<a name="line1">  1: </a>#include <A href="../../../include/petsc/private/petscimpl.h.html">&lt;petsc/private/petscimpl.h&gt;</A>
+<a name="line2">  2: </a><font color="#A020F0">#include &lt;yaml.h&gt;</font>
+
+<a name="line4">  4: </a><font color="#4169E1">enum</font> storage_flags {VAR,VAL,SEQ};     <font color="#B22222">/* "Store as" switch */</font>
+
+<a name="line6">  6: </a><strong><font color="#4169E1"><a name="PetscParseLayerYAML"></a>static <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscParseLayerYAML(PetscOptions options, yaml_document_t *doc, yaml_node_t *node)</font></strong>
+<a name="line7">  7: </a>{
+<a name="line8">  8: </a>  char            option[PETSC_MAX_PATH_LEN],prefix[PETSC_MAX_PATH_LEN];
+<a name="line9">  9: </a>  yaml_node_pair_t *start, *top;
+<a name="line10"> 10: </a>  <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  ierr;
+
+<a name="line13"> 13: </a>  <a href="../../../docs/manualpages/Sys/PetscSNPrintf.html#PetscSNPrintf">PetscSNPrintf</a>(option,PETSC_MAX_PATH_LEN,<font color="#666666">"%s"</font>,<font color="#666666">" "</font>);
+<a name="line14"> 14: </a>  <font color="#4169E1">if</font> (node-&gt;type != YAML_MAPPING_NODE) <a href="../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>, PETSC_ERR_SUP, <font color="#666666">"Unsupported yaml node type: expected mapping"</font>);
+<a name="line15"> 15: </a>  start = node-&gt;data.mapping.pairs.start;
+<a name="line16"> 16: </a>  top   = node-&gt;data.mapping.pairs.top;
+<a name="line17"> 17: </a>  <font color="#4169E1">for</font> (yaml_node_pair_t *pair = start; pair &lt; top; pair++) {
+<a name="line18"> 18: </a>    int key_id = pair-&gt;key;
+<a name="line19"> 19: </a>    int value_id = pair-&gt;value;
+<a name="line20"> 20: </a>    yaml_node_t *key = NULL;
+<a name="line21"> 21: </a>    yaml_node_t *value = NULL;
+
+<a name="line23"> 23: </a>    key = yaml_document_get_node(doc, key_id);
+<a name="line24"> 24: </a>    <font color="#4169E1">if</font> (!key) <a href="../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>, PETSC_ERR_LIB, <font color="#666666">"Corrupt yaml document"</font>);
+<a name="line25"> 25: </a>    value = yaml_document_get_node(doc, value_id);
+<a name="line26"> 26: </a>    <font color="#4169E1">if</font> (!value) <a href="../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>, PETSC_ERR_LIB, <font color="#666666">"Corrupt yaml document"</font>);
+<a name="line27"> 27: </a>    <font color="#4169E1">if</font> (key-&gt;type != YAML_SCALAR_NODE) <a href="../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>, PETSC_ERR_SUP, <font color="#666666">"Unsupported yaml node type: expected scalar"</font>);
+<a name="line28"> 28: </a>    <font color="#4169E1">if</font> (value-&gt;type == YAML_SCALAR_NODE) {
+<a name="line29"> 29: </a>      <a href="../../../docs/manualpages/Sys/PetscSNPrintf.html#PetscSNPrintf">PetscSNPrintf</a>(option,PETSC_MAX_PATH_LEN,<font color="#666666">"-%s %s"</font>,(char *)(key-&gt;data.scalar.value),(char*)(value-&gt;data.scalar.value));
+<a name="line30"> 30: </a>      <a href="../../../docs/manualpages/Sys/PetscOptionsInsertString.html#PetscOptionsInsertString">PetscOptionsInsertString</a>(options, option);
+<a name="line31"> 31: </a>    } <font color="#4169E1">else</font> <font color="#4169E1">if</font> (value-&gt;type == YAML_MAPPING_NODE) {
+<a name="line32"> 32: </a>      <a href="../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> isMerge;
+
+<a name="line34"> 34: </a>      <font color="#B22222">/* "&lt;&lt;" is the merge key: don't increment the prefix */</font>
+<a name="line35"> 35: </a>      <a href="../../../docs/manualpages/Sys/PetscStrcmp.html#PetscStrcmp">PetscStrcmp</a>((char *)(key-&gt;data.scalar.value), <font color="#666666">"&lt;&lt;"</font>, &amp;isMerge);
+<a name="line36"> 36: </a>      <font color="#4169E1">if</font> (!isMerge) {
+<a name="line37"> 37: </a>        <a href="../../../docs/manualpages/Sys/PetscSNPrintf.html#PetscSNPrintf">PetscSNPrintf</a>(prefix,PETSC_MAX_PATH_LEN,<font color="#666666">"%s_"</font>,(char *)(key-&gt;data.scalar.value));
+<a name="line38"> 38: </a>        <a href="../../../docs/manualpages/Sys/PetscOptionsPrefixPush.html#PetscOptionsPrefixPush">PetscOptionsPrefixPush</a>(options, prefix);
+<a name="line39"> 39: </a>      }
+<a name="line40"> 40: </a>      PetscParseLayerYAML(options, doc, value);
+<a name="line41"> 41: </a>      <font color="#4169E1">if</font> (!isMerge) {
+<a name="line42"> 42: </a>        <a href="../../../docs/manualpages/Sys/PetscOptionsPrefixPop.html#PetscOptionsPrefixPop">PetscOptionsPrefixPop</a>(options);
+<a name="line43"> 43: </a>      }
+<a name="line44"> 44: </a>    } <font color="#4169E1">else</font> <a href="../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>, PETSC_ERR_SUP, <font color="#666666">"Unsupported yaml node tye: expected scalar or mapping"</font>);
+<a name="line45"> 45: </a>  }
+<a name="line46"> 46: </a>  <font color="#4169E1">return</font>(0);
+<a name="line47"> 47: </a>}
+
+<a name="line49"> 49: </a><font color="#B22222">/*@C</font>
+<a name="line50"> 50: </a><font color="#B22222">   <a href="../../../docs/manualpages/Sys/PetscOptionsInsertStringYAML.html#PetscOptionsInsertStringYAML">PetscOptionsInsertStringYAML</a> - Inserts YAML-formatted options into the database from a string</font>
+
+<a name="line52"> 52: </a><font color="#B22222">   Logically Collective</font>
+
+<a name="line54"> 54: </a><font color="#B22222">   Input Parameter:</font>
+<a name="line55"> 55: </a><font color="#B22222">+  options - options object</font>
+<a name="line56"> 56: </a><font color="#B22222">-  in_str - YAML-formatted string op options</font>
+
+<a name="line58"> 58: </a><font color="#B22222">   Level: intermediate</font>
+
+<a name="line60"> 60: </a><font color="#B22222">.seealso: <a href="../../../docs/manualpages/Sys/PetscOptionsSetValue.html#PetscOptionsSetValue">PetscOptionsSetValue</a>(), <a href="../../../docs/manualpages/Sys/PetscOptionsView.html#PetscOptionsView">PetscOptionsView</a>(), <a href="../../../docs/manualpages/Sys/PetscOptionsHasName.html#PetscOptionsHasName">PetscOptionsHasName</a>(), <a href="../../../docs/manualpages/Sys/PetscOptionsGetInt.html#PetscOptionsGetInt">PetscOptionsGetInt</a>(),</font>
+<a name="line61"> 61: </a><font color="#B22222">          <a href="../../../docs/manualpages/Sys/PetscOptionsGetReal.html#PetscOptionsGetReal">PetscOptionsGetReal</a>(), <a href="../../../docs/manualpages/Sys/PetscOptionsGetString.html#PetscOptionsGetString">PetscOptionsGetString</a>(), <a href="../../../docs/manualpages/Sys/PetscOptionsGetIntArray.html#PetscOptionsGetIntArray">PetscOptionsGetIntArray</a>(), <a href="../../../docs/manualpages/Sys/PetscOptionsBool.html#PetscOptionsBool">PetscOptionsBool</a>(),</font>
+<a name="line62"> 62: </a><font color="#B22222">          <a href="../../../docs/manualpages/Sys/PetscOptionsName.html#PetscOptionsName">PetscOptionsName</a>(), <a href="../../../docs/manualpages/Sys/PetscOptionsBegin.html#PetscOptionsBegin">PetscOptionsBegin</a>(), <a href="../../../docs/manualpages/Sys/PetscOptionsEnd.html#PetscOptionsEnd">PetscOptionsEnd</a>(), <a href="../../../docs/manualpages/Sys/PetscOptionsHead.html#PetscOptionsHead">PetscOptionsHead</a>(),</font>
+<a name="line63"> 63: </a><font color="#B22222">          <a href="../../../docs/manualpages/Sys/PetscOptionsStringArray.html#PetscOptionsStringArray">PetscOptionsStringArray</a>(),<a href="../../../docs/manualpages/Sys/PetscOptionsRealArray.html#PetscOptionsRealArray">PetscOptionsRealArray</a>(), <a href="../../../docs/manualpages/Sys/PetscOptionsScalar.html#PetscOptionsScalar">PetscOptionsScalar</a>(),</font>
+<a name="line64"> 64: </a><font color="#B22222">          <a href="../../../docs/manualpages/Sys/PetscOptionsBoolGroupBegin.html#PetscOptionsBoolGroupBegin">PetscOptionsBoolGroupBegin</a>(), <a href="../../../docs/manualpages/Sys/PetscOptionsBoolGroup.html#PetscOptionsBoolGroup">PetscOptionsBoolGroup</a>(), <a href="../../../docs/manualpages/Sys/PetscOptionsBoolGroupEnd.html#PetscOptionsBoolGroupEnd">PetscOptionsBoolGroupEnd</a>(),</font>
+<a name="line65"> 65: </a><font color="#B22222">          <a href="../../../docs/manualpages/Sys/PetscOptionsFList.html#PetscOptionsFList">PetscOptionsFList</a>(), <a href="../../../docs/manualpages/Sys/PetscOptionsEList.html#PetscOptionsEList">PetscOptionsEList</a>(), <a href="../../../docs/manualpages/Sys/PetscOptionsInsertFile.html#PetscOptionsInsertFile">PetscOptionsInsertFile</a>(), <a href="../../../docs/manualpages/Sys/PetscOptionsInsertFileYAML.html#PetscOptionsInsertFileYAML">PetscOptionsInsertFileYAML</a>()</font>
+<a name="line66"> 66: </a><font color="#B22222">@*/</font>
+<a name="line67"> 67: </a><strong><font color="#4169E1"><a name="PetscOptionsInsertStringYAML"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../docs/manualpages/Sys/PetscOptionsInsertStringYAML.html#PetscOptionsInsertStringYAML">PetscOptionsInsertStringYAML</a>(PetscOptions options,const char in_str[])</font></strong>
+<a name="line68"> 68: </a>{
+<a name="line70"> 70: </a>  size_t         yamlLength;
+<a name="line71"> 71: </a>  yaml_parser_t  parser;
+<a name="line72"> 72: </a>  yaml_document_t doc;
+<a name="line73"> 73: </a>  yaml_node_t    *root = NULL;
+
+<a name="line76"> 76: </a>  <a href="../../../docs/manualpages/Sys/PetscStrlen.html#PetscStrlen">PetscStrlen</a>(in_str, &amp;yamlLength);
+<a name="line77"> 77: </a>  <font color="#4169E1">if</font> (!yaml_parser_initialize(&amp;parser)){
+<a name="line78"> 78: </a>    <a href="../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,PETSC_ERR_LIB,<font color="#666666">"YAML parser initialization error"</font>);
+<a name="line79"> 79: </a>  }
+<a name="line80"> 80: </a>  yaml_parser_set_input_string(&amp;parser,(const unsigned char *) in_str,yamlLength);
+<a name="line81"> 81: </a>  <font color="#4169E1">if</font> (!yaml_parser_load(&amp;parser, &amp;doc)) {
+<a name="line82"> 82: </a>    <a href="../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,PETSC_ERR_LIB,<font color="#666666">"YAML parser loading error"</font>);
+<a name="line83"> 83: </a>  }
+<a name="line84"> 84: </a>  root = yaml_document_get_root_node(&amp;doc);
+<a name="line85"> 85: </a>  <font color="#4169E1">if</font> (root) {
+<a name="line86"> 86: </a>    PetscParseLayerYAML(options, &amp;doc, root);
+<a name="line87"> 87: </a>  }
+<a name="line88"> 88: </a>  yaml_document_delete(&amp;doc);
+<a name="line89"> 89: </a>  yaml_parser_delete(&amp;parser);
+<a name="line90"> 90: </a>  <font color="#4169E1">return</font>(0);
+<a name="line91"> 91: </a>}
+
+<a name="line93"> 93: </a><font color="#B22222">/*@C</font>
+
+<a name="line95"> 95: </a><font color="#B22222">  <a href="../../../docs/manualpages/Sys/PetscOptionsInsertFileYAML.html#PetscOptionsInsertFileYAML">PetscOptionsInsertFileYAML</a> - Insert a YAML-formatted file in the option database</font>
+
+<a name="line97"> 97: </a><font color="#B22222">  Collective</font>
+
+<a name="line99"> 99: </a><font color="#B22222">  Input Parameter:</font>
+<a name="line100">100: </a><font color="#B22222">+   comm - the processes that will share the options (usually <a href="../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>)</font>
+<a name="line101">101: </a><font color="#B22222">.   file - name of file</font>
+<a name="line102">102: </a><font color="#B22222">-   require - if <a href="../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a> will generate an error if the file does not exist</font>
+
+<a name="line104">104: </a><font color="#B22222">  Only a small subset of the YAML standard is implemented. Sequences are NOT supported;</font>
+<a name="line105">105: </a><font color="#B22222">  aliases and the merge key "&lt;&lt;" are.</font>
+<a name="line106">106: </a><font color="#B22222">  The algorithm recursively parses the yaml file, pushing and popping prefixes</font>
+<a name="line107">107: </a><font color="#B22222">  and inserting key + values pairs using <a href="../../../docs/manualpages/Sys/PetscOptionsInsertString.html#PetscOptionsInsertString">PetscOptionsInsertString</a>().</font>
+
+<a name="line109">109: </a><font color="#B22222">  PETSc will generate an error condition that stops the program if a YAML error</font>
+<a name="line110">110: </a><font color="#B22222">  is detected, hence the user should check that the YAML file is valid before</font>
+<a name="line111">111: </a><font color="#B22222">  supplying it, for instance at http://www.yamllint.com/ .</font>
+
+<a name="line113">113: </a><font color="#B22222">  Inspired by https://stackoverflow.com/a/621451</font>
+
+<a name="line115">115: </a><font color="#B22222">  Level: intermediate</font>
+
+<a name="line117">117: </a><font color="#B22222">.seealso: <a href="../../../docs/manualpages/Sys/PetscOptionsSetValue.html#PetscOptionsSetValue">PetscOptionsSetValue</a>(), <a href="../../../docs/manualpages/Sys/PetscOptionsView.html#PetscOptionsView">PetscOptionsView</a>(), <a href="../../../docs/manualpages/Sys/PetscOptionsHasName.html#PetscOptionsHasName">PetscOptionsHasName</a>(), <a href="../../../docs/manualpages/Sys/PetscOptionsGetInt.html#PetscOptionsGetInt">PetscOptionsGetInt</a>(),</font>
+<a name="line118">118: </a><font color="#B22222">          <a href="../../../docs/manualpages/Sys/PetscOptionsGetReal.html#PetscOptionsGetReal">PetscOptionsGetReal</a>(), <a href="../../../docs/manualpages/Sys/PetscOptionsGetString.html#PetscOptionsGetString">PetscOptionsGetString</a>(), <a href="../../../docs/manualpages/Sys/PetscOptionsGetIntArray.html#PetscOptionsGetIntArray">PetscOptionsGetIntArray</a>(), <a href="../../../docs/manualpages/Sys/PetscOptionsBool.html#PetscOptionsBool">PetscOptionsBool</a>(),</font>
+<a name="line119">119: </a><font color="#B22222">          <a href="../../../docs/manualpages/Sys/PetscOptionsName.html#PetscOptionsName">PetscOptionsName</a>(), <a href="../../../docs/manualpages/Sys/PetscOptionsBegin.html#PetscOptionsBegin">PetscOptionsBegin</a>(), <a href="../../../docs/manualpages/Sys/PetscOptionsEnd.html#PetscOptionsEnd">PetscOptionsEnd</a>(), <a href="../../../docs/manualpages/Sys/PetscOptionsHead.html#PetscOptionsHead">PetscOptionsHead</a>(),</font>
+<a name="line120">120: </a><font color="#B22222">          <a href="../../../docs/manualpages/Sys/PetscOptionsStringArray.html#PetscOptionsStringArray">PetscOptionsStringArray</a>(),<a href="../../../docs/manualpages/Sys/PetscOptionsRealArray.html#PetscOptionsRealArray">PetscOptionsRealArray</a>(), <a href="../../../docs/manualpages/Sys/PetscOptionsScalar.html#PetscOptionsScalar">PetscOptionsScalar</a>(),</font>
+<a name="line121">121: </a><font color="#B22222">          <a href="../../../docs/manualpages/Sys/PetscOptionsBoolGroupBegin.html#PetscOptionsBoolGroupBegin">PetscOptionsBoolGroupBegin</a>(), <a href="../../../docs/manualpages/Sys/PetscOptionsBoolGroup.html#PetscOptionsBoolGroup">PetscOptionsBoolGroup</a>(), <a href="../../../docs/manualpages/Sys/PetscOptionsBoolGroupEnd.html#PetscOptionsBoolGroupEnd">PetscOptionsBoolGroupEnd</a>(),</font>
+<a name="line122">122: </a><font color="#B22222">          <a href="../../../docs/manualpages/Sys/PetscOptionsFList.html#PetscOptionsFList">PetscOptionsFList</a>(), <a href="../../../docs/manualpages/Sys/PetscOptionsEList.html#PetscOptionsEList">PetscOptionsEList</a>(), <a href="../../../docs/manualpages/Sys/PetscOptionsInsertFile.html#PetscOptionsInsertFile">PetscOptionsInsertFile</a>(), <a href="../../../docs/manualpages/Sys/PetscOptionsInsertStringYAML.html#PetscOptionsInsertStringYAML">PetscOptionsInsertStringYAML</a>()</font>
+<a name="line123">123: </a><font color="#B22222">@*/</font>
+<a name="line124">124: </a><strong><font color="#4169E1"><a name="PetscOptionsInsertFileYAML"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../docs/manualpages/Sys/PetscOptionsInsertFileYAML.html#PetscOptionsInsertFileYAML">PetscOptionsInsertFileYAML</a>(<a href="../../../docs/manualpages/Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</a> comm,const char file[],<a href="../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> require)</font></strong>
+<a name="line125">125: </a>{
+<a name="line127">127: </a>  <a href="../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a>    rank;
+<a name="line128">128: </a>  char           fname[PETSC_MAX_PATH_LEN];
+<a name="line129">129: </a>  unsigned char *optionsStr;
+<a name="line130">130: </a>  int            yamlLength;
+<a name="line131">131: </a>  FILE          *source;
+<a name="line132">132: </a>  <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       offset;
+<a name="line133">133: </a>  size_t         rd;
+
+<a name="line136">136: </a>  <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_rank.html#MPI_Comm_rank">MPI_Comm_rank</a>(comm,&amp;rank);
+<a name="line137">137: </a>  <font color="#4169E1">if</font> (!rank) {
+<a name="line138">138: </a>    <a href="../../../docs/manualpages/Sys/PetscFixFilename.html#PetscFixFilename">PetscFixFilename</a>(file,fname);
+<a name="line139">139: </a>    source = fopen(fname,<font color="#666666">"r"</font>);
+<a name="line140">140: </a>    <font color="#4169E1">if</font> (source) {
+<a name="line141">141: </a>      fseek(source,0,SEEK_END);
+<a name="line142">142: </a>      yamlLength = ftell(source);
+<a name="line143">143: </a>      fseek(source,0,SEEK_SET);
+<a name="line144">144: </a>      <a href="../../../docs/manualpages/Sys/PetscMalloc1.html#PetscMalloc1">PetscMalloc1</a>(yamlLength+1,&amp;optionsStr);
+<a name="line145">145: </a>      <font color="#B22222">/* Read the content of the YAML file one char at a time; why does this read the file one byte at a time? */</font>
+<a name="line146">146: </a>      <font color="#4169E1">for</font> (offset = 0; offset &lt; yamlLength; offset++) {
+<a name="line147">147: </a>        rd = fread(&amp;(optionsStr[offset]), <font color="#4169E1">sizeof</font>(unsigned char),1,source);
+<a name="line148">148: </a>        <font color="#4169E1">if</font> (rd != <font color="#4169E1">sizeof</font>(unsigned char)) <a href="../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_FILE_OPEN,<font color="#666666">"Unable to read entire YAML file: %s"</font>,file);
+<a name="line149">149: </a>      }
+<a name="line150">150: </a>      fclose(source);
+<a name="line151">151: </a>      optionsStr[yamlLength] = '\0';
+<a name="line152">152: </a>    } <font color="#4169E1">else</font> <font color="#4169E1">if</font> (require) <a href="../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_FILE_OPEN,<font color="#666666">"Unable to open YAML option file %s\n"</font>,fname);
+<a name="line153">153: </a>    <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Bcast.html#MPI_Bcast">MPI_Bcast</a>(&amp;yamlLength,1,MPI_INT,0,comm);
+<a name="line154">154: </a>    <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Bcast.html#MPI_Bcast">MPI_Bcast</a>(optionsStr,yamlLength+1,MPI_UNSIGNED_CHAR,0,comm);
+<a name="line155">155: </a>  } <font color="#4169E1">else</font> {
+<a name="line156">156: </a>    <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Bcast.html#MPI_Bcast">MPI_Bcast</a>(&amp;yamlLength,1,MPI_INT,0,comm);
+<a name="line157">157: </a>    <a href="../../../docs/manualpages/Sys/PetscMalloc1.html#PetscMalloc1">PetscMalloc1</a>(yamlLength+1,&amp;optionsStr);
+<a name="line158">158: </a>    <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Bcast.html#MPI_Bcast">MPI_Bcast</a>(optionsStr,yamlLength+1,MPI_UNSIGNED_CHAR,0,comm);
+<a name="line159">159: </a>  }
+<a name="line160">160: </a>  <a href="../../../docs/manualpages/Sys/PetscOptionsInsertStringYAML.html#PetscOptionsInsertStringYAML">PetscOptionsInsertStringYAML</a>(NULL, (const char *) optionsStr);
+<a name="line161">161: </a>  <a href="../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(optionsStr);
+<a name="line162">162: </a>  <font color="#4169E1">return</font>(0);
+<a name="line163">163: </a>}
+</pre>
+</body>
+
+</html>

@@ -1,0 +1,85 @@
+<center><a href="mcudahost.cu">Actual source code: mcudahost.cu</a></center><br>
+
+<html>
+<head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/src/sys/memory/cuda/mcudahost.cu.html" />
+<title></title>
+<meta name="generator" content="c2html 0.9.4">
+<meta name="date" content="2021-03-30T16:49:27+00:00">
+</head>
+
+<body bgcolor="#FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 src/sys/memory/cuda/mcudahost.cu.html "><small>Report Typos and Errors</small></a></div>
+<pre width="80">
+<a name="line1">  1: </a>#include <A href="../../../../include/petscsys.h.html">&lt;petscsys.h&gt;</A>
+<a name="line2">  2: </a>#include <A href="../../../../include/petsccublas.h.html">&lt;petsccublas.h&gt;</A>
+
+<a name="line4">  4: </a><strong><font color="#4169E1"><a name="PetscCUDAHostMalloc"></a>static <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscCUDAHostMalloc(size_t a,<a href="../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> clear,int lineno,const char function[],const char filename[],void **result)</font></strong>
+<a name="line5">  5: </a>{
+<a name="line6">  6: </a>  cudaError_t ierr;
+<a name="line7">  7: </a>  cudaMallocHost(result,a);CHKERRCUDA(ierr);
+<a name="line8">  8: </a>  <font color="#4169E1">return</font> 0;
+<a name="line9">  9: </a>}
+
+<a name="line11"> 11: </a><strong><font color="#4169E1"><a name="PetscCUDAHostFree"></a>static <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscCUDAHostFree(void *aa,int lineno,const char function[],const char filename[])</font></strong>
+<a name="line12"> 12: </a>{
+<a name="line13"> 13: </a>  cudaError_t ierr;
+<a name="line14"> 14: </a>  cudaFreeHost(aa);CHKERRCUDA(ierr);
+<a name="line15"> 15: </a>  <font color="#4169E1">return</font> 0;
+<a name="line16"> 16: </a>}
+
+<a name="line18"> 18: </a><strong><font color="#4169E1"><a name="PetscCUDAHostRealloc"></a>static <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscCUDAHostRealloc(size_t a,int lineno,const char function[],const char filename[],void **result)</font></strong>
+<a name="line19"> 19: </a>{
+<a name="line20"> 20: </a>  <a href="../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_MEM,<font color="#666666">"CUDA has no Realloc()"</font>);
+<a name="line21"> 21: </a>}
+
+<a name="line23"> 23: </a><strong><font color="#4169E1">static <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> (*PetscMallocOld)(size_t,<a href="../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>,int,const char[],const char[],void**)</font></strong>;
+<a name="line24"> 24: </a><strong><font color="#4169E1">static <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> (*PetscReallocOld)(size_t,int,const char[],const char[],void**)</font></strong>;
+<a name="line25"> 25: </a><strong><font color="#4169E1">static <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> (*PetscFreeOld)(void*,int,const char[],const char[])</font></strong>;
+
+<a name="line27"> 27: </a><font color="#B22222">/*@C</font>
+<a name="line28"> 28: </a><font color="#B22222">   <a href="../../../docs/manualpages/Sys/PetscMallocSetCUDAHost.html#PetscMallocSetCUDAHost">PetscMallocSetCUDAHost</a> - Set <a href="../../../docs/manualpages/Sys/PetscMalloc.html#PetscMalloc">PetscMalloc</a> to use CUDAHostMalloc</font>
+<a name="line29"> 29: </a><font color="#B22222">     Switch the current malloc and free routines to the CUDA malloc and free routines</font>
+
+<a name="line31"> 31: </a><font color="#B22222">   Not Collective</font>
+
+<a name="line33"> 33: </a><font color="#B22222">   Level: developer</font>
+
+<a name="line35"> 35: </a><font color="#B22222">   Notes:</font>
+<a name="line36"> 36: </a><font color="#B22222">     This provides a way to use the CUDA malloc and free routines temporarily. One</font>
+<a name="line37"> 37: </a><font color="#B22222">     can switch back to the previous choice by calling <a href="../../../docs/manualpages/Sys/PetscMallocResetCUDAHost.html#PetscMallocResetCUDAHost">PetscMallocResetCUDAHost</a>().</font>
+
+<a name="line39"> 39: </a><font color="#B22222">.seealso: <a href="../../../docs/manualpages/Sys/PetscMallocResetCUDAHost.html#PetscMallocResetCUDAHost">PetscMallocResetCUDAHost</a>()</font>
+<a name="line40"> 40: </a><font color="#B22222">@*/</font>
+<a name="line41"> 41: </a><strong><font color="#4169E1"><a name="PetscMallocSetCUDAHost"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../docs/manualpages/Sys/PetscMallocSetCUDAHost.html#PetscMallocSetCUDAHost">PetscMallocSetCUDAHost</a>(void)</font></strong>
+<a name="line42"> 42: </a>{
+<a name="line44"> 44: </a>  <font color="#B22222">/* Save the previous choice */</font>
+<a name="line45"> 45: </a>  PetscMallocOld  = PetscTrMalloc;
+<a name="line46"> 46: </a>  PetscReallocOld = PetscTrRealloc;
+<a name="line47"> 47: </a>  PetscFreeOld    = PetscTrFree;
+<a name="line48"> 48: </a>  PetscTrMalloc   = PetscCUDAHostMalloc;
+<a name="line49"> 49: </a>  PetscTrRealloc  = PetscCUDAHostRealloc;
+<a name="line50"> 50: </a>  PetscTrFree     = PetscCUDAHostFree;
+<a name="line51"> 51: </a>  <font color="#4169E1">return</font>(0);
+<a name="line52"> 52: </a>}
+
+<a name="line54"> 54: </a><font color="#B22222">/*@C</font>
+<a name="line55"> 55: </a><font color="#B22222">   <a href="../../../docs/manualpages/Sys/PetscMallocResetCUDAHost.html#PetscMallocResetCUDAHost">PetscMallocResetCUDAHost</a> - Reset the changes made by <a href="../../../docs/manualpages/Sys/PetscMallocSetCUDAHost.html#PetscMallocSetCUDAHost">PetscMallocSetCUDAHost</a></font>
+
+<a name="line57"> 57: </a><font color="#B22222">   Not Collective</font>
+
+<a name="line59"> 59: </a><font color="#B22222">   Level: developer</font>
+
+<a name="line61"> 61: </a><font color="#B22222">.seealso: <a href="../../../docs/manualpages/Sys/PetscMallocSetCUDAHost.html#PetscMallocSetCUDAHost">PetscMallocSetCUDAHost</a>()</font>
+<a name="line62"> 62: </a><font color="#B22222">@*/</font>
+<a name="line63"> 63: </a><strong><font color="#4169E1"><a name="PetscMallocResetCUDAHost"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../docs/manualpages/Sys/PetscMallocResetCUDAHost.html#PetscMallocResetCUDAHost">PetscMallocResetCUDAHost</a>(void)</font></strong>
+<a name="line64"> 64: </a>{
+<a name="line66"> 66: </a>  PetscTrMalloc  = PetscMallocOld;
+<a name="line67"> 67: </a>  PetscTrRealloc = PetscReallocOld;
+<a name="line68"> 68: </a>  PetscTrFree    = PetscFreeOld;
+<a name="line69"> 69: </a>  <font color="#4169E1">return</font>(0);
+<a name="line70"> 70: </a>}
+</pre>
+</body>
+
+</html>

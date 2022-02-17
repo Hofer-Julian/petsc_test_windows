@@ -1,0 +1,45 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/IS/ISPermutation.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>ISPermutation</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/IS/ISPermutation.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="ISPermutation"><H1>ISPermutation</H1></A>
+<A HREF="../Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</A> or <A HREF="../Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</A> depending on whether the index set has been declared to be a permutation. 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscis.h" 
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A>  <A HREF="../IS/ISPermutation.html#ISPermutation">ISPermutation</A>(<A HREF="../IS/IS.html#IS">IS</A> is,<A HREF="../Sys/PetscBool.html#PetscBool">PetscBool</A>  *perm)
+</PRE>
+Logically Collective on <A HREF="../IS/IS.html#IS">IS</A>
+<P>
+<H3><FONT COLOR="#CC3333">Input Parmeters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>is </B></TD><TD>- the index set
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Output Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>perm </B></TD><TD>- <A HREF="../Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</A> if a permutation, else <A HREF="../Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</A>
+</TD></TR></TABLE>
+<P>
+
+<P>
+Note: If it is not alread known that the <A HREF="../IS/IS.html#IS">IS</A> is a permutation (if <A HREF="../IS/ISSetPermutation.html#ISSetPermutation">ISSetPermutation</A>()
+or <A HREF="../IS/ISSetInfo.html#ISSetInfo">ISSetInfo</A>() has not been called), this routine will not attempt to compute
+whether the index set is a permutation and will assume perm is <A HREF="../Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</A>.
+To compute the value when it is not already known, use <A HREF="../IS/ISGetInfo.html#ISGetInfo">ISGetInfo</A>() with
+the compute flag set to <A HREF="../Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</A>.
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../IS/ISSetPermutation.html#ISSetPermutation">ISSetPermutation</A>(), <A HREF="../IS/ISGetInfo.html#ISGetInfo">ISGetInfo</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>intermediate<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/vec/is/is/interface/index.c.html#ISPermutation">src/vec/is/is/interface/index.c</A>
+<BR><A HREF="./index.html">Index of all IS routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

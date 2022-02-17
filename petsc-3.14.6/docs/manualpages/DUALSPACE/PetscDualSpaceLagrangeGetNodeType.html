@@ -1,0 +1,46 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DUALSPACE/PetscDualSpaceLagrangeGetNodeType.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>PetscDualSpaceLagrangeGetNodeType</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/DUALSPACE/PetscDualSpaceLagrangeGetNodeType.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="PetscDualSpaceLagrangeGetNodeType"><H1>PetscDualSpaceLagrangeGetNodeType</H1></A>
+Get a description of how nodes are laid out for Lagrange polynomials in this dual space 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscfe.h" 
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../DUALSPACE/PetscDualSpaceLagrangeGetNodeType.html#PetscDualSpaceLagrangeGetNodeType">PetscDualSpaceLagrangeGetNodeType</A>(<A HREF="../FE/PetscDualSpace.html#PetscDualSpace">PetscDualSpace</A> sp, <A HREF="../FE/PetscDTNodeType.html#PetscDTNodeType">PetscDTNodeType</A> *nodeType, <A HREF="../Sys/PetscBool.html#PetscBool">PetscBool</A> *boundary, <A HREF="../Sys/PetscReal.html#PetscReal">PetscReal</A> *exponent)
+</PRE>
+Not collective
+<P>
+<H3><FONT COLOR="#CC3333">Input Parameter</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>sp </B></TD><TD>- The <A HREF="../FE/PetscDualSpace.html#PetscDualSpace">PetscDualSpace</A>
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Output Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>nodeType </B></TD><TD>- The type of nodes
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>boundary </B></TD><TD>- Whether the node type is one that includes endpoints (if nodeType is <A HREF="../FE/PetscDTNodeType.html#PetscDTNodeType">PETSCDTNODES_GAUSSJACOBI</A>, nodes that
+include the boundary are Gauss-Lobatto-Jacobi nodes)
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>exponent </B></TD><TD>- If nodeType is PETSCDTNODES_GAUSJACOBI, indicates the exponent used for both ends of the 1D Jacobi weight function
+'0' is Gauss-Legendre, '-0.5' is Gauss-Chebyshev of the first type, '0.5' is Gauss-Chebyshev of the second type
+</TD></TR></TABLE>
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../FE/PetscDTNodeType.html#PetscDTNodeType">PetscDTNodeType</A>, <A HREF="../DUALSPACE/PetscDualSpaceLagrangeSetNodeType.html#PetscDualSpaceLagrangeSetNodeType">PetscDualSpaceLagrangeSetNodeType</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>advanced<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/dm/dt/dualspace/impls/lagrange/dspacelagrange.c.html#PetscDualSpaceLagrangeGetNodeType">src/dm/dt/dualspace/impls/lagrange/dspacelagrange.c</A>
+<P><H3><FONT COLOR="CC3333">Implementations</FONT></H3><A HREF="../../../src/dm/dt/dualspace/impls/lagrange/dspacelagrange.c.html#PetscDualSpaceLagrangeGetNodeType_Lagrange">PetscDualSpaceLagrangeGetNodeType_Lagrange in src/dm/dt/dualspace/impls/lagrange/dspacelagrange.c</A><BR>
+<BR><A HREF="./index.html">Index of all DUALSPACE routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

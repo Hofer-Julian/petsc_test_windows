@@ -1,0 +1,34 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/VecViennaCLResetArray.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>VecViennaCLResetArray</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/Vec/VecViennaCLResetArray.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="VecViennaCLResetArray"><H1>VecViennaCLResetArray</H1></A>
+Resets a vector to use its default memory. Call this after the use of <A HREF="../Vec/VecViennaCLPlaceArray.html#VecViennaCLPlaceArray">VecViennaCLPlaceArray</A>(). 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscvec.h" 
+PETSC_EXTERN <A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../Vec/VecViennaCLResetArray.html#VecViennaCLResetArray">VecViennaCLResetArray</A>(<A HREF="../Vec/Vec.html#Vec">Vec</A> vin)
+</PRE>
+Not Collective
+<P>
+<H3><FONT COLOR="#CC3333">Input Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>vec </B></TD><TD>- the vector
+</TD></TR></TABLE>
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../Vec/VecViennaCLPlaceArray.html#VecViennaCLPlaceArray">VecViennaCLPlaceArray</A>(), <A HREF="../Vec/VecResetArray.html#VecResetArray">VecResetArray</A>(), <A HREF="../Vec/VecCUDAResetArray.html#VecCUDAResetArray">VecCUDAResetArray</A>(), <A HREF="../Vec/VecPlaceArray.html#VecPlaceArray">VecPlaceArray</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>developer<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/vec/vec/impls/seq/seqviennacl/vecviennacl.cxx.html#VecViennaCLResetArray">src/vec/vec/impls/seq/seqviennacl/vecviennacl.cxx</A>
+<BR><A HREF="./index.html">Index of all Vec routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

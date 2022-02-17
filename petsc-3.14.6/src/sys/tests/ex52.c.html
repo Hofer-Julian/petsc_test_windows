@@ -1,0 +1,175 @@
+<center><a href="ex52.c">Actual source code: ex52.c</a></center><br>
+
+<html>
+<head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/src/sys/tests/ex52.c.html" />
+<title></title>
+<meta name="generator" content="c2html 0.9.4">
+<meta name="date" content="2021-03-30T16:49:34+00:00">
+</head>
+
+<body bgcolor="#FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 src/sys/tests/ex52.c.html "><small>Report Typos and Errors</small></a></div>
+<pre width="80">
+<a name="line1">  1: </a>static char help[] = <font color="#666666">"A benchmark for testing <a href="../../../docs/manualpages/Sys/PetscSortInt.html#PetscSortInt">PetscSortInt</a>(), PetscSortIntSemiOrdered(), <a href="../../../docs/manualpages/Sys/PetscSortIntWithArrayPair.html#PetscSortIntWithArrayPair">PetscSortIntWithArrayPair</a>(), <a href="../../../docs/manualpages/Sys/PetscIntSortSemiOrderedWithArray.html#PetscIntSortSemiOrderedWithArray">PetscIntSortSemiOrderedWithArray</a>(), and <a href="../../../docs/manualpages/Sys/PetscSortIntWithArray.html#PetscSortIntWithArray">PetscSortIntWithArray</a>()\n\</font>
+<a name="line2">  2: </a><font color="#666666">  The array is filled with random numbers, but one can control average duplicates for each unique integer with the -d option.\n\</font>
+<a name="line3">  3: </a><font color="#666666">  Usage:\n\</font>
+<a name="line4">  4: </a><font color="#666666">   mpirun -n 1 ./ex52 -n &lt;length of the array to sort&gt;, default=100 \n\</font>
+<a name="line5">  5: </a><font color="#666666">                      -r &lt;repeat times for each sort&gt;, default=10 \n\</font>
+<a name="line6">  6: </a><font color="#666666">                      -d &lt;average duplicates for each unique integer&gt;, default=1, i.e., no duplicates \n\n"</font>;
+
+<a name="line8">  8: </a>#include <A href="../../../include/petscsys.h.html">&lt;petscsys.h&gt;</A>
+<a name="line9">  9: </a>#include <A href="../../../include/petsctime.h.html">&lt;petsctime.h&gt;</A>
+<a name="line10"> 10: </a>#include <A href="../../../include/petscviewer.h.html">&lt;petscviewer.h&gt;</A>
+<a name="line11"> 11: </a>#include <A href="../../../include/petscvec.h.html">&lt;petscvec.h&gt;</A>
+<a name="line12"> 12: </a><strong><font color="#4169E1"><a name="main"></a>int main(int argc,char **argv)</font></strong>
+<a name="line13"> 13: </a>{
+<a name="line15"> 15: </a>  <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       i,l,n=100,r=10,d=1,vsize=1;
+<a name="line16"> 16: </a>  <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       *X,*X1,*XR,*XSO,*W,*Y,*Z,*XP,*X1P;
+<a name="line17"> 17: </a>  <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>      val,norm1,nreal;
+<a name="line18"> 18: </a>  <a href="../../../docs/manualpages/Sys/PetscRandom.html#PetscRandom">PetscRandom</a>    rdm,rdm2;
+<a name="line19"> 19: </a>  <a href="../../../docs/manualpages/Sys/PetscLogDouble.html#PetscLogDouble">PetscLogDouble</a> time, time1, time2;
+<a name="line20"> 20: </a>  <a href="../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a>    size;
+<a name="line21"> 21: </a>  <a href="../../../docs/manualpages/Viewer/PetscViewer.html#PetscViewer">PetscViewer</a>    vwr;
+<a name="line22"> 22: </a>  <a href="../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a>            x;
+<a name="line23"> 23: </a>  unsigned long  seedr, seedo;
+<a name="line24"> 24: </a>  <a href="../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>      order=<a href="../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+
+<a name="line26"> 26: </a>  <a href="../../../docs/manualpages/Sys/PetscInitialize.html#PetscInitialize">PetscInitialize</a>(&amp;argc,&amp;argv,(char*)0,help);<font color="#4169E1">if</font> (ierr) <font color="#4169E1">return</font> ierr;
+<a name="line27"> 27: </a>  <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_size.html#MPI_Comm_size">MPI_Comm_size</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,&amp;size);
+<a name="line28"> 28: </a>  <font color="#4169E1">if</font> (size != 1) <a href="../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,PETSC_ERR_ARG_OUTOFRANGE,<font color="#666666">"This is a uniprocessor example only!"</font>);
+
+<a name="line30"> 30: </a>  <a href="../../../docs/manualpages/Sys/PetscOptionsGetInt.html#PetscOptionsGetInt">PetscOptionsGetInt</a>(NULL,NULL,<font color="#666666">"-n"</font>,&amp;n,NULL);
+<a name="line31"> 31: </a>  <a href="../../../docs/manualpages/Sys/PetscOptionsGetInt.html#PetscOptionsGetInt">PetscOptionsGetInt</a>(NULL,NULL,<font color="#666666">"-r"</font>,&amp;r,NULL);
+<a name="line32"> 32: </a>  <a href="../../../docs/manualpages/Sys/PetscOptionsGetInt.html#PetscOptionsGetInt">PetscOptionsGetInt</a>(NULL,NULL,<font color="#666666">"-d"</font>,&amp;d,NULL);
+<a name="line33"> 33: </a>  <a href="../../../docs/manualpages/Sys/PetscOptionsGetInt.html#PetscOptionsGetInt">PetscOptionsGetInt</a>(NULL,NULL,<font color="#666666">"-vsize"</font>,&amp;vsize,NULL);
+<a name="line34"> 34: </a>  <a href="../../../docs/manualpages/Sys/PetscOptionsGetBool.html#PetscOptionsGetBool">PetscOptionsGetBool</a>(NULL,NULL,<font color="#666666">"-order"</font>,NULL,&amp;order);
+<a name="line35"> 35: </a>  <a href="../../../docs/manualpages/Viewer/PetscOptionsGetViewer.html#PetscOptionsGetViewer">PetscOptionsGetViewer</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,NULL,NULL,<font color="#666666">"-array_view"</font>,&amp;vwr,NULL,NULL);
+<a name="line36"> 36: </a>  <font color="#4169E1">if</font> (n&lt;1 || r&lt;1 || d&lt;1 || d&gt;n) <a href="../../../docs/manualpages/Sys/SETERRQ3.html#SETERRQ3">SETERRQ3</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,PETSC_ERR_SUP,<font color="#666666">"Wrong input n=%D,r=%D,d=%D. They must be &gt;=1 and n&gt;=d\n"</font>,n,r,d);
+
+<a name="line38"> 38: </a>  <a href="../../../docs/manualpages/Sys/PetscCalloc6.html#PetscCalloc6">PetscCalloc6</a>(n,&amp;X,n,&amp;X1,n,&amp;XR,n,&amp;XSO,n,&amp;Y,n,&amp;Z);
+<a name="line39"> 39: </a>  <a href="../../../docs/manualpages/Sys/PetscRandomCreate.html#PetscRandomCreate">PetscRandomCreate</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,&amp;rdm);
+<a name="line40"> 40: </a>  <a href="../../../docs/manualpages/Sys/PetscRandomSetFromOptions.html#PetscRandomSetFromOptions">PetscRandomSetFromOptions</a>(rdm);
+<a name="line41"> 41: </a>  <a href="../../../docs/manualpages/Sys/PetscRandomGetSeed.html#PetscRandomGetSeed">PetscRandomGetSeed</a>(rdm, &amp;seedr);
+
+<a name="line43"> 43: </a>  <font color="#4169E1">for</font> (i=0; i&lt;n; ++i) {
+<a name="line44"> 44: </a>    <a href="../../../docs/manualpages/Sys/PetscRandomGetValueReal.html#PetscRandomGetValueReal">PetscRandomGetValueReal</a>(rdm,&amp;val);
+<a name="line45"> 45: </a>    XR[i] = val*PETSC_MAX_INT;
+<a name="line46"> 46: </a>    <font color="#4169E1">if</font> (d &gt; 1) XR[i] = XR[i] % (n/d);
+<a name="line47"> 47: </a>    XSO[i] = i;
+<a name="line48"> 48: </a>    <font color="#4169E1">if</font> (d &gt; 1) XSO[i] = XSO[i] % (n/d);
+<a name="line49"> 49: </a>  }
+
+<a name="line51"> 51: </a>  nreal = (<a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>) n;
+<a name="line52"> 52: </a>  <a href="../../../docs/manualpages/Sys/PetscRandomCreate.html#PetscRandomCreate">PetscRandomCreate</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,&amp;rdm2);
+<a name="line53"> 53: </a>  <a href="../../../docs/manualpages/Sys/PetscRandomGetSeed.html#PetscRandomGetSeed">PetscRandomGetSeed</a>(rdm, &amp;seedo);
+<a name="line54"> 54: </a>  <a href="../../../docs/manualpages/Sys/PetscRandomSetInterval.html#PetscRandomSetInterval">PetscRandomSetInterval</a>(rdm2,0,nreal);
+<a name="line55"> 55: </a>  <font color="#4169E1">for</font> (i = 0; i &lt; n/10; ++i) {
+<a name="line56"> 56: </a>    <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> swapi, t;
+<a name="line57"> 57: </a>    <a href="../../../docs/manualpages/Sys/PetscRandomGetValueReal.html#PetscRandomGetValueReal">PetscRandomGetValueReal</a>(rdm2,&amp;val);
+<a name="line58"> 58: </a>    swapi = (<a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>) val;
+<a name="line59"> 59: </a>    t = XSO[swapi-1];
+<a name="line60"> 60: </a>    XSO[swapi-1] = XSO[swapi];
+<a name="line61"> 61: </a>    XSO[swapi] = t;
+<a name="line62"> 62: </a>  }
+<a name="line63"> 63: </a>  <a href="../../../docs/manualpages/Sys/PetscRandomDestroy.html#PetscRandomDestroy">PetscRandomDestroy</a>(&amp;rdm2);
+
+<a name="line65"> 65: </a>  <font color="#4169E1">if</font> (vwr) {<a href="../../../docs/manualpages/Sys/PetscIntView.html#PetscIntView">PetscIntView</a>(n, order ? XSO : XR, vwr);}
+<a name="line66"> 66: </a>  <a href="../../../docs/manualpages/Viewer/PetscViewerDestroy.html#PetscViewerDestroy">PetscViewerDestroy</a>(&amp;vwr);
+<a name="line67"> 67: </a>  <a href="../../../docs/manualpages/Vec/VecCreate.html#VecCreate">VecCreate</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,&amp;x);
+<a name="line68"> 68: </a>  <a href="../../../docs/manualpages/Vec/VecSetSizes.html#VecSetSizes">VecSetSizes</a>(x,<a href="../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a>,vsize);
+<a name="line69"> 69: </a>  <a href="../../../docs/manualpages/Vec/VecSetFromOptions.html#VecSetFromOptions">VecSetFromOptions</a>(x);
+<a name="line70"> 70: </a>  <a href="../../../docs/manualpages/Vec/VecSetRandom.html#VecSetRandom">VecSetRandom</a>(x,rdm);
+<a name="line71"> 71: </a>  time = 0.0;
+<a name="line72"> 72: </a>  time1 = 0.0;
+<a name="line73"> 73: </a>  <font color="#4169E1">for</font> (l=0; l&lt;r; l++) { <font color="#B22222">/* r loops */</font>
+<a name="line74"> 74: </a>    <a href="../../../docs/manualpages/Sys/PetscArraycpy.html#PetscArraycpy">PetscArraycpy</a>(X,order ? XSO : XR,n);
+<a name="line75"> 75: </a>    <a href="../../../docs/manualpages/Sys/PetscArraycpy.html#PetscArraycpy">PetscArraycpy</a>(X1,order ? XSO : XR,n);
+
+<a name="line77"> 77: </a>    <a href="../../../docs/manualpages/Vec/VecNorm.html#VecNorm">VecNorm</a>(x,<a href="../../../docs/manualpages/Vec/NORM_1.html#NORM_1">NORM_1</a>,&amp;norm1);
+<a name="line78"> 78: </a>    <a href="../../../docs/manualpages/Sys/PetscTimeSubtract.html#PetscTimeSubtract">PetscTimeSubtract</a>(&amp;time1);
+<a name="line79"> 79: </a>    <a href="../../../docs/manualpages/Sys/PetscIntSortSemiOrdered.html#PetscIntSortSemiOrdered">PetscIntSortSemiOrdered</a>(n,X1);
+<a name="line80"> 80: </a>    <a href="../../../docs/manualpages/Sys/PetscTimeAdd.html#PetscTimeAdd">PetscTimeAdd</a>(&amp;time1);
+
+<a name="line82"> 82: </a>    <a href="../../../docs/manualpages/Vec/VecNorm.html#VecNorm">VecNorm</a>(x,<a href="../../../docs/manualpages/Vec/NORM_1.html#NORM_1">NORM_1</a>,&amp;norm1);
+<a name="line83"> 83: </a>    <a href="../../../docs/manualpages/Sys/PetscTimeSubtract.html#PetscTimeSubtract">PetscTimeSubtract</a>(&amp;time);
+<a name="line84"> 84: </a>    <a href="../../../docs/manualpages/Sys/PetscSortInt.html#PetscSortInt">PetscSortInt</a>(n,X);
+<a name="line85"> 85: </a>    <a href="../../../docs/manualpages/Sys/PetscTimeAdd.html#PetscTimeAdd">PetscTimeAdd</a>(&amp;time);
+
+<a name="line87"> 87: </a>    <font color="#4169E1">for</font> (i=0; i&lt;n-1; i++) {<font color="#4169E1">if</font> (X[i] &gt; X[i+1]) <a href="../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_PLIB,<font color="#666666">"<a href="../../../docs/manualpages/Sys/PetscSortInt.html#PetscSortInt">PetscSortInt</a>() produced wrong results!"</font>);}
+<a name="line88"> 88: </a>    <font color="#4169E1">for</font> (i=0; i&lt;n; i++) {<font color="#4169E1">if</font> (X[i] != X1[i]) <a href="../../../docs/manualpages/Sys/SETERRQ7.html#SETERRQ7">SETERRQ7</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_PLIB,<font color="#666666">"<a href="../../../docs/manualpages/Sys/PetscIntSortSemiOrdered.html#PetscIntSortSemiOrdered">PetscIntSortSemiOrdered</a>() rep %D X1[%D]:%D does not match <a href="../../../docs/manualpages/Sys/PetscSortInt.html#PetscSortInt">PetscSortInt</a>() X[%D]:%D! randomSeed %lu, orderedSeed %lu"</font>,l,i,X1[i],i,X[i],seedr,seedo);}
+<a name="line89"> 89: </a>    <font color="#4169E1">for</font> (i=0; i&lt;n-1; i++) {<font color="#4169E1">if</font> (X1[i] &gt; X1[i+1]) <a href="../../../docs/manualpages/Sys/SETERRQ2.html#SETERRQ2">SETERRQ2</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_PLIB,<font color="#666666">"<a href="../../../docs/manualpages/Sys/PetscIntSortSemiOrdered.html#PetscIntSortSemiOrdered">PetscIntSortSemiOrdered</a>() produced wrong results! randomSeed %lu orderedSeed %lu"</font>,seedr,seedo);}
+<a name="line90"> 90: </a>    <a href="../../../docs/manualpages/Sys/PetscArrayzero.html#PetscArrayzero">PetscArrayzero</a>(X,n);
+<a name="line91"> 91: </a>    <a href="../../../docs/manualpages/Sys/PetscArrayzero.html#PetscArrayzero">PetscArrayzero</a>(X1,n);
+<a name="line92"> 92: </a>  }
+<a name="line93"> 93: </a>  <a href="../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,<font color="#666666">"<a href="../../../docs/manualpages/Sys/PetscSortInt.html#PetscSortInt">PetscSortInt</a>()              with %D integers, %D duplicate(s) per unique value took %g seconds\n"</font>,n,d,time/r);
+<a name="line94"> 94: </a>  <a href="../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,<font color="#666666">"<a href="../../../docs/manualpages/Sys/PetscIntSortSemiOrdered.html#PetscIntSortSemiOrdered">PetscIntSortSemiOrdered</a>()   with %D integers, %D duplicate(s) per unique value took %g seconds\n"</font>,n,d,time1/r);
+<a name="line95"> 95: </a>  <a href="../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,<font color="#666666">"Speedup of <a href="../../../docs/manualpages/Sys/PetscIntSortSemiOrdered.html#PetscIntSortSemiOrdered">PetscIntSortSemiOrdered</a>() was %g (0:1 = slower, &gt;1 means faster)\n"</font>,time/time1);
+
+
+<a name="line98"> 98: </a>  <font color="#4169E1">for</font> (i=0; i&lt;n; i++) { <font color="#B22222">/* Init X[] */</font>
+<a name="line99"> 99: </a>    <a href="../../../docs/manualpages/Sys/PetscRandomGetValueReal.html#PetscRandomGetValueReal">PetscRandomGetValueReal</a>(rdm,&amp;val);
+<a name="line100">100: </a>    X[i] = val*PETSC_MAX_INT;
+<a name="line101">101: </a>    <font color="#4169E1">if</font> (d &gt; 1) X[i] = X[i] % (n/d);
+<a name="line102">102: </a>  }
+<a name="line103">103: </a>  <a href="../../../docs/manualpages/Sys/PetscCalloc3.html#PetscCalloc3">PetscCalloc3</a>(n,&amp;XP,n,&amp;X1P,n,&amp;W);
+
+<a name="line105">105: </a>  time = 0.0;
+<a name="line106">106: </a>  time1 = 0.0;
+<a name="line107">107: </a>  time2 = 0.0;
+<a name="line108">108: </a>  <font color="#4169E1">for</font> (l=0; l&lt;r; l++) { <font color="#B22222">/* r loops */</font>
+<a name="line109">109: </a>    <a href="../../../docs/manualpages/Sys/PetscArraycpy.html#PetscArraycpy">PetscArraycpy</a>(X1, order ? XSO : XR,n);
+<a name="line110">110: </a>    <a href="../../../docs/manualpages/Sys/PetscArraycpy.html#PetscArraycpy">PetscArraycpy</a>(X1P,order ? XSO : XR,n);
+<a name="line111">111: </a>    <a href="../../../docs/manualpages/Sys/PetscArraycpy.html#PetscArraycpy">PetscArraycpy</a>(X,  order ? XSO : XR,n);
+<a name="line112">112: </a>    <a href="../../../docs/manualpages/Sys/PetscArraycpy.html#PetscArraycpy">PetscArraycpy</a>(XP, order ? XSO : XR,n);
+<a name="line113">113: </a>    <a href="../../../docs/manualpages/Sys/PetscArraycpy.html#PetscArraycpy">PetscArraycpy</a>(W, order ? XSO : XR,n);
+
+<a name="line115">115: </a>    <a href="../../../docs/manualpages/Vec/VecNorm.html#VecNorm">VecNorm</a>(x,<a href="../../../docs/manualpages/Vec/NORM_1.html#NORM_1">NORM_1</a>,&amp;norm1);
+<a name="line116">116: </a>    <a href="../../../docs/manualpages/Sys/PetscTimeSubtract.html#PetscTimeSubtract">PetscTimeSubtract</a>(&amp;time1);
+<a name="line117">117: </a>    <a href="../../../docs/manualpages/Sys/PetscIntSortSemiOrderedWithArray.html#PetscIntSortSemiOrderedWithArray">PetscIntSortSemiOrderedWithArray</a>(n,X1,X1P);
+<a name="line118">118: </a>    <a href="../../../docs/manualpages/Sys/PetscTimeAdd.html#PetscTimeAdd">PetscTimeAdd</a>(&amp;time1);
+
+<a name="line120">120: </a>    <a href="../../../docs/manualpages/Vec/VecNorm.html#VecNorm">VecNorm</a>(x,<a href="../../../docs/manualpages/Vec/NORM_1.html#NORM_1">NORM_1</a>,&amp;norm1);
+<a name="line121">121: </a>    <a href="../../../docs/manualpages/Sys/PetscTimeSubtract.html#PetscTimeSubtract">PetscTimeSubtract</a>(&amp;time2);
+<a name="line122">122: </a>    <a href="../../../docs/manualpages/Sys/PetscSortIntWithArray.html#PetscSortIntWithArray">PetscSortIntWithArray</a>(n,X,XP);
+<a name="line123">123: </a>    <a href="../../../docs/manualpages/Sys/PetscTimeAdd.html#PetscTimeAdd">PetscTimeAdd</a>(&amp;time2);
+
+<a name="line125">125: </a>    <a href="../../../docs/manualpages/Sys/PetscTimeSubtract.html#PetscTimeSubtract">PetscTimeSubtract</a>(&amp;time);
+<a name="line126">126: </a>    <a href="../../../docs/manualpages/Sys/PetscSortIntWithArrayPair.html#PetscSortIntWithArrayPair">PetscSortIntWithArrayPair</a>(n,W,Y,Z);
+<a name="line127">127: </a>    <a href="../../../docs/manualpages/Sys/PetscTimeAdd.html#PetscTimeAdd">PetscTimeAdd</a>(&amp;time);
+
+<a name="line129">129: </a>    <font color="#4169E1">for</font> (i=0; i&lt;n-1; i++) {<font color="#4169E1">if</font> (Y[i] &gt; Y[i+1]) {<a href="../../../docs/manualpages/Sys/PetscIntView.html#PetscIntView">PetscIntView</a>(n,Y,0);<a href="../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_PLIB,<font color="#666666">"<a href="../../../docs/manualpages/Sys/PetscSortIntWithArray.html#PetscSortIntWithArray">PetscSortIntWithArray</a>() produced wrong results!"</font>);}}
+<a name="line130">130: </a>    <font color="#4169E1">for</font> (i=0; i&lt;n-1; i++) {<font color="#4169E1">if</font> (W[i] &gt; W[i+1]) <a href="../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_PLIB,<font color="#666666">"<a href="../../../docs/manualpages/Sys/PetscSortIntWithArrayPair.html#PetscSortIntWithArrayPair">PetscSortIntWithArrayPair</a>() produced wrong results!"</font>);}
+<a name="line131">131: </a>    <font color="#4169E1">for</font> (i=0; i&lt;n; i++) {<font color="#4169E1">if</font> (X1P[i] != X[i]) <a href="../../../docs/manualpages/Sys/SETERRQ7.html#SETERRQ7">SETERRQ7</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_PLIB,<font color="#666666">"<a href="../../../docs/manualpages/Sys/PetscIntSortSemiOrdered.html#PetscIntSortSemiOrdered">PetscIntSortSemiOrdered</a>() rep %D X1[%D]:%D does not match <a href="../../../docs/manualpages/Sys/PetscSortIntWithArray.html#PetscSortIntWithArray">PetscSortIntWithArray</a>() X[%D]:%D! randomSeed %lu, orderedSeed %lu"</font>,l,i,X1[i],i,X[i],seedr,seedo);}
+<a name="line132">132: </a>    <font color="#4169E1">for</font> (i=0; i&lt;n-1; i++) {<font color="#4169E1">if</font> (X1[i] &gt; X1[i+1]) <a href="../../../docs/manualpages/Sys/SETERRQ2.html#SETERRQ2">SETERRQ2</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_PLIB,<font color="#666666">"<a href="../../../docs/manualpages/Sys/PetscIntSortSemiOrdered.html#PetscIntSortSemiOrdered">PetscIntSortSemiOrdered</a>() produced wrong results! randomSeed %lu orderedSeed %lu"</font>,seedr,seedo);}
+<a name="line133">133: </a>    <a href="../../../docs/manualpages/Sys/PetscArrayzero.html#PetscArrayzero">PetscArrayzero</a>(X1,n);
+<a name="line134">134: </a>    <a href="../../../docs/manualpages/Sys/PetscArrayzero.html#PetscArrayzero">PetscArrayzero</a>(X1P,n);
+<a name="line135">135: </a>    <a href="../../../docs/manualpages/Sys/PetscArrayzero.html#PetscArrayzero">PetscArrayzero</a>(X,n);
+<a name="line136">136: </a>    <a href="../../../docs/manualpages/Sys/PetscArrayzero.html#PetscArrayzero">PetscArrayzero</a>(XP,n);
+<a name="line137">137: </a>    <a href="../../../docs/manualpages/Sys/PetscArrayzero.html#PetscArrayzero">PetscArrayzero</a>(W,n);
+<a name="line138">138: </a>  }
+<a name="line139">139: </a>  <a href="../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,<font color="#666666">"<a href="../../../docs/manualpages/Sys/PetscSortIntWithArrayPair.html#PetscSortIntWithArrayPair">PetscSortIntWithArrayPair</a>()        with %D integers, %D duplicate(s) per unique value took %g seconds\n"</font>,n,d,time/r);
+<a name="line140">140: </a>  <a href="../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,<font color="#666666">"<a href="../../../docs/manualpages/Sys/PetscSortIntWithArray.html#PetscSortIntWithArray">PetscSortIntWithArray</a>()            with %D integers, %D duplicate(s) per unique value took %g seconds\n"</font>,n,d,time2/r);
+<a name="line141">141: </a>  <a href="../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,<font color="#666666">"<a href="../../../docs/manualpages/Sys/PetscIntSortSemiOrderedWithArray.html#PetscIntSortSemiOrderedWithArray">PetscIntSortSemiOrderedWithArray</a>() with %D integers, %D duplicate(s) per unique value took %g seconds\n"</font>,n,d,time1/r);
+<a name="line142">142: </a>  <a href="../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,<font color="#666666">"Speedup of <a href="../../../docs/manualpages/Sys/PetscIntSortSemiOrderedWithArray.html#PetscIntSortSemiOrderedWithArray">PetscIntSortSemiOrderedWithArray</a>() was %g (0:1 = slower, &gt;1 means faster)\n"</font>,time2/time1);
+<a name="line143">143: </a>  <a href="../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,<font color="#666666">"SUCCEEDED\n"</font>);
+
+<a name="line145">145: </a>  <a href="../../../docs/manualpages/Vec/VecDestroy.html#VecDestroy">VecDestroy</a>(&amp;x);
+<a name="line146">146: </a>  <a href="../../../docs/manualpages/Sys/PetscRandomDestroy.html#PetscRandomDestroy">PetscRandomDestroy</a>(&amp;rdm);
+<a name="line147">147: </a>  <a href="../../../docs/manualpages/Sys/PetscFree3.html#PetscFree3">PetscFree3</a>(XP,X1P,W);
+<a name="line148">148: </a>  <a href="../../../docs/manualpages/Sys/PetscFree6.html#PetscFree6">PetscFree6</a>(X,X1,XR,XSO,Y,Z);
+<a name="line149">149: </a>  <a href="../../../docs/manualpages/Sys/PetscFinalize.html#PetscFinalize">PetscFinalize</a>();
+<a name="line150">150: </a>  <font color="#4169E1">return</font> ierr;
+<a name="line151">151: </a>}
+
+<a name="line153">153: </a><font color="#B22222">/*TEST</font>
+
+<a name="line155">155: </a><font color="#B22222">   test:</font>
+<a name="line156">156: </a><font color="#B22222">      args: -n 1000 -r 10 -d 1</font>
+<a name="line157">157: </a><font color="#B22222">      # Do not need to output timing results for test</font>
+<a name="line158">158: </a><font color="#B22222">      filter: grep -vE "per unique value took|Speedup of "</font>
+<a name="line159">159: </a><font color="#B22222">TEST*/</font>
+</pre>
+</body>
+
+</html>

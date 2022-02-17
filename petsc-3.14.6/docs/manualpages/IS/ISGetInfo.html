@@ -1,0 +1,49 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/IS/ISGetInfo.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>ISGetInfo</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/IS/ISGetInfo.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="ISGetInfo"><H1>ISGetInfo</H1></A>
+Determine whether an index set satisfies a given property 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscis.h" 
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../IS/ISGetInfo.html#ISGetInfo">ISGetInfo</A>(<A HREF="../IS/IS.html#IS">IS</A> is, <A HREF="../IS/ISInfo.html#ISInfo">ISInfo</A> info, ISInfoType type, <A HREF="../Sys/PetscBool.html#PetscBool">PetscBool</A> compute, <A HREF="../Sys/PetscBool.html#PetscBool">PetscBool</A> *flg)
+</PRE>
+Collective or logically collective on <A HREF="../IS/IS.html#IS">IS</A> if the type is IS_GLOBAL (logically collective if the value of the property has been permanently set with <A HREF="../IS/ISSetInfo.html#ISSetInfo">ISSetInfo</A>())
+<P>
+<H3><FONT COLOR="#CC3333">Input Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>is </B></TD><TD>- the index set
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>info </B></TD><TD>- describing a property of the index set, one of those listed in the documentation of <A HREF="../IS/ISSetInfo.html#ISSetInfo">ISSetInfo</A>()
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>compute </B></TD><TD>- if <A HREF="../Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</A>, the property will not be computed if it is not already known and the property will be assumed to be false
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>type </B></TD><TD>- whether the property is local (IS_LOCAL) or global (IS_GLOBAL)
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Output Parameter</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>flg </B></TD><TD>- wheter the property is true (<A HREF="../Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</A>) or false (<A HREF="../Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</A>)
+</TD></TR></TABLE>
+<P>
+Note: <A HREF="../IS/ISGetInfo.html#ISGetInfo">ISGetInfo</A> uses cached values when possible, which will be incorrect if <A HREF="../IS/ISSetInfo.html#ISSetInfo">ISSetInfo</A>() has been called with incorrect information.  To clear cached values, use <A HREF="../IS/ISClearInfoCache.html#ISClearInfoCache">ISClearInfoCache</A>().
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+  <A HREF="../IS/ISInfo.html#ISInfo">ISInfo</A>, ISInfoType, <A HREF="../IS/ISSetInfo.html#ISSetInfo">ISSetInfo</A>(), <A HREF="../IS/ISClearInfoCache.html#ISClearInfoCache">ISClearInfoCache</A>()
+<BR>
+<P>
+<P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>advanced<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/vec/is/is/interface/index.c.html#ISGetInfo">src/vec/is/is/interface/index.c</A>
+<BR><A HREF="./index.html">Index of all IS routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

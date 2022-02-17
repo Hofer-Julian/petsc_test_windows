@@ -1,0 +1,93 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatShellSetMatProductOperation.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>MatShellSetMatProductOperation</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/Mat/MatShellSetMatProductOperation.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="MatShellSetMatProductOperation"><H1>MatShellSetMatProductOperation</H1></A>
+Allows user to set a matrix matrix operation for a shell matrix. 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscmat.h" 
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../Mat/MatShellSetMatProductOperation.html#MatShellSetMatProductOperation">MatShellSetMatProductOperation</A>(<A HREF="../Mat/Mat.html#Mat">Mat</A> A,<A HREF="../Mat/MatProductType.html#MatProductType">MatProductType</A> ptype,<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> (*symbolic)(<A HREF="../Mat/Mat.html#Mat">Mat</A>,<A HREF="../Mat/Mat.html#Mat">Mat</A>,<A HREF="../Mat/Mat.html#Mat">Mat</A>,void**),<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> (*numeric)(<A HREF="../Mat/Mat.html#Mat">Mat</A>,<A HREF="../Mat/Mat.html#Mat">Mat</A>,<A HREF="../Mat/Mat.html#Mat">Mat</A>,void*),<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> (*destroy)(void *),<A HREF="../Mat/MatType.html#MatType">MatType</A> Btype,<A HREF="../Mat/MatType.html#MatType">MatType</A> Ctype)
+</PRE>
+Logically Collective on <A HREF="../Mat/Mat.html#Mat">Mat</A>
+<P>
+<H3><FONT COLOR="#CC3333">Input Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>A </B></TD><TD>- the shell matrix
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>ptype </B></TD><TD>- the product type
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>symbolic </B></TD><TD>- the function for the symbolic phase (can be NULL)
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>numeric </B></TD><TD>- the function for the numerical phase
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>destroy </B></TD><TD>- the function for the destruction of the needed data generated during the symbolic phase (can be NULL)
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>Btype </B></TD><TD>- the matrix type for the matrix to be multiplied against
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>Ctype </B></TD><TD>- the matrix type for the result (can be NULL)
+</TD></TR></TABLE>
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">Usage</FONT></H3>
+<pre>
+     extern <A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> usersymbolic(<A HREF="../Mat/Mat.html#Mat">Mat</A>,<A HREF="../Mat/Mat.html#Mat">Mat</A>,<A HREF="../Mat/Mat.html#Mat">Mat</A>,void**);
+</pre>
+<pre>
+     extern <A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> usernumeric(<A HREF="../Mat/Mat.html#Mat">Mat</A>,<A HREF="../Mat/Mat.html#Mat">Mat</A>,<A HREF="../Mat/Mat.html#Mat">Mat</A>,void*);
+</pre>
+<pre>
+     extern <A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> userdestroy(void*);
+</pre>
+<pre>
+     <A HREF="../Mat/MatCreateShell.html#MatCreateShell">MatCreateShell</A>(comm,m,n,M,N,ctx,&amp;A);
+</pre>
+<pre>
+     <A HREF="../Mat/MatShellSetMatProductOperation.html#MatShellSetMatProductOperation">MatShellSetMatProductOperation</A>(A,<A HREF="../Mat/MatProductType.html#MatProductType">MATPRODUCT_AB</A>,usersymbolic,usernumeric,userdestroy,<A HREF="../Mat/MATSEQAIJ.html#MATSEQAIJ">MATSEQAIJ</A>,<A HREF="../Mat/MATDENSE.html#MATDENSE">MATDENSE</A>);
+</pre>
+<pre>
+     [ create B of type SEQAIJ etc..]
+</pre>
+<pre>
+     <A HREF="../Mat/MatProductCreate.html#MatProductCreate">MatProductCreate</A>(A,B,NULL,&amp;C);
+</pre>
+<pre>
+     <A HREF="../Mat/MatProductSetType.html#MatProductSetType">MatProductSetType</A>(C,<A HREF="../Mat/MatProductType.html#MatProductType">MATPRODUCT_AB</A>);
+</pre>
+<pre>
+     <A HREF="../Mat/MatProductSetFromOptions.html#MatProductSetFromOptions">MatProductSetFromOptions</A>(C);
+</pre>
+<pre>
+     <A HREF="../Mat/MatProductSymbolic.html#MatProductSymbolic">MatProductSymbolic</A>(C); -&gt; actually runs the user defined symbolic operation
+</pre>
+<pre>
+     <A HREF="../Mat/MatProductNumeric.html#MatProductNumeric">MatProductNumeric</A>(C); -&gt; actually runs the user defined numeric operation
+</pre>
+<pre>
+     [ use C = A*B ]
+</pre>
+<P>
+<H3><FONT COLOR="#CC3333">Notes</FONT></H3>
+<A HREF="../Mat/MatProductType.html#MatProductType">MATPRODUCT_ABC</A> is not supported yet. Not supported in Fortran.
+If the symbolic phase is not specified, <A HREF="../Mat/MatSetUp.html#MatSetUp">MatSetUp</A>() is called on the result matrix that must have its type set if Ctype is NULL.
+Any additional data needed by the matrix product needs to be returned during the symbolic phase and destroyed with the destroy callback.
+PETSc will take care of calling the user-defined callbacks.
+It is allowed to specify the same callbacks for different Btype matrix types.
+The couple (Btype,ptype) uniquely identifies the operation: the last specified callbacks takes precedence.
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../Mat/MatCreateShell.html#MatCreateShell">MatCreateShell</A>(), <A HREF="../Mat/MatShellGetContext.html#MatShellGetContext">MatShellGetContext</A>(), <A HREF="../Mat/MatShellGetOperation.html#MatShellGetOperation">MatShellGetOperation</A>(), <A HREF="../Mat/MatShellSetContext.html#MatShellSetContext">MatShellSetContext</A>(), <A HREF="../Mat/MatSetOperation.html#MatSetOperation">MatSetOperation</A>(), <A HREF="../Mat/MatProductType.html#MatProductType">MatProductType</A>, <A HREF="../Mat/MatType.html#MatType">MatType</A>, <A HREF="../Mat/MatSetUp.html#MatSetUp">MatSetUp</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>advanced<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/mat/impls/shell/shell.c.html#MatShellSetMatProductOperation">src/mat/impls/shell/shell.c</A>
+<P><H3><FONT COLOR="CC3333">Implementations</FONT></H3><A HREF="../../../src/mat/impls/shell/shell.c.html#MatShellSetMatProductOperation_Shell(Mat A,MatProductType ptype,PetscErrorCode (*symbolic)(Mat,Mat,Mat,void**),PetscErrorCode (*numeric)(Mat,Mat,Mat,void*),PetscErrorCode (*destroy)">MatShellSetMatProductOperation_Shell(Mat A,MatProductType ptype,PetscErrorCode (*symbolic)(Mat,Mat,Mat,void**),PetscErrorCode (*numeric)(Mat,Mat,Mat,void*),PetscErrorCode (*destroy) in src/mat/impls/shell/shell.c</A><BR>
+<BR><A HREF="./index.html">Index of all Mat routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

@@ -1,0 +1,88 @@
+<center><a href="ex1.c">Actual source code: ex1.c</a></center><br>
+
+<html>
+<head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/src/ts/utils/dmplexlandau/tutorials/ex1.c.html" />
+<title></title>
+<meta name="generator" content="c2html 0.9.4">
+<meta name="date" content="2021-03-30T16:52:01+00:00">
+</head>
+
+<body bgcolor="#FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 src/ts/utils/dmplexlandau/tutorials/ex1.c.html "><small>Report Typos and Errors</small></a></div>
+<pre width="80">
+<a name="line1">  1: </a>static char help[] = <font color="#666666">"Landau collision operator driver\n\n"</font>;
+
+<a name="line3">  3: </a>#include <A href="../../../../../include/petscts.h.html">&lt;petscts.h&gt;</A>
+<a name="line4">  4: </a>#include <A href="../../../../../include/petsclandau.h.html">&lt;petsclandau.h&gt;</A>
+
+<a name="line6">  6: </a><strong><font color="#4169E1"><a name="main"></a>int main(int argc, char **argv)</font></strong>
+<a name="line7">  7: </a>{
+<a name="line8">  8: </a>  <a href="../../../../../docs/manualpages/DM/DM.html#DM">DM</a>             dm;
+<a name="line9">  9: </a>  <a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a>            X,X_0;
+<a name="line11"> 11: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       dim=2;
+<a name="line12"> 12: </a>  <a href="../../../../../docs/manualpages/TS/TS.html#TS">TS</a>             ts;
+<a name="line13"> 13: </a>  <a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a>            J;
+<a name="line14"> 14: </a>  <a href="../../../../../docs/manualpages/SNES/SNES.html#SNES">SNES</a>           snes;
+<a name="line15"> 15: </a>  <a href="../../../../../docs/manualpages/KSP/KSP.html#KSP">KSP</a>            ksp;
+<a name="line16"> 16: </a>  <a href="../../../../../docs/manualpages/PC/PC.html#PC">PC</a>             pc;
+<a name="line17"> 17: </a>  <a href="../../../../../docs/manualpages/SNES/SNESLineSearch.html#SNESLineSearch">SNESLineSearch</a> linesearch;
+<a name="line18"> 18: </a>  <a href="../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>      time;
+
+<a name="line20"> 20: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInitialize.html#PetscInitialize">PetscInitialize</a>(&amp;argc, &amp;argv, NULL,help);<font color="#4169E1">if</font> (ierr) <font color="#4169E1">return</font> ierr;
+<a name="line21"> 21: </a>  <a href="../../../../../docs/manualpages/Sys/PetscOptionsGetInt.html#PetscOptionsGetInt">PetscOptionsGetInt</a>(NULL,NULL, <font color="#666666">"-dim"</font>, &amp;dim, NULL);
+<a name="line22"> 22: </a>  <font color="#B22222">/* Create a mesh */</font>
+<a name="line23"> 23: </a>  <a href="../../../../../docs/manualpages/LANDAU/LandauCreateVelocitySpace.html#LandauCreateVelocitySpace">LandauCreateVelocitySpace</a>(<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, dim, <font color="#666666">""</font>, &amp;X, &amp;J, &amp;dm);
+<a name="line24"> 24: </a>  <a href="../../../../../docs/manualpages/LANDAU/LandauCreateMassMatrix.html#LandauCreateMassMatrix">LandauCreateMassMatrix</a>(dm, NULL);
+<a name="line25"> 25: </a>  <a href="../../../../../docs/manualpages/DM/DMSetUp.html#DMSetUp">DMSetUp</a>(dm);
+<a name="line26"> 26: </a>  <a href="../../../../../docs/manualpages/Vec/VecDuplicate.html#VecDuplicate">VecDuplicate</a>(X,&amp;X_0);
+<a name="line27"> 27: </a>  <a href="../../../../../docs/manualpages/Vec/VecCopy.html#VecCopy">VecCopy</a>(X,X_0);
+<a name="line28"> 28: </a>  <a href="../../../../../docs/manualpages/LANDAU/LandauPrintNorms.html#LandauPrintNorms">LandauPrintNorms</a>(X,0);
+<a name="line29"> 29: </a>  <a href="../../../../../docs/manualpages/DM/DMSetOutputSequenceNumber.html#DMSetOutputSequenceNumber">DMSetOutputSequenceNumber</a>(dm, 0, 0.0);
+<a name="line30"> 30: </a>  <a href="../../../../../docs/manualpages/DM/DMViewFromOptions.html#DMViewFromOptions">DMViewFromOptions</a>(dm,NULL,<font color="#666666">"-dm_view"</font>);
+<a name="line31"> 31: </a>  <a href="../../../../../docs/manualpages/Vec/VecViewFromOptions.html#VecViewFromOptions">VecViewFromOptions</a>(X,NULL,<font color="#666666">"-vec_view"</font>);
+<a name="line32"> 32: </a>  <font color="#B22222">/* Create timestepping solver context */</font>
+<a name="line33"> 33: </a>  <a href="../../../../../docs/manualpages/TS/TSCreate.html#TSCreate">TSCreate</a>(<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,&amp;ts);
+<a name="line34"> 34: </a>  <a href="../../../../../docs/manualpages/TS/TSSetOptionsPrefix.html#TSSetOptionsPrefix">TSSetOptionsPrefix</a>(ts, <font color="#666666">"ex1_"</font>);  <font color="#B22222">/* should get this from the dm or give it to the dm */</font>
+<a name="line35"> 35: </a>  <a href="../../../../../docs/manualpages/TS/TSSetDM.html#TSSetDM">TSSetDM</a>(ts,dm);
+<a name="line36"> 36: </a>  <a href="../../../../../docs/manualpages/TS/TSGetSNES.html#TSGetSNES">TSGetSNES</a>(ts,&amp;snes);
+<a name="line37"> 37: </a>  <a href="../../../../../docs/manualpages/SNES/SNESSetOptionsPrefix.html#SNESSetOptionsPrefix">SNESSetOptionsPrefix</a>(snes, <font color="#666666">"ex1_"</font>);  <font color="#B22222">/* should get this from the dm or give it to the dm */</font>
+<a name="line38"> 38: </a>  <a href="../../../../../docs/manualpages/SNES/SNESGetLineSearch.html#SNESGetLineSearch">SNESGetLineSearch</a>(snes,&amp;linesearch);
+<a name="line39"> 39: </a>  <a href="../../../../../docs/manualpages/SNES/SNESLineSearchSetType.html#SNESLineSearchSetType">SNESLineSearchSetType</a>(linesearch,<a href="../../../../../docs/manualpages/SNES/SNESLINESEARCHBASIC.html#SNESLINESEARCHBASIC">SNESLINESEARCHBASIC</a>);
+<a name="line40"> 40: </a>  <a href="../../../../../docs/manualpages/TS/TSSetIFunction.html#TSSetIFunction">TSSetIFunction</a>(ts,NULL,<a href="../../../../../docs/manualpages/LANDAU/LandauIFunction.html#LandauIFunction">LandauIFunction</a>,NULL);
+<a name="line41"> 41: </a>  <a href="../../../../../docs/manualpages/TS/TSSetIJacobian.html#TSSetIJacobian">TSSetIJacobian</a>(ts,J,J,<a href="../../../../../docs/manualpages/LANDAU/LandauIJacobian.html#LandauIJacobian">LandauIJacobian</a>,NULL);
+<a name="line42"> 42: </a>  <a href="../../../../../docs/manualpages/TS/TSSetExactFinalTime.html#TSSetExactFinalTime">TSSetExactFinalTime</a>(ts,<a href="../../../../../docs/manualpages/TS/TSExactFinalTimeOption.html#TSExactFinalTimeOption">TS_EXACTFINALTIME_STEPOVER</a>);
+<a name="line43"> 43: </a>  <a href="../../../../../docs/manualpages/SNES/SNESGetKSP.html#SNESGetKSP">SNESGetKSP</a>(snes,&amp;ksp);
+<a name="line44"> 44: </a>  <a href="../../../../../docs/manualpages/KSP/KSPSetOptionsPrefix.html#KSPSetOptionsPrefix">KSPSetOptionsPrefix</a>(ksp, <font color="#666666">"ex1_"</font>);  <font color="#B22222">/* should get this from the dm or give it to the dm */</font>
+<a name="line45"> 45: </a>  <a href="../../../../../docs/manualpages/KSP/KSPGetPC.html#KSPGetPC">KSPGetPC</a>(ksp,&amp;pc);
+<a name="line46"> 46: </a>  <a href="../../../../../docs/manualpages/PC/PCSetOptionsPrefix.html#PCSetOptionsPrefix">PCSetOptionsPrefix</a>(pc, <font color="#666666">"ex1_"</font>);  <font color="#B22222">/* should get this from the dm or give it to the dm */</font>
+<a name="line47"> 47: </a>  <a href="../../../../../docs/manualpages/TS/TSSetFromOptions.html#TSSetFromOptions">TSSetFromOptions</a>(ts);
+<a name="line48"> 48: </a>  <a href="../../../../../docs/manualpages/TS/TSSetSolution.html#TSSetSolution">TSSetSolution</a>(ts,X);
+<a name="line49"> 49: </a>  <a href="../../../../../docs/manualpages/TS/TSSolve.html#TSSolve">TSSolve</a>(ts,X);
+<a name="line50"> 50: </a>  <a href="../../../../../docs/manualpages/LANDAU/LandauPrintNorms.html#LandauPrintNorms">LandauPrintNorms</a>(X,1);
+<a name="line51"> 51: </a>  <a href="../../../../../docs/manualpages/TS/TSGetTime.html#TSGetTime">TSGetTime</a>(ts, &amp;time);
+<a name="line52"> 52: </a>  <a href="../../../../../docs/manualpages/DM/DMSetOutputSequenceNumber.html#DMSetOutputSequenceNumber">DMSetOutputSequenceNumber</a>(dm, 1, time);
+<a name="line53"> 53: </a>  <a href="../../../../../docs/manualpages/Vec/VecViewFromOptions.html#VecViewFromOptions">VecViewFromOptions</a>(X,NULL,<font color="#666666">"-vec_view"</font>);
+<a name="line54"> 54: </a>  <a href="../../../../../docs/manualpages/Vec/VecAXPY.html#VecAXPY">VecAXPY</a>(X,-1,X_0);
+<a name="line55"> 55: </a>  <font color="#B22222">/* clean up */</font>
+<a name="line56"> 56: </a>  <a href="../../../../../docs/manualpages/LANDAU/LandauDestroyVelocitySpace.html#LandauDestroyVelocitySpace">LandauDestroyVelocitySpace</a>(&amp;dm);
+<a name="line57"> 57: </a>  <a href="../../../../../docs/manualpages/TS/TSDestroy.html#TSDestroy">TSDestroy</a>(&amp;ts);
+<a name="line58"> 58: </a>  <a href="../../../../../docs/manualpages/Vec/VecDestroy.html#VecDestroy">VecDestroy</a>(&amp;X);
+<a name="line59"> 59: </a>  <a href="../../../../../docs/manualpages/Vec/VecDestroy.html#VecDestroy">VecDestroy</a>(&amp;X_0);
+<a name="line60"> 60: </a>  <a href="../../../../../docs/manualpages/Sys/PetscFinalize.html#PetscFinalize">PetscFinalize</a>();
+<a name="line61"> 61: </a>  <font color="#4169E1">return</font> ierr;
+<a name="line62"> 62: </a>}
+
+
+<a name="line65"> 65: </a><font color="#B22222">/*TEST</font>
+
+<a name="line67"> 67: </a><font color="#B22222">  test:</font>
+<a name="line68"> 68: </a><font color="#B22222">    suffix: 0</font>
+<a name="line69"> 69: </a><font color="#B22222">    requires: p4est !complex</font>
+<a name="line70"> 70: </a><font color="#B22222">    args: -petscspace_degree 4 -petscspace_poly_tensor 1 -dm_landau_type p4est -info :dm,tsadapt -dm_landau_ion_masses 2,4 -dm_landau_ion_charges 1,18 -dm_landau_thermal_temps 5,5,.5 -dm_landau_n 1.00018,1,1e-5 -dm_landau_n_0 1e20 -ex1_ts_monitor -ex1_snes_rtol 1.e-6 -ex1_snes_monitor -ex1_snes_converged_reason -ex1_ts_type arkimex -ex1_ts_arkimex_type 1bee -ex1_ts_max_snes_failures -1 -ex1_ts_rtol 1e-4 -ex1_ts_dt 1.e-6 -ex1_ts_max_time 1 -ex1_ts_adapt_clip .5,1.25 -ex1_ts_adapt_scale_solve_failed 0.75 -ex1_ts_adapt_time_step_increase_delay 5 -ex1_ts_max_steps 1 -ex1_pc_type lu -ex1_ksp_type preonly -dm_landau_amr_levels_max 7 -dm_landau_domain_radius 5 -dm_landau_amr_re_levels 0 -dm_landau_re_radius 1 -dm_landau_amr_z_refine1 1 -dm_landau_amr_z_refine2 0 -dm_landau_amr_post_refine 0 -dm_landau_z_radius1 .1 -dm_landau_z_radius2 .1 -dm_refine 1</font>
+
+<a name="line72"> 72: </a><font color="#B22222">TEST*/</font>
+</pre>
+</body>
+
+</html>

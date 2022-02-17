@@ -1,0 +1,47 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/TS/TSSetComputeInitialCondition.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>TSSetComputeInitialCondition</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/TS/TSSetComputeInitialCondition.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="TSSetComputeInitialCondition"><H1>TSSetComputeInitialCondition</H1></A>
+Set the function used to automatically compute an initial condition for the timestepping. 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscts.h"  
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../TS/TSSetComputeInitialCondition.html#TSSetComputeInitialCondition">TSSetComputeInitialCondition</A>(<A HREF="../TS/TS.html#TS">TS</A> ts, <A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> (*initCondition)(<A HREF="../TS/TS.html#TS">TS</A>, <A HREF="../Vec/Vec.html#Vec">Vec</A>))
+</PRE>
+Logically collective on ts
+<P>
+<H3><FONT COLOR="#CC3333">Input Arguments</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>ts        </B></TD><TD>- time stepping context
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>initCondition </B></TD><TD>- The function which computes an initial condition
+</TD></TR></TABLE>
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">Calling sequence for initCondition</FONT></H3>
+<pre>
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> initCondition(<A HREF="../TS/TS.html#TS">TS</A> ts, <A HREF="../Vec/Vec.html#Vec">Vec</A> u)
+</pre>
+<P>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>ts </B></TD><TD>- The timestepping context
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>u  </B></TD><TD>- The input vector in which the initial condition is to be stored
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../TS/TSGetComputeInitialCondition.html#TSGetComputeInitialCondition">TSGetComputeInitialCondition</A>(), <A HREF="../TS/TSComputeInitialCondition.html#TSComputeInitialCondition">TSComputeInitialCondition</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>advanced<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/ts/interface/ts.c.html#TSSetComputeInitialCondition">src/ts/interface/ts.c</A>
+<BR><A HREF="./index.html">Index of all TS routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

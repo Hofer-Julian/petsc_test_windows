@@ -1,0 +1,1787 @@
+<center><a href="plexgmsh.c">Actual source code: plexgmsh.c</a></center><br>
+
+<html>
+<head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/src/dm/impls/plex/plexgmsh.c.html" />
+<title></title>
+<meta name="generator" content="c2html 0.9.4">
+<meta name="date" content="2021-03-30T16:50:45+00:00">
+</head>
+
+<body bgcolor="#FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 src/dm/impls/plex/plexgmsh.c.html "><small>Report Typos and Errors</small></a></div>
+<pre width="80">
+<a name="line1">  1: </a><strong><font color="#228B22">#define PETSCDM_DLL</font></strong>
+<a name="line2">  2: </a>#include <A href="../../../../include/petsc/private/dmpleximpl.h.html">&lt;petsc/private/dmpleximpl.h&gt;</A>
+<a name="line3">  3: </a>#include <A href="../../../../include/petsc/private/hashmapi.h.html">&lt;petsc/private/hashmapi.h&gt;</A>
+
+<a name="line5">  5: </a>#include <A href="gmshlex.h.html">&lt;../src/dm/impls/plex/gmshlex.h&gt;</A>
+
+<a name="line7">  7: </a><strong><font color="#228B22">#define GMSH_LEXORDER_ITEM(T, p)                                   \</font></strong>
+<a name="line8">  8: </a><strong><font color="#228B22">static int *GmshLexOrder_##T##_##p(void)                           \</font></strong>
+<a name="line9">  9: </a><strong><font color="#228B22">{                                                                  \</font></strong>
+<a name="line10"> 10: </a><strong><font color="#228B22">  static int Gmsh_LexOrder_##T##_##p[GmshNumNodes_##T(p)] = {-1};  \</font></strong>
+<a name="line11"> 11: </a><strong><font color="#228B22">  int *lex = Gmsh_LexOrder_##T##_##p;                              \</font></strong>
+<a name="line12"> 12: </a><strong><font color="#228B22">  if (lex[0] == -1) (void)GmshLexOrder_##T(p, lex, 0);             \</font></strong>
+<a name="line13"> 13: </a><strong><font color="#228B22">  return lex;                                                      \</font></strong>
+<a name="line14"> 14: </a><strong><font color="#228B22">}</font></strong>
+
+<a name="line16"> 16: </a><strong><font color="#228B22">#define GMSH_LEXORDER_LIST(T) \</font></strong>
+<a name="line17"> 17: </a><strong><font color="#228B22">GMSH_LEXORDER_ITEM(T,  1)     \</font></strong>
+<a name="line18"> 18: </a><strong><font color="#228B22">GMSH_LEXORDER_ITEM(T,  2)     \</font></strong>
+<a name="line19"> 19: </a><strong><font color="#228B22">GMSH_LEXORDER_ITEM(T,  3)     \</font></strong>
+<a name="line20"> 20: </a><strong><font color="#228B22">GMSH_LEXORDER_ITEM(T,  4)     \</font></strong>
+<a name="line21"> 21: </a><strong><font color="#228B22">GMSH_LEXORDER_ITEM(T,  5)     \</font></strong>
+<a name="line22"> 22: </a><strong><font color="#228B22">GMSH_LEXORDER_ITEM(T,  6)     \</font></strong>
+<a name="line23"> 23: </a><strong><font color="#228B22">GMSH_LEXORDER_ITEM(T,  7)     \</font></strong>
+<a name="line24"> 24: </a><strong><font color="#228B22">GMSH_LEXORDER_ITEM(T,  8)     \</font></strong>
+<a name="line25"> 25: </a><strong><font color="#228B22">GMSH_LEXORDER_ITEM(T,  9)     \</font></strong>
+<a name="line26"> 26: </a><strong><font color="#228B22">GMSH_LEXORDER_ITEM(T, 10)</font></strong>
+
+<a name="line28"> 28: </a>GMSH_LEXORDER_ITEM(VTX, 0)
+<a name="line29"> 29: </a><strong><font color="#4169E1"><a name="MSH_LEXORDER_LIST"></a>GMSH_LEXORDER_LIST(SEG)</font></strong>
+<a name="line30"> 30: </a><strong><font color="#4169E1">GMSH_LEXORDER_LIST(TRI)</font></strong>
+<a name="line31"> 31: </a><strong><font color="#4169E1">GMSH_LEXORDER_LIST(QUA)</font></strong>
+<a name="line32"> 32: </a><strong><font color="#4169E1">GMSH_LEXORDER_LIST(TET)</font></strong>
+<a name="line33"> 33: </a><strong><font color="#4169E1">GMSH_LEXORDER_LIST(HEX)</font></strong>
+<a name="line34"> 34: </a><strong><font color="#4169E1">GMSH_LEXORDER_LIST(PRI)</font></strong>
+<a name="line35"> 35: </a><strong><font color="#4169E1">GMSH_LEXORDER_LIST(PYR)</font></strong>
+
+<a name="line37"> 37: </a><font color="#4169E1">typedef</font> <font color="#4169E1">enum</font> {
+<a name="line38"> 38: </a>  GMSH_VTX = 0,
+<a name="line39"> 39: </a>  GMSH_SEG = 1,
+<a name="line40"> 40: </a>  GMSH_TRI = 2,
+<a name="line41"> 41: </a>  GMSH_QUA = 3,
+<a name="line42"> 42: </a>  GMSH_TET = 4,
+<a name="line43"> 43: </a>  GMSH_HEX = 5,
+<a name="line44"> 44: </a>  GMSH_PRI = 6,
+<a name="line45"> 45: </a>  GMSH_PYR = 7,
+<a name="line46"> 46: </a>  GMSH_NUM_POLYTOPES = 8
+<a name="line47"> 47: </a>} GmshPolytopeType;
+
+<a name="line49"> 49: </a><font color="#4169E1">typedef</font> <font color="#4169E1">struct</font> {
+<a name="line50"> 50: </a>  int   cellType;
+<a name="line51"> 51: </a>  int   polytope;
+<a name="line52"> 52: </a>  int   dim;
+<a name="line53"> 53: </a>  int   order;
+<a name="line54"> 54: </a>  int   numVerts;
+<a name="line55"> 55: </a>  int   numNodes;
+<a name="line56"> 56: </a>  int* (*lexorder)(void);
+<a name="line57"> 57: </a>} GmshCellInfo;
+
+<a name="line59"> 59: </a><strong><font color="#228B22">#define GmshCellEntry(cellType, polytope, dim, order) \</font></strong>
+<a name="line60"> 60: </a><strong><font color="#228B22">  {cellType, GMSH_##polytope, dim, order, \</font></strong>
+<a name="line61"> 61: </a><strong><font color="#228B22">   GmshNumNodes_##polytope(1), \</font></strong>
+<a name="line62"> 62: </a><strong><font color="#228B22">   GmshNumNodes_##polytope(order), \</font></strong>
+<a name="line63"> 63: </a><strong><font color="#228B22">   GmshLexOrder_##polytope##_##order}</font></strong>
+
+<a name="line65"> 65: </a>static const GmshCellInfo GmshCellTable[] = {
+<a name="line66"> 66: </a>  GmshCellEntry( 15, VTX, 0,  0),
+
+<a name="line68"> 68: </a>  GmshCellEntry(  1, SEG, 1,  1),
+<a name="line69"> 69: </a>  GmshCellEntry(  8, SEG, 1,  2),
+<a name="line70"> 70: </a>  GmshCellEntry( 26, SEG, 1,  3),
+<a name="line71"> 71: </a>  GmshCellEntry( 27, SEG, 1,  4),
+<a name="line72"> 72: </a>  GmshCellEntry( 28, SEG, 1,  5),
+<a name="line73"> 73: </a>  GmshCellEntry( 62, SEG, 1,  6),
+<a name="line74"> 74: </a>  GmshCellEntry( 63, SEG, 1,  7),
+<a name="line75"> 75: </a>  GmshCellEntry( 64, SEG, 1,  8),
+<a name="line76"> 76: </a>  GmshCellEntry( 65, SEG, 1,  9),
+<a name="line77"> 77: </a>  GmshCellEntry( 66, SEG, 1, 10),
+
+<a name="line79"> 79: </a>  GmshCellEntry(  2, TRI, 2,  1),
+<a name="line80"> 80: </a>  GmshCellEntry(  9, TRI, 2,  2),
+<a name="line81"> 81: </a>  GmshCellEntry( 21, TRI, 2,  3),
+<a name="line82"> 82: </a>  GmshCellEntry( 23, TRI, 2,  4),
+<a name="line83"> 83: </a>  GmshCellEntry( 25, TRI, 2,  5),
+<a name="line84"> 84: </a>  GmshCellEntry( 42, TRI, 2,  6),
+<a name="line85"> 85: </a>  GmshCellEntry( 43, TRI, 2,  7),
+<a name="line86"> 86: </a>  GmshCellEntry( 44, TRI, 2,  8),
+<a name="line87"> 87: </a>  GmshCellEntry( 45, TRI, 2,  9),
+<a name="line88"> 88: </a>  GmshCellEntry( 46, TRI, 2, 10),
+
+<a name="line90"> 90: </a>  GmshCellEntry(  3, QUA, 2,  1),
+<a name="line91"> 91: </a>  GmshCellEntry( 10, QUA, 2,  2),
+<a name="line92"> 92: </a>  GmshCellEntry( 36, QUA, 2,  3),
+<a name="line93"> 93: </a>  GmshCellEntry( 37, QUA, 2,  4),
+<a name="line94"> 94: </a>  GmshCellEntry( 38, QUA, 2,  5),
+<a name="line95"> 95: </a>  GmshCellEntry( 47, QUA, 2,  6),
+<a name="line96"> 96: </a>  GmshCellEntry( 48, QUA, 2,  7),
+<a name="line97"> 97: </a>  GmshCellEntry( 49, QUA, 2,  8),
+<a name="line98"> 98: </a>  GmshCellEntry( 50, QUA, 2,  9),
+<a name="line99"> 99: </a>  GmshCellEntry( 51, QUA, 2, 10),
+
+<a name="line101">101: </a>  GmshCellEntry(  4, TET, 3,  1),
+<a name="line102">102: </a>  GmshCellEntry( 11, TET, 3,  2),
+<a name="line103">103: </a>  GmshCellEntry( 29, TET, 3,  3),
+<a name="line104">104: </a>  GmshCellEntry( 30, TET, 3,  4),
+<a name="line105">105: </a>  GmshCellEntry( 31, TET, 3,  5),
+<a name="line106">106: </a>  GmshCellEntry( 71, TET, 3,  6),
+<a name="line107">107: </a>  GmshCellEntry( 72, TET, 3,  7),
+<a name="line108">108: </a>  GmshCellEntry( 73, TET, 3,  8),
+<a name="line109">109: </a>  GmshCellEntry( 74, TET, 3,  9),
+<a name="line110">110: </a>  GmshCellEntry( 75, TET, 3, 10),
+
+<a name="line112">112: </a>  GmshCellEntry(  5, HEX, 3,  1),
+<a name="line113">113: </a>  GmshCellEntry( 12, HEX, 3,  2),
+<a name="line114">114: </a>  GmshCellEntry( 92, HEX, 3,  3),
+<a name="line115">115: </a>  GmshCellEntry( 93, HEX, 3,  4),
+<a name="line116">116: </a>  GmshCellEntry( 94, HEX, 3,  5),
+<a name="line117">117: </a>  GmshCellEntry( 95, HEX, 3,  6),
+<a name="line118">118: </a>  GmshCellEntry( 96, HEX, 3,  7),
+<a name="line119">119: </a>  GmshCellEntry( 97, HEX, 3,  8),
+<a name="line120">120: </a>  GmshCellEntry( 98, HEX, 3,  9),
+<a name="line121">121: </a>  GmshCellEntry( -1, HEX, 3, 10),
+
+<a name="line123">123: </a>  GmshCellEntry(  6, PRI, 3,  1),
+<a name="line124">124: </a>  GmshCellEntry( 13, PRI, 3,  2),
+<a name="line125">125: </a>  GmshCellEntry( 90, PRI, 3,  3),
+<a name="line126">126: </a>  GmshCellEntry( 91, PRI, 3,  4),
+<a name="line127">127: </a>  GmshCellEntry(106, PRI, 3,  5),
+<a name="line128">128: </a>  GmshCellEntry(107, PRI, 3,  6),
+<a name="line129">129: </a>  GmshCellEntry(108, PRI, 3,  7),
+<a name="line130">130: </a>  GmshCellEntry(109, PRI, 3,  8),
+<a name="line131">131: </a>  GmshCellEntry(110, PRI, 3,  9),
+<a name="line132">132: </a>  GmshCellEntry( -1, PRI, 3, 10),
+
+<a name="line134">134: </a>  GmshCellEntry(  7, PYR, 3,  1),
+<a name="line135">135: </a>  GmshCellEntry( 14, PYR, 3,  2),
+<a name="line136">136: </a>  GmshCellEntry(118, PYR, 3,  3),
+<a name="line137">137: </a>  GmshCellEntry(119, PYR, 3,  4),
+<a name="line138">138: </a>  GmshCellEntry(120, PYR, 3,  5),
+<a name="line139">139: </a>  GmshCellEntry(121, PYR, 3,  6),
+<a name="line140">140: </a>  GmshCellEntry(122, PYR, 3,  7),
+<a name="line141">141: </a>  GmshCellEntry(123, PYR, 3,  8),
+<a name="line142">142: </a>  GmshCellEntry(124, PYR, 3,  9),
+<a name="line143">143: </a>  GmshCellEntry( -1, PYR, 3, 10)
+
+<a name="line145">145: </a><font color="#A020F0">#if 0</font>
+<a name="line146">146: </a>  {20, GMSH_TRI, 2, 3, 3,  9, NULL},
+<a name="line147">147: </a>  {16, GMSH_QUA, 2, 2, 4,  8, NULL},
+<a name="line148">148: </a>  {17, GMSH_HEX, 3, 2, 8, 20, NULL},
+<a name="line149">149: </a>  {18, GMSH_PRI, 3, 2, 6, 15, NULL},
+<a name="line150">150: </a>  {19, GMSH_PYR, 3, 2, 5, 13, NULL},
+<a name="line151">151: </a><font color="#A020F0">#endif</font>
+<a name="line152">152: </a>};
+
+<a name="line154">154: </a>static GmshCellInfo GmshCellMap[150];
+
+<a name="line156">156: </a><strong><font color="#4169E1"><a name="GmshCellInfoSetUp"></a>static <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> GmshCellInfoSetUp(void)</font></strong>
+<a name="line157">157: </a>{
+<a name="line158">158: </a>  size_t           i, n;
+<a name="line159">159: </a>  static <a href="../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> called = <a href="../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+
+<a name="line161">161: </a>  <font color="#4169E1">if</font> (called) <font color="#4169E1">return</font> 0;
+<a name="line163">163: </a>  called = <a href="../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>;
+<a name="line164">164: </a>  n = <font color="#4169E1">sizeof</font>(GmshCellMap)/<font color="#4169E1">sizeof</font>(GmshCellMap[0]);
+<a name="line165">165: </a>  <font color="#4169E1">for</font> (i = 0; i &lt; n; ++i) {
+<a name="line166">166: </a>    GmshCellMap[i].cellType = -1;
+<a name="line167">167: </a>    GmshCellMap[i].polytope = -1;
+<a name="line168">168: </a>  }
+<a name="line169">169: </a>  n = <font color="#4169E1">sizeof</font>(GmshCellTable)/<font color="#4169E1">sizeof</font>(GmshCellTable[0]);
+<a name="line170">170: </a>  <font color="#4169E1">for</font> (i = 0; i &lt; n; ++i) {
+<a name="line171">171: </a>    <font color="#4169E1">if</font> (GmshCellTable[i].cellType &lt;= 0) <font color="#4169E1">continue</font>;
+<a name="line172">172: </a>    GmshCellMap[GmshCellTable[i].cellType] = GmshCellTable[i];
+<a name="line173">173: </a>  }
+<a name="line174">174: </a>  <font color="#4169E1">return</font>(0);
+<a name="line175">175: </a>}
+
+<a name="line177">177: </a><strong><font color="#228B22">#define GmshCellTypeCheck(ct) 0; do { \</font></strong>
+<a name="line178">178: </a><strong><font color="#228B22">    const int _ct_ = (int)ct; \</font></strong>
+<a name="line179">179: </a><strong><font color="#228B22">    if (_ct_ &lt; 0 || _ct_ &gt;= (int)(sizeof(GmshCellMap)/sizeof(GmshCellMap[0]))) \</font></strong>
+<a name="line180">180: </a><strong><font color="#228B22">      <a href="../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, PETSC_ERR_ARG_OUTOFRANGE, </font><font color="#666666">"Invalid Gmsh element type %d"</font><font color="#228B22">, _ct_); \</font></strong>
+<a name="line181">181: </a><strong><font color="#228B22">    if (GmshCellMap[_ct_].cellType != _ct_) \</font></strong>
+<a name="line182">182: </a><strong><font color="#228B22">      <a href="../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, PETSC_ERR_SUP, </font><font color="#666666">"Unsupported Gmsh element type %d"</font><font color="#228B22">, _ct_); \</font></strong>
+<a name="line183">183: </a><strong><font color="#228B22">    if (GmshCellMap[_ct_].polytope == -1) \</font></strong>
+<a name="line184">184: </a><strong><font color="#228B22">      <a href="../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, PETSC_ERR_SUP, </font><font color="#666666">"Unsupported Gmsh element type %d"</font><font color="#228B22">, _ct_); \</font></strong>
+<a name="line185">185: </a><strong><font color="#228B22">  } while (0)</font></strong>
+
+
+<a name="line188">188: </a><font color="#4169E1">typedef</font> <font color="#4169E1">struct</font> {
+<a name="line189">189: </a>  <a href="../../../../docs/manualpages/Viewer/PetscViewer.html#PetscViewer">PetscViewer</a>  viewer;
+<a name="line190">190: </a>  int          fileFormat;
+<a name="line191">191: </a>  int          dataSize;
+<a name="line192">192: </a>  <a href="../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>    binary;
+<a name="line193">193: </a>  <a href="../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>    byteSwap;
+<a name="line194">194: </a>  size_t       wlen;
+<a name="line195">195: </a>  void        *wbuf;
+<a name="line196">196: </a>  size_t       slen;
+<a name="line197">197: </a>  void        *sbuf;
+<a name="line198">198: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>    *nbuf;
+<a name="line199">199: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>     nodeStart;
+<a name="line200">200: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>     nodeEnd;
+<a name="line201">201: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>    *nodeMap;
+<a name="line202">202: </a>} GmshFile;
+
+<a name="line204">204: </a><strong><font color="#4169E1"><a name="GmshBufferGet"></a>static <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> GmshBufferGet(GmshFile *gmsh, size_t count, size_t eltsize, void *buf)</font></strong>
+<a name="line205">205: </a>{
+<a name="line206">206: </a>  size_t         size = count * eltsize;
+
+<a name="line210">210: </a>  <font color="#4169E1">if</font> (gmsh-&gt;wlen &lt; size) {
+<a name="line211">211: </a>    <a href="../../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(gmsh-&gt;wbuf);
+<a name="line212">212: </a>    <a href="../../../../docs/manualpages/Sys/PetscMalloc.html#PetscMalloc">PetscMalloc</a>(size, &amp;gmsh-&gt;wbuf);
+<a name="line213">213: </a>    gmsh-&gt;wlen = size;
+<a name="line214">214: </a>  }
+<a name="line215">215: </a>  *(void**)buf = size ? gmsh-&gt;wbuf : NULL;
+<a name="line216">216: </a>  <font color="#4169E1">return</font>(0);
+<a name="line217">217: </a>}
+
+<a name="line219">219: </a><strong><font color="#4169E1"><a name="GmshBufferSizeGet"></a>static <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> GmshBufferSizeGet(GmshFile *gmsh, size_t count, void *buf)</font></strong>
+<a name="line220">220: </a>{
+<a name="line221">221: </a>  size_t         dataSize = (size_t)gmsh-&gt;dataSize;
+<a name="line222">222: </a>  size_t         size = count * dataSize;
+
+<a name="line226">226: </a>  <font color="#4169E1">if</font> (gmsh-&gt;slen &lt; size) {
+<a name="line227">227: </a>    <a href="../../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(gmsh-&gt;sbuf);
+<a name="line228">228: </a>    <a href="../../../../docs/manualpages/Sys/PetscMalloc.html#PetscMalloc">PetscMalloc</a>(size, &amp;gmsh-&gt;sbuf);
+<a name="line229">229: </a>    gmsh-&gt;slen = size;
+<a name="line230">230: </a>  }
+<a name="line231">231: </a>  *(void**)buf = size ? gmsh-&gt;sbuf : NULL;
+<a name="line232">232: </a>  <font color="#4169E1">return</font>(0);
+<a name="line233">233: </a>}
+
+<a name="line235">235: </a><strong><font color="#4169E1"><a name="GmshRead"></a>static <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> GmshRead(GmshFile *gmsh, void *buf, <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> count, <a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PetscDataType</a> dtype)</font></strong>
+<a name="line236">236: </a>{
+<a name="line239">239: </a>  <a href="../../../../docs/manualpages/Viewer/PetscViewerRead.html#PetscViewerRead">PetscViewerRead</a>(gmsh-&gt;viewer, buf, count, NULL, dtype);
+<a name="line240">240: </a>  <font color="#4169E1">if</font> (gmsh-&gt;byteSwap) {PetscByteSwap(buf, dtype, count);}
+<a name="line241">241: </a>  <font color="#4169E1">return</font>(0);
+<a name="line242">242: </a>}
+
+<a name="line244">244: </a><strong><font color="#4169E1"><a name="GmshReadString"></a>static <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> GmshReadString(GmshFile *gmsh, char *buf, <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> count)</font></strong>
+<a name="line245">245: </a>{
+<a name="line248">248: </a>  <a href="../../../../docs/manualpages/Viewer/PetscViewerRead.html#PetscViewerRead">PetscViewerRead</a>(gmsh-&gt;viewer, buf, count, NULL, <a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_STRING</a>);
+<a name="line249">249: </a>  <font color="#4169E1">return</font>(0);
+<a name="line250">250: </a>}
+
+<a name="line252">252: </a><strong><font color="#4169E1"><a name="GmshMatch"></a>static <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> GmshMatch(PETSC_UNUSED GmshFile *gmsh, const char Section[], char line[PETSC_MAX_PATH_LEN], <a href="../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> *match)</font></strong>
+<a name="line253">253: </a>{
+<a name="line256">256: </a>  <a href="../../../../docs/manualpages/Sys/PetscStrcmp.html#PetscStrcmp">PetscStrcmp</a>(line, Section, match);
+<a name="line257">257: </a>  <font color="#4169E1">return</font>(0);
+<a name="line258">258: </a>}
+
+<a name="line260">260: </a><strong><font color="#4169E1"><a name="GmshExpect"></a>static <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> GmshExpect(GmshFile *gmsh, const char Section[], char line[PETSC_MAX_PATH_LEN])</font></strong>
+<a name="line261">261: </a>{
+<a name="line262">262: </a>  <a href="../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>      match;
+
+<a name="line266">266: </a>  GmshMatch(gmsh, Section, line, &amp;match);
+<a name="line267">267: </a>  <font color="#4169E1">if</font> (!match) <a href="../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, PETSC_ERR_FILE_UNEXPECTED, <font color="#666666">"File is not a valid Gmsh file, expecting %s"</font>,Section);
+<a name="line268">268: </a>  <font color="#4169E1">return</font>(0);
+<a name="line269">269: </a>}
+
+<a name="line271">271: </a><strong><font color="#4169E1"><a name="GmshReadSection"></a>static <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> GmshReadSection(GmshFile *gmsh, char line[PETSC_MAX_PATH_LEN])</font></strong>
+<a name="line272">272: </a>{
+<a name="line273">273: </a>  <a href="../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>      match;
+
+<a name="line277">277: </a>  <font color="#4169E1">while</font> (<a href="../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>) {
+<a name="line278">278: </a>    GmshReadString(gmsh, line, 1);
+<a name="line279">279: </a>    GmshMatch(gmsh, <font color="#666666">"$Comments"</font>, line, &amp;match);
+<a name="line280">280: </a>    <font color="#4169E1">if</font> (!match) <font color="#4169E1">break</font>;
+<a name="line281">281: </a>    <font color="#4169E1">while</font> (<a href="../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>) {
+<a name="line282">282: </a>      GmshReadString(gmsh, line, 1);
+<a name="line283">283: </a>      GmshMatch(gmsh, <font color="#666666">"$EndComments"</font>, line, &amp;match);
+<a name="line284">284: </a>      <font color="#4169E1">if</font> (match) <font color="#4169E1">break</font>;
+<a name="line285">285: </a>    }
+<a name="line286">286: </a>  }
+<a name="line287">287: </a>  <font color="#4169E1">return</font>(0);
+<a name="line288">288: </a>}
+
+<a name="line290">290: </a><strong><font color="#4169E1"><a name="GmshReadEndSection"></a>static <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> GmshReadEndSection(GmshFile *gmsh, const char EndSection[], char line[PETSC_MAX_PATH_LEN])</font></strong>
+<a name="line291">291: </a>{
+<a name="line294">294: </a>  GmshReadString(gmsh, line, 1);
+<a name="line295">295: </a>  GmshExpect(gmsh, EndSection, line);
+<a name="line296">296: </a>  <font color="#4169E1">return</font>(0);
+<a name="line297">297: </a>}
+
+<a name="line299">299: </a><strong><font color="#4169E1"><a name="GmshReadSize"></a>static <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> GmshReadSize(GmshFile *gmsh, <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *buf, <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> count)</font></strong>
+<a name="line300">300: </a>{
+<a name="line301">301: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       i;
+<a name="line302">302: </a>  size_t         dataSize = (size_t)gmsh-&gt;dataSize;
+
+<a name="line306">306: </a>  <font color="#4169E1">if</font> (dataSize == <font color="#4169E1">sizeof</font>(<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>)) {
+<a name="line307">307: </a>    GmshRead(gmsh, buf, count, <a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_INT</a>);
+<a name="line308">308: </a>  } <font color="#4169E1">else</font>  <font color="#4169E1">if</font> (dataSize == <font color="#4169E1">sizeof</font>(int)) {
+<a name="line309">309: </a>    int *ibuf = NULL;
+<a name="line310">310: </a>    GmshBufferSizeGet(gmsh, count, &amp;ibuf);
+<a name="line311">311: </a>    GmshRead(gmsh, ibuf, count, <a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_ENUM</a>);
+<a name="line312">312: </a>    <font color="#4169E1">for</font> (i = 0; i &lt; count; ++i) buf[i] = (<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>)ibuf[i];
+<a name="line313">313: </a>  } <font color="#4169E1">else</font>  <font color="#4169E1">if</font> (dataSize == <font color="#4169E1">sizeof</font>(long)) {
+<a name="line314">314: </a>    long *ibuf = NULL;
+<a name="line315">315: </a>    GmshBufferSizeGet(gmsh, count, &amp;ibuf);
+<a name="line316">316: </a>    GmshRead(gmsh, ibuf, count, <a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_LONG</a>);
+<a name="line317">317: </a>    <font color="#4169E1">for</font> (i = 0; i &lt; count; ++i) buf[i] = (<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>)ibuf[i];
+<a name="line318">318: </a>  } <font color="#4169E1">else</font> <font color="#4169E1">if</font> (dataSize == <font color="#4169E1">sizeof</font>(PetscInt64)) {
+<a name="line319">319: </a>    PetscInt64 *ibuf = NULL;
+<a name="line320">320: </a>    GmshBufferSizeGet(gmsh, count, &amp;ibuf);
+<a name="line321">321: </a>    GmshRead(gmsh, ibuf, count, <a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_INT64</a>);
+<a name="line322">322: </a>    <font color="#4169E1">for</font> (i = 0; i &lt; count; ++i) buf[i] = (<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>)ibuf[i];
+<a name="line323">323: </a>  }
+<a name="line324">324: </a>  <font color="#4169E1">return</font>(0);
+<a name="line325">325: </a>}
+
+<a name="line327">327: </a><strong><font color="#4169E1"><a name="GmshReadInt"></a>static <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> GmshReadInt(GmshFile *gmsh, int *buf, <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> count)</font></strong>
+<a name="line328">328: </a>{
+<a name="line331">331: </a>  GmshRead(gmsh, buf, count, <a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_ENUM</a>);
+<a name="line332">332: </a>  <font color="#4169E1">return</font>(0);
+<a name="line333">333: </a>}
+
+<a name="line335">335: </a><strong><font color="#4169E1"><a name="GmshReadDouble"></a>static <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> GmshReadDouble(GmshFile *gmsh, double *buf, <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> count)</font></strong>
+<a name="line336">336: </a>{
+<a name="line339">339: </a>  GmshRead(gmsh, buf, count, <a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_DOUBLE</a>);
+<a name="line340">340: </a>  <font color="#4169E1">return</font>(0);
+<a name="line341">341: </a>}
+
+<a name="line343">343: </a><font color="#4169E1">typedef</font> <font color="#4169E1">struct</font> {
+<a name="line344">344: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> id;       <font color="#B22222">/* Entity ID */</font>
+<a name="line345">345: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> dim;      <font color="#B22222">/* Dimension */</font>
+<a name="line346">346: </a>  double   bbox[6];  <font color="#B22222">/* Bounding box */</font>
+<a name="line347">347: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> numTags;  <font color="#B22222">/* Size of tag array */</font>
+<a name="line348">348: </a>  int      tags[4];  <font color="#B22222">/* Tag array */</font>
+<a name="line349">349: </a>} GmshEntity;
+
+<a name="line351">351: </a><font color="#4169E1">typedef</font> <font color="#4169E1">struct</font> {
+<a name="line352">352: </a>  GmshEntity *entity[4];
+<a name="line353">353: </a>  PetscHMapI  entityMap[4];
+<a name="line354">354: </a>} GmshEntities;
+
+<a name="line356">356: </a>static <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> GmshEntitiesCreate(<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> count[4], GmshEntities **entities)
+<a name="line357">357: </a>{
+<a name="line358">358: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       dim;
+
+<a name="line362">362: </a>  <a href="../../../../docs/manualpages/Sys/PetscNew.html#PetscNew">PetscNew</a>(entities);
+<a name="line363">363: </a>  <font color="#4169E1">for</font> (dim = 0; dim &lt; 4; ++dim) {
+<a name="line364">364: </a>    <a href="../../../../docs/manualpages/Sys/PetscCalloc1.html#PetscCalloc1">PetscCalloc1</a>(count[dim], &amp;(*entities)-&gt;entity[dim]);
+<a name="line365">365: </a>    PetscHMapICreate(&amp;(*entities)-&gt;entityMap[dim]);
+<a name="line366">366: </a>  }
+<a name="line367">367: </a>  <font color="#4169E1">return</font>(0);
+<a name="line368">368: </a>}
+
+<a name="line370">370: </a><strong><font color="#4169E1"><a name="GmshEntitiesDestroy"></a>static <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> GmshEntitiesDestroy(GmshEntities **entities)</font></strong>
+<a name="line371">371: </a>{
+<a name="line372">372: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       dim;
+
+<a name="line376">376: </a>  <font color="#4169E1">if</font> (!*entities) <font color="#4169E1">return</font>(0);
+<a name="line377">377: </a>  <font color="#4169E1">for</font> (dim = 0; dim &lt; 4; ++dim) {
+<a name="line378">378: </a>    <a href="../../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>((*entities)-&gt;entity[dim]);
+<a name="line379">379: </a>    PetscHMapIDestroy(&amp;(*entities)-&gt;entityMap[dim]);
+<a name="line380">380: </a>  }
+<a name="line381">381: </a>  <a href="../../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>((*entities));
+<a name="line382">382: </a>  <font color="#4169E1">return</font>(0);
+<a name="line383">383: </a>}
+
+<a name="line385">385: </a><strong><font color="#4169E1"><a name="GmshEntitiesAdd"></a>static <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> GmshEntitiesAdd(GmshEntities *entities, <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> index, <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> dim, <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> eid, GmshEntity** entity)</font></strong>
+<a name="line386">386: </a>{
+
+<a name="line390">390: </a>  PetscHMapISet(entities-&gt;entityMap[dim], eid, index);
+<a name="line391">391: </a>  entities-&gt;entity[dim][index].dim = dim;
+<a name="line392">392: </a>  entities-&gt;entity[dim][index].id  = eid;
+<a name="line393">393: </a>  <font color="#4169E1">if</font> (entity) *entity = &amp;entities-&gt;entity[dim][index];
+<a name="line394">394: </a>  <font color="#4169E1">return</font>(0);
+<a name="line395">395: </a>}
+
+<a name="line397">397: </a><strong><font color="#4169E1"><a name="GmshEntitiesGet"></a>static <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> GmshEntitiesGet(GmshEntities *entities, <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> dim, <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> eid, GmshEntity** entity)</font></strong>
+<a name="line398">398: </a>{
+<a name="line399">399: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       index;
+
+<a name="line403">403: </a>  PetscHMapIGet(entities-&gt;entityMap[dim], eid, &amp;index);
+<a name="line404">404: </a>  *entity = &amp;entities-&gt;entity[dim][index];
+<a name="line405">405: </a>  <font color="#4169E1">return</font>(0);
+<a name="line406">406: </a>}
+
+<a name="line408">408: </a><font color="#4169E1">typedef</font> <font color="#4169E1">struct</font> {
+<a name="line409">409: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *id;   <font color="#B22222">/* Node IDs */</font>
+<a name="line410">410: </a>  double   *xyz;  <font color="#B22222">/* Coordinates */</font>
+<a name="line411">411: </a>} GmshNodes;
+
+<a name="line413">413: </a><strong><font color="#4169E1"><a name="GmshNodesCreate"></a>static <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> GmshNodesCreate(<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> count, GmshNodes **nodes)</font></strong>
+<a name="line414">414: </a>{
+
+<a name="line418">418: </a>  <a href="../../../../docs/manualpages/Sys/PetscNew.html#PetscNew">PetscNew</a>(nodes);
+<a name="line419">419: </a>  <a href="../../../../docs/manualpages/Sys/PetscMalloc1.html#PetscMalloc1">PetscMalloc1</a>(count*1, &amp;(*nodes)-&gt;id);
+<a name="line420">420: </a>  <a href="../../../../docs/manualpages/Sys/PetscMalloc1.html#PetscMalloc1">PetscMalloc1</a>(count*3, &amp;(*nodes)-&gt;xyz);
+<a name="line421">421: </a>  <font color="#4169E1">return</font>(0);
+<a name="line422">422: </a>}
+
+<a name="line424">424: </a><strong><font color="#4169E1"><a name="GmshNodesDestroy"></a>static <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> GmshNodesDestroy(GmshNodes **nodes)</font></strong>
+<a name="line425">425: </a>{
+<a name="line428">428: </a>  <font color="#4169E1">if</font> (!*nodes) <font color="#4169E1">return</font>(0);
+<a name="line429">429: </a>  <a href="../../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>((*nodes)-&gt;id);
+<a name="line430">430: </a>  <a href="../../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>((*nodes)-&gt;xyz);
+<a name="line431">431: </a>  <a href="../../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>((*nodes));
+<a name="line432">432: </a>  <font color="#4169E1">return</font>(0);
+<a name="line433">433: </a>}
+
+<a name="line435">435: </a><font color="#4169E1">typedef</font> <font color="#4169E1">struct</font> {
+<a name="line436">436: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> id;       <font color="#B22222">/* Element ID */</font>
+<a name="line437">437: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> dim;      <font color="#B22222">/* Dimension */</font>
+<a name="line438">438: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> cellType; <font color="#B22222">/* Cell type */</font>
+<a name="line439">439: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> numVerts; <font color="#B22222">/* Size of vertex array */</font>
+<a name="line440">440: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> numNodes; <font color="#B22222">/* Size of node array */</font>
+<a name="line441">441: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *nodes;   <font color="#B22222">/* Vertex/Node array */</font>
+<a name="line442">442: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> numTags;  <font color="#B22222">/* Size of tag array */</font>
+<a name="line443">443: </a>  int      tags[4];  <font color="#B22222">/* Tag array */</font>
+<a name="line444">444: </a>} GmshElement;
+
+<a name="line446">446: </a><strong><font color="#4169E1"><a name="GmshElementsCreate"></a>static <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> GmshElementsCreate(<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> count, GmshElement **elements)</font></strong>
+<a name="line447">447: </a>{
+
+<a name="line451">451: </a>  <a href="../../../../docs/manualpages/Sys/PetscCalloc1.html#PetscCalloc1">PetscCalloc1</a>(count, elements);
+<a name="line452">452: </a>  <font color="#4169E1">return</font>(0);
+<a name="line453">453: </a>}
+
+<a name="line455">455: </a><strong><font color="#4169E1"><a name="GmshElementsDestroy"></a>static <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> GmshElementsDestroy(GmshElement **elements)</font></strong>
+<a name="line456">456: </a>{
+
+<a name="line460">460: </a>  <font color="#4169E1">if</font> (!*elements) <font color="#4169E1">return</font>(0);
+<a name="line461">461: </a>  <a href="../../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(*elements);
+<a name="line462">462: </a>  <font color="#4169E1">return</font>(0);
+<a name="line463">463: </a>}
+
+<a name="line465">465: </a><font color="#4169E1">typedef</font> <font color="#4169E1">struct</font> {
+<a name="line466">466: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       dim;
+<a name="line467">467: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       order;
+<a name="line468">468: </a>  GmshEntities  *entities;
+<a name="line469">469: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       numNodes;
+<a name="line470">470: </a>  GmshNodes     *nodelist;
+<a name="line471">471: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       numElems;
+<a name="line472">472: </a>  GmshElement   *elements;
+<a name="line473">473: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       numVerts;
+<a name="line474">474: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       numCells;
+<a name="line475">475: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>      *periodMap;
+<a name="line476">476: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>      *vertexMap;
+<a name="line477">477: </a>  <a href="../../../../docs/manualpages/Sys/PetscSegBuffer.html#PetscSegBuffer">PetscSegBuffer</a> segbuf;
+<a name="line478">478: </a>} GmshMesh;
+
+<a name="line480">480: </a><strong><font color="#4169E1"><a name="GmshMeshCreate"></a>static <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> GmshMeshCreate(GmshMesh **mesh)</font></strong>
+<a name="line481">481: </a>{
+
+<a name="line485">485: </a>  <a href="../../../../docs/manualpages/Sys/PetscNew.html#PetscNew">PetscNew</a>(mesh);
+<a name="line486">486: </a>  <a href="../../../../docs/manualpages/Sys/PetscSegBufferCreate.html#PetscSegBufferCreate">PetscSegBufferCreate</a>(<font color="#4169E1">sizeof</font>(<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>), 0, &amp;(*mesh)-&gt;segbuf);
+<a name="line487">487: </a>  <font color="#4169E1">return</font>(0);
+<a name="line488">488: </a>}
+
+<a name="line490">490: </a><strong><font color="#4169E1"><a name="GmshMeshDestroy"></a>static <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> GmshMeshDestroy(GmshMesh **mesh)</font></strong>
+<a name="line491">491: </a>{
+
+<a name="line495">495: </a>  <font color="#4169E1">if</font> (!*mesh) <font color="#4169E1">return</font>(0);
+<a name="line496">496: </a>  GmshEntitiesDestroy(&amp;(*mesh)-&gt;entities);
+<a name="line497">497: </a>  GmshNodesDestroy(&amp;(*mesh)-&gt;nodelist);
+<a name="line498">498: </a>  GmshElementsDestroy(&amp;(*mesh)-&gt;elements);
+<a name="line499">499: </a>  <a href="../../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>((*mesh)-&gt;periodMap);
+<a name="line500">500: </a>  <a href="../../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>((*mesh)-&gt;vertexMap);
+<a name="line501">501: </a>  <a href="../../../../docs/manualpages/Sys/PetscSegBufferDestroy.html#PetscSegBufferDestroy">PetscSegBufferDestroy</a>(&amp;(*mesh)-&gt;segbuf);
+<a name="line502">502: </a>  <a href="../../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>((*mesh));
+<a name="line503">503: </a>  <font color="#4169E1">return</font>(0);
+<a name="line504">504: </a>}
+
+<a name="line506">506: </a><strong><font color="#4169E1"><a name="GmshReadNodes_v22"></a>static <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> GmshReadNodes_v22(GmshFile *gmsh, GmshMesh *mesh)</font></strong>
+<a name="line507">507: </a>{
+<a name="line508">508: </a>  <a href="../../../../docs/manualpages/Viewer/PetscViewer.html#PetscViewer">PetscViewer</a>    viewer = gmsh-&gt;viewer;
+<a name="line509">509: </a>  <a href="../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>      byteSwap = gmsh-&gt;byteSwap;
+<a name="line510">510: </a>  char           line[PETSC_MAX_PATH_LEN];
+<a name="line511">511: </a>  int            n, num, nid, snum;
+<a name="line512">512: </a>  GmshNodes      *nodes;
+
+<a name="line516">516: </a>  <a href="../../../../docs/manualpages/Viewer/PetscViewerRead.html#PetscViewerRead">PetscViewerRead</a>(viewer, line, 1, NULL, <a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_STRING</a>);
+<a name="line517">517: </a>  snum = sscanf(line, <font color="#666666">"%d"</font>, &amp;num);
+<a name="line518">518: </a>  <font color="#4169E1">if</font> (snum != 1) <a href="../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, PETSC_ERR_FILE_UNEXPECTED, <font color="#666666">"File is not a valid Gmsh file"</font>);
+<a name="line519">519: </a>  GmshNodesCreate(num, &amp;nodes);
+<a name="line520">520: </a>  mesh-&gt;numNodes = num;
+<a name="line521">521: </a>  mesh-&gt;nodelist = nodes;
+<a name="line522">522: </a>  <font color="#4169E1">for</font> (n = 0; n &lt; num; ++n) {
+<a name="line523">523: </a>    double *xyz = nodes-&gt;xyz + n*3;
+<a name="line524">524: </a>    <a href="../../../../docs/manualpages/Viewer/PetscViewerRead.html#PetscViewerRead">PetscViewerRead</a>(viewer, &amp;nid, 1, NULL, <a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_ENUM</a>);
+<a name="line525">525: </a>    <a href="../../../../docs/manualpages/Viewer/PetscViewerRead.html#PetscViewerRead">PetscViewerRead</a>(viewer, xyz, 3, NULL, <a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_DOUBLE</a>);
+<a name="line526">526: </a>    <font color="#4169E1">if</font> (byteSwap) {PetscByteSwap(&amp;nid, <a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_ENUM</a>, 1);}
+<a name="line527">527: </a>    <font color="#4169E1">if</font> (byteSwap) {PetscByteSwap(xyz, <a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_DOUBLE</a>, 3);}
+<a name="line528">528: </a>    nodes-&gt;id[n] = nid;
+<a name="line529">529: </a>  }
+<a name="line530">530: </a>  <font color="#4169E1">return</font>(0);
+<a name="line531">531: </a>}
+
+<a name="line533">533: </a><font color="#B22222">/* Gmsh elements can be of any dimension/co-dimension, so we need to traverse the</font>
+<a name="line534">534: </a><font color="#B22222">   file contents multiple times to figure out the true number of cells and facets</font>
+<a name="line535">535: </a><font color="#B22222">   in the given mesh. To make this more efficient we read the file contents only</font>
+<a name="line536">536: </a><font color="#B22222">   once and store them in memory, while determining the true number of cells. */</font>
+<a name="line537">537: </a><strong><font color="#4169E1"><a name="GmshReadElements_v22"></a>static <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> GmshReadElements_v22(GmshFile* gmsh, GmshMesh *mesh)</font></strong>
+<a name="line538">538: </a>{
+<a name="line539">539: </a>  <a href="../../../../docs/manualpages/Viewer/PetscViewer.html#PetscViewer">PetscViewer</a>    viewer = gmsh-&gt;viewer;
+<a name="line540">540: </a>  <a href="../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>      binary = gmsh-&gt;binary;
+<a name="line541">541: </a>  <a href="../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>      byteSwap = gmsh-&gt;byteSwap;
+<a name="line542">542: </a>  char           line[PETSC_MAX_PATH_LEN];
+<a name="line543">543: </a>  int            i, c, p, num, ibuf[1+4+1000], snum;
+<a name="line544">544: </a>  int            cellType, numElem, numVerts, numNodes, numTags;
+<a name="line545">545: </a>  GmshElement   *elements;
+<a name="line546">546: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>      *nodeMap = gmsh-&gt;nodeMap;
+
+<a name="line550">550: </a>  <a href="../../../../docs/manualpages/Viewer/PetscViewerRead.html#PetscViewerRead">PetscViewerRead</a>(viewer, line, 1, NULL, <a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_STRING</a>);
+<a name="line551">551: </a>  snum = sscanf(line, <font color="#666666">"%d"</font>, &amp;num);
+<a name="line552">552: </a>  <font color="#4169E1">if</font> (snum != 1) <a href="../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, PETSC_ERR_FILE_UNEXPECTED, <font color="#666666">"File is not a valid Gmsh file"</font>);
+<a name="line553">553: </a>  GmshElementsCreate(num, &amp;elements);
+<a name="line554">554: </a>  mesh-&gt;numElems = num;
+<a name="line555">555: </a>  mesh-&gt;elements = elements;
+<a name="line556">556: </a>  <font color="#4169E1">for</font> (c = 0; c &lt; num;) {
+<a name="line557">557: </a>    <a href="../../../../docs/manualpages/Viewer/PetscViewerRead.html#PetscViewerRead">PetscViewerRead</a>(viewer, ibuf, 3, NULL, <a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_ENUM</a>);
+<a name="line558">558: </a>    <font color="#4169E1">if</font> (byteSwap) {PetscByteSwap(ibuf, <a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_ENUM</a>, 3);}
+
+<a name="line560">560: </a>    cellType = binary ? ibuf[0] : ibuf[1];
+<a name="line561">561: </a>    numElem  = binary ? ibuf[1] : 1;
+<a name="line562">562: </a>    numTags  = ibuf[2];
+
+<a name="line564">564: </a>    GmshCellTypeCheck(cellType);
+<a name="line565">565: </a>    numVerts = GmshCellMap[cellType].numVerts;
+<a name="line566">566: </a>    numNodes = GmshCellMap[cellType].numNodes;
+
+<a name="line568">568: </a>    <font color="#4169E1">for</font> (i = 0; i &lt; numElem; ++i, ++c) {
+<a name="line569">569: </a>      GmshElement *element = elements + c;
+<a name="line570">570: </a>      const int off = binary ? 0 : 1, nint = 1 + numTags + numNodes - off;
+<a name="line571">571: </a>      const int *id = ibuf, *nodes = ibuf + 1 + numTags, *tags = ibuf + 1;
+<a name="line572">572: </a>      <a href="../../../../docs/manualpages/Viewer/PetscViewerRead.html#PetscViewerRead">PetscViewerRead</a>(viewer, ibuf+off, nint, NULL, <a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_ENUM</a>);
+<a name="line573">573: </a>      <font color="#4169E1">if</font> (byteSwap) {PetscByteSwap(ibuf+off, <a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_ENUM</a>, nint);}
+<a name="line574">574: </a>      element-&gt;id  = id[0];
+<a name="line575">575: </a>      element-&gt;dim = GmshCellMap[cellType].dim;
+<a name="line576">576: </a>      element-&gt;cellType = cellType;
+<a name="line577">577: </a>      element-&gt;numVerts = numVerts;
+<a name="line578">578: </a>      element-&gt;numNodes = numNodes;
+<a name="line579">579: </a>      element-&gt;numTags  = <a href="../../../../docs/manualpages/Sys/PetscMin.html#PetscMin">PetscMin</a>(numTags, 4);
+<a name="line580">580: </a>      <a href="../../../../docs/manualpages/Sys/PetscSegBufferGet.html#PetscSegBufferGet">PetscSegBufferGet</a>(mesh-&gt;segbuf, (size_t)element-&gt;numNodes, &amp;element-&gt;nodes);
+<a name="line581">581: </a>      <font color="#4169E1">for</font> (p = 0; p &lt; element-&gt;numNodes; p++) element-&gt;nodes[p] = nodeMap[nodes[p]];
+<a name="line582">582: </a>      <font color="#4169E1">for</font> (p = 0; p &lt; element-&gt;numTags;  p++) element-&gt;tags[p]  = tags[p];
+<a name="line583">583: </a>    }
+<a name="line584">584: </a>  }
+<a name="line585">585: </a>  <font color="#4169E1">return</font>(0);
+<a name="line586">586: </a>}
+
+<a name="line588">588: </a><font color="#B22222">/*</font>
+<a name="line589">589: </a><font color="#B22222">$Entities</font>
+<a name="line590">590: </a><font color="#B22222">  numPoints(unsigned long) numCurves(unsigned long)</font>
+<a name="line591">591: </a><font color="#B22222">    numSurfaces(unsigned long) numVolumes(unsigned long)</font>
+<a name="line592">592: </a><font color="#B22222">  // points</font>
+<a name="line593">593: </a><font color="#B22222">  tag(int) boxMinX(double) boxMinY(double) boxMinZ(double)</font>
+<a name="line594">594: </a><font color="#B22222">    boxMaxX(double) boxMaxY(double) boxMaxZ(double)</font>
+<a name="line595">595: </a><font color="#B22222">    numPhysicals(unsigned long) phyisicalTag[...](int)</font>
+<a name="line596">596: </a><font color="#B22222">  ...</font>
+<a name="line597">597: </a><font color="#B22222">  // curves</font>
+<a name="line598">598: </a><font color="#B22222">  tag(int) boxMinX(double) boxMinY(double) boxMinZ(double)</font>
+<a name="line599">599: </a><font color="#B22222">     boxMaxX(double) boxMaxY(double) boxMaxZ(double)</font>
+<a name="line600">600: </a><font color="#B22222">     numPhysicals(unsigned long) physicalTag[...](int)</font>
+<a name="line601">601: </a><font color="#B22222">     numBREPVert(unsigned long) tagBREPVert[...](int)</font>
+<a name="line602">602: </a><font color="#B22222">  ...</font>
+<a name="line603">603: </a><font color="#B22222">  // surfaces</font>
+<a name="line604">604: </a><font color="#B22222">  tag(int) boxMinX(double) boxMinY(double) boxMinZ(double)</font>
+<a name="line605">605: </a><font color="#B22222">    boxMaxX(double) boxMaxY(double) boxMaxZ(double)</font>
+<a name="line606">606: </a><font color="#B22222">    numPhysicals(unsigned long) physicalTag[...](int)</font>
+<a name="line607">607: </a><font color="#B22222">    numBREPCurve(unsigned long) tagBREPCurve[...](int)</font>
+<a name="line608">608: </a><font color="#B22222">  ...</font>
+<a name="line609">609: </a><font color="#B22222">  // volumes</font>
+<a name="line610">610: </a><font color="#B22222">  tag(int) boxMinX(double) boxMinY(double) boxMinZ(double)</font>
+<a name="line611">611: </a><font color="#B22222">    boxMaxX(double) boxMaxY(double) boxMaxZ(double)</font>
+<a name="line612">612: </a><font color="#B22222">    numPhysicals(unsigned long) physicalTag[...](int)</font>
+<a name="line613">613: </a><font color="#B22222">    numBREPSurfaces(unsigned long) tagBREPSurfaces[...](int)</font>
+<a name="line614">614: </a><font color="#B22222">  ...</font>
+<a name="line615">615: </a><font color="#B22222">$EndEntities</font>
+<a name="line616">616: </a><font color="#B22222">*/</font>
+<a name="line617">617: </a><strong><font color="#4169E1"><a name="GmshReadEntities_v40"></a>static <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> GmshReadEntities_v40(GmshFile *gmsh, GmshMesh *mesh)</font></strong>
+<a name="line618">618: </a>{
+<a name="line619">619: </a>  <a href="../../../../docs/manualpages/Viewer/PetscViewer.html#PetscViewer">PetscViewer</a>    viewer = gmsh-&gt;viewer;
+<a name="line620">620: </a>  <a href="../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>      byteSwap = gmsh-&gt;byteSwap;
+<a name="line621">621: </a>  long           index, num, lbuf[4];
+<a name="line622">622: </a>  int            dim, eid, numTags, *ibuf, t;
+<a name="line623">623: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       count[4], i;
+<a name="line624">624: </a>  GmshEntity     *entity = NULL;
+
+<a name="line628">628: </a>  <a href="../../../../docs/manualpages/Viewer/PetscViewerRead.html#PetscViewerRead">PetscViewerRead</a>(viewer, lbuf, 4, NULL, <a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_LONG</a>);
+<a name="line629">629: </a>  <font color="#4169E1">if</font> (byteSwap) {PetscByteSwap(lbuf, <a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_LONG</a>, 4);}
+<a name="line630">630: </a>  <font color="#4169E1">for</font> (i = 0; i &lt; 4; ++i) count[i] = lbuf[i];
+<a name="line631">631: </a>  GmshEntitiesCreate(count, &amp;mesh-&gt;entities);
+<a name="line632">632: </a>  <font color="#4169E1">for</font> (dim = 0; dim &lt; 4; ++dim) {
+<a name="line633">633: </a>    <font color="#4169E1">for</font> (index = 0; index &lt; count[dim]; ++index) {
+<a name="line634">634: </a>      <a href="../../../../docs/manualpages/Viewer/PetscViewerRead.html#PetscViewerRead">PetscViewerRead</a>(viewer, &amp;eid, 1, NULL, <a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_ENUM</a>);
+<a name="line635">635: </a>      <font color="#4169E1">if</font> (byteSwap) {PetscByteSwap(&amp;eid, <a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_ENUM</a>, 1);}
+<a name="line636">636: </a>      GmshEntitiesAdd(mesh-&gt;entities, (<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>)index, dim, eid, &amp;entity);
+<a name="line637">637: </a>      <a href="../../../../docs/manualpages/Viewer/PetscViewerRead.html#PetscViewerRead">PetscViewerRead</a>(viewer, entity-&gt;bbox, 6, NULL, <a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_DOUBLE</a>);
+<a name="line638">638: </a>      <font color="#4169E1">if</font> (byteSwap) {PetscByteSwap(entity-&gt;bbox, <a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_DOUBLE</a>, 6);}
+<a name="line639">639: </a>      <a href="../../../../docs/manualpages/Viewer/PetscViewerRead.html#PetscViewerRead">PetscViewerRead</a>(viewer, &amp;num, 1, NULL, <a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_LONG</a>);
+<a name="line640">640: </a>      <font color="#4169E1">if</font> (byteSwap) {PetscByteSwap(&amp;num, <a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_LONG</a>, 1);}
+<a name="line641">641: </a>      GmshBufferGet(gmsh, num, <font color="#4169E1">sizeof</font>(int), &amp;ibuf);
+<a name="line642">642: </a>      <a href="../../../../docs/manualpages/Viewer/PetscViewerRead.html#PetscViewerRead">PetscViewerRead</a>(viewer, ibuf, num, NULL, <a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_ENUM</a>);
+<a name="line643">643: </a>      <font color="#4169E1">if</font> (byteSwap) {PetscByteSwap(ibuf, <a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_ENUM</a>, num);}
+<a name="line644">644: </a>      entity-&gt;numTags = numTags = (int) <a href="../../../../docs/manualpages/Sys/PetscMin.html#PetscMin">PetscMin</a>(num, 4);
+<a name="line645">645: </a>      <font color="#4169E1">for</font> (t = 0; t &lt; numTags; ++t) entity-&gt;tags[t] = ibuf[t];
+<a name="line646">646: </a>      <font color="#4169E1">if</font> (dim == 0) <font color="#4169E1">continue</font>;
+<a name="line647">647: </a>      <a href="../../../../docs/manualpages/Viewer/PetscViewerRead.html#PetscViewerRead">PetscViewerRead</a>(viewer, &amp;num, 1, NULL, <a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_LONG</a>);
+<a name="line648">648: </a>      <font color="#4169E1">if</font> (byteSwap) {PetscByteSwap(&amp;num, <a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_LONG</a>, 1);}
+<a name="line649">649: </a>      GmshBufferGet(gmsh, num, <font color="#4169E1">sizeof</font>(int), &amp;ibuf);
+<a name="line650">650: </a>      <a href="../../../../docs/manualpages/Viewer/PetscViewerRead.html#PetscViewerRead">PetscViewerRead</a>(viewer, ibuf, num, NULL, <a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_ENUM</a>);
+<a name="line651">651: </a>      <font color="#4169E1">if</font> (byteSwap) {PetscByteSwap(ibuf, <a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_ENUM</a>, num);}
+<a name="line652">652: </a>    }
+<a name="line653">653: </a>  }
+<a name="line654">654: </a>  <font color="#4169E1">return</font>(0);
+<a name="line655">655: </a>}
+
+<a name="line657">657: </a><font color="#B22222">/*</font>
+<a name="line658">658: </a><font color="#B22222">$Nodes</font>
+<a name="line659">659: </a><font color="#B22222">  numEntityBlocks(unsigned long) numNodes(unsigned long)</font>
+<a name="line660">660: </a><font color="#B22222">  tagEntity(int) dimEntity(int) typeNode(int) numNodes(unsigned long)</font>
+<a name="line661">661: </a><font color="#B22222">    tag(int) x(double) y(double) z(double)</font>
+<a name="line662">662: </a><font color="#B22222">    ...</font>
+<a name="line663">663: </a><font color="#B22222">  ...</font>
+<a name="line664">664: </a><font color="#B22222">$EndNodes</font>
+<a name="line665">665: </a><font color="#B22222">*/</font>
+<a name="line666">666: </a><strong><font color="#4169E1"><a name="GmshReadNodes_v40"></a>static <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> GmshReadNodes_v40(GmshFile *gmsh, GmshMesh *mesh)</font></strong>
+<a name="line667">667: </a>{
+<a name="line668">668: </a>  <a href="../../../../docs/manualpages/Viewer/PetscViewer.html#PetscViewer">PetscViewer</a>    viewer = gmsh-&gt;viewer;
+<a name="line669">669: </a>  <a href="../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>      byteSwap = gmsh-&gt;byteSwap;
+<a name="line670">670: </a>  long           block, node, n, numEntityBlocks, numTotalNodes, numNodes;
+<a name="line671">671: </a>  int            info[3], nid;
+<a name="line672">672: </a>  GmshNodes      *nodes;
+
+<a name="line676">676: </a>  <a href="../../../../docs/manualpages/Viewer/PetscViewerRead.html#PetscViewerRead">PetscViewerRead</a>(viewer, &amp;numEntityBlocks, 1, NULL, <a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_LONG</a>);
+<a name="line677">677: </a>  <font color="#4169E1">if</font> (byteSwap) {PetscByteSwap(&amp;numEntityBlocks, <a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_LONG</a>, 1);}
+<a name="line678">678: </a>  <a href="../../../../docs/manualpages/Viewer/PetscViewerRead.html#PetscViewerRead">PetscViewerRead</a>(viewer, &amp;numTotalNodes, 1, NULL, <a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_LONG</a>);
+<a name="line679">679: </a>  <font color="#4169E1">if</font> (byteSwap) {PetscByteSwap(&amp;numTotalNodes, <a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_LONG</a>, 1);}
+<a name="line680">680: </a>  GmshNodesCreate(numTotalNodes, &amp;nodes);
+<a name="line681">681: </a>  mesh-&gt;numNodes = numTotalNodes;
+<a name="line682">682: </a>  mesh-&gt;nodelist = nodes;
+<a name="line683">683: </a>  <font color="#4169E1">for</font> (n = 0, block = 0; block &lt; numEntityBlocks; ++block) {
+<a name="line684">684: </a>    <a href="../../../../docs/manualpages/Viewer/PetscViewerRead.html#PetscViewerRead">PetscViewerRead</a>(viewer, info, 3, NULL, <a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_ENUM</a>);
+<a name="line685">685: </a>    <a href="../../../../docs/manualpages/Viewer/PetscViewerRead.html#PetscViewerRead">PetscViewerRead</a>(viewer, &amp;numNodes, 1, NULL, <a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_LONG</a>);
+<a name="line686">686: </a>    <font color="#4169E1">if</font> (byteSwap) {PetscByteSwap(&amp;numNodes, <a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_LONG</a>, 1);}
+<a name="line687">687: </a>    <font color="#4169E1">if</font> (gmsh-&gt;binary) {
+<a name="line688">688: </a>      size_t nbytes = <font color="#4169E1">sizeof</font>(int) + 3*<font color="#4169E1">sizeof</font>(double);
+<a name="line689">689: </a>      char   *cbuf = NULL; <font color="#B22222">/* dummy value to prevent warning from compiler about possible unitilized value */</font>
+<a name="line690">690: </a>      GmshBufferGet(gmsh, numNodes, nbytes, &amp;cbuf);
+<a name="line691">691: </a>      <a href="../../../../docs/manualpages/Viewer/PetscViewerRead.html#PetscViewerRead">PetscViewerRead</a>(viewer, cbuf, numNodes*nbytes, NULL, <a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_CHAR</a>);
+<a name="line692">692: </a>      <font color="#4169E1">for</font> (node = 0; node &lt; numNodes; ++node, ++n) {
+<a name="line693">693: </a>        char   *cnid = cbuf + node*nbytes, *cxyz = cnid + <font color="#4169E1">sizeof</font>(int);
+<a name="line694">694: </a>        double *xyz = nodes-&gt;xyz + n*3;
+<a name="line695">695: </a>        <font color="#4169E1">if</font> (!PetscBinaryBigEndian()) {PetscByteSwap(cnid, <a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_ENUM</a>, 1);}
+<a name="line696">696: </a>        <font color="#4169E1">if</font> (!PetscBinaryBigEndian()) {PetscByteSwap(cxyz, <a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_DOUBLE</a>, 3);}
+<a name="line697">697: </a>        <a href="../../../../docs/manualpages/Sys/PetscMemcpy.html#PetscMemcpy">PetscMemcpy</a>(&amp;nid, cnid, <font color="#4169E1">sizeof</font>(int));
+<a name="line698">698: </a>        <a href="../../../../docs/manualpages/Sys/PetscMemcpy.html#PetscMemcpy">PetscMemcpy</a>(xyz, cxyz, 3*<font color="#4169E1">sizeof</font>(double));
+<a name="line699">699: </a>        <font color="#4169E1">if</font> (byteSwap) {PetscByteSwap(&amp;nid, <a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_ENUM</a>, 1);}
+<a name="line700">700: </a>        <font color="#4169E1">if</font> (byteSwap) {PetscByteSwap(xyz, <a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_DOUBLE</a>, 3);}
+<a name="line701">701: </a>        nodes-&gt;id[n] = nid;
+<a name="line702">702: </a>      }
+<a name="line703">703: </a>    } <font color="#4169E1">else</font> {
+<a name="line704">704: </a>      <font color="#4169E1">for</font> (node = 0; node &lt; numNodes; ++node, ++n) {
+<a name="line705">705: </a>        double *xyz = nodes-&gt;xyz + n*3;
+<a name="line706">706: </a>        <a href="../../../../docs/manualpages/Viewer/PetscViewerRead.html#PetscViewerRead">PetscViewerRead</a>(viewer, &amp;nid, 1, NULL, <a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_ENUM</a>);
+<a name="line707">707: </a>        <a href="../../../../docs/manualpages/Viewer/PetscViewerRead.html#PetscViewerRead">PetscViewerRead</a>(viewer, xyz, 3, NULL, <a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_DOUBLE</a>);
+<a name="line708">708: </a>        <font color="#4169E1">if</font> (byteSwap) {PetscByteSwap(&amp;nid, <a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_ENUM</a>, 1);}
+<a name="line709">709: </a>        <font color="#4169E1">if</font> (byteSwap) {PetscByteSwap(xyz, <a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_DOUBLE</a>, 3);}
+<a name="line710">710: </a>        nodes-&gt;id[n] = nid;
+<a name="line711">711: </a>      }
+<a name="line712">712: </a>    }
+<a name="line713">713: </a>  }
+<a name="line714">714: </a>  <font color="#4169E1">return</font>(0);
+<a name="line715">715: </a>}
+
+<a name="line717">717: </a><font color="#B22222">/*</font>
+<a name="line718">718: </a><font color="#B22222">$Elements</font>
+<a name="line719">719: </a><font color="#B22222">  numEntityBlocks(unsigned long) numElements(unsigned long)</font>
+<a name="line720">720: </a><font color="#B22222">  tagEntity(int) dimEntity(int) typeEle(int) numElements(unsigned long)</font>
+<a name="line721">721: </a><font color="#B22222">    tag(int) numVert[...](int)</font>
+<a name="line722">722: </a><font color="#B22222">    ...</font>
+<a name="line723">723: </a><font color="#B22222">  ...</font>
+<a name="line724">724: </a><font color="#B22222">$EndElements</font>
+<a name="line725">725: </a><font color="#B22222">*/</font>
+<a name="line726">726: </a><strong><font color="#4169E1"><a name="GmshReadElements_v40"></a>static <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> GmshReadElements_v40(GmshFile *gmsh, GmshMesh *mesh)</font></strong>
+<a name="line727">727: </a>{
+<a name="line728">728: </a>  <a href="../../../../docs/manualpages/Viewer/PetscViewer.html#PetscViewer">PetscViewer</a>    viewer = gmsh-&gt;viewer;
+<a name="line729">729: </a>  <a href="../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>      byteSwap = gmsh-&gt;byteSwap;
+<a name="line730">730: </a>  long           c, block, numEntityBlocks, numTotalElements, elem, numElements;
+<a name="line731">731: </a>  int            p, info[3], *ibuf = NULL;
+<a name="line732">732: </a>  int            eid, dim, cellType, numVerts, numNodes, numTags;
+<a name="line733">733: </a>  GmshEntity     *entity = NULL;
+<a name="line734">734: </a>  GmshElement    *elements;
+<a name="line735">735: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       *nodeMap = gmsh-&gt;nodeMap;
+
+<a name="line739">739: </a>  <a href="../../../../docs/manualpages/Viewer/PetscViewerRead.html#PetscViewerRead">PetscViewerRead</a>(viewer, &amp;numEntityBlocks, 1, NULL, <a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_LONG</a>);
+<a name="line740">740: </a>  <font color="#4169E1">if</font> (byteSwap) {PetscByteSwap(&amp;numEntityBlocks, <a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_LONG</a>, 1);}
+<a name="line741">741: </a>  <a href="../../../../docs/manualpages/Viewer/PetscViewerRead.html#PetscViewerRead">PetscViewerRead</a>(viewer, &amp;numTotalElements, 1, NULL, <a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_LONG</a>);
+<a name="line742">742: </a>  <font color="#4169E1">if</font> (byteSwap) {PetscByteSwap(&amp;numTotalElements, <a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_LONG</a>, 1);}
+<a name="line743">743: </a>  GmshElementsCreate(numTotalElements, &amp;elements);
+<a name="line744">744: </a>  mesh-&gt;numElems = numTotalElements;
+<a name="line745">745: </a>  mesh-&gt;elements = elements;
+<a name="line746">746: </a>  <font color="#4169E1">for</font> (c = 0, block = 0; block &lt; numEntityBlocks; ++block) {
+<a name="line747">747: </a>    <a href="../../../../docs/manualpages/Viewer/PetscViewerRead.html#PetscViewerRead">PetscViewerRead</a>(viewer, info, 3, NULL, <a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_ENUM</a>);
+<a name="line748">748: </a>    <font color="#4169E1">if</font> (byteSwap) {PetscByteSwap(info, <a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_ENUM</a>, 3);}
+<a name="line749">749: </a>    eid = info[0]; dim = info[1]; cellType = info[2];
+<a name="line750">750: </a>    GmshEntitiesGet(mesh-&gt;entities, dim, eid, &amp;entity);
+<a name="line751">751: </a>    GmshCellTypeCheck(cellType);
+<a name="line752">752: </a>    numVerts = GmshCellMap[cellType].numVerts;
+<a name="line753">753: </a>    numNodes = GmshCellMap[cellType].numNodes;
+<a name="line754">754: </a>    numTags  = entity-&gt;numTags;
+<a name="line755">755: </a>    <a href="../../../../docs/manualpages/Viewer/PetscViewerRead.html#PetscViewerRead">PetscViewerRead</a>(viewer, &amp;numElements, 1, NULL, <a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_LONG</a>);
+<a name="line756">756: </a>    <font color="#4169E1">if</font> (byteSwap) {PetscByteSwap(&amp;numElements, <a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_LONG</a>, 1);}
+<a name="line757">757: </a>    GmshBufferGet(gmsh, (1+numNodes)*numElements, <font color="#4169E1">sizeof</font>(int), &amp;ibuf);
+<a name="line758">758: </a>    <a href="../../../../docs/manualpages/Viewer/PetscViewerRead.html#PetscViewerRead">PetscViewerRead</a>(viewer, ibuf, (1+numNodes)*numElements, NULL, <a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_ENUM</a>);
+<a name="line759">759: </a>    <font color="#4169E1">if</font> (byteSwap) {PetscByteSwap(ibuf, <a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_ENUM</a>, (1+numNodes)*numElements);}
+<a name="line760">760: </a>    <font color="#4169E1">for</font> (elem = 0; elem &lt; numElements; ++elem, ++c) {
+<a name="line761">761: </a>      GmshElement *element = elements + c;
+<a name="line762">762: </a>      const int *id = ibuf + elem*(1+numNodes), *nodes = id + 1;
+<a name="line763">763: </a>      element-&gt;id  = id[0];
+<a name="line764">764: </a>      element-&gt;dim = dim;
+<a name="line765">765: </a>      element-&gt;cellType = cellType;
+<a name="line766">766: </a>      element-&gt;numVerts = numVerts;
+<a name="line767">767: </a>      element-&gt;numNodes = numNodes;
+<a name="line768">768: </a>      element-&gt;numTags  = numTags;
+<a name="line769">769: </a>      <a href="../../../../docs/manualpages/Sys/PetscSegBufferGet.html#PetscSegBufferGet">PetscSegBufferGet</a>(mesh-&gt;segbuf, (size_t)element-&gt;numNodes, &amp;element-&gt;nodes);
+<a name="line770">770: </a>      <font color="#4169E1">for</font> (p = 0; p &lt; element-&gt;numNodes; p++) element-&gt;nodes[p] = nodeMap[nodes[p]];
+<a name="line771">771: </a>      <font color="#4169E1">for</font> (p = 0; p &lt; element-&gt;numTags;  p++) element-&gt;tags[p]  = entity-&gt;tags[p];
+<a name="line772">772: </a>    }
+<a name="line773">773: </a>  }
+<a name="line774">774: </a>  <font color="#4169E1">return</font>(0);
+<a name="line775">775: </a>}
+
+<a name="line777">777: </a><strong><font color="#4169E1"><a name="GmshReadPeriodic_v40"></a>static <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> GmshReadPeriodic_v40(GmshFile *gmsh, <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> periodicMap[])</font></strong>
+<a name="line778">778: </a>{
+<a name="line779">779: </a>  <a href="../../../../docs/manualpages/Viewer/PetscViewer.html#PetscViewer">PetscViewer</a>    viewer = gmsh-&gt;viewer;
+<a name="line780">780: </a>  int            fileFormat = gmsh-&gt;fileFormat;
+<a name="line781">781: </a>  <a href="../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>      binary = gmsh-&gt;binary;
+<a name="line782">782: </a>  <a href="../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>      byteSwap = gmsh-&gt;byteSwap;
+<a name="line783">783: </a>  int            numPeriodic, snum, i;
+<a name="line784">784: </a>  char           line[PETSC_MAX_PATH_LEN];
+<a name="line785">785: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       *nodeMap = gmsh-&gt;nodeMap;
+
+<a name="line789">789: </a>  <font color="#4169E1">if</font> (fileFormat == 22 || !binary) {
+<a name="line790">790: </a>    <a href="../../../../docs/manualpages/Viewer/PetscViewerRead.html#PetscViewerRead">PetscViewerRead</a>(viewer, line, 1, NULL, <a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_STRING</a>);
+<a name="line791">791: </a>    snum = sscanf(line, <font color="#666666">"%d"</font>, &amp;numPeriodic);
+<a name="line792">792: </a>    <font color="#4169E1">if</font> (snum != 1) <a href="../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, PETSC_ERR_FILE_UNEXPECTED, <font color="#666666">"File is not a valid Gmsh file"</font>);
+<a name="line793">793: </a>  } <font color="#4169E1">else</font> {
+<a name="line794">794: </a>    <a href="../../../../docs/manualpages/Viewer/PetscViewerRead.html#PetscViewerRead">PetscViewerRead</a>(viewer, &amp;numPeriodic, 1, NULL, <a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_ENUM</a>);
+<a name="line795">795: </a>    <font color="#4169E1">if</font> (byteSwap) {PetscByteSwap(&amp;numPeriodic, <a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_ENUM</a>, 1);}
+<a name="line796">796: </a>  }
+<a name="line797">797: </a>  <font color="#4169E1">for</font> (i = 0; i &lt; numPeriodic; i++) {
+<a name="line798">798: </a>    int    ibuf[3], slaveDim = -1, slaveTag = -1, masterTag = -1, slaveNode, masterNode;
+<a name="line799">799: </a>    long   j, nNodes;
+<a name="line800">800: </a>    double affine[16];
+
+<a name="line802">802: </a>    <font color="#4169E1">if</font> (fileFormat == 22 || !binary) {
+<a name="line803">803: </a>      <a href="../../../../docs/manualpages/Viewer/PetscViewerRead.html#PetscViewerRead">PetscViewerRead</a>(viewer, line, 3, NULL, <a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_STRING</a>);
+<a name="line804">804: </a>      snum = sscanf(line, <font color="#666666">"%d %d %d"</font>, &amp;slaveDim, &amp;slaveTag, &amp;masterTag);
+<a name="line805">805: </a>      <font color="#4169E1">if</font> (snum != 3) <a href="../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, PETSC_ERR_FILE_UNEXPECTED, <font color="#666666">"File is not a valid Gmsh file"</font>);
+<a name="line806">806: </a>    } <font color="#4169E1">else</font> {
+<a name="line807">807: </a>      <a href="../../../../docs/manualpages/Viewer/PetscViewerRead.html#PetscViewerRead">PetscViewerRead</a>(viewer, ibuf, 3, NULL, <a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_ENUM</a>);
+<a name="line808">808: </a>      <font color="#4169E1">if</font> (byteSwap) {PetscByteSwap(ibuf, <a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_ENUM</a>, 3);}
+<a name="line809">809: </a>      slaveDim = ibuf[0]; slaveTag = ibuf[1]; masterTag = ibuf[2];
+<a name="line810">810: </a>    }
+<a name="line811">811: </a>    (void)slaveDim; (void)slaveTag; (void)masterTag; <font color="#B22222">/* unused */</font>
+
+<a name="line813">813: </a>    <font color="#4169E1">if</font> (fileFormat == 22 || !binary) {
+<a name="line814">814: </a>      <a href="../../../../docs/manualpages/Viewer/PetscViewerRead.html#PetscViewerRead">PetscViewerRead</a>(viewer, line, 1, NULL, <a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_STRING</a>);
+<a name="line815">815: </a>      snum = sscanf(line, <font color="#666666">"%ld"</font>, &amp;nNodes);
+<a name="line816">816: </a>      <font color="#4169E1">if</font> (snum != 1) { <font color="#B22222">/* discard transformation and try again */</font>
+<a name="line817">817: </a>        <a href="../../../../docs/manualpages/Viewer/PetscViewerRead.html#PetscViewerRead">PetscViewerRead</a>(viewer, line, -PETSC_MAX_PATH_LEN, NULL, <a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_STRING</a>);
+<a name="line818">818: </a>        <a href="../../../../docs/manualpages/Viewer/PetscViewerRead.html#PetscViewerRead">PetscViewerRead</a>(viewer, line, 1, NULL, <a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_STRING</a>);
+<a name="line819">819: </a>        snum = sscanf(line, <font color="#666666">"%ld"</font>, &amp;nNodes);
+<a name="line820">820: </a>        <font color="#4169E1">if</font> (snum != 1) <a href="../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, PETSC_ERR_FILE_UNEXPECTED, <font color="#666666">"File is not a valid Gmsh file"</font>);
+<a name="line821">821: </a>      }
+<a name="line822">822: </a>    } <font color="#4169E1">else</font> {
+<a name="line823">823: </a>      <a href="../../../../docs/manualpages/Viewer/PetscViewerRead.html#PetscViewerRead">PetscViewerRead</a>(viewer, &amp;nNodes, 1, NULL, <a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_LONG</a>);
+<a name="line824">824: </a>      <font color="#4169E1">if</font> (byteSwap) {PetscByteSwap(&amp;nNodes, <a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_LONG</a>, 1);}
+<a name="line825">825: </a>      <font color="#4169E1">if</font> (nNodes == -1) { <font color="#B22222">/* discard transformation and try again */</font>
+<a name="line826">826: </a>        <a href="../../../../docs/manualpages/Viewer/PetscViewerRead.html#PetscViewerRead">PetscViewerRead</a>(viewer, affine, 16, NULL, <a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_DOUBLE</a>);
+<a name="line827">827: </a>        <a href="../../../../docs/manualpages/Viewer/PetscViewerRead.html#PetscViewerRead">PetscViewerRead</a>(viewer, &amp;nNodes, 1, NULL, <a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_LONG</a>);
+<a name="line828">828: </a>        <font color="#4169E1">if</font> (byteSwap) {PetscByteSwap(&amp;nNodes, <a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_LONG</a>, 1);}
+<a name="line829">829: </a>      }
+<a name="line830">830: </a>    }
+
+<a name="line832">832: </a>    <font color="#4169E1">for</font> (j = 0; j &lt; nNodes; j++) {
+<a name="line833">833: </a>      <font color="#4169E1">if</font> (fileFormat == 22 || !binary) {
+<a name="line834">834: </a>        <a href="../../../../docs/manualpages/Viewer/PetscViewerRead.html#PetscViewerRead">PetscViewerRead</a>(viewer, line, 2, NULL, <a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_STRING</a>);
+<a name="line835">835: </a>        snum = sscanf(line, <font color="#666666">"%d %d"</font>, &amp;slaveNode, &amp;masterNode);
+<a name="line836">836: </a>        <font color="#4169E1">if</font> (snum != 2) <a href="../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, PETSC_ERR_FILE_UNEXPECTED, <font color="#666666">"File is not a valid Gmsh file"</font>);
+<a name="line837">837: </a>      } <font color="#4169E1">else</font> {
+<a name="line838">838: </a>        <a href="../../../../docs/manualpages/Viewer/PetscViewerRead.html#PetscViewerRead">PetscViewerRead</a>(viewer, ibuf, 2, NULL, <a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_ENUM</a>);
+<a name="line839">839: </a>        <font color="#4169E1">if</font> (byteSwap) {PetscByteSwap(ibuf, <a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_ENUM</a>, 2);}
+<a name="line840">840: </a>        slaveNode = ibuf[0]; masterNode = ibuf[1];
+<a name="line841">841: </a>      }
+<a name="line842">842: </a>      slaveNode  = (int) nodeMap[slaveNode];
+<a name="line843">843: </a>      masterNode = (int) nodeMap[masterNode];
+<a name="line844">844: </a>      periodicMap[slaveNode] = masterNode;
+<a name="line845">845: </a>    }
+<a name="line846">846: </a>  }
+<a name="line847">847: </a>  <font color="#4169E1">return</font>(0);
+<a name="line848">848: </a>}
+
+<a name="line850">850: </a><font color="#B22222">/* http://gmsh.info/dev/doc/texinfo/gmsh.html#MSH-file-format</font>
+<a name="line851">851: </a><font color="#B22222">$Entities</font>
+<a name="line852">852: </a><font color="#B22222">  numPoints(size_t) numCurves(size_t)</font>
+<a name="line853">853: </a><font color="#B22222">    numSurfaces(size_t) numVolumes(size_t)</font>
+<a name="line854">854: </a><font color="#B22222">  pointTag(int) X(double) Y(double) Z(double)</font>
+<a name="line855">855: </a><font color="#B22222">    numPhysicalTags(size_t) physicalTag(int) ...</font>
+<a name="line856">856: </a><font color="#B22222">  ...</font>
+<a name="line857">857: </a><font color="#B22222">  curveTag(int) minX(double) minY(double) minZ(double)</font>
+<a name="line858">858: </a><font color="#B22222">    maxX(double) maxY(double) maxZ(double)</font>
+<a name="line859">859: </a><font color="#B22222">    numPhysicalTags(size_t) physicalTag(int) ...</font>
+<a name="line860">860: </a><font color="#B22222">    numBoundingPoints(size_t) pointTag(int) ...</font>
+<a name="line861">861: </a><font color="#B22222">  ...</font>
+<a name="line862">862: </a><font color="#B22222">  surfaceTag(int) minX(double) minY(double) minZ(double)</font>
+<a name="line863">863: </a><font color="#B22222">    maxX(double) maxY(double) maxZ(double)</font>
+<a name="line864">864: </a><font color="#B22222">    numPhysicalTags(size_t) physicalTag(int) ...</font>
+<a name="line865">865: </a><font color="#B22222">    numBoundingCurves(size_t) curveTag(int) ...</font>
+<a name="line866">866: </a><font color="#B22222">  ...</font>
+<a name="line867">867: </a><font color="#B22222">  volumeTag(int) minX(double) minY(double) minZ(double)</font>
+<a name="line868">868: </a><font color="#B22222">    maxX(double) maxY(double) maxZ(double)</font>
+<a name="line869">869: </a><font color="#B22222">    numPhysicalTags(size_t) physicalTag(int) ...</font>
+<a name="line870">870: </a><font color="#B22222">    numBoundngSurfaces(size_t) surfaceTag(int) ...</font>
+<a name="line871">871: </a><font color="#B22222">  ...</font>
+<a name="line872">872: </a><font color="#B22222">$EndEntities</font>
+<a name="line873">873: </a><font color="#B22222">*/</font>
+<a name="line874">874: </a><strong><font color="#4169E1"><a name="GmshReadEntities_v41"></a>static <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> GmshReadEntities_v41(GmshFile *gmsh, GmshMesh *mesh)</font></strong>
+<a name="line875">875: </a>{
+<a name="line876">876: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       count[4], index, numTags, i;
+<a name="line877">877: </a>  int            dim, eid, *tags = NULL;
+<a name="line878">878: </a>  GmshEntity     *entity = NULL;
+
+<a name="line882">882: </a>  GmshReadSize(gmsh, count, 4);
+<a name="line883">883: </a>  GmshEntitiesCreate(count, &amp;mesh-&gt;entities);
+<a name="line884">884: </a>  <font color="#4169E1">for</font> (dim = 0; dim &lt; 4; ++dim) {
+<a name="line885">885: </a>    <font color="#4169E1">for</font> (index = 0; index &lt; count[dim]; ++index) {
+<a name="line886">886: </a>      GmshReadInt(gmsh, &amp;eid, 1);
+<a name="line887">887: </a>      GmshEntitiesAdd(mesh-&gt;entities, (<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>)index, dim, eid, &amp;entity);
+<a name="line888">888: </a>      GmshReadDouble(gmsh, entity-&gt;bbox, (dim == 0) ? 3 : 6);
+<a name="line889">889: </a>      GmshReadSize(gmsh, &amp;numTags, 1);
+<a name="line890">890: </a>      GmshBufferGet(gmsh, numTags, <font color="#4169E1">sizeof</font>(int), &amp;tags);
+<a name="line891">891: </a>      GmshReadInt(gmsh, tags, numTags);
+<a name="line892">892: </a>      entity-&gt;numTags = <a href="../../../../docs/manualpages/Sys/PetscMin.html#PetscMin">PetscMin</a>(numTags, 4);
+<a name="line893">893: </a>      <font color="#4169E1">for</font> (i = 0; i &lt; entity-&gt;numTags; ++i) entity-&gt;tags[i] = tags[i];
+<a name="line894">894: </a>      <font color="#4169E1">if</font> (dim == 0) <font color="#4169E1">continue</font>;
+<a name="line895">895: </a>      GmshReadSize(gmsh, &amp;numTags, 1);
+<a name="line896">896: </a>      GmshBufferGet(gmsh, numTags, <font color="#4169E1">sizeof</font>(int), &amp;tags);
+<a name="line897">897: </a>      GmshReadInt(gmsh, tags, numTags);
+<a name="line898">898: </a>    }
+<a name="line899">899: </a>  }
+<a name="line900">900: </a>  <font color="#4169E1">return</font>(0);
+<a name="line901">901: </a>}
+
+<a name="line903">903: </a><font color="#B22222">/* http://gmsh.info/dev/doc/texinfo/gmsh.html#MSH-file-format</font>
+<a name="line904">904: </a><font color="#B22222">$Nodes</font>
+<a name="line905">905: </a><font color="#B22222">  numEntityBlocks(size_t) numNodes(size_t)</font>
+<a name="line906">906: </a><font color="#B22222">    minNodeTag(size_t) maxNodeTag(size_t)</font>
+<a name="line907">907: </a><font color="#B22222">  entityDim(int) entityTag(int) parametric(int; 0 or 1) numNodesBlock(size_t)</font>
+<a name="line908">908: </a><font color="#B22222">    nodeTag(size_t)</font>
+<a name="line909">909: </a><font color="#B22222">    ...</font>
+<a name="line910">910: </a><font color="#B22222">    x(double) y(double) z(double)</font>
+<a name="line911">911: </a><font color="#B22222">       &lt; u(double; if parametric and entityDim = 1 or entityDim = 2) &gt;</font>
+<a name="line912">912: </a><font color="#B22222">       &lt; v(double; if parametric and entityDim = 2) &gt;</font>
+<a name="line913">913: </a><font color="#B22222">    ...</font>
+<a name="line914">914: </a><font color="#B22222">  ...</font>
+<a name="line915">915: </a><font color="#B22222">$EndNodes</font>
+<a name="line916">916: </a><font color="#B22222">*/</font>
+<a name="line917">917: </a><strong><font color="#4169E1"><a name="GmshReadNodes_v41"></a>static <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> GmshReadNodes_v41(GmshFile *gmsh, GmshMesh *mesh)</font></strong>
+<a name="line918">918: </a>{
+<a name="line919">919: </a>  int            info[3];
+<a name="line920">920: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       sizes[4], numEntityBlocks, numNodes, numNodesBlock = 0, block, node;
+<a name="line921">921: </a>  GmshNodes      *nodes;
+
+<a name="line925">925: </a>  GmshReadSize(gmsh, sizes, 4);
+<a name="line926">926: </a>  numEntityBlocks = sizes[0]; numNodes = sizes[1];
+<a name="line927">927: </a>  GmshNodesCreate(numNodes, &amp;nodes);
+<a name="line928">928: </a>  mesh-&gt;numNodes = numNodes;
+<a name="line929">929: </a>  mesh-&gt;nodelist = nodes;
+<a name="line930">930: </a>  <font color="#4169E1">for</font> (block = 0, node = 0; block &lt; numEntityBlocks; ++block, node += numNodesBlock) {
+<a name="line931">931: </a>    GmshReadInt(gmsh, info, 3);
+<a name="line932">932: </a>    <font color="#4169E1">if</font> (info[2] != 0) <a href="../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, PETSC_ERR_SUP, <font color="#666666">"Parametric coordinates not supported"</font>);
+<a name="line933">933: </a>    GmshReadSize(gmsh, &amp;numNodesBlock, 1);
+<a name="line934">934: </a>    GmshReadSize(gmsh, nodes-&gt;id+node, numNodesBlock);
+<a name="line935">935: </a>    GmshReadDouble(gmsh, nodes-&gt;xyz+node*3, numNodesBlock*3);
+<a name="line936">936: </a>  }
+<a name="line937">937: </a>  gmsh-&gt;nodeStart = sizes[2];
+<a name="line938">938: </a>  gmsh-&gt;nodeEnd   = sizes[3]+1;
+<a name="line939">939: </a>  <font color="#4169E1">return</font>(0);
+<a name="line940">940: </a>}
+
+<a name="line942">942: </a><font color="#B22222">/* http://gmsh.info/dev/doc/texinfo/gmsh.html#MSH-file-format</font>
+<a name="line943">943: </a><font color="#B22222">$Elements</font>
+<a name="line944">944: </a><font color="#B22222">  numEntityBlocks(size_t) numElements(size_t)</font>
+<a name="line945">945: </a><font color="#B22222">    minElementTag(size_t) maxElementTag(size_t)</font>
+<a name="line946">946: </a><font color="#B22222">  entityDim(int) entityTag(int) elementType(int; see below) numElementsBlock(size_t)</font>
+<a name="line947">947: </a><font color="#B22222">    elementTag(size_t) nodeTag(size_t) ...</font>
+<a name="line948">948: </a><font color="#B22222">    ...</font>
+<a name="line949">949: </a><font color="#B22222">  ...</font>
+<a name="line950">950: </a><font color="#B22222">$EndElements</font>
+<a name="line951">951: </a><font color="#B22222">*/</font>
+<a name="line952">952: </a><strong><font color="#4169E1"><a name="GmshReadElements_v41"></a>static <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> GmshReadElements_v41(GmshFile *gmsh, GmshMesh *mesh)</font></strong>
+<a name="line953">953: </a>{
+<a name="line954">954: </a>  int            info[3], eid, dim, cellType;
+<a name="line955">955: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       sizes[4], *ibuf = NULL, numEntityBlocks, numElements, numBlockElements, numVerts, numNodes, numTags, block, elem, c, p;
+<a name="line956">956: </a>  GmshEntity     *entity = NULL;
+<a name="line957">957: </a>  GmshElement    *elements;
+<a name="line958">958: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       *nodeMap = gmsh-&gt;nodeMap;
+
+<a name="line962">962: </a>  GmshReadSize(gmsh, sizes, 4);
+<a name="line963">963: </a>  numEntityBlocks = sizes[0]; numElements = sizes[1];
+<a name="line964">964: </a>  GmshElementsCreate(numElements, &amp;elements);
+<a name="line965">965: </a>  mesh-&gt;numElems = numElements;
+<a name="line966">966: </a>  mesh-&gt;elements = elements;
+<a name="line967">967: </a>  <font color="#4169E1">for</font> (c = 0, block = 0; block &lt; numEntityBlocks; ++block) {
+<a name="line968">968: </a>    GmshReadInt(gmsh, info, 3);
+<a name="line969">969: </a>    dim = info[0]; eid = info[1]; cellType = info[2];
+<a name="line970">970: </a>    GmshEntitiesGet(mesh-&gt;entities, dim, eid, &amp;entity);
+<a name="line971">971: </a>    GmshCellTypeCheck(cellType);
+<a name="line972">972: </a>    numVerts = GmshCellMap[cellType].numVerts;
+<a name="line973">973: </a>    numNodes = GmshCellMap[cellType].numNodes;
+<a name="line974">974: </a>    numTags  = entity-&gt;numTags;
+<a name="line975">975: </a>    GmshReadSize(gmsh, &amp;numBlockElements, 1);
+<a name="line976">976: </a>    GmshBufferGet(gmsh, (1+numNodes)*numBlockElements, <font color="#4169E1">sizeof</font>(<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>), &amp;ibuf);
+<a name="line977">977: </a>    GmshReadSize(gmsh, ibuf, (1+numNodes)*numBlockElements);
+<a name="line978">978: </a>    <font color="#4169E1">for</font> (elem = 0; elem &lt; numBlockElements; ++elem, ++c) {
+<a name="line979">979: </a>      GmshElement *element = elements + c;
+<a name="line980">980: </a>      const <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *id = ibuf + elem*(1+numNodes), *nodes = id + 1;
+<a name="line981">981: </a>      element-&gt;id  = id[0];
+<a name="line982">982: </a>      element-&gt;dim = dim;
+<a name="line983">983: </a>      element-&gt;cellType = cellType;
+<a name="line984">984: </a>      element-&gt;numVerts = numVerts;
+<a name="line985">985: </a>      element-&gt;numNodes = numNodes;
+<a name="line986">986: </a>      element-&gt;numTags  = numTags;
+<a name="line987">987: </a>      <a href="../../../../docs/manualpages/Sys/PetscSegBufferGet.html#PetscSegBufferGet">PetscSegBufferGet</a>(mesh-&gt;segbuf, (size_t)element-&gt;numNodes, &amp;element-&gt;nodes);
+<a name="line988">988: </a>      <font color="#4169E1">for</font> (p = 0; p &lt; element-&gt;numNodes; p++) element-&gt;nodes[p] = nodeMap[nodes[p]];
+<a name="line989">989: </a>      <font color="#4169E1">for</font> (p = 0; p &lt; element-&gt;numTags;  p++) element-&gt;tags[p]  = entity-&gt;tags[p];
+<a name="line990">990: </a>    }
+<a name="line991">991: </a>  }
+<a name="line992">992: </a>  <font color="#4169E1">return</font>(0);
+<a name="line993">993: </a>}
+
+<a name="line995">995: </a><font color="#B22222">/* http://gmsh.info/dev/doc/texinfo/gmsh.html#MSH-file-format</font>
+<a name="line996">996: </a><font color="#B22222">$Periodic</font>
+<a name="line997">997: </a><font color="#B22222">  numPeriodicLinks(size_t)</font>
+<a name="line998">998: </a><font color="#B22222">  entityDim(int) entityTag(int) entityTagMaster(int)</font>
+<a name="line999">999: </a><font color="#B22222">  numAffine(size_t) value(double) ...</font>
+<a name="line1000">1000: </a><font color="#B22222">  numCorrespondingNodes(size_t)</font>
+<a name="line1001">1001: </a><font color="#B22222">    nodeTag(size_t) nodeTagMaster(size_t)</font>
+<a name="line1002">1002: </a><font color="#B22222">    ...</font>
+<a name="line1003">1003: </a><font color="#B22222">  ...</font>
+<a name="line1004">1004: </a><font color="#B22222">$EndPeriodic</font>
+<a name="line1005">1005: </a><font color="#B22222">*/</font>
+<a name="line1006">1006: </a><strong><font color="#4169E1"><a name="GmshReadPeriodic_v41"></a>static <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> GmshReadPeriodic_v41(GmshFile *gmsh, <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> periodicMap[])</font></strong>
+<a name="line1007">1007: </a>{
+<a name="line1008">1008: </a>  int            info[3];
+<a name="line1009">1009: </a>  double         dbuf[16];
+<a name="line1010">1010: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       numPeriodicLinks, numAffine, numCorrespondingNodes, *nodeTags = NULL, link, node;
+<a name="line1011">1011: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       *nodeMap = gmsh-&gt;nodeMap;
+
+<a name="line1015">1015: </a>  GmshReadSize(gmsh, &amp;numPeriodicLinks, 1);
+<a name="line1016">1016: </a>  <font color="#4169E1">for</font> (link = 0; link &lt; numPeriodicLinks; ++link) {
+<a name="line1017">1017: </a>    GmshReadInt(gmsh, info, 3);
+<a name="line1018">1018: </a>    GmshReadSize(gmsh, &amp;numAffine, 1);
+<a name="line1019">1019: </a>    GmshReadDouble(gmsh, dbuf, numAffine);
+<a name="line1020">1020: </a>    GmshReadSize(gmsh, &amp;numCorrespondingNodes, 1);
+<a name="line1021">1021: </a>    GmshBufferGet(gmsh, numCorrespondingNodes, <font color="#4169E1">sizeof</font>(<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>), &amp;nodeTags);
+<a name="line1022">1022: </a>    GmshReadSize(gmsh, nodeTags, numCorrespondingNodes*2);
+<a name="line1023">1023: </a>    <font color="#4169E1">for</font> (node = 0; node &lt; numCorrespondingNodes; ++node) {
+<a name="line1024">1024: </a>      <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> slaveNode  = nodeMap[nodeTags[node*2+0]];
+<a name="line1025">1025: </a>      <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> masterNode = nodeMap[nodeTags[node*2+1]];
+<a name="line1026">1026: </a>      periodicMap[slaveNode] = masterNode;
+<a name="line1027">1027: </a>    }
+<a name="line1028">1028: </a>  }
+<a name="line1029">1029: </a>  <font color="#4169E1">return</font>(0);
+<a name="line1030">1030: </a>}
+
+<a name="line1032">1032: </a><font color="#B22222">/* http://gmsh.info/dev/doc/texinfo/gmsh.html#MSH-file-format</font>
+<a name="line1033">1033: </a><font color="#B22222">$MeshFormat // same as MSH version 2</font>
+<a name="line1034">1034: </a><font color="#B22222">  version(ASCII double; currently 4.1)</font>
+<a name="line1035">1035: </a><font color="#B22222">  file-type(ASCII int; 0 for ASCII mode, 1 for binary mode)</font>
+<a name="line1036">1036: </a><font color="#B22222">  data-size(ASCII int; sizeof(size_t))</font>
+<a name="line1037">1037: </a><font color="#B22222">  &lt; int with value one; only in binary mode, to detect endianness &gt;</font>
+<a name="line1038">1038: </a><font color="#B22222">$EndMeshFormat</font>
+<a name="line1039">1039: </a><font color="#B22222">*/</font>
+<a name="line1040">1040: </a><strong><font color="#4169E1"><a name="GmshReadMeshFormat"></a>static <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> GmshReadMeshFormat(GmshFile *gmsh)</font></strong>
+<a name="line1041">1041: </a>{
+<a name="line1042">1042: </a>  char           line[PETSC_MAX_PATH_LEN];
+<a name="line1043">1043: </a>  int            snum, fileType, fileFormat, dataSize, checkEndian;
+<a name="line1044">1044: </a>  float          version;
+
+<a name="line1048">1048: </a>  GmshReadString(gmsh, line, 3);
+<a name="line1049">1049: </a>  snum = sscanf(line, <font color="#666666">"%f %d %d"</font>, &amp;version, &amp;fileType, &amp;dataSize);
+<a name="line1050">1050: </a>  <font color="#4169E1">if</font> (snum != 3) <a href="../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, PETSC_ERR_FILE_UNEXPECTED, <font color="#666666">"Unable to parse Gmsh file header: %s"</font>, line);
+<a name="line1051">1051: </a>  <font color="#4169E1">if</font> (version &lt; 2.2) <a href="../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, PETSC_ERR_SUP, <font color="#666666">"Gmsh file version %3.1f must be at least 2.2"</font>, (double)version);
+<a name="line1052">1052: </a>  <font color="#4169E1">if</font> ((int)version == 3) <a href="../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, PETSC_ERR_SUP, <font color="#666666">"Gmsh file version %3.1f not supported"</font>, (double)version);
+<a name="line1053">1053: </a>  <font color="#4169E1">if</font> (version &gt; 4.1) <a href="../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, PETSC_ERR_SUP, <font color="#666666">"Gmsh file version %3.1f must be at most 4.1"</font>, (double)version);
+<a name="line1054">1054: </a>  <font color="#4169E1">if</font> (gmsh-&gt;binary &amp;&amp; !fileType) <a href="../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, PETSC_ERR_ARG_INCOMP, <font color="#666666">"Viewer is binary but Gmsh file is ASCII"</font>);
+<a name="line1055">1055: </a>  <font color="#4169E1">if</font> (!gmsh-&gt;binary &amp;&amp; fileType) <a href="../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, PETSC_ERR_ARG_INCOMP, <font color="#666666">"Viewer is ASCII but Gmsh file is binary"</font>);
+<a name="line1056">1056: </a>  fileFormat = (int)(version*10); <font color="#B22222">/* XXX Should use (int)roundf(version*10) ? */</font>
+<a name="line1057">1057: </a>  <font color="#4169E1">if</font> (fileFormat &lt;= 40 &amp;&amp; dataSize != <font color="#4169E1">sizeof</font>(double)) <a href="../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, PETSC_ERR_FILE_UNEXPECTED, <font color="#666666">"Data size %d is not valid for a Gmsh file"</font>, dataSize);
+<a name="line1058">1058: </a>  <font color="#4169E1">if</font> (fileFormat &gt;= 41 &amp;&amp; dataSize != <font color="#4169E1">sizeof</font>(int) &amp;&amp; dataSize != <font color="#4169E1">sizeof</font>(PetscInt64)) <a href="../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, PETSC_ERR_FILE_UNEXPECTED, <font color="#666666">"Data size %d is not valid for a Gmsh file"</font>, dataSize);
+<a name="line1059">1059: </a>  gmsh-&gt;fileFormat = fileFormat;
+<a name="line1060">1060: </a>  gmsh-&gt;dataSize = dataSize;
+<a name="line1061">1061: </a>  gmsh-&gt;byteSwap = <a href="../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line1062">1062: </a>  <font color="#4169E1">if</font> (gmsh-&gt;binary) {
+<a name="line1063">1063: </a>    GmshReadInt(gmsh, &amp;checkEndian, 1);
+<a name="line1064">1064: </a>    <font color="#4169E1">if</font> (checkEndian != 1) {
+<a name="line1065">1065: </a>      PetscByteSwap(&amp;checkEndian, <a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_ENUM</a>, 1);
+<a name="line1066">1066: </a>      <font color="#4169E1">if</font> (checkEndian != 1) <a href="../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, PETSC_ERR_FILE_UNEXPECTED, <font color="#666666">"Unable to detect endianness in Gmsh file header: %s"</font>, line);
+<a name="line1067">1067: </a>      gmsh-&gt;byteSwap = <a href="../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>;
+<a name="line1068">1068: </a>    }
+<a name="line1069">1069: </a>  }
+<a name="line1070">1070: </a>  <font color="#4169E1">return</font>(0);
+<a name="line1071">1071: </a>}
+
+<a name="line1073">1073: </a><font color="#B22222">/*</font>
+<a name="line1074">1074: </a><font color="#B22222"><strong></font><font color="#4169E1"><a name="numPhysicalNames"></a>PhysicalNames</font></strong>
+<a name="line1075">1075: </a><strong><font color="#4169E1">  numPhysicalNames(ASCII int)</font></strong>
+<a name="line1076">1076: </a><strong><font color="#4169E1">  dimension(ASCII int) physicalTag(ASCII int)</font></strong> "name"(127 characters max)
+<a name="line1077">1077: </a>  ...
+<a name="line1078">1078: </a>$EndPhysicalNames
+<a name="line1079">1079: </a>*/
+<a name="line1080">1080: </a><strong><font color="#4169E1"><a name="GmshReadPhysicalNames"></a>static <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> GmshReadPhysicalNames(GmshFile *gmsh)</font></strong>
+<a name="line1081">1081: </a>{
+<a name="line1082">1082: </a>  char           line[PETSC_MAX_PATH_LEN], name[128+2], *p, *q;
+<a name="line1083">1083: </a>  int            snum, numRegions, region, dim, tag;
+
+<a name="line1087">1087: </a>  GmshReadString(gmsh, line, 1);
+<a name="line1088">1088: </a>  snum = sscanf(line, <font color="#666666">"%d"</font>, &amp;numRegions);
+<a name="line1089">1089: </a>  <font color="#4169E1">if</font> (snum != 1) <a href="../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, PETSC_ERR_FILE_UNEXPECTED, <font color="#666666">"File is not a valid Gmsh file"</font>);
+<a name="line1090">1090: </a>  <font color="#4169E1">for</font> (region = 0; region &lt; numRegions; ++region) {
+<a name="line1091">1091: </a>    GmshReadString(gmsh, line, 2);
+<a name="line1092">1092: </a>    snum = sscanf(line, <font color="#666666">"%d %d"</font>, &amp;dim, &amp;tag);
+<a name="line1093">1093: </a>    <font color="#4169E1">if</font> (snum != 2) <a href="../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, PETSC_ERR_FILE_UNEXPECTED, <font color="#666666">"File is not a valid Gmsh file"</font>);
+<a name="line1094">1094: </a>    GmshReadString(gmsh, line, -(<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>)<font color="#4169E1">sizeof</font>(line));
+<a name="line1095">1095: </a>    <a href="../../../../docs/manualpages/Sys/PetscStrchr.html#PetscStrchr">PetscStrchr</a>(line, '"', &amp;p);
+<a name="line1096">1096: </a>    <font color="#4169E1">if</font> (!p) <a href="../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, PETSC_ERR_FILE_UNEXPECTED, <font color="#666666">"File is not a valid Gmsh file"</font>);
+<a name="line1097">1097: </a>    <a href="../../../../docs/manualpages/Sys/PetscStrrchr.html#PetscStrrchr">PetscStrrchr</a>(line, '"', &amp;q);
+<a name="line1098">1098: </a>    <font color="#4169E1">if</font> (q == p) <a href="../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, PETSC_ERR_FILE_UNEXPECTED, <font color="#666666">"File is not a valid Gmsh file"</font>);
+<a name="line1099">1099: </a>    <a href="../../../../docs/manualpages/Sys/PetscStrncpy.html#PetscStrncpy">PetscStrncpy</a>(name, p+1, (size_t)(q-p-1));
+<a name="line1100">1100: </a>  }
+<a name="line1101">1101: </a>  <font color="#4169E1">return</font>(0);
+<a name="line1102">1102: </a>}
+
+<a name="line1104">1104: </a><strong><font color="#4169E1"><a name="GmshReadEntities"></a>static <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> GmshReadEntities(GmshFile *gmsh, GmshMesh *mesh)</font></strong>
+<a name="line1105">1105: </a>{
+
+<a name="line1109">1109: </a>  <font color="#4169E1">switch</font> (gmsh-&gt;fileFormat) {
+<a name="line1110">1110: </a>  <font color="#4169E1">case</font> 41: GmshReadEntities_v41(gmsh, mesh); <font color="#4169E1">break</font>;
+<a name="line1111">1111: </a><strong><font color="#FF0000">  default:</font></strong> GmshReadEntities_v40(gmsh, mesh); <font color="#4169E1">break</font>;
+<a name="line1112">1112: </a>  }
+<a name="line1113">1113: </a>  <font color="#4169E1">return</font>(0);
+<a name="line1114">1114: </a>}
+
+<a name="line1116">1116: </a><strong><font color="#4169E1"><a name="GmshReadNodes"></a>static <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> GmshReadNodes(GmshFile *gmsh, GmshMesh *mesh)</font></strong>
+<a name="line1117">1117: </a>{
+
+<a name="line1121">1121: </a>  <font color="#4169E1">switch</font> (gmsh-&gt;fileFormat) {
+<a name="line1122">1122: </a>  <font color="#4169E1">case</font> 41: GmshReadNodes_v41(gmsh, mesh); <font color="#4169E1">break</font>;
+<a name="line1123">1123: </a>  <font color="#4169E1">case</font> 40: GmshReadNodes_v40(gmsh, mesh); <font color="#4169E1">break</font>;
+<a name="line1124">1124: </a><strong><font color="#FF0000">  default:</font></strong> GmshReadNodes_v22(gmsh, mesh); <font color="#4169E1">break</font>;
+<a name="line1125">1125: </a>  }
+
+<a name="line1127">1127: </a>  { <font color="#B22222">/* Gmsh v2.2/v4.0 does not provide min/max node tags */</font>
+<a name="line1128">1128: </a>    <font color="#4169E1">if</font> (mesh-&gt;numNodes &gt; 0 &amp;&amp; gmsh-&gt;nodeEnd &gt;= gmsh-&gt;nodeStart) {
+<a name="line1129">1129: </a>      <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>  tagMin = PETSC_MAX_INT, tagMax = PETSC_MIN_INT, n;
+<a name="line1130">1130: </a>      GmshNodes *nodes = mesh-&gt;nodelist;
+<a name="line1131">1131: </a>      <font color="#4169E1">for</font> (n = 0; n &lt; mesh-&gt;numNodes; ++n) {
+<a name="line1132">1132: </a>        const <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> tag = nodes-&gt;id[n];
+<a name="line1133">1133: </a>        tagMin = <a href="../../../../docs/manualpages/Sys/PetscMin.html#PetscMin">PetscMin</a>(tag, tagMin);
+<a name="line1134">1134: </a>        tagMax = <a href="../../../../docs/manualpages/Sys/PetscMax.html#PetscMax">PetscMax</a>(tag, tagMax);
+<a name="line1135">1135: </a>      }
+<a name="line1136">1136: </a>      gmsh-&gt;nodeStart = tagMin;
+<a name="line1137">1137: </a>      gmsh-&gt;nodeEnd   = tagMax+1;
+<a name="line1138">1138: </a>    }
+<a name="line1139">1139: </a>  }
+
+<a name="line1141">1141: </a>  { <font color="#B22222">/* Support for sparse node tags */</font>
+<a name="line1142">1142: </a>    <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>  n, t;
+<a name="line1143">1143: </a>    GmshNodes *nodes = mesh-&gt;nodelist;
+<a name="line1144">1144: </a>    <a href="../../../../docs/manualpages/Sys/PetscMalloc1.html#PetscMalloc1">PetscMalloc1</a>(gmsh-&gt;nodeEnd - gmsh-&gt;nodeStart, &amp;gmsh-&gt;nbuf);
+<a name="line1145">1145: </a>    <font color="#4169E1">for</font> (t = 0; t &lt; gmsh-&gt;nodeEnd - gmsh-&gt;nodeStart; ++t) gmsh-&gt;nbuf[t] = PETSC_MIN_INT;
+<a name="line1146">1146: </a>    gmsh-&gt;nodeMap = gmsh-&gt;nbuf - gmsh-&gt;nodeStart;
+<a name="line1147">1147: </a>    <font color="#4169E1">for</font> (n = 0; n &lt; mesh-&gt;numNodes; ++n) {
+<a name="line1148">1148: </a>      const <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> tag = nodes-&gt;id[n];
+<a name="line1149">1149: </a>      <font color="#4169E1">if</font> (gmsh-&gt;nodeMap[tag] &gt;= 0) <a href="../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, PETSC_ERR_FILE_UNEXPECTED, <font color="#666666">"Repeated node tag %D"</font>, tag);
+<a name="line1150">1150: </a>      gmsh-&gt;nodeMap[tag] = n;
+<a name="line1151">1151: </a>    }
+<a name="line1152">1152: </a>  }
+<a name="line1153">1153: </a>  <font color="#4169E1">return</font>(0);
+<a name="line1154">1154: </a>}
+
+<a name="line1156">1156: </a><strong><font color="#4169E1"><a name="GmshReadElements"></a>static <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> GmshReadElements(GmshFile *gmsh, GmshMesh *mesh)</font></strong>
+<a name="line1157">1157: </a>{
+
+<a name="line1161">1161: </a>  <font color="#4169E1">switch</font> (gmsh-&gt;fileFormat) {
+<a name="line1162">1162: </a>  <font color="#4169E1">case</font> 41: GmshReadElements_v41(gmsh, mesh); <font color="#4169E1">break</font>;
+<a name="line1163">1163: </a>  <font color="#4169E1">case</font> 40: GmshReadElements_v40(gmsh, mesh); <font color="#4169E1">break</font>;
+<a name="line1164">1164: </a><strong><font color="#FF0000">  default:</font></strong> GmshReadElements_v22(gmsh, mesh); <font color="#4169E1">break</font>;
+<a name="line1165">1165: </a>  }
+
+<a name="line1167">1167: </a>  { <font color="#B22222">/* Reorder elements by codimension and polytope type */</font>
+<a name="line1168">1168: </a>    <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>    ne = mesh-&gt;numElems;
+<a name="line1169">1169: </a>    GmshElement *elements = mesh-&gt;elements;
+<a name="line1170">1170: </a>    <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>    keymap[GMSH_NUM_POLYTOPES], nk = 0;
+<a name="line1171">1171: </a>    <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>    offset[GMSH_NUM_POLYTOPES+1], e, k;
+
+<a name="line1173">1173: </a>    <font color="#4169E1">for</font> (k = 0; k &lt; GMSH_NUM_POLYTOPES; ++k) keymap[k] = PETSC_MIN_INT;
+<a name="line1174">1174: </a>    <a href="../../../../docs/manualpages/Sys/PetscMemzero.html#PetscMemzero">PetscMemzero</a>(offset,<font color="#4169E1">sizeof</font>(offset));
+
+<a name="line1176">1176: </a>    keymap[GMSH_TET] = nk++;
+<a name="line1177">1177: </a>    keymap[GMSH_HEX] = nk++;
+<a name="line1178">1178: </a>    keymap[GMSH_PRI] = nk++;
+<a name="line1179">1179: </a>    keymap[GMSH_PYR] = nk++;
+<a name="line1180">1180: </a>    keymap[GMSH_TRI] = nk++;
+<a name="line1181">1181: </a>    keymap[GMSH_QUA] = nk++;
+<a name="line1182">1182: </a>    keymap[GMSH_SEG] = nk++;
+<a name="line1183">1183: </a>    keymap[GMSH_VTX] = nk++;
+
+<a name="line1185">1185: </a>    GmshElementsCreate(mesh-&gt;numElems, &amp;mesh-&gt;elements);
+<a name="line1186">1186: </a><strong><font color="#228B22">#define key(eid) keymap[GmshCellMap[elements[(eid)].cellType].polytope]</font></strong>
+<a name="line1187">1187: </a>    <font color="#4169E1">for</font> (e = 0; e &lt; ne; ++e) offset[1+key(e)]++;
+<a name="line1188">1188: </a>    <font color="#4169E1">for</font> (k = 1; k &lt; nk; ++k) offset[k] += offset[k-1];
+<a name="line1189">1189: </a>    <font color="#4169E1">for</font> (e = 0; e &lt; ne; ++e) mesh-&gt;elements[offset[key(e)]++] = elements[e];
+<a name="line1190">1190: </a><strong><font color="#228B22">#undef key</font></strong>
+<a name="line1191">1191: </a>    GmshElementsDestroy(&amp;elements);
+<a name="line1192">1192: </a>  }
+
+<a name="line1194">1194: </a>  { <font color="#B22222">/* Mesh dimension and order */</font>
+<a name="line1195">1195: </a>    GmshElement *elem = mesh-&gt;numElems ? mesh-&gt;elements : NULL;
+<a name="line1196">1196: </a>    mesh-&gt;dim   = elem ? GmshCellMap[elem-&gt;cellType].dim   : 0;
+<a name="line1197">1197: </a>    mesh-&gt;order = elem ? GmshCellMap[elem-&gt;cellType].order : 0;
+<a name="line1198">1198: </a>  }
+
+<a name="line1200">1200: </a>  {
+<a name="line1201">1201: </a>    <a href="../../../../docs/manualpages/Sys/PetscBT.html#PetscBT">PetscBT</a>  vtx;
+<a name="line1202">1202: </a>    <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> dim = mesh-&gt;dim, e, n, v;
+
+<a name="line1204">1204: </a>    PetscBTCreate(mesh-&gt;numNodes, &amp;vtx);
+
+<a name="line1206">1206: </a>    <font color="#B22222">/* Compute number of cells and set of vertices */</font>
+<a name="line1207">1207: </a>    mesh-&gt;numCells = 0;
+<a name="line1208">1208: </a>    <font color="#4169E1">for</font> (e = 0; e &lt; mesh-&gt;numElems; ++e) {
+<a name="line1209">1209: </a>      GmshElement *elem = mesh-&gt;elements + e;
+<a name="line1210">1210: </a>      <font color="#4169E1">if</font> (elem-&gt;dim == dim &amp;&amp; dim &gt; 0) mesh-&gt;numCells++;
+<a name="line1211">1211: </a>      <font color="#4169E1">for</font> (v = 0; v &lt; elem-&gt;numVerts; v++) {
+<a name="line1212">1212: </a>        PetscBTSet(vtx, elem-&gt;nodes[v]);
+<a name="line1213">1213: </a>      }
+<a name="line1214">1214: </a>    }
+
+<a name="line1216">1216: </a>    <font color="#B22222">/* Compute numbering for vertices */</font>
+<a name="line1217">1217: </a>    mesh-&gt;numVerts = 0;
+<a name="line1218">1218: </a>    <a href="../../../../docs/manualpages/Sys/PetscMalloc1.html#PetscMalloc1">PetscMalloc1</a>(mesh-&gt;numNodes, &amp;mesh-&gt;vertexMap);
+<a name="line1219">1219: </a>    <font color="#4169E1">for</font> (n = 0; n &lt; mesh-&gt;numNodes; ++n)
+<a name="line1220">1220: </a>      mesh-&gt;vertexMap[n] = PetscBTLookup(vtx, n) ? mesh-&gt;numVerts++ : PETSC_MIN_INT;
+
+<a name="line1222">1222: </a>    PetscBTDestroy(&amp;vtx);
+<a name="line1223">1223: </a>  }
+<a name="line1224">1224: </a>  <font color="#4169E1">return</font>(0);
+<a name="line1225">1225: </a>}
+
+<a name="line1227">1227: </a><strong><font color="#4169E1"><a name="GmshReadPeriodic"></a>static <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> GmshReadPeriodic(GmshFile *gmsh, GmshMesh *mesh)</font></strong>
+<a name="line1228">1228: </a>{
+<a name="line1229">1229: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       n;
+
+<a name="line1233">1233: </a>  <a href="../../../../docs/manualpages/Sys/PetscMalloc1.html#PetscMalloc1">PetscMalloc1</a>(mesh-&gt;numNodes, &amp;mesh-&gt;periodMap);
+<a name="line1234">1234: </a>  <font color="#4169E1">for</font> (n = 0; n &lt; mesh-&gt;numNodes; ++n) mesh-&gt;periodMap[n] = n;
+<a name="line1235">1235: </a>  <font color="#4169E1">switch</font> (gmsh-&gt;fileFormat) {
+<a name="line1236">1236: </a>  <font color="#4169E1">case</font> 41: GmshReadPeriodic_v41(gmsh, mesh-&gt;periodMap); <font color="#4169E1">break</font>;
+<a name="line1237">1237: </a><strong><font color="#FF0000">  default:</font></strong> GmshReadPeriodic_v40(gmsh, mesh-&gt;periodMap); <font color="#4169E1">break</font>;
+<a name="line1238">1238: </a>  }
+
+<a name="line1240">1240: </a>  <font color="#B22222">/* Find canonical master nodes */</font>
+<a name="line1241">1241: </a>  <font color="#4169E1">for</font> (n = 0; n &lt; mesh-&gt;numNodes; ++n)
+<a name="line1242">1242: </a>    <font color="#4169E1">while</font> (mesh-&gt;periodMap[n] != mesh-&gt;periodMap[mesh-&gt;periodMap[n]])
+<a name="line1243">1243: </a>      mesh-&gt;periodMap[n] = mesh-&gt;periodMap[mesh-&gt;periodMap[n]];
+
+<a name="line1245">1245: </a>  <font color="#B22222">/* Renumber vertices (filter out slaves) */</font>
+<a name="line1246">1246: </a>  mesh-&gt;numVerts = 0;
+<a name="line1247">1247: </a>  <font color="#4169E1">for</font> (n = 0; n &lt; mesh-&gt;numNodes; ++n)
+<a name="line1248">1248: </a>    <font color="#4169E1">if</font> (mesh-&gt;vertexMap[n] &gt;= 0)   <font color="#B22222">/* is vertex */</font>
+<a name="line1249">1249: </a>      <font color="#4169E1">if</font> (mesh-&gt;periodMap[n] == n) <font color="#B22222">/* is master */</font>
+<a name="line1250">1250: </a>        mesh-&gt;vertexMap[n] = mesh-&gt;numVerts++;
+<a name="line1251">1251: </a>  <font color="#4169E1">for</font> (n = 0; n &lt; mesh-&gt;numNodes; ++n)
+<a name="line1252">1252: </a>    <font color="#4169E1">if</font> (mesh-&gt;vertexMap[n] &gt;= 0)   <font color="#B22222">/* is vertex */</font>
+<a name="line1253">1253: </a>      <font color="#4169E1">if</font> (mesh-&gt;periodMap[n] != n) <font color="#B22222">/* is slave  */</font>
+<a name="line1254">1254: </a>        mesh-&gt;vertexMap[n] = mesh-&gt;vertexMap[mesh-&gt;periodMap[n]];
+<a name="line1255">1255: </a>  <font color="#4169E1">return</font>(0);
+<a name="line1256">1256: </a>}
+
+<a name="line1258">1258: </a><strong><font color="#228B22">#define DM_POLYTOPE_VERTEX  <a href="../../../../docs/manualpages/DM/DMPolytopeType.html#DMPolytopeType">DM_POLYTOPE_POINT</a></font></strong>
+<a name="line1259">1259: </a><strong><font color="#228B22">#define DM_POLYTOPE_PYRAMID <a href="../../../../docs/manualpages/DM/DMPolytopeType.html#DMPolytopeType">DM_POLYTOPE_UNKNOWN</a></font></strong>
+<a name="line1260">1260: </a>static const <a href="../../../../docs/manualpages/DM/DMPolytopeType.html#DMPolytopeType">DMPolytopeType</a> DMPolytopeMap[] = {
+<a name="line1261">1261: </a>  <font color="#B22222">/* GMSH_VTX */</font> DM_POLYTOPE_VERTEX,
+<a name="line1262">1262: </a>  <font color="#B22222">/* GMSH_SEG */</font> <a href="../../../../docs/manualpages/DM/DMPolytopeType.html#DMPolytopeType">DM_POLYTOPE_SEGMENT</a>,
+<a name="line1263">1263: </a>  <font color="#B22222">/* GMSH_TRI */</font> <a href="../../../../docs/manualpages/DM/DMPolytopeType.html#DMPolytopeType">DM_POLYTOPE_TRIANGLE</a>,
+<a name="line1264">1264: </a>  <font color="#B22222">/* GMSH_QUA */</font> <a href="../../../../docs/manualpages/DM/DMPolytopeType.html#DMPolytopeType">DM_POLYTOPE_QUADRILATERAL</a>,
+<a name="line1265">1265: </a>  <font color="#B22222">/* GMSH_TET */</font> <a href="../../../../docs/manualpages/DM/DMPolytopeType.html#DMPolytopeType">DM_POLYTOPE_TETRAHEDRON</a>,
+<a name="line1266">1266: </a>  <font color="#B22222">/* GMSH_HEX */</font> <a href="../../../../docs/manualpages/DM/DMPolytopeType.html#DMPolytopeType">DM_POLYTOPE_HEXAHEDRON</a>,
+<a name="line1267">1267: </a>  <font color="#B22222">/* GMSH_PRI */</font> <a href="../../../../docs/manualpages/DM/DMPolytopeType.html#DMPolytopeType">DM_POLYTOPE_TRI_PRISM</a>,
+<a name="line1268">1268: </a>  <font color="#B22222">/* GMSH_PYR */</font> DM_POLYTOPE_PYRAMID,
+<a name="line1269">1269: </a>  <a href="../../../../docs/manualpages/DM/DMPolytopeType.html#DMPolytopeType">DM_POLYTOPE_UNKNOWN</a>
+<a name="line1270">1270: </a>};
+
+<a name="line1272">1272: </a><strong><font color="#4169E1"><a name="DMPolytopeTypeFromGmsh"></a>PETSC_STATIC_INLINE <a href="../../../../docs/manualpages/DM/DMPolytopeType.html#DMPolytopeType">DMPolytopeType</a> DMPolytopeTypeFromGmsh(<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> cellType)</font></strong>
+<a name="line1273">1273: </a>{
+<a name="line1274">1274: </a>  <font color="#4169E1">return</font> DMPolytopeMap[GmshCellMap[cellType].polytope];
+<a name="line1275">1275: </a>}
+
+<a name="line1277">1277: </a><strong><font color="#4169E1"><a name="GmshCreateFE"></a>static <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> GmshCreateFE(<a href="../../../../docs/manualpages/Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</a> comm, const char prefix[], <a href="../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> isSimplex, <a href="../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> continuity, <a href="../../../../docs/manualpages/FE/PetscDTNodeType.html#PetscDTNodeType">PetscDTNodeType</a> nodeType, <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> dim, <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> Nc, <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> k, <a href="../../../../docs/manualpages/FE/PetscFE.html#PetscFE">PetscFE</a> *fem)</font></strong>
+<a name="line1278">1278: </a>{
+<a name="line1279">1279: </a>  <a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a>              K;
+<a name="line1280">1280: </a>  <a href="../../../../docs/manualpages/FE/PetscSpace.html#PetscSpace">PetscSpace</a>      P;
+<a name="line1281">1281: </a>  <a href="../../../../docs/manualpages/FE/PetscDualSpace.html#PetscDualSpace">PetscDualSpace</a>  Q;
+<a name="line1282">1282: </a>  <a href="../../../../docs/manualpages/FE/PetscQuadrature.html#PetscQuadrature">PetscQuadrature</a> q, fq;
+<a name="line1283">1283: </a>  <a href="../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>       isTensor = isSimplex ? <a href="../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a> : <a href="../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>;
+<a name="line1284">1284: </a>  <a href="../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>       endpoint = <a href="../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>;
+<a name="line1285">1285: </a>  char            name[32];
+<a name="line1286">1286: </a>  <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  ierr;
+
+<a name="line1289">1289: </a>  <font color="#B22222">/* Create space */</font>
+<a name="line1290">1290: </a>  <a href="../../../../docs/manualpages/SPACE/PetscSpaceCreate.html#PetscSpaceCreate">PetscSpaceCreate</a>(comm, &amp;P);
+<a name="line1291">1291: </a>  <a href="../../../../docs/manualpages/SPACE/PetscSpaceSetType.html#PetscSpaceSetType">PetscSpaceSetType</a>(P, <a href="../../../../docs/manualpages/SPACE/PETSCSPACEPOLYNOMIAL.html#PETSCSPACEPOLYNOMIAL">PETSCSPACEPOLYNOMIAL</a>);
+<a name="line1292">1292: </a>  <a href="../../../../docs/manualpages/SPACE/PetscSpacePolynomialSetTensor.html#PetscSpacePolynomialSetTensor">PetscSpacePolynomialSetTensor</a>(P, isTensor);
+<a name="line1293">1293: </a>  <a href="../../../../docs/manualpages/SPACE/PetscSpaceSetNumComponents.html#PetscSpaceSetNumComponents">PetscSpaceSetNumComponents</a>(P, Nc);
+<a name="line1294">1294: </a>  <a href="../../../../docs/manualpages/SPACE/PetscSpaceSetNumVariables.html#PetscSpaceSetNumVariables">PetscSpaceSetNumVariables</a>(P, dim);
+<a name="line1295">1295: </a>  <a href="../../../../docs/manualpages/SPACE/PetscSpaceSetDegree.html#PetscSpaceSetDegree">PetscSpaceSetDegree</a>(P, k, <a href="../../../../docs/manualpages/Sys/PETSC_DETERMINE.html#PETSC_DETERMINE">PETSC_DETERMINE</a>);
+<a name="line1296">1296: </a>  <font color="#4169E1">if</font> (prefix) {
+<a name="line1297">1297: </a>    <a href="../../../../docs/manualpages/Sys/PetscObjectSetOptionsPrefix.html#PetscObjectSetOptionsPrefix">PetscObjectSetOptionsPrefix</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>) P, prefix);
+<a name="line1298">1298: </a>    <a href="../../../../docs/manualpages/SPACE/PetscSpaceSetFromOptions.html#PetscSpaceSetFromOptions">PetscSpaceSetFromOptions</a>(P);
+<a name="line1299">1299: </a>    <a href="../../../../docs/manualpages/Sys/PetscObjectSetOptionsPrefix.html#PetscObjectSetOptionsPrefix">PetscObjectSetOptionsPrefix</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>) P, NULL);
+<a name="line1300">1300: </a>    <a href="../../../../docs/manualpages/SPACE/PetscSpaceGetDegree.html#PetscSpaceGetDegree">PetscSpaceGetDegree</a>(P, &amp;k, NULL);
+<a name="line1301">1301: </a>  }
+<a name="line1302">1302: </a>  <a href="../../../../docs/manualpages/SPACE/PetscSpaceSetUp.html#PetscSpaceSetUp">PetscSpaceSetUp</a>(P);
+<a name="line1303">1303: </a>  <font color="#B22222">/* Create dual space */</font>
+<a name="line1304">1304: </a>  <a href="../../../../docs/manualpages/DUALSPACE/PetscDualSpaceCreate.html#PetscDualSpaceCreate">PetscDualSpaceCreate</a>(comm, &amp;Q);
+<a name="line1305">1305: </a>  <a href="../../../../docs/manualpages/DUALSPACE/PetscDualSpaceSetType.html#PetscDualSpaceSetType">PetscDualSpaceSetType</a>(Q, <a href="../../../../docs/manualpages/DUALSPACE/PETSCDUALSPACELAGRANGE.html#PETSCDUALSPACELAGRANGE">PETSCDUALSPACELAGRANGE</a>);
+<a name="line1306">1306: </a>  <a href="../../../../docs/manualpages/DUALSPACE/PetscDualSpaceLagrangeSetTensor.html#PetscDualSpaceLagrangeSetTensor">PetscDualSpaceLagrangeSetTensor</a>(Q, isTensor);
+<a name="line1307">1307: </a>  <a href="../../../../docs/manualpages/DUALSPACE/PetscDualSpaceLagrangeSetContinuity.html#PetscDualSpaceLagrangeSetContinuity">PetscDualSpaceLagrangeSetContinuity</a>(Q, continuity);
+<a name="line1308">1308: </a>  <a href="../../../../docs/manualpages/DUALSPACE/PetscDualSpaceLagrangeSetNodeType.html#PetscDualSpaceLagrangeSetNodeType">PetscDualSpaceLagrangeSetNodeType</a>(Q, nodeType, endpoint, 0);
+<a name="line1309">1309: </a>  <a href="../../../../docs/manualpages/DUALSPACE/PetscDualSpaceSetNumComponents.html#PetscDualSpaceSetNumComponents">PetscDualSpaceSetNumComponents</a>(Q, Nc);
+<a name="line1310">1310: </a>  <a href="../../../../docs/manualpages/DUALSPACE/PetscDualSpaceSetOrder.html#PetscDualSpaceSetOrder">PetscDualSpaceSetOrder</a>(Q, k);
+<a name="line1311">1311: </a>  <a href="../../../../docs/manualpages/DUALSPACE/PetscDualSpaceCreateReferenceCell.html#PetscDualSpaceCreateReferenceCell">PetscDualSpaceCreateReferenceCell</a>(Q, dim, isSimplex, &amp;K);
+<a name="line1312">1312: </a>  <a href="../../../../docs/manualpages/DUALSPACE/PetscDualSpaceSetDM.html#PetscDualSpaceSetDM">PetscDualSpaceSetDM</a>(Q, K);
+<a name="line1313">1313: </a>  <a href="../../../../docs/manualpages/DM/DMDestroy.html#DMDestroy">DMDestroy</a>(&amp;K);
+<a name="line1314">1314: </a>  <font color="#4169E1">if</font> (prefix) {
+<a name="line1315">1315: </a>    <a href="../../../../docs/manualpages/Sys/PetscObjectSetOptionsPrefix.html#PetscObjectSetOptionsPrefix">PetscObjectSetOptionsPrefix</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>) Q, prefix);
+<a name="line1316">1316: </a>    <a href="../../../../docs/manualpages/DUALSPACE/PetscDualSpaceSetFromOptions.html#PetscDualSpaceSetFromOptions">PetscDualSpaceSetFromOptions</a>(Q);
+<a name="line1317">1317: </a>    <a href="../../../../docs/manualpages/Sys/PetscObjectSetOptionsPrefix.html#PetscObjectSetOptionsPrefix">PetscObjectSetOptionsPrefix</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>) Q, NULL);
+<a name="line1318">1318: </a>  }
+<a name="line1319">1319: </a>  <a href="../../../../docs/manualpages/DUALSPACE/PetscDualSpaceSetUp.html#PetscDualSpaceSetUp">PetscDualSpaceSetUp</a>(Q);
+<a name="line1320">1320: </a>  <font color="#B22222">/* Create quadrature */</font>
+<a name="line1321">1321: </a>  <font color="#4169E1">if</font> (isSimplex) {
+<a name="line1322">1322: </a>    <a href="../../../../docs/manualpages/DT/PetscDTStroudConicalQuadrature.html#PetscDTStroudConicalQuadrature">PetscDTStroudConicalQuadrature</a>(dim,   1, k+1, -1, +1, &amp;q);
+<a name="line1323">1323: </a>    <a href="../../../../docs/manualpages/DT/PetscDTStroudConicalQuadrature.html#PetscDTStroudConicalQuadrature">PetscDTStroudConicalQuadrature</a>(dim-1, 1, k+1, -1, +1, &amp;fq);
+<a name="line1324">1324: </a>  } <font color="#4169E1">else</font> {
+<a name="line1325">1325: </a>    <a href="../../../../docs/manualpages/DT/PetscDTGaussTensorQuadrature.html#PetscDTGaussTensorQuadrature">PetscDTGaussTensorQuadrature</a>(dim,   1, k+1, -1, +1, &amp;q);
+<a name="line1326">1326: </a>    <a href="../../../../docs/manualpages/DT/PetscDTGaussTensorQuadrature.html#PetscDTGaussTensorQuadrature">PetscDTGaussTensorQuadrature</a>(dim-1, 1, k+1, -1, +1, &amp;fq);
+<a name="line1327">1327: </a>  }
+<a name="line1328">1328: </a>  <font color="#B22222">/* Create finite element */</font>
+<a name="line1329">1329: </a>  <a href="../../../../docs/manualpages/FE/PetscFECreate.html#PetscFECreate">PetscFECreate</a>(comm, fem);
+<a name="line1330">1330: </a>  <a href="../../../../docs/manualpages/FE/PetscFESetType.html#PetscFESetType">PetscFESetType</a>(*fem, <a href="../../../../docs/manualpages/FE/PETSCFEBASIC.html#PETSCFEBASIC">PETSCFEBASIC</a>);
+<a name="line1331">1331: </a>  <a href="../../../../docs/manualpages/FE/PetscFESetNumComponents.html#PetscFESetNumComponents">PetscFESetNumComponents</a>(*fem, Nc);
+<a name="line1332">1332: </a>  <a href="../../../../docs/manualpages/FE/PetscFESetBasisSpace.html#PetscFESetBasisSpace">PetscFESetBasisSpace</a>(*fem, P);
+<a name="line1333">1333: </a>  <a href="../../../../docs/manualpages/FE/PetscFESetDualSpace.html#PetscFESetDualSpace">PetscFESetDualSpace</a>(*fem, Q);
+<a name="line1334">1334: </a>  <a href="../../../../docs/manualpages/FE/PetscFESetQuadrature.html#PetscFESetQuadrature">PetscFESetQuadrature</a>(*fem, q);
+<a name="line1335">1335: </a>  <a href="../../../../docs/manualpages/FE/PetscFESetFaceQuadrature.html#PetscFESetFaceQuadrature">PetscFESetFaceQuadrature</a>(*fem, fq);
+<a name="line1336">1336: </a>  <font color="#4169E1">if</font> (prefix) {
+<a name="line1337">1337: </a>    <a href="../../../../docs/manualpages/Sys/PetscObjectSetOptionsPrefix.html#PetscObjectSetOptionsPrefix">PetscObjectSetOptionsPrefix</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>) *fem, prefix);
+<a name="line1338">1338: </a>    <a href="../../../../docs/manualpages/FE/PetscFESetFromOptions.html#PetscFESetFromOptions">PetscFESetFromOptions</a>(*fem);
+<a name="line1339">1339: </a>    <a href="../../../../docs/manualpages/Sys/PetscObjectSetOptionsPrefix.html#PetscObjectSetOptionsPrefix">PetscObjectSetOptionsPrefix</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>) *fem, NULL);
+<a name="line1340">1340: </a>  }
+<a name="line1341">1341: </a>  <a href="../../../../docs/manualpages/FE/PetscFESetUp.html#PetscFESetUp">PetscFESetUp</a>(*fem);
+<a name="line1342">1342: </a>  <font color="#B22222">/* Cleanup */</font>
+<a name="line1343">1343: </a>  <a href="../../../../docs/manualpages/SPACE/PetscSpaceDestroy.html#PetscSpaceDestroy">PetscSpaceDestroy</a>(&amp;P);
+<a name="line1344">1344: </a>  <a href="../../../../docs/manualpages/DUALSPACE/PetscDualSpaceDestroy.html#PetscDualSpaceDestroy">PetscDualSpaceDestroy</a>(&amp;Q);
+<a name="line1345">1345: </a>  <a href="../../../../docs/manualpages/DT/PetscQuadratureDestroy.html#PetscQuadratureDestroy">PetscQuadratureDestroy</a>(&amp;q);
+<a name="line1346">1346: </a>  <a href="../../../../docs/manualpages/DT/PetscQuadratureDestroy.html#PetscQuadratureDestroy">PetscQuadratureDestroy</a>(&amp;fq);
+<a name="line1347">1347: </a>  <font color="#B22222">/* Set finite element name */</font>
+<a name="line1348">1348: </a>  <a href="../../../../docs/manualpages/Sys/PetscSNPrintf.html#PetscSNPrintf">PetscSNPrintf</a>(name, <font color="#4169E1">sizeof</font>(name), <font color="#666666">"%s%D"</font>, isSimplex? <font color="#666666">"P"</font> : <font color="#666666">"Q"</font>, k);
+<a name="line1349">1349: </a>  <a href="../../../../docs/manualpages/FE/PetscFESetName.html#PetscFESetName">PetscFESetName</a>(*fem, name);
+<a name="line1350">1350: </a>  <font color="#4169E1">return</font>(0);
+<a name="line1351">1351: </a>}
+
+<a name="line1353">1353: </a><font color="#B22222">/*@C</font>
+<a name="line1354">1354: </a><font color="#B22222">  <a href="../../../../docs/manualpages/DMPLEX/DMPlexCreateGmshFromFile.html#DMPlexCreateGmshFromFile">DMPlexCreateGmshFromFile</a> - Create a DMPlex mesh from a Gmsh file</font>
+
+<a name="line1356">1356: </a><font color="#B22222">+ comm        - The MPI communicator</font>
+<a name="line1357">1357: </a><font color="#B22222">. filename    - Name of the Gmsh file</font>
+<a name="line1358">1358: </a><font color="#B22222">- interpolate - Create faces and edges in the mesh</font>
+
+<a name="line1360">1360: </a><font color="#B22222">  Output Parameter:</font>
+<a name="line1361">1361: </a><font color="#B22222">. dm  - The <a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> object representing the mesh</font>
+
+<a name="line1363">1363: </a><font color="#B22222">  Level: beginner</font>
+
+<a name="line1365">1365: </a><font color="#B22222">.seealso: <a href="../../../../docs/manualpages/DMPLEX/DMPlexCreateFromFile.html#DMPlexCreateFromFile">DMPlexCreateFromFile</a>(), <a href="../../../../docs/manualpages/DMPLEX/DMPlexCreateGmsh.html#DMPlexCreateGmsh">DMPlexCreateGmsh</a>(), <a href="../../../../docs/manualpages/DMPLEX/DMPlexCreate.html#DMPlexCreate">DMPlexCreate</a>()</font>
+<a name="line1366">1366: </a><font color="#B22222">@*/</font>
+<a name="line1367">1367: </a><strong><font color="#4169E1"><a name="DMPlexCreateGmshFromFile"></a><a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../../docs/manualpages/DMPLEX/DMPlexCreateGmshFromFile.html#DMPlexCreateGmshFromFile">DMPlexCreateGmshFromFile</a>(<a href="../../../../docs/manualpages/Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</a> comm, const char filename[], <a href="../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> interpolate, <a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> *dm)</font></strong>
+<a name="line1368">1368: </a>{
+<a name="line1369">1369: </a>  <a href="../../../../docs/manualpages/Viewer/PetscViewer.html#PetscViewer">PetscViewer</a>     viewer;
+<a name="line1370">1370: </a>  <a href="../../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a>     rank;
+<a name="line1371">1371: </a>  int             fileType;
+<a name="line1372">1372: </a>  <a href="../../../../docs/manualpages/Viewer/PetscViewerType.html#PetscViewerType">PetscViewerType</a> vtype;
+<a name="line1373">1373: </a>  <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  ierr;
+
+<a name="line1376">1376: </a>  <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_rank.html#MPI_Comm_rank">MPI_Comm_rank</a>(comm, &amp;rank);
+
+<a name="line1378">1378: </a>  <font color="#B22222">/* Determine Gmsh file type (ASCII or binary) from file header */</font>
+<a name="line1379">1379: </a>  <font color="#4169E1">if</font> (!rank) {
+<a name="line1380">1380: </a>    GmshFile    gmsh[1];
+<a name="line1381">1381: </a>    char        line[PETSC_MAX_PATH_LEN];
+<a name="line1382">1382: </a>    int         snum;
+<a name="line1383">1383: </a>    float       version;
+
+<a name="line1385">1385: </a>    <a href="../../../../docs/manualpages/Sys/PetscArrayzero.html#PetscArrayzero">PetscArrayzero</a>(gmsh,1);
+<a name="line1386">1386: </a>    <a href="../../../../docs/manualpages/Viewer/PetscViewerCreate.html#PetscViewerCreate">PetscViewerCreate</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, &amp;gmsh-&gt;viewer);
+<a name="line1387">1387: </a>    <a href="../../../../docs/manualpages/Viewer/PetscViewerSetType.html#PetscViewerSetType">PetscViewerSetType</a>(gmsh-&gt;viewer, <a href="../../../../docs/manualpages/Viewer/PETSCVIEWERASCII.html#PETSCVIEWERASCII">PETSCVIEWERASCII</a>);
+<a name="line1388">1388: </a>    <a href="../../../../docs/manualpages/Viewer/PetscViewerFileSetMode.html#PetscViewerFileSetMode">PetscViewerFileSetMode</a>(gmsh-&gt;viewer, <a href="../../../../docs/manualpages/Sys/PetscFileMode.html#PetscFileMode">FILE_MODE_READ</a>);
+<a name="line1389">1389: </a>    <a href="../../../../docs/manualpages/Viewer/PetscViewerFileSetName.html#PetscViewerFileSetName">PetscViewerFileSetName</a>(gmsh-&gt;viewer, filename);
+<a name="line1390">1390: </a>    <font color="#B22222">/* Read only the first two lines of the Gmsh file */</font>
+<a name="line1391">1391: </a>    GmshReadSection(gmsh, line);
+<a name="line1392">1392: </a>    GmshExpect(gmsh, <font color="#666666">"$MeshFormat"</font>, line);
+<a name="line1393">1393: </a>    GmshReadString(gmsh, line, 2);
+<a name="line1394">1394: </a>    snum = sscanf(line, <font color="#666666">"%f %d"</font>, &amp;version, &amp;fileType);
+<a name="line1395">1395: </a>    <font color="#4169E1">if</font> (snum != 2) <a href="../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, PETSC_ERR_FILE_UNEXPECTED, <font color="#666666">"Unable to parse Gmsh file header: %s"</font>, line);
+<a name="line1396">1396: </a>    <font color="#4169E1">if</font> (version &lt; 2.2) <a href="../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, PETSC_ERR_SUP, <font color="#666666">"Gmsh file version %3.1f must be at least 2.2"</font>, (double)version);
+<a name="line1397">1397: </a>    <font color="#4169E1">if</font> ((int)version == 3) <a href="../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, PETSC_ERR_SUP, <font color="#666666">"Gmsh file version %3.1f not supported"</font>, (double)version);
+<a name="line1398">1398: </a>    <font color="#4169E1">if</font> (version &gt; 4.1) <a href="../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, PETSC_ERR_SUP, <font color="#666666">"Gmsh file version %3.1f must be at most 4.1"</font>, (double)version);
+<a name="line1399">1399: </a>    <a href="../../../../docs/manualpages/Viewer/PetscViewerDestroy.html#PetscViewerDestroy">PetscViewerDestroy</a>(&amp;gmsh-&gt;viewer);
+<a name="line1400">1400: </a>  }
+<a name="line1401">1401: </a>  <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Bcast.html#MPI_Bcast">MPI_Bcast</a>(&amp;fileType, 1, MPI_INT, 0, comm);
+<a name="line1402">1402: </a>  vtype = (fileType == 0) ? <a href="../../../../docs/manualpages/Viewer/PETSCVIEWERASCII.html#PETSCVIEWERASCII">PETSCVIEWERASCII</a> : <a href="../../../../docs/manualpages/Viewer/PETSCVIEWERBINARY.html#PETSCVIEWERBINARY">PETSCVIEWERBINARY</a>;
+
+<a name="line1404">1404: </a>  <font color="#B22222">/* Create appropriate viewer and build plex */</font>
+<a name="line1405">1405: </a>  <a href="../../../../docs/manualpages/Viewer/PetscViewerCreate.html#PetscViewerCreate">PetscViewerCreate</a>(comm, &amp;viewer);
+<a name="line1406">1406: </a>  <a href="../../../../docs/manualpages/Viewer/PetscViewerSetType.html#PetscViewerSetType">PetscViewerSetType</a>(viewer, vtype);
+<a name="line1407">1407: </a>  <a href="../../../../docs/manualpages/Viewer/PetscViewerFileSetMode.html#PetscViewerFileSetMode">PetscViewerFileSetMode</a>(viewer, <a href="../../../../docs/manualpages/Sys/PetscFileMode.html#PetscFileMode">FILE_MODE_READ</a>);
+<a name="line1408">1408: </a>  <a href="../../../../docs/manualpages/Viewer/PetscViewerFileSetName.html#PetscViewerFileSetName">PetscViewerFileSetName</a>(viewer, filename);
+<a name="line1409">1409: </a>  <a href="../../../../docs/manualpages/DMPLEX/DMPlexCreateGmsh.html#DMPlexCreateGmsh">DMPlexCreateGmsh</a>(comm, viewer, interpolate, dm);
+<a name="line1410">1410: </a>  <a href="../../../../docs/manualpages/Viewer/PetscViewerDestroy.html#PetscViewerDestroy">PetscViewerDestroy</a>(&amp;viewer);
+<a name="line1411">1411: </a>  <font color="#4169E1">return</font>(0);
+<a name="line1412">1412: </a>}
+
+<a name="line1414">1414: </a><font color="#B22222">/*@</font>
+<a name="line1415">1415: </a><font color="#B22222">  <a href="../../../../docs/manualpages/DMPLEX/DMPlexCreateGmsh.html#DMPlexCreateGmsh">DMPlexCreateGmsh</a> - Create a DMPlex mesh from a Gmsh file viewer</font>
+
+<a name="line1417">1417: </a><font color="#B22222">  Collective</font>
+
+<a name="line1419">1419: </a><font color="#B22222">  Input Parameters:</font>
+<a name="line1420">1420: </a><font color="#B22222">+ comm  - The MPI communicator</font>
+<a name="line1421">1421: </a><font color="#B22222">. viewer - The Viewer associated with a Gmsh file</font>
+<a name="line1422">1422: </a><font color="#B22222">- interpolate - Create faces and edges in the mesh</font>
+
+<a name="line1424">1424: </a><font color="#B22222">  Output Parameter:</font>
+<a name="line1425">1425: </a><font color="#B22222">. dm  - The <a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> object representing the mesh</font>
+
+<a name="line1427">1427: </a><font color="#B22222">  Note: http://gmsh.info/doc/texinfo/gmsh.html#MSH-file-format</font>
+
+<a name="line1429">1429: </a><font color="#B22222">  Level: beginner</font>
+
+<a name="line1431">1431: </a><font color="#B22222">.seealso: <a href="../../../../docs/manualpages/DMPLEX/DMPLEX.html#DMPLEX">DMPLEX</a>, <a href="../../../../docs/manualpages/DM/DMCreate.html#DMCreate">DMCreate</a>()</font>
+<a name="line1432">1432: </a><font color="#B22222">@*/</font>
+<a name="line1433">1433: </a><strong><font color="#4169E1"><a name="DMPlexCreateGmsh"></a><a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../../docs/manualpages/DMPLEX/DMPlexCreateGmsh.html#DMPlexCreateGmsh">DMPlexCreateGmsh</a>(<a href="../../../../docs/manualpages/Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</a> comm, <a href="../../../../docs/manualpages/Viewer/PetscViewer.html#PetscViewer">PetscViewer</a> viewer, <a href="../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> interpolate, <a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> *dm)</font></strong>
+<a name="line1434">1434: </a>{
+<a name="line1435">1435: </a>  GmshMesh      *mesh = NULL;
+<a name="line1436">1436: </a>  <a href="../../../../docs/manualpages/Viewer/PetscViewer.html#PetscViewer">PetscViewer</a>    parentviewer = NULL;
+<a name="line1437">1437: </a>  <a href="../../../../docs/manualpages/Sys/PetscBT.html#PetscBT">PetscBT</a>        periodicVerts = NULL;
+<a name="line1438">1438: </a>  <a href="../../../../docs/manualpages/Sys/PetscBT.html#PetscBT">PetscBT</a>        periodicCells = NULL;
+<a name="line1439">1439: </a>  <a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a>             cdm;
+<a name="line1440">1440: </a>  <a href="../../../../docs/manualpages/PetscSection/PetscSection.html#PetscSection">PetscSection</a>   coordSection;
+<a name="line1441">1441: </a>  <a href="../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a>            coordinates;
+<a name="line1442">1442: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       dim = 0, coordDim = -1, order = 0;
+<a name="line1443">1443: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       numNodes = 0, numElems = 0, numVerts = 0, numCells = 0;
+<a name="line1444">1444: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       cell, cone[8], e, n, v, d;
+<a name="line1445">1445: </a>  <a href="../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>      binary, usemarker = <a href="../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line1446">1446: </a>  <a href="../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>      hybrid = interpolate, periodic = <a href="../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>;
+<a name="line1447">1447: </a>  <a href="../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>      highOrder = <a href="../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>, highOrderSet, project = <a href="../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line1448">1448: </a>  <a href="../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>      isSimplex = <a href="../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>, isHybrid = <a href="../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>, hasTetra = <a href="../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line1449">1449: </a>  <a href="../../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a>    rank;
+
+<a name="line1453">1453: </a>  <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_rank.html#MPI_Comm_rank">MPI_Comm_rank</a>(comm, &amp;rank);
+<a name="line1454">1454: </a>  <a href="../../../../docs/manualpages/Sys/PetscObjectOptionsBegin.html#PetscObjectOptionsBegin">PetscObjectOptionsBegin</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)viewer);
+<a name="line1455">1455: </a>  <a href="../../../../docs/manualpages/Sys/PetscOptionsHead.html#PetscOptionsHead">PetscOptionsHead</a>(PetscOptionsObject,<font color="#666666">"DMPlex Gmsh options"</font>);
+<a name="line1456">1456: </a>  <a href="../../../../docs/manualpages/Sys/PetscOptionsBool.html#PetscOptionsBool">PetscOptionsBool</a>(<font color="#666666">"-dm_plex_gmsh_hybrid"</font>, <font color="#666666">"Generate hybrid cell bounds"</font>, <font color="#666666">"<a href="../../../../docs/manualpages/DMPLEX/DMPlexCreateGmsh.html#DMPlexCreateGmsh">DMPlexCreateGmsh</a>"</font>, hybrid, &amp;hybrid, NULL);
+<a name="line1457">1457: </a>  <a href="../../../../docs/manualpages/Sys/PetscOptionsBool.html#PetscOptionsBool">PetscOptionsBool</a>(<font color="#666666">"-dm_plex_gmsh_periodic"</font>,<font color="#666666">"Read Gmsh periodic section"</font>, <font color="#666666">"<a href="../../../../docs/manualpages/DMPLEX/DMPlexCreateGmsh.html#DMPlexCreateGmsh">DMPlexCreateGmsh</a>"</font>, periodic, &amp;periodic, NULL);
+<a name="line1458">1458: </a>  <a href="../../../../docs/manualpages/Sys/PetscOptionsBool.html#PetscOptionsBool">PetscOptionsBool</a>(<font color="#666666">"-dm_plex_gmsh_highorder"</font>,<font color="#666666">"Generate high-order coordinates"</font>, <font color="#666666">"<a href="../../../../docs/manualpages/DMPLEX/DMPlexCreateGmsh.html#DMPlexCreateGmsh">DMPlexCreateGmsh</a>"</font>, highOrder, &amp;highOrder, &amp;highOrderSet);
+<a name="line1459">1459: </a>  <a href="../../../../docs/manualpages/Sys/PetscOptionsBool.html#PetscOptionsBool">PetscOptionsBool</a>(<font color="#666666">"-dm_plex_gmsh_project"</font>, <font color="#666666">"Project high-order coordinates to a different space"</font>, <font color="#666666">"<a href="../../../../docs/manualpages/DMPLEX/DMPlexCreateGmsh.html#DMPlexCreateGmsh">DMPlexCreateGmsh</a>"</font>, project, &amp;project, NULL);
+<a name="line1460">1460: </a>  <a href="../../../../docs/manualpages/Sys/PetscOptionsBool.html#PetscOptionsBool">PetscOptionsBool</a>(<font color="#666666">"-dm_plex_gmsh_use_marker"</font>, <font color="#666666">"Generate marker label"</font>, <font color="#666666">"<a href="../../../../docs/manualpages/DMPLEX/DMPlexCreateGmsh.html#DMPlexCreateGmsh">DMPlexCreateGmsh</a>"</font>, usemarker, &amp;usemarker, NULL);
+<a name="line1461">1461: </a>  <a href="../../../../docs/manualpages/Sys/PetscOptionsBoundedInt.html#PetscOptionsBoundedInt">PetscOptionsBoundedInt</a>(<font color="#666666">"-dm_plex_gmsh_spacedim"</font>, <font color="#666666">"Embedding space dimension"</font>, <font color="#666666">"<a href="../../../../docs/manualpages/DMPLEX/DMPlexCreateGmsh.html#DMPlexCreateGmsh">DMPlexCreateGmsh</a>"</font>, coordDim, &amp;coordDim, NULL, <a href="../../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a>);
+<a name="line1462">1462: </a>  <a href="../../../../docs/manualpages/Sys/PetscOptionsTail.html#PetscOptionsTail">PetscOptionsTail</a>();
+<a name="line1463">1463: </a>  <a href="../../../../docs/manualpages/Sys/PetscOptionsEnd.html#PetscOptionsEnd">PetscOptionsEnd</a>();
+
+<a name="line1465">1465: </a>  GmshCellInfoSetUp();
+
+<a name="line1467">1467: </a>  <a href="../../../../docs/manualpages/DM/DMCreate.html#DMCreate">DMCreate</a>(comm, dm);
+<a name="line1468">1468: </a>  <a href="../../../../docs/manualpages/DM/DMSetType.html#DMSetType">DMSetType</a>(*dm, <a href="../../../../docs/manualpages/DMPLEX/DMPLEX.html#DMPLEX">DMPLEX</a>);
+<a name="line1469">1469: </a>  <a href="../../../../docs/manualpages/Profiling/PetscLogEventBegin.html#PetscLogEventBegin">PetscLogEventBegin</a>(DMPLEX_CreateGmsh,*dm,NULL,NULL,NULL);
+
+<a name="line1471">1471: </a>  <a href="../../../../docs/manualpages/Sys/PetscObjectTypeCompare.html#PetscObjectTypeCompare">PetscObjectTypeCompare</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)viewer, <a href="../../../../docs/manualpages/Viewer/PETSCVIEWERBINARY.html#PETSCVIEWERBINARY">PETSCVIEWERBINARY</a>, &amp;binary);
+
+<a name="line1473">1473: </a>  <font color="#B22222">/* Binary viewers read on all ranks, get subviewer to read only in rank 0 */</font>
+<a name="line1474">1474: </a>  <font color="#4169E1">if</font> (binary) {
+<a name="line1475">1475: </a>    parentviewer = viewer;
+<a name="line1476">1476: </a>    <a href="../../../../docs/manualpages/Viewer/PetscViewerGetSubViewer.html#PetscViewerGetSubViewer">PetscViewerGetSubViewer</a>(parentviewer, <a href="../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, &amp;viewer);
+<a name="line1477">1477: </a>  }
+
+<a name="line1479">1479: </a>  <font color="#4169E1">if</font> (!rank) {
+<a name="line1480">1480: </a>    GmshFile  gmsh[1];
+<a name="line1481">1481: </a>    char      line[PETSC_MAX_PATH_LEN];
+<a name="line1482">1482: </a>    <a href="../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> match;
+
+<a name="line1484">1484: </a>    <a href="../../../../docs/manualpages/Sys/PetscArrayzero.html#PetscArrayzero">PetscArrayzero</a>(gmsh,1);
+<a name="line1485">1485: </a>    gmsh-&gt;viewer = viewer;
+<a name="line1486">1486: </a>    gmsh-&gt;binary = binary;
+
+<a name="line1488">1488: </a>    GmshMeshCreate(&amp;mesh);
+
+<a name="line1490">1490: </a>    <font color="#B22222">/* Read mesh format */</font>
+<a name="line1491">1491: </a>    GmshReadSection(gmsh, line);
+<a name="line1492">1492: </a>    GmshExpect(gmsh, <font color="#666666">"$MeshFormat"</font>, line);
+<a name="line1493">1493: </a>    GmshReadMeshFormat(gmsh);
+<a name="line1494">1494: </a>    GmshReadEndSection(gmsh, <font color="#666666">"$EndMeshFormat"</font>, line);
+
+<a name="line1496">1496: </a>    <font color="#B22222">/* OPTIONAL Read physical names */</font>
+<a name="line1497">1497: </a>    GmshReadSection(gmsh, line);
+<a name="line1498">1498: </a>    GmshMatch(gmsh, <font color="#666666">"$PhysicalNames"</font>, line, &amp;match);
+<a name="line1499">1499: </a>    <font color="#4169E1">if</font> (match) {
+<a name="line1500">1500: </a>      GmshExpect(gmsh, <font color="#666666">"$PhysicalNames"</font>, line);
+<a name="line1501">1501: </a>      GmshReadPhysicalNames(gmsh);
+<a name="line1502">1502: </a>      GmshReadEndSection(gmsh, <font color="#666666">"$EndPhysicalNames"</font>, line);
+<a name="line1503">1503: </a>      <font color="#B22222">/* Initial read for entity section */</font>
+<a name="line1504">1504: </a>      GmshReadSection(gmsh, line);
+<a name="line1505">1505: </a>    }
+
+<a name="line1507">1507: </a>    <font color="#B22222">/* Read entities */</font>
+<a name="line1508">1508: </a>    <font color="#4169E1">if</font> (gmsh-&gt;fileFormat &gt;= 40) {
+<a name="line1509">1509: </a>      GmshExpect(gmsh, <font color="#666666">"$Entities"</font>, line);
+<a name="line1510">1510: </a>      GmshReadEntities(gmsh, mesh);
+<a name="line1511">1511: </a>      GmshReadEndSection(gmsh, <font color="#666666">"$EndEntities"</font>, line);
+<a name="line1512">1512: </a>      <font color="#B22222">/* Initial read for nodes section */</font>
+<a name="line1513">1513: </a>      GmshReadSection(gmsh, line);
+<a name="line1514">1514: </a>    }
+
+<a name="line1516">1516: </a>    <font color="#B22222">/* Read nodes */</font>
+<a name="line1517">1517: </a>    GmshExpect(gmsh, <font color="#666666">"$Nodes"</font>, line);
+<a name="line1518">1518: </a>    GmshReadNodes(gmsh, mesh);
+<a name="line1519">1519: </a>    GmshReadEndSection(gmsh, <font color="#666666">"$EndNodes"</font>, line);
+
+<a name="line1521">1521: </a>    <font color="#B22222">/* Read elements */</font>
+<a name="line1522">1522: </a>    GmshReadSection(gmsh, line);
+<a name="line1523">1523: </a>    GmshExpect(gmsh, <font color="#666666">"$Elements"</font>, line);
+<a name="line1524">1524: </a>    GmshReadElements(gmsh, mesh);
+<a name="line1525">1525: </a>    GmshReadEndSection(gmsh, <font color="#666666">"$EndElements"</font>, line);
+
+<a name="line1527">1527: </a>    <font color="#B22222">/* Read periodic section (OPTIONAL) */</font>
+<a name="line1528">1528: </a>    <font color="#4169E1">if</font> (periodic) {
+<a name="line1529">1529: </a>      GmshReadSection(gmsh, line);
+<a name="line1530">1530: </a>      GmshMatch(gmsh, <font color="#666666">"$Periodic"</font>, line, &amp;periodic);
+<a name="line1531">1531: </a>    }
+<a name="line1532">1532: </a>    <font color="#4169E1">if</font> (periodic) {
+<a name="line1533">1533: </a>      GmshExpect(gmsh, <font color="#666666">"$Periodic"</font>, line);
+<a name="line1534">1534: </a>      GmshReadPeriodic(gmsh, mesh);
+<a name="line1535">1535: </a>      GmshReadEndSection(gmsh, <font color="#666666">"$EndPeriodic"</font>, line);
+<a name="line1536">1536: </a>    }
+
+<a name="line1538">1538: </a>    <a href="../../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(gmsh-&gt;wbuf);
+<a name="line1539">1539: </a>    <a href="../../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(gmsh-&gt;sbuf);
+<a name="line1540">1540: </a>    <a href="../../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(gmsh-&gt;nbuf);
+
+<a name="line1542">1542: </a>    dim       = mesh-&gt;dim;
+<a name="line1543">1543: </a>    order     = mesh-&gt;order;
+<a name="line1544">1544: </a>    numNodes  = mesh-&gt;numNodes;
+<a name="line1545">1545: </a>    numElems  = mesh-&gt;numElems;
+<a name="line1546">1546: </a>    numVerts  = mesh-&gt;numVerts;
+<a name="line1547">1547: </a>    numCells  = mesh-&gt;numCells;
+
+<a name="line1549">1549: </a>    {
+<a name="line1550">1550: </a>      GmshElement *elemA = mesh-&gt;numCells &gt; 0 ? mesh-&gt;elements : NULL;
+<a name="line1551">1551: </a>      GmshElement *elemB = elemA ? elemA + mesh-&gt;numCells - 1  : NULL;
+<a name="line1552">1552: </a>      int ptA = elemA ? GmshCellMap[elemA-&gt;cellType].polytope : -1;
+<a name="line1553">1553: </a>      int ptB = elemB ? GmshCellMap[elemB-&gt;cellType].polytope : -1;
+<a name="line1554">1554: </a>      isSimplex = (ptA == GMSH_QUA || ptA == GMSH_HEX) ? <a href="../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a> : <a href="../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>;
+<a name="line1555">1555: </a>      isHybrid  = (ptA == ptB) ? <a href="../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a> : <a href="../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>;
+<a name="line1556">1556: </a>      hasTetra  = (ptA == GMSH_TET) ? <a href="../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a> : <a href="../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line1557">1557: </a>    }
+<a name="line1558">1558: </a>  }
+
+<a name="line1560">1560: </a>  <font color="#4169E1">if</font> (parentviewer) {
+<a name="line1561">1561: </a>    <a href="../../../../docs/manualpages/Viewer/PetscViewerRestoreSubViewer.html#PetscViewerRestoreSubViewer">PetscViewerRestoreSubViewer</a>(parentviewer, <a href="../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, &amp;viewer);
+<a name="line1562">1562: </a>  }
+
+<a name="line1564">1564: </a>  {
+<a name="line1565">1565: </a>    int buf[6];
+
+<a name="line1567">1567: </a>    buf[0] = (int)dim;
+<a name="line1568">1568: </a>    buf[1] = (int)order;
+<a name="line1569">1569: </a>    buf[2] = periodic;
+<a name="line1570">1570: </a>    buf[3] = isSimplex;
+<a name="line1571">1571: </a>    buf[4] = isHybrid;
+<a name="line1572">1572: </a>    buf[5] = hasTetra;
+
+<a name="line1574">1574: </a>    <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Bcast.html#MPI_Bcast">MPI_Bcast</a>(buf, 6, MPI_INT, 0, comm);
+
+<a name="line1576">1576: </a>    dim       = buf[0];
+<a name="line1577">1577: </a>    order     = buf[1];
+<a name="line1578">1578: </a>    periodic  = buf[2] ? <a href="../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a> : <a href="../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line1579">1579: </a>    isSimplex = buf[3] ? <a href="../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a> : <a href="../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line1580">1580: </a>    isHybrid  = buf[4] ? <a href="../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a> : <a href="../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line1581">1581: </a>    hasTetra  = buf[5] ? <a href="../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a> : <a href="../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line1582">1582: </a>  }
+
+<a name="line1584">1584: </a>  <font color="#4169E1">if</font> (!highOrderSet) highOrder = (order &gt; 1) ? <a href="../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a> : <a href="../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line1585">1585: </a>  <font color="#4169E1">if</font> (highOrder &amp;&amp; isHybrid) <a href="../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(comm, PETSC_ERR_SUP, <font color="#666666">"No support for discretization on hybrid meshes yet"</font>);
+
+<a name="line1587">1587: </a>  <font color="#B22222">/* We do not want this label automatically computed, instead we fill it here */</font>
+<a name="line1588">1588: </a>  <a href="../../../../docs/manualpages/DM/DMCreateLabel.html#DMCreateLabel">DMCreateLabel</a>(*dm, <font color="#666666">"celltype"</font>);
+
+<a name="line1590">1590: </a>  <font color="#B22222">/* Allocate the cell-vertex mesh */</font>
+<a name="line1591">1591: </a>  <a href="../../../../docs/manualpages/DMPLEX/DMPlexSetChart.html#DMPlexSetChart">DMPlexSetChart</a>(*dm, 0, numCells+numVerts);
+<a name="line1592">1592: </a>  <font color="#4169E1">for</font> (cell = 0; cell &lt; numCells; ++cell) {
+<a name="line1593">1593: </a>    GmshElement *elem = mesh-&gt;elements + cell;
+<a name="line1594">1594: </a>    <a href="../../../../docs/manualpages/DM/DMPolytopeType.html#DMPolytopeType">DMPolytopeType</a> ctype = DMPolytopeTypeFromGmsh(elem-&gt;cellType);
+<a name="line1595">1595: </a>    <font color="#4169E1">if</font> (hybrid &amp;&amp; hasTetra &amp;&amp; ctype == <a href="../../../../docs/manualpages/DM/DMPolytopeType.html#DMPolytopeType">DM_POLYTOPE_TRI_PRISM</a>) ctype = <a href="../../../../docs/manualpages/DM/DMPolytopeType.html#DMPolytopeType">DM_POLYTOPE_TRI_PRISM_TENSOR</a>;
+<a name="line1596">1596: </a>    <a href="../../../../docs/manualpages/DMPLEX/DMPlexSetConeSize.html#DMPlexSetConeSize">DMPlexSetConeSize</a>(*dm, cell, elem-&gt;numVerts);
+<a name="line1597">1597: </a>    <a href="../../../../docs/manualpages/DMPLEX/DMPlexSetCellType.html#DMPlexSetCellType">DMPlexSetCellType</a>(*dm, cell, ctype);
+<a name="line1598">1598: </a>  }
+<a name="line1599">1599: </a>  <font color="#4169E1">for</font> (v = numCells; v &lt; numCells+numVerts; ++v) {
+<a name="line1600">1600: </a>    <a href="../../../../docs/manualpages/DMPLEX/DMPlexSetCellType.html#DMPlexSetCellType">DMPlexSetCellType</a>(*dm, v, <a href="../../../../docs/manualpages/DM/DMPolytopeType.html#DMPolytopeType">DM_POLYTOPE_POINT</a>);
+<a name="line1601">1601: </a>  }
+<a name="line1602">1602: </a>  <a href="../../../../docs/manualpages/DM/DMSetUp.html#DMSetUp">DMSetUp</a>(*dm);
+
+<a name="line1604">1604: </a>  <font color="#B22222">/* Add cell-vertex connections */</font>
+<a name="line1605">1605: </a>  <font color="#4169E1">for</font> (cell = 0; cell &lt; numCells; ++cell) {
+<a name="line1606">1606: </a>    GmshElement *elem = mesh-&gt;elements + cell;
+<a name="line1607">1607: </a>    <font color="#4169E1">for</font> (v = 0; v &lt; elem-&gt;numVerts; ++v) {
+<a name="line1608">1608: </a>      const <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> nn = elem-&gt;nodes[v];
+<a name="line1609">1609: </a>      const <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> vv = mesh-&gt;vertexMap[nn];
+<a name="line1610">1610: </a>      cone[v] = numCells + vv;
+<a name="line1611">1611: </a>    }
+<a name="line1612">1612: </a>    <a href="../../../../docs/manualpages/DMPLEX/DMPlexReorderCell.html#DMPlexReorderCell">DMPlexReorderCell</a>(*dm, cell, cone);
+<a name="line1613">1613: </a>    <a href="../../../../docs/manualpages/DMPLEX/DMPlexSetCone.html#DMPlexSetCone">DMPlexSetCone</a>(*dm, cell, cone);
+<a name="line1614">1614: </a>  }
+
+<a name="line1616">1616: </a>  <a href="../../../../docs/manualpages/DM/DMSetDimension.html#DMSetDimension">DMSetDimension</a>(*dm, dim);
+<a name="line1617">1617: </a>  <a href="../../../../docs/manualpages/DMPLEX/DMPlexSymmetrize.html#DMPlexSymmetrize">DMPlexSymmetrize</a>(*dm);
+<a name="line1618">1618: </a>  <a href="../../../../docs/manualpages/DMPLEX/DMPlexStratify.html#DMPlexStratify">DMPlexStratify</a>(*dm);
+<a name="line1619">1619: </a>  <font color="#4169E1">if</font> (interpolate) {
+<a name="line1620">1620: </a>    <a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> idm;
+
+<a name="line1622">1622: </a>    <a href="../../../../docs/manualpages/DMPLEX/DMPlexInterpolate.html#DMPlexInterpolate">DMPlexInterpolate</a>(*dm, &amp;idm);
+<a name="line1623">1623: </a>    <a href="../../../../docs/manualpages/DM/DMDestroy.html#DMDestroy">DMDestroy</a>(dm);
+<a name="line1624">1624: </a>    *dm  = idm;
+<a name="line1625">1625: </a>  }
+
+<a name="line1627">1627: </a>  <font color="#4169E1">if</font> (usemarker &amp;&amp; !interpolate &amp;&amp; dim &gt; 1) <a href="../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(comm,PETSC_ERR_SUP,<font color="#666666">"Cannot create marker label without interpolation"</font>);
+<a name="line1628">1628: </a>  <font color="#4169E1">if</font> (!rank &amp;&amp; usemarker) {
+<a name="line1629">1629: </a>    <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> f, fStart, fEnd;
+
+<a name="line1631">1631: </a>    <a href="../../../../docs/manualpages/DM/DMCreateLabel.html#DMCreateLabel">DMCreateLabel</a>(*dm, <font color="#666666">"marker"</font>);
+<a name="line1632">1632: </a>    <a href="../../../../docs/manualpages/DMPLEX/DMPlexGetHeightStratum.html#DMPlexGetHeightStratum">DMPlexGetHeightStratum</a>(*dm, 1, &amp;fStart, &amp;fEnd);
+<a name="line1633">1633: </a>    <font color="#4169E1">for</font> (f = fStart; f &lt; fEnd; ++f) {
+<a name="line1634">1634: </a>      <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> suppSize;
+
+<a name="line1636">1636: </a>      <a href="../../../../docs/manualpages/DMPLEX/DMPlexGetSupportSize.html#DMPlexGetSupportSize">DMPlexGetSupportSize</a>(*dm, f, &amp;suppSize);
+<a name="line1637">1637: </a>      <font color="#4169E1">if</font> (suppSize == 1) {
+<a name="line1638">1638: </a>        <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *cone = NULL, coneSize, p;
+
+<a name="line1640">1640: </a>        <a href="../../../../docs/manualpages/DMPLEX/DMPlexGetTransitiveClosure.html#DMPlexGetTransitiveClosure">DMPlexGetTransitiveClosure</a>(*dm, f, <a href="../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>, &amp;coneSize, &amp;cone);
+<a name="line1641">1641: </a>        <font color="#4169E1">for</font> (p = 0; p &lt; coneSize; p += 2) {
+<a name="line1642">1642: </a>          <a href="../../../../docs/manualpages/DM/DMSetLabelValue.html#DMSetLabelValue">DMSetLabelValue</a>(*dm, <font color="#666666">"marker"</font>, cone[p], 1);
+<a name="line1643">1643: </a>        }
+<a name="line1644">1644: </a>        <a href="../../../../docs/manualpages/DMPLEX/DMPlexRestoreTransitiveClosure.html#DMPlexRestoreTransitiveClosure">DMPlexRestoreTransitiveClosure</a>(*dm, f, <a href="../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>, &amp;coneSize, &amp;cone);
+<a name="line1645">1645: </a>      }
+<a name="line1646">1646: </a>    }
+<a name="line1647">1647: </a>  }
+
+<a name="line1649">1649: </a>  <font color="#4169E1">if</font> (!rank) {
+<a name="line1650">1650: </a>    <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> vStart, vEnd;
+
+<a name="line1652">1652: </a>    <a href="../../../../docs/manualpages/DMPLEX/DMPlexGetDepthStratum.html#DMPlexGetDepthStratum">DMPlexGetDepthStratum</a>(*dm, 0, &amp;vStart, &amp;vEnd);
+<a name="line1653">1653: </a>    <font color="#4169E1">for</font> (cell = 0, e = 0; e &lt; numElems; ++e) {
+<a name="line1654">1654: </a>      GmshElement *elem = mesh-&gt;elements + e;
+
+<a name="line1656">1656: </a>      <font color="#B22222">/* Create cell sets */</font>
+<a name="line1657">1657: </a>      <font color="#4169E1">if</font> (elem-&gt;dim == dim &amp;&amp; dim &gt; 0) {
+<a name="line1658">1658: </a>        <font color="#4169E1">if</font> (elem-&gt;numTags &gt; 0) {
+<a name="line1659">1659: </a>          <a href="../../../../docs/manualpages/DM/DMSetLabelValue.html#DMSetLabelValue">DMSetLabelValue</a>(*dm, <font color="#666666">"Cell Sets"</font>, cell, elem-&gt;tags[0]);
+<a name="line1660">1660: </a>        }
+<a name="line1661">1661: </a>        cell++;
+<a name="line1662">1662: </a>      }
+
+<a name="line1664">1664: </a>      <font color="#B22222">/* Create face sets */</font>
+<a name="line1665">1665: </a>      <font color="#4169E1">if</font> (interpolate &amp;&amp; elem-&gt;dim == dim-1) {
+<a name="line1666">1666: </a>        <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>        joinSize;
+<a name="line1667">1667: </a>        const <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *join = NULL;
+<a name="line1668">1668: </a>        <font color="#B22222">/* Find the relevant facet with vertex joins */</font>
+<a name="line1669">1669: </a>        <font color="#4169E1">for</font> (v = 0; v &lt; elem-&gt;numVerts; ++v) {
+<a name="line1670">1670: </a>          const <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> nn = elem-&gt;nodes[v];
+<a name="line1671">1671: </a>          const <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> vv = mesh-&gt;vertexMap[nn];
+<a name="line1672">1672: </a>          cone[v] = vStart + vv;
+<a name="line1673">1673: </a>        }
+<a name="line1674">1674: </a>        <a href="../../../../docs/manualpages/DMPLEX/DMPlexGetFullJoin.html#DMPlexGetFullJoin">DMPlexGetFullJoin</a>(*dm, elem-&gt;numVerts, cone, &amp;joinSize, &amp;join);
+<a name="line1675">1675: </a>        <font color="#4169E1">if</font> (joinSize != 1) <a href="../../../../docs/manualpages/Sys/SETERRQ2.html#SETERRQ2">SETERRQ2</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, PETSC_ERR_SUP, <font color="#666666">"Could not determine Plex facet for Gmsh element %D (Plex cell %D)"</font>, elem-&gt;id, e);
+<a name="line1676">1676: </a>        <a href="../../../../docs/manualpages/DM/DMSetLabelValue.html#DMSetLabelValue">DMSetLabelValue</a>(*dm, <font color="#666666">"Face Sets"</font>, join[0], elem-&gt;tags[0]);
+<a name="line1677">1677: </a>        <a href="../../../../docs/manualpages/DMPLEX/DMPlexRestoreJoin.html#DMPlexRestoreJoin">DMPlexRestoreJoin</a>(*dm, elem-&gt;numVerts, cone, &amp;joinSize, &amp;join);
+<a name="line1678">1678: </a>      }
+
+<a name="line1680">1680: </a>      <font color="#B22222">/* Create vertex sets */</font>
+<a name="line1681">1681: </a>      <font color="#4169E1">if</font> (elem-&gt;dim == 0) {
+<a name="line1682">1682: </a>        <font color="#4169E1">if</font> (elem-&gt;numTags &gt; 0) {
+<a name="line1683">1683: </a>          const <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> nn = elem-&gt;nodes[0];
+<a name="line1684">1684: </a>          const <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> vv = mesh-&gt;vertexMap[nn];
+<a name="line1685">1685: </a>          <a href="../../../../docs/manualpages/DM/DMSetLabelValue.html#DMSetLabelValue">DMSetLabelValue</a>(*dm, <font color="#666666">"Vertex Sets"</font>, vStart + vv, elem-&gt;tags[0]);
+<a name="line1686">1686: </a>        }
+<a name="line1687">1687: </a>      }
+<a name="line1688">1688: </a>    }
+<a name="line1689">1689: </a>  }
+
+<a name="line1691">1691: </a>  <font color="#4169E1">if</font> (periodic) {
+<a name="line1692">1692: </a>    PetscBTCreate(numVerts, &amp;periodicVerts);
+<a name="line1693">1693: </a>    <font color="#4169E1">for</font> (n = 0; n &lt; numNodes; ++n) {
+<a name="line1694">1694: </a>      <font color="#4169E1">if</font> (mesh-&gt;vertexMap[n] &gt;= 0) {
+<a name="line1695">1695: </a>        <font color="#4169E1">if</font> (<a href="../../../../docs/manualpages/Sys/PetscUnlikely.html#PetscUnlikely">PetscUnlikely</a>(mesh-&gt;periodMap[n] != n)) {
+<a name="line1696">1696: </a>          <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> m = mesh-&gt;periodMap[n];
+<a name="line1697">1697: </a>          ierr= PetscBTSet(periodicVerts, mesh-&gt;vertexMap[n]);
+<a name="line1698">1698: </a>          ierr= PetscBTSet(periodicVerts, mesh-&gt;vertexMap[m]);
+<a name="line1699">1699: </a>        }
+<a name="line1700">1700: </a>      }
+<a name="line1701">1701: </a>    }
+<a name="line1702">1702: </a>    PetscBTCreate(numCells, &amp;periodicCells);
+<a name="line1703">1703: </a>    <font color="#4169E1">for</font> (cell = 0; cell &lt; numCells; ++cell) {
+<a name="line1704">1704: </a>      GmshElement *elem = mesh-&gt;elements + cell;
+<a name="line1705">1705: </a>      <font color="#4169E1">for</font> (v = 0; v &lt; elem-&gt;numVerts; ++v) {
+<a name="line1706">1706: </a>        <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> nn = elem-&gt;nodes[v];
+<a name="line1707">1707: </a>        <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> vv = mesh-&gt;vertexMap[nn];
+<a name="line1708">1708: </a>        <font color="#4169E1">if</font> (<a href="../../../../docs/manualpages/Sys/PetscUnlikely.html#PetscUnlikely">PetscUnlikely</a>(PetscBTLookup(periodicVerts, vv))) {
+<a name="line1709">1709: </a>          PetscBTSet(periodicCells, cell); <font color="#4169E1">break</font>;
+<a name="line1710">1710: </a>        }
+<a name="line1711">1711: </a>      }
+<a name="line1712">1712: </a>    }
+<a name="line1713">1713: </a>  }
+
+<a name="line1715">1715: </a>  <font color="#B22222">/* Setup coordinate <a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> */</font>
+<a name="line1716">1716: </a>  <font color="#4169E1">if</font> (coordDim &lt; 0) coordDim = dim;
+<a name="line1717">1717: </a>  <a href="../../../../docs/manualpages/DM/DMSetCoordinateDim.html#DMSetCoordinateDim">DMSetCoordinateDim</a>(*dm, coordDim);
+<a name="line1718">1718: </a>  <a href="../../../../docs/manualpages/DM/DMGetCoordinateDM.html#DMGetCoordinateDM">DMGetCoordinateDM</a>(*dm, &amp;cdm);
+<a name="line1719">1719: </a>  <font color="#4169E1">if</font> (highOrder) {
+<a name="line1720">1720: </a>    <a href="../../../../docs/manualpages/FE/PetscFE.html#PetscFE">PetscFE</a>         fe;
+<a name="line1721">1721: </a>    <a href="../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>       continuity = periodic ? <a href="../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a> : <a href="../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>;
+<a name="line1722">1722: </a>    <a href="../../../../docs/manualpages/FE/PetscDTNodeType.html#PetscDTNodeType">PetscDTNodeType</a> nodeType   = <a href="../../../../docs/manualpages/FE/PetscDTNodeType.html#PetscDTNodeType">PETSCDTNODES_EQUISPACED</a>;
+
+<a name="line1724">1724: </a>    <font color="#4169E1">if</font> (isSimplex) continuity = <a href="../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>; <font color="#B22222">/* XXX FIXME Requires DMPlexSetClosurePermutationLexicographic() */</font>
+
+<a name="line1726">1726: </a>    GmshCreateFE(comm, NULL, isSimplex, continuity, nodeType, dim, coordDim, order, &amp;fe);
+<a name="line1727">1727: </a>    <a href="../../../../docs/manualpages/FE/PetscFEViewFromOptions.html#PetscFEViewFromOptions">PetscFEViewFromOptions</a>(fe, NULL, <font color="#666666">"-dm_plex_gmsh_fe_view"</font>);
+<a name="line1728">1728: </a>    <a href="../../../../docs/manualpages/DM/DMSetField.html#DMSetField">DMSetField</a>(cdm, 0, NULL, (<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>) fe);
+<a name="line1729">1729: </a>    <a href="../../../../docs/manualpages/FE/PetscFEDestroy.html#PetscFEDestroy">PetscFEDestroy</a>(&amp;fe);
+<a name="line1730">1730: </a>    <a href="../../../../docs/manualpages/DM/DMCreateDS.html#DMCreateDS">DMCreateDS</a>(cdm);
+<a name="line1731">1731: </a>  }
+
+<a name="line1733">1733: </a>  <font color="#B22222">/* Create coordinates */</font>
+<a name="line1734">1734: </a>  <font color="#4169E1">if</font> (highOrder) {
+
+<a name="line1736">1736: </a>    <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>     maxDof = GmshNumNodes_HEX(order)*coordDim;
+<a name="line1737">1737: </a>    double       *coords = mesh ? mesh-&gt;nodelist-&gt;xyz : NULL;
+<a name="line1738">1738: </a>    <a href="../../../../docs/manualpages/PetscSection/PetscSection.html#PetscSection">PetscSection</a> section;
+<a name="line1739">1739: </a>    <a href="../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>  *cellCoords;
+
+<a name="line1741">1741: </a>    <a href="../../../../docs/manualpages/DM/DMSetLocalSection.html#DMSetLocalSection">DMSetLocalSection</a>(cdm, NULL);
+<a name="line1742">1742: </a>    <a href="../../../../docs/manualpages/DM/DMGetLocalSection.html#DMGetLocalSection">DMGetLocalSection</a>(cdm, &amp;coordSection);
+<a name="line1743">1743: </a>    <a href="../../../../docs/manualpages/PetscSection/PetscSectionClone.html#PetscSectionClone">PetscSectionClone</a>(coordSection, &amp;section);
+<a name="line1744">1744: </a>    <a href="../../../../docs/manualpages/DMPLEX/DMPlexSetClosurePermutationTensor.html#DMPlexSetClosurePermutationTensor">DMPlexSetClosurePermutationTensor</a>(cdm, 0, section); <font color="#B22222">/* XXX Implement DMPlexSetClosurePermutationLexicographic() */</font>
+
+<a name="line1746">1746: </a>    <a href="../../../../docs/manualpages/DM/DMCreateLocalVector.html#DMCreateLocalVector">DMCreateLocalVector</a>(cdm, &amp;coordinates);
+<a name="line1747">1747: </a>    <a href="../../../../docs/manualpages/Sys/PetscMalloc1.html#PetscMalloc1">PetscMalloc1</a>(maxDof, &amp;cellCoords);
+<a name="line1748">1748: </a>    <font color="#4169E1">for</font> (cell = 0; cell &lt; numCells; ++cell) {
+<a name="line1749">1749: </a>      GmshElement *elem = mesh-&gt;elements + cell;
+<a name="line1750">1750: </a>      const int *lexorder = GmshCellMap[elem-&gt;cellType].lexorder();
+<a name="line1751">1751: </a>      <font color="#4169E1">for</font> (n = 0; n &lt; elem-&gt;numNodes; ++n) {
+<a name="line1752">1752: </a>        const <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> node = elem-&gt;nodes[lexorder[n]];
+<a name="line1753">1753: </a>        <font color="#4169E1">for</font> (d = 0; d &lt; coordDim; ++d)
+<a name="line1754">1754: </a>          cellCoords[n*coordDim+d] = (<a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>) coords[node*3+d];
+<a name="line1755">1755: </a>      }
+<a name="line1756">1756: </a>      <a href="../../../../docs/manualpages/DMPLEX/DMPlexVecSetClosure.html#DMPlexVecSetClosure">DMPlexVecSetClosure</a>(cdm, section, coordinates, cell, cellCoords, <a href="../../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>);
+<a name="line1757">1757: </a>    }
+<a name="line1758">1758: </a>    <a href="../../../../docs/manualpages/PetscSection/PetscSectionDestroy.html#PetscSectionDestroy">PetscSectionDestroy</a>(&amp;section);
+<a name="line1759">1759: </a>    <a href="../../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(cellCoords);
+
+<a name="line1761">1761: </a>  } <font color="#4169E1">else</font> {
+
+<a name="line1763">1763: </a>    <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>    *nodeMap;
+<a name="line1764">1764: </a>    double      *coords = mesh ? mesh-&gt;nodelist-&gt;xyz : NULL;
+<a name="line1765">1765: </a>    <a href="../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> *pointCoords;
+
+<a name="line1767">1767: </a>    <a href="../../../../docs/manualpages/DM/DMGetLocalSection.html#DMGetLocalSection">DMGetLocalSection</a>(cdm, &amp;coordSection);
+<a name="line1768">1768: </a>    <a href="../../../../docs/manualpages/PetscSection/PetscSectionSetNumFields.html#PetscSectionSetNumFields">PetscSectionSetNumFields</a>(coordSection, 1);
+<a name="line1769">1769: </a>    <a href="../../../../docs/manualpages/PetscSection/PetscSectionSetFieldComponents.html#PetscSectionSetFieldComponents">PetscSectionSetFieldComponents</a>(coordSection, 0, coordDim);
+<a name="line1770">1770: </a>    <font color="#4169E1">if</font> (periodic) { <font color="#B22222">/* we need to localize coordinates on cells */</font>
+<a name="line1771">1771: </a>      <a href="../../../../docs/manualpages/PetscSection/PetscSectionSetChart.html#PetscSectionSetChart">PetscSectionSetChart</a>(coordSection, 0, numCells+numVerts);
+<a name="line1772">1772: </a>    } <font color="#4169E1">else</font> {
+<a name="line1773">1773: </a>      <a href="../../../../docs/manualpages/PetscSection/PetscSectionSetChart.html#PetscSectionSetChart">PetscSectionSetChart</a>(coordSection, numCells, numCells+numVerts);
+<a name="line1774">1774: </a>    }
+<a name="line1775">1775: </a>    <font color="#4169E1">if</font> (periodic) {
+<a name="line1776">1776: </a>      <font color="#4169E1">for</font> (cell = 0; cell &lt; numCells; ++cell) {
+<a name="line1777">1777: </a>        <font color="#4169E1">if</font> (<a href="../../../../docs/manualpages/Sys/PetscUnlikely.html#PetscUnlikely">PetscUnlikely</a>(PetscBTLookup(periodicCells, cell))) {
+<a name="line1778">1778: </a>          GmshElement *elem = mesh-&gt;elements + cell;
+<a name="line1779">1779: </a>          <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> dof = elem-&gt;numVerts * coordDim;
+<a name="line1780">1780: </a>          <a href="../../../../docs/manualpages/PetscSection/PetscSectionSetDof.html#PetscSectionSetDof">PetscSectionSetDof</a>(coordSection, cell, dof);
+<a name="line1781">1781: </a>          <a href="../../../../docs/manualpages/PetscSection/PetscSectionSetFieldDof.html#PetscSectionSetFieldDof">PetscSectionSetFieldDof</a>(coordSection, cell, 0, dof);
+<a name="line1782">1782: </a>        }
+<a name="line1783">1783: </a>      }
+<a name="line1784">1784: </a>    }
+<a name="line1785">1785: </a>    <font color="#4169E1">for</font> (v = numCells; v &lt; numCells+numVerts; ++v) {
+<a name="line1786">1786: </a>      <a href="../../../../docs/manualpages/PetscSection/PetscSectionSetDof.html#PetscSectionSetDof">PetscSectionSetDof</a>(coordSection, v, coordDim);
+<a name="line1787">1787: </a>      <a href="../../../../docs/manualpages/PetscSection/PetscSectionSetFieldDof.html#PetscSectionSetFieldDof">PetscSectionSetFieldDof</a>(coordSection, v, 0, coordDim);
+<a name="line1788">1788: </a>    }
+<a name="line1789">1789: </a>    <a href="../../../../docs/manualpages/PetscSection/PetscSectionSetUp.html#PetscSectionSetUp">PetscSectionSetUp</a>(coordSection);
+
+<a name="line1791">1791: </a>    <a href="../../../../docs/manualpages/DM/DMCreateLocalVector.html#DMCreateLocalVector">DMCreateLocalVector</a>(cdm, &amp;coordinates);
+<a name="line1792">1792: </a>    <a href="../../../../docs/manualpages/Vec/VecGetArray.html#VecGetArray">VecGetArray</a>(coordinates, &amp;pointCoords);
+<a name="line1793">1793: </a>    <font color="#4169E1">if</font> (periodic) {
+<a name="line1794">1794: </a>      <font color="#4169E1">for</font> (cell = 0; cell &lt; numCells; ++cell) {
+<a name="line1795">1795: </a>        <font color="#4169E1">if</font> (<a href="../../../../docs/manualpages/Sys/PetscUnlikely.html#PetscUnlikely">PetscUnlikely</a>(PetscBTLookup(periodicCells, cell))) {
+<a name="line1796">1796: </a>          GmshElement *elem = mesh-&gt;elements + cell;
+<a name="line1797">1797: </a>          <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> off, node;
+<a name="line1798">1798: </a>          <font color="#4169E1">for</font> (v = 0; v &lt; elem-&gt;numVerts; ++v)
+<a name="line1799">1799: </a>            cone[v] = elem-&gt;nodes[v];
+<a name="line1800">1800: </a>          <a href="../../../../docs/manualpages/DMPLEX/DMPlexReorderCell.html#DMPlexReorderCell">DMPlexReorderCell</a>(cdm, cell, cone);
+<a name="line1801">1801: </a>          <a href="../../../../docs/manualpages/PetscSection/PetscSectionGetOffset.html#PetscSectionGetOffset">PetscSectionGetOffset</a>(coordSection, cell, &amp;off);
+<a name="line1802">1802: </a>          <font color="#4169E1">for</font> (v = 0; v &lt; elem-&gt;numVerts; ++v)
+<a name="line1803">1803: </a>            <font color="#4169E1">for</font> (node = cone[v], d = 0; d &lt; coordDim; ++d)
+<a name="line1804">1804: </a>              pointCoords[off++] = (<a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>) coords[node*3+d];
+<a name="line1805">1805: </a>        }
+<a name="line1806">1806: </a>      }
+<a name="line1807">1807: </a>    }
+<a name="line1808">1808: </a>    <a href="../../../../docs/manualpages/Sys/PetscMalloc1.html#PetscMalloc1">PetscMalloc1</a>(numVerts, &amp;nodeMap);
+<a name="line1809">1809: </a>    <font color="#4169E1">for</font> (n = 0; n &lt; numNodes; n++)
+<a name="line1810">1810: </a>      <font color="#4169E1">if</font> (mesh-&gt;vertexMap[n] &gt;= 0)
+<a name="line1811">1811: </a>        nodeMap[mesh-&gt;vertexMap[n]] = n;
+<a name="line1812">1812: </a>    <font color="#4169E1">for</font> (v = 0; v &lt; numVerts; ++v) {
+<a name="line1813">1813: </a>      <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> off, node = nodeMap[v];
+<a name="line1814">1814: </a>      <a href="../../../../docs/manualpages/PetscSection/PetscSectionGetOffset.html#PetscSectionGetOffset">PetscSectionGetOffset</a>(coordSection, numCells + v, &amp;off);
+<a name="line1815">1815: </a>      <font color="#4169E1">for</font> (d = 0; d &lt; coordDim; ++d)
+<a name="line1816">1816: </a>        pointCoords[off+d] = (<a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>) coords[node*3+d];
+<a name="line1817">1817: </a>    }
+<a name="line1818">1818: </a>    <a href="../../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(nodeMap);
+<a name="line1819">1819: </a>    <a href="../../../../docs/manualpages/Vec/VecRestoreArray.html#VecRestoreArray">VecRestoreArray</a>(coordinates, &amp;pointCoords);
+
+<a name="line1821">1821: </a>  }
+
+<a name="line1823">1823: </a>  <a href="../../../../docs/manualpages/Sys/PetscObjectSetName.html#PetscObjectSetName">PetscObjectSetName</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>) coordinates, <font color="#666666">"coordinates"</font>);
+<a name="line1824">1824: </a>  <a href="../../../../docs/manualpages/Vec/VecSetBlockSize.html#VecSetBlockSize">VecSetBlockSize</a>(coordinates, coordDim);
+<a name="line1825">1825: </a>  <a href="../../../../docs/manualpages/DM/DMSetCoordinatesLocal.html#DMSetCoordinatesLocal">DMSetCoordinatesLocal</a>(*dm, coordinates);
+<a name="line1826">1826: </a>  <a href="../../../../docs/manualpages/Vec/VecDestroy.html#VecDestroy">VecDestroy</a>(&amp;coordinates);
+<a name="line1827">1827: </a>  <a href="../../../../docs/manualpages/DM/DMSetPeriodicity.html#DMSetPeriodicity">DMSetPeriodicity</a>(*dm, periodic, NULL, NULL, NULL);
+
+<a name="line1829">1829: </a>  GmshMeshDestroy(&amp;mesh);
+<a name="line1830">1830: </a>  PetscBTDestroy(&amp;periodicVerts);
+<a name="line1831">1831: </a>  PetscBTDestroy(&amp;periodicCells);
+
+<a name="line1833">1833: </a>  <font color="#4169E1">if</font> (highOrder &amp;&amp; project)  {
+<a name="line1834">1834: </a>    <a href="../../../../docs/manualpages/FE/PetscFE.html#PetscFE">PetscFE</a>         fe;
+<a name="line1835">1835: </a>    const char      prefix[]   = <font color="#666666">"dm_plex_gmsh_project_"</font>;
+<a name="line1836">1836: </a>    <a href="../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>       continuity = periodic ? <a href="../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a> : <a href="../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>;
+<a name="line1837">1837: </a>    <a href="../../../../docs/manualpages/FE/PetscDTNodeType.html#PetscDTNodeType">PetscDTNodeType</a> nodeType   = <a href="../../../../docs/manualpages/FE/PetscDTNodeType.html#PetscDTNodeType">PETSCDTNODES_GAUSSJACOBI</a>;
+
+<a name="line1839">1839: </a>    <font color="#4169E1">if</font> (isSimplex) continuity = <a href="../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>; <font color="#B22222">/* XXX FIXME Requires DMPlexSetClosurePermutationLexicographic() */</font>
+
+<a name="line1841">1841: </a>    GmshCreateFE(comm, prefix, isSimplex, continuity, nodeType, dim, coordDim, order, &amp;fe);
+<a name="line1842">1842: </a>    <a href="../../../../docs/manualpages/FE/PetscFEViewFromOptions.html#PetscFEViewFromOptions">PetscFEViewFromOptions</a>(fe, NULL, <font color="#666666">"-dm_plex_gmsh_project_fe_view"</font>);
+<a name="line1843">1843: </a>    <a href="../../../../docs/manualpages/DM/DMProjectCoordinates.html#DMProjectCoordinates">DMProjectCoordinates</a>(*dm, fe);
+<a name="line1844">1844: </a>    <a href="../../../../docs/manualpages/FE/PetscFEDestroy.html#PetscFEDestroy">PetscFEDestroy</a>(&amp;fe);
+<a name="line1845">1845: </a>  }
+
+<a name="line1847">1847: </a>  <a href="../../../../docs/manualpages/Profiling/PetscLogEventEnd.html#PetscLogEventEnd">PetscLogEventEnd</a>(DMPLEX_CreateGmsh,*dm,NULL,NULL,NULL);
+<a name="line1848">1848: </a>  <font color="#4169E1">return</font>(0);
+<a name="line1849">1849: </a>}
+</pre>
+</body>
+
+</html>

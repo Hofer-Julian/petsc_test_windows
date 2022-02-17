@@ -1,0 +1,144 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/sphinx_docs/html/developers/design.html" />
+    <meta charset="utf-8" />
+    <title>The Design of PETSc &#8212; PETSc 3.14.6 documentation</title>
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/katex-math.css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/contrib/auto-render.min.js"></script>
+    <script src="../_static/katex_autorenderer.js"></script>
+    <link rel="shortcut icon" href="../_static/PETSc_RGB-logo.png"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="The PETSc Kernel" href="kernel.html" />
+    <link rel="prev" title="Developing PETSc Documentation" href="documentation.html" /> 
+  </head><body>
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/sphinx_docs/html/developers/design.html "><small>Report Typos and Errors</small></a></div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="kernel.html" title="The PETSc Kernel"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="documentation.html" title="Developing PETSc Documentation"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">PETSc 3.14.6 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">PETSc Developer’s Documentation</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/PETSc-TAO_RGB.svg" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="documentation.html"
+                        title="previous chapter">Developing PETSc Documentation</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="kernel.html"
+                        title="next chapter">The PETSc Kernel</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/developers/design.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="the-design-of-petsc">
+<h1>The Design of PETSc<a class="headerlink" href="#the-design-of-petsc" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="kernel.html">The PETSc Kernel</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="kernel.html#petsc-types">PETSc Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="kernel.html#implementation-of-error-handling">Implementation of Error Handling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="kernel.html#memory-management">Memory Management</a></li>
+<li class="toctree-l2"><a class="reference internal" href="kernel.html#implementation-of-profiling">Implementation of Profiling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="kernel.html#references">References</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="objects.html">Basic Object Design and Implementation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="objects.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="objects.html#organization-of-the-source-code">Organization of the Source Code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="objects.html#common-object-header">Common Object Header</a></li>
+<li class="toctree-l2"><a class="reference internal" href="objects.html#common-object-functions">Common Object Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="objects.html#object-function-implementation">Object Function Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="objects.html#petsc-packages">PETSc Packages</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="callbacks.html">How the Solvers Handle User Provided Callbacks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="matrices.html">The Various Matrix Classes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="matrices.html#matrix-blocking-strategies">Matrix Blocking Strategies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="matrices.html#assorted-matrix-types">Assorted Matrix Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="matrices.html#references">References</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="articles.html">Articles about PETSc Design</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="articles.html#references">References</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="kernel.html" title="The PETSc Kernel"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="documentation.html" title="Developing PETSc Documentation"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">PETSc 3.14.6 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >PETSc Developer’s Documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 1991-2021, UChicago Argonne, LLC and the PETSc Development Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.4.
+    </div>
+  </body>
+</html>

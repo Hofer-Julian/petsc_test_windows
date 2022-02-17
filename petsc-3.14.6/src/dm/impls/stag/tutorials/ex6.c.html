@@ -1,0 +1,932 @@
+<center><a href="ex6.c">Actual source code: ex6.c</a></center><br>
+
+<html>
+<head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/src/dm/impls/stag/tutorials/ex6.c.html" />
+<title></title>
+<meta name="generator" content="c2html 0.9.4">
+<meta name="date" content="2021-03-30T16:50:53+00:00">
+</head>
+
+<body bgcolor="#FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 src/dm/impls/stag/tutorials/ex6.c.html "><small>Report Typos and Errors</small></a></div>
+<pre width="80">
+<a name="line1">  1: </a>static const char help[] = <font color="#666666">"Simple 2D or 3D finite difference seismic wave propagation, using\n"</font>
+<a name="line2">  2: </a><font color="#666666">"a staggered grid represented with DMStag objects.\n"</font>
+<a name="line3">  3: </a><font color="#666666">"-dim &lt;2,3&gt;  : dimension of problem\n"</font>
+<a name="line4">  4: </a><font color="#666666">"-nsteps &lt;n&gt; : number of timesteps\n"</font>
+<a name="line5">  5: </a><font color="#666666">"-dt &lt;dt&gt;    : length of timestep\n"</font>
+<a name="line6">  6: </a><font color="#666666">"\n"</font>;
+
+<a name="line8">  8: </a><font color="#B22222">/*</font>
+<a name="line9">  9: </a><font color="#B22222">Reference:</font>
+
+<a name="line11"> 11: </a><font color="#B22222">@article{Virieux1986,</font>
+<a name="line12"> 12: </a><font color="#B22222">  title     = {{P-SV} Wave Propagation in Heterogeneous Media: {V}elocity-Stress Finite-Difference Method},</font>
+<a name="line13"> 13: </a><font color="#B22222">  author    = {Virieux, Jean},</font>
+<a name="line14"> 14: </a><font color="#B22222">  journal   = {Geophysics},</font>
+<a name="line15"> 15: </a><font color="#B22222">  volume    = {51},</font>
+<a name="line16"> 16: </a><font color="#B22222">  number    = {4},</font>
+<a name="line17"> 17: </a><font color="#B22222">  pages     = {889--901},</font>
+<a name="line18"> 18: </a><font color="#B22222">  publisher = {Society of Exploration Geophysicists},</font>
+<a name="line19"> 19: </a><font color="#B22222">  year      = {1986},</font>
+<a name="line20"> 20: </a><font color="#B22222">}</font>
+
+<a name="line22"> 22: </a><font color="#B22222">Notes:</font>
+
+<a name="line24"> 24: </a><font color="#B22222">* This example uses y in 2 dimensions, where the paper uses z.</font>
+<a name="line25"> 25: </a><font color="#B22222">* This example uses the dual grid of the one pictured in Fig. 1. of the paper,</font>
+<a name="line26"> 26: </a><font color="#B22222">so that velocities are on face boundaries, shear stresses are defined on vertices,</font>
+<a name="line27"> 27: </a><font color="#B22222">and normal stresses are defined on elements.</font>
+<a name="line28"> 28: </a><font color="#B22222">* There is a typo in the paragraph after (5) in the paper: Sigma, Xi, and Tau</font>
+<a name="line29"> 29: </a><font color="#B22222">represent tau_xx, tau_xz, and tau_zz, respectively (the last two entries are</font>
+<a name="line30"> 30: </a><font color="#B22222">transposed in the paper).</font>
+<a name="line31"> 31: </a><font color="#B22222">* This example treats the boundaries naively (by leaving ~zero velocity and stress there).</font>
+
+<a name="line33"> 33: </a><font color="#B22222">*/</font>
+
+<a name="line35"> 35: </a>#include <A href="../../../../../include/petscdmstag.h.html">&lt;petscdmstag.h&gt;</A>
+<a name="line36"> 36: </a>#include <A href="../../../../../include/petscts.h.html">&lt;petscts.h&gt;</A>
+
+<a name="line38"> 38: </a><font color="#B22222">/* A struct defining the parameters of the problem */</font>
+<a name="line39"> 39: </a><font color="#4169E1">typedef</font> <font color="#4169E1">struct</font> {
+<a name="line40"> 40: </a>  <a href="../../../../../docs/manualpages/DM/DM.html#DM">DM</a>          dm_velocity,dm_stress;
+<a name="line41"> 41: </a>  <a href="../../../../../docs/manualpages/DM/DM.html#DM">DM</a>          dm_buoyancy,dm_lame;
+<a name="line42"> 42: </a>  <a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a>         buoyancy,lame; <font color="#B22222">/* Global, but for efficiency one could store local vectors */</font>
+<a name="line43"> 43: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>    dim; <font color="#B22222">/* 2 or 3 */</font>
+<a name="line44"> 44: </a>  <a href="../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> rho,lambda,mu; <font color="#B22222">/* constant material properties */</font>
+<a name="line45"> 45: </a>  <a href="../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>   xmin,xmax,ymin,ymax,zmin,zmax;
+<a name="line46"> 46: </a>  <a href="../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>   dt;
+<a name="line47"> 47: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>    timesteps;
+<a name="line48"> 48: </a>  <a href="../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>   dump_output;
+<a name="line49"> 49: </a>} Ctx;
+
+<a name="line51"> 51: </a><strong><font color="#4169E1">static <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> CreateLame(Ctx*)</font></strong>;
+<a name="line52"> 52: </a><strong><font color="#4169E1">static <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> ForceStress(const Ctx*,<a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a>,<a href="../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>)</font></strong>;
+<a name="line53"> 53: </a><strong><font color="#4169E1">static <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> DumpVelocity(const Ctx*,<a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a>,<a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>)</font></strong>;
+<a name="line54"> 54: </a><strong><font color="#4169E1">static <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> DumpStress(const Ctx*,<a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a>,<a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>)</font></strong>;
+<a name="line55"> 55: </a><strong><font color="#4169E1">static <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> UpdateVelocity(const Ctx*,<a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a>,<a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a>,<a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a>)</font></strong>;
+<a name="line56"> 56: </a><strong><font color="#4169E1">static <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> UpdateStress(const Ctx*,<a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a>,<a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a>,<a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a>)</font></strong>;
+
+<a name="line58"> 58: </a><strong><font color="#4169E1"><a name="main"></a>int main(int argc,char *argv[])</font></strong>
+<a name="line59"> 59: </a>{
+<a name="line61"> 61: </a>  Ctx            ctx;
+<a name="line62"> 62: </a>  <a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a>            velocity,stress;
+<a name="line63"> 63: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       timestep;
+
+<a name="line65"> 65: </a>  <font color="#B22222">/* Initialize PETSc */</font>
+<a name="line66"> 66: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInitialize.html#PetscInitialize">PetscInitialize</a>(&amp;argc,&amp;argv,0,help);<font color="#4169E1">if</font> (ierr) <font color="#4169E1">return</font> ierr;
+
+<a name="line68"> 68: </a>  <font color="#B22222">/* Populate application context */</font>
+<a name="line69"> 69: </a>  ctx.dim         = 2;
+<a name="line70"> 70: </a>  ctx.rho         = 1.0;
+<a name="line71"> 71: </a>  ctx.lambda      = 1.0;
+<a name="line72"> 72: </a>  ctx.mu          = 1.0;
+<a name="line73"> 73: </a>  ctx.xmin        = 0.0; ctx.xmax = 1.0;
+<a name="line74"> 74: </a>  ctx.ymin        = 0.0; ctx.ymax = 1.0;
+<a name="line75"> 75: </a>  ctx.zmin        = 0.0; ctx.zmax = 1.0;
+<a name="line76"> 76: </a>  ctx.dt          = 0.001;
+<a name="line77"> 77: </a>  ctx.timesteps   = 100;
+<a name="line78"> 78: </a>  ctx.dump_output = <a href="../../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>;
+
+<a name="line80"> 80: </a>  <font color="#B22222">/* Update context from command line options */</font>
+<a name="line81"> 81: </a>  <a href="../../../../../docs/manualpages/Sys/PetscOptionsGetInt.html#PetscOptionsGetInt">PetscOptionsGetInt</a>(NULL,NULL,<font color="#666666">"-dim"</font>,&amp;ctx.dim,NULL);
+<a name="line82"> 82: </a>  <a href="../../../../../docs/manualpages/Sys/PetscOptionsGetReal.html#PetscOptionsGetReal">PetscOptionsGetReal</a>(NULL,NULL,<font color="#666666">"-dt"</font>,&amp;ctx.dt,NULL);
+<a name="line83"> 83: </a>  <a href="../../../../../docs/manualpages/Sys/PetscOptionsGetInt.html#PetscOptionsGetInt">PetscOptionsGetInt</a>(NULL,NULL,<font color="#666666">"-nsteps"</font>,&amp;ctx.timesteps,NULL);
+<a name="line84"> 84: </a>  <a href="../../../../../docs/manualpages/Sys/PetscOptionsGetBool.html#PetscOptionsGetBool">PetscOptionsGetBool</a>(NULL,NULL,<font color="#666666">"-dump_output"</font>,&amp;ctx.dump_output,NULL);
+
+<a name="line86"> 86: </a>  <font color="#B22222">/* Create a DMStag, with uniform coordinates, for the velocities */</font>
+<a name="line87"> 87: </a>  {
+<a name="line88"> 88: </a>    <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> dof0,dof1,dof2,dof3;
+<a name="line89"> 89: </a>    const <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> stencilWidth = 1;
+
+<a name="line91"> 91: </a>    <font color="#4169E1">switch</font> (ctx.dim) {
+<a name="line92"> 92: </a>      <font color="#4169E1">case</font> 2:
+<a name="line93"> 93: </a>        dof0 = 0; dof1 = 1; dof2 = 0; <font color="#B22222">/* 1 dof per cell boundary */</font>
+<a name="line94"> 94: </a>        <a href="../../../../../docs/manualpages/DMSTAG/DMStagCreate2d.html#DMStagCreate2d">DMStagCreate2d</a>(<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,<a href="../../../../../docs/manualpages/DM/DMBoundaryType.html#DMBoundaryType">DM_BOUNDARY_NONE</a>,<a href="../../../../../docs/manualpages/DM/DMBoundaryType.html#DMBoundaryType">DM_BOUNDARY_NONE</a>,100,100,<a href="../../../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a>,<a href="../../../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a>,dof0,dof1,dof2,<a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilType.html#DMStagStencilType">DMSTAG_STENCIL_BOX</a>,stencilWidth,NULL,NULL,&amp;ctx.dm_velocity);
+<a name="line95"> 95: </a>        <font color="#4169E1">break</font>;
+<a name="line96"> 96: </a>      <font color="#4169E1">case</font> 3:
+<a name="line97"> 97: </a>        dof0 = 0; dof1 = 0; dof2 = 1; dof3 = 0; <font color="#B22222">/* 1 dof per cell boundary */</font>
+<a name="line98"> 98: </a>        <a href="../../../../../docs/manualpages/DMSTAG/DMStagCreate3d.html#DMStagCreate3d">DMStagCreate3d</a>(<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,<a href="../../../../../docs/manualpages/DM/DMBoundaryType.html#DMBoundaryType">DM_BOUNDARY_NONE</a>,<a href="../../../../../docs/manualpages/DM/DMBoundaryType.html#DMBoundaryType">DM_BOUNDARY_NONE</a>,<a href="../../../../../docs/manualpages/DM/DMBoundaryType.html#DMBoundaryType">DM_BOUNDARY_NONE</a>,30,30,30,<a href="../../../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a>,<a href="../../../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a>,<a href="../../../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a>,dof0,dof1,dof2,dof3,<a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilType.html#DMStagStencilType">DMSTAG_STENCIL_BOX</a>,stencilWidth,NULL,NULL,NULL,&amp;ctx.dm_velocity);
+<a name="line99"> 99: </a>        <font color="#4169E1">break</font>;
+<a name="line100">100: </a><strong><font color="#FF0000">      default:</font></strong> <a href="../../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,PETSC_ERR_SUP,<font color="#666666">"Not Implemented for dimension %D"</font>,ctx.dim);
+<a name="line101">101: </a>    }
+<a name="line102">102: </a>  }
+<a name="line103">103: </a>  <a href="../../../../../docs/manualpages/DM/DMSetFromOptions.html#DMSetFromOptions">DMSetFromOptions</a>(ctx.dm_velocity); <font color="#B22222">/* Options control velocity <a href="../../../../../docs/manualpages/DM/DM.html#DM">DM</a> */</font>
+<a name="line104">104: </a>  <a href="../../../../../docs/manualpages/DM/DMSetUp.html#DMSetUp">DMSetUp</a>(ctx.dm_velocity);
+<a name="line105">105: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagSetUniformCoordinatesProduct.html#DMStagSetUniformCoordinatesProduct">DMStagSetUniformCoordinatesProduct</a>(ctx.dm_velocity,ctx.xmin,ctx.xmax,ctx.ymin,ctx.ymax,ctx.zmin,ctx.zmax);
+
+<a name="line107">107: </a>  <font color="#B22222">/* Create a second, compatible DMStag for the stresses */</font>
+<a name="line108">108: </a>  <font color="#4169E1">switch</font> (ctx.dim) {
+<a name="line109">109: </a>    <font color="#4169E1">case</font> 2:
+<a name="line110">110: </a>      <font color="#B22222">/* One shear stress component on element corners, two shear stress components on elements */</font>
+<a name="line111">111: </a>      <a href="../../../../../docs/manualpages/DMSTAG/DMStagCreateCompatibleDMStag.html#DMStagCreateCompatibleDMStag">DMStagCreateCompatibleDMStag</a>(ctx.dm_velocity,1,0,2,0,&amp;ctx.dm_stress);
+<a name="line112">112: </a>      <font color="#4169E1">break</font>;
+<a name="line113">113: </a>    <font color="#4169E1">case</font> 3:
+<a name="line114">114: </a>      <font color="#B22222">/* One shear stress component on element edges, three shear stress components on elements */</font>
+<a name="line115">115: </a>      <a href="../../../../../docs/manualpages/DMSTAG/DMStagCreateCompatibleDMStag.html#DMStagCreateCompatibleDMStag">DMStagCreateCompatibleDMStag</a>(ctx.dm_velocity,0,1,0,3,&amp;ctx.dm_stress);
+<a name="line116">116: </a>      <font color="#4169E1">break</font>;
+<a name="line117">117: </a><strong><font color="#FF0000">    default:</font></strong> <a href="../../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,PETSC_ERR_SUP,<font color="#666666">"Not Implemented for dimension %D"</font>,ctx.dim);
+<a name="line118">118: </a>  }
+<a name="line119">119: </a>  <a href="../../../../../docs/manualpages/DM/DMSetUp.html#DMSetUp">DMSetUp</a>(ctx.dm_stress);
+<a name="line120">120: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagSetUniformCoordinatesProduct.html#DMStagSetUniformCoordinatesProduct">DMStagSetUniformCoordinatesProduct</a>(ctx.dm_stress,ctx.xmin,ctx.xmax,ctx.ymin,ctx.ymax,ctx.zmin,ctx.zmax);
+
+<a name="line122">122: </a>  <font color="#B22222">/* Create two additional DMStag objects for the buoyancy and Lame parameters */</font>
+<a name="line123">123: </a>  <font color="#4169E1">switch</font> (ctx.dim) {
+<a name="line124">124: </a>    <font color="#4169E1">case</font> 2:
+<a name="line125">125: </a>      <font color="#B22222">/* buoyancy on element boundaries (edges) */</font>
+<a name="line126">126: </a>      <a href="../../../../../docs/manualpages/DMSTAG/DMStagCreateCompatibleDMStag.html#DMStagCreateCompatibleDMStag">DMStagCreateCompatibleDMStag</a>(ctx.dm_velocity,0,1,0,0,&amp;ctx.dm_buoyancy);
+<a name="line127">127: </a>      <font color="#4169E1">break</font>;
+<a name="line128">128: </a>    <font color="#4169E1">case</font> 3:
+<a name="line129">129: </a>      <font color="#B22222">/* buoyancy on element boundaries (faces) */</font>
+<a name="line130">130: </a>      <a href="../../../../../docs/manualpages/DMSTAG/DMStagCreateCompatibleDMStag.html#DMStagCreateCompatibleDMStag">DMStagCreateCompatibleDMStag</a>(ctx.dm_velocity,0,0,1,0,&amp;ctx.dm_buoyancy);
+<a name="line131">131: </a>      <font color="#4169E1">break</font>;
+<a name="line132">132: </a><strong><font color="#FF0000">    default:</font></strong> <a href="../../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,PETSC_ERR_SUP,<font color="#666666">"Not Implemented for dimension %D"</font>,ctx.dim);
+<a name="line133">133: </a>  }
+<a name="line134">134: </a>  <a href="../../../../../docs/manualpages/DM/DMSetUp.html#DMSetUp">DMSetUp</a>(ctx.dm_buoyancy);
+
+<a name="line136">136: </a>  <font color="#4169E1">switch</font> (ctx.dim) {
+<a name="line137">137: </a>    <font color="#4169E1">case</font> 2:
+<a name="line138">138: </a>      <font color="#B22222">/* mu and lambda + 2*mu on element centers, mu on corners */</font>
+<a name="line139">139: </a>      <a href="../../../../../docs/manualpages/DMSTAG/DMStagCreateCompatibleDMStag.html#DMStagCreateCompatibleDMStag">DMStagCreateCompatibleDMStag</a>(ctx.dm_velocity,1,0,2,0,&amp;ctx.dm_lame);
+<a name="line140">140: </a>      <font color="#4169E1">break</font>;
+<a name="line141">141: </a>    <font color="#4169E1">case</font> 3:
+<a name="line142">142: </a>      <font color="#B22222">/* mu and lambda + 2*mu on element centers, mu on edges */</font>
+<a name="line143">143: </a>      <a href="../../../../../docs/manualpages/DMSTAG/DMStagCreateCompatibleDMStag.html#DMStagCreateCompatibleDMStag">DMStagCreateCompatibleDMStag</a>(ctx.dm_velocity,0,1,0,2,&amp;ctx.dm_lame);
+<a name="line144">144: </a>      <font color="#4169E1">break</font>;
+<a name="line145">145: </a><strong><font color="#FF0000">    default:</font></strong> <a href="../../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,PETSC_ERR_SUP,<font color="#666666">"Not Implemented for dimension %D"</font>,ctx.dim);
+<a name="line146">146: </a>  }
+<a name="line147">147: </a>  <a href="../../../../../docs/manualpages/DM/DMSetUp.html#DMSetUp">DMSetUp</a>(ctx.dm_lame);
+
+<a name="line149">149: </a>  <font color="#B22222">/* Print out some info */</font>
+<a name="line150">150: </a>  {
+<a name="line151">151: </a>    <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>    N[3];
+<a name="line152">152: </a>    <a href="../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> dx,Vp;
+
+<a name="line154">154: </a>    <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetGlobalSizes.html#DMStagGetGlobalSizes">DMStagGetGlobalSizes</a>(ctx.dm_velocity,&amp;N[0],&amp;N[1],&amp;N[2]);
+<a name="line155">155: </a>    dx = (ctx.xmax - ctx.xmin)/N[0];
+<a name="line156">156: </a>    Vp = PetscSqrtScalar((ctx.lambda + 2 * ctx.mu) / ctx.rho);
+<a name="line157">157: </a>    <font color="#4169E1">if</font> (ctx.dim == 2) {
+<a name="line158">158: </a>      <a href="../../../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,<font color="#666666">"Using a %D x %D mesh\n"</font>,N[0],N[1]);
+<a name="line159">159: </a>    } <font color="#4169E1">else</font> <font color="#4169E1">if</font> (ctx.dim == 3) {
+<a name="line160">160: </a>      <a href="../../../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,<font color="#666666">"Using a %D x %D x %D mesh\n"</font>,N[0],N[1],N[2]);
+<a name="line161">161: </a>    }
+<a name="line162">162: </a>    <a href="../../../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,<font color="#666666">"dx: %g\n"</font>,dx);
+<a name="line163">163: </a>    <a href="../../../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,<font color="#666666">"dt: %g\n"</font>,ctx.dt);
+<a name="line164">164: </a>    <a href="../../../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,<font color="#666666">"P-wave velocity: %g\n"</font>,PetscSqrtScalar((ctx.lambda + 2 * ctx.mu) / ctx.rho));
+<a name="line165">165: </a>    <a href="../../../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,<font color="#666666">"V_p dt / dx: %g\n"</font>,Vp * ctx.dt / dx);
+<a name="line166">166: </a>  }
+
+<a name="line168">168: </a>  <font color="#B22222">/* Populate the coefficient arrays */</font>
+<a name="line169">169: </a>  CreateLame(&amp;ctx);
+<a name="line170">170: </a>  <a href="../../../../../docs/manualpages/DM/DMCreateGlobalVector.html#DMCreateGlobalVector">DMCreateGlobalVector</a>(ctx.dm_buoyancy,&amp;ctx.buoyancy);
+<a name="line171">171: </a>  <a href="../../../../../docs/manualpages/Vec/VecSet.html#VecSet">VecSet</a>(ctx.buoyancy,1.0/ctx.rho);
+
+<a name="line173">173: </a>  <font color="#B22222">/* Create vectors to store the system state */</font>
+<a name="line174">174: </a>  <a href="../../../../../docs/manualpages/DM/DMCreateGlobalVector.html#DMCreateGlobalVector">DMCreateGlobalVector</a>(ctx.dm_velocity,&amp;velocity);
+<a name="line175">175: </a>  <a href="../../../../../docs/manualpages/DM/DMCreateGlobalVector.html#DMCreateGlobalVector">DMCreateGlobalVector</a>(ctx.dm_stress,&amp;stress);
+
+<a name="line177">177: </a>  <font color="#B22222">/* Initial State */</font>
+<a name="line178">178: </a>  <a href="../../../../../docs/manualpages/Vec/VecSet.html#VecSet">VecSet</a>(velocity,0.0);
+<a name="line179">179: </a>  <a href="../../../../../docs/manualpages/Vec/VecSet.html#VecSet">VecSet</a>(stress,0.0);
+<a name="line180">180: </a>  ForceStress(&amp;ctx,stress,0.0);
+<a name="line181">181: </a>  <font color="#4169E1">if</font> (ctx.dump_output) {
+<a name="line182">182: </a>    DumpVelocity(&amp;ctx,velocity,0);
+<a name="line183">183: </a>    DumpStress(&amp;ctx,stress,0);
+<a name="line184">184: </a>  }
+
+<a name="line186">186: </a>  <font color="#B22222">/* Time Loop */</font>
+<a name="line187">187: </a>  <font color="#4169E1">for</font> (timestep = 1; timestep &lt;= ctx.timesteps; ++timestep) {
+<a name="line188">188: </a>    const <a href="../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> t = timestep * ctx.dt;
+
+<a name="line190">190: </a>    UpdateVelocity(&amp;ctx,velocity,stress,ctx.buoyancy);
+<a name="line191">191: </a>    UpdateStress(&amp;ctx,velocity,stress,ctx.lame);
+<a name="line192">192: </a>    ForceStress(&amp;ctx,stress,t);
+<a name="line193">193: </a>    <a href="../../../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,<font color="#666666">"Timestep %d, t = %g\n"</font>,timestep,(double)t);
+<a name="line194">194: </a>    <font color="#4169E1">if</font> (ctx.dump_output) {
+<a name="line195">195: </a>      DumpVelocity(&amp;ctx,velocity,timestep);
+<a name="line196">196: </a>      DumpStress(&amp;ctx,stress,timestep);
+<a name="line197">197: </a>    }
+<a name="line198">198: </a>  }
+
+<a name="line200">200: </a>  <font color="#B22222">/* Clean up and finalize PETSc */</font>
+<a name="line201">201: </a>  <a href="../../../../../docs/manualpages/Vec/VecDestroy.html#VecDestroy">VecDestroy</a>(&amp;velocity);
+<a name="line202">202: </a>  <a href="../../../../../docs/manualpages/Vec/VecDestroy.html#VecDestroy">VecDestroy</a>(&amp;stress);
+<a name="line203">203: </a>  <a href="../../../../../docs/manualpages/Vec/VecDestroy.html#VecDestroy">VecDestroy</a>(&amp;ctx.lame);
+<a name="line204">204: </a>  <a href="../../../../../docs/manualpages/Vec/VecDestroy.html#VecDestroy">VecDestroy</a>(&amp;ctx.buoyancy);
+<a name="line205">205: </a>  <a href="../../../../../docs/manualpages/DM/DMDestroy.html#DMDestroy">DMDestroy</a>(&amp;ctx.dm_velocity);
+<a name="line206">206: </a>  <a href="../../../../../docs/manualpages/DM/DMDestroy.html#DMDestroy">DMDestroy</a>(&amp;ctx.dm_stress);
+<a name="line207">207: </a>  <a href="../../../../../docs/manualpages/DM/DMDestroy.html#DMDestroy">DMDestroy</a>(&amp;ctx.dm_buoyancy);
+<a name="line208">208: </a>  <a href="../../../../../docs/manualpages/DM/DMDestroy.html#DMDestroy">DMDestroy</a>(&amp;ctx.dm_lame);
+<a name="line209">209: </a>  <a href="../../../../../docs/manualpages/Sys/PetscFinalize.html#PetscFinalize">PetscFinalize</a>();
+<a name="line210">210: </a>  <font color="#4169E1">return</font> ierr;
+<a name="line211">211: </a>}
+
+<a name="line213">213: </a><strong><font color="#4169E1"><a name="CreateLame"></a>static <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> CreateLame(Ctx *ctx)</font></strong>
+<a name="line214">214: </a>{
+<a name="line216">216: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       N[3],ex,ey,ez,startx,starty,startz,nx,ny,nz,extrax,extray,extraz;
+
+<a name="line219">219: </a>  <a href="../../../../../docs/manualpages/DM/DMCreateGlobalVector.html#DMCreateGlobalVector">DMCreateGlobalVector</a>(ctx-&gt;dm_lame,&amp;ctx-&gt;lame);
+<a name="line220">220: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetGlobalSizes.html#DMStagGetGlobalSizes">DMStagGetGlobalSizes</a>(ctx-&gt;dm_lame,&amp;N[0],&amp;N[1],&amp;N[2]);
+<a name="line221">221: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetCorners.html#DMStagGetCorners">DMStagGetCorners</a>(ctx-&gt;dm_buoyancy,&amp;startx,&amp;starty,&amp;startz,&amp;nx,&amp;ny,&amp;nz,&amp;extrax,&amp;extray,&amp;extraz);
+<a name="line222">222: </a>  <font color="#4169E1">if</font> (ctx-&gt;dim == 2) {
+<a name="line223">223: </a>    <font color="#B22222">/* Element values */</font>
+<a name="line224">224: </a>    <font color="#4169E1">for</font> (ey=starty; ey&lt;starty+ny; ++ey) {
+<a name="line225">225: </a>      <font color="#4169E1">for</font> (ex=startx; ex&lt;startx+nx; ++ex) {
+<a name="line226">226: </a>        <a href="../../../../../docs/manualpages/DMSTAG/DMStagStencil.html#DMStagStencil">DMStagStencil</a> pos;
+
+<a name="line228">228: </a>        pos.i = ex; pos.j = ey; pos.c = 0; pos.loc = <a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_ELEMENT</a>;
+<a name="line229">229: </a>        <a href="../../../../../docs/manualpages/DMSTAG/DMStagVecSetValuesStencil.html#DMStagVecSetValuesStencil">DMStagVecSetValuesStencil</a>(ctx-&gt;dm_lame,ctx-&gt;lame,1,&amp;pos,&amp;ctx-&gt;lambda,<a href="../../../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>);
+<a name="line230">230: </a>        pos.i = ex; pos.j = ey; pos.c = 1; pos.loc = <a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_ELEMENT</a>;
+<a name="line231">231: </a>        <a href="../../../../../docs/manualpages/DMSTAG/DMStagVecSetValuesStencil.html#DMStagVecSetValuesStencil">DMStagVecSetValuesStencil</a>(ctx-&gt;dm_lame,ctx-&gt;lame,1,&amp;pos,&amp;ctx-&gt;mu,<a href="../../../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>);
+<a name="line232">232: </a>      }
+<a name="line233">233: </a>    }
+<a name="line234">234: </a>    <font color="#B22222">/* Vertex Values */</font>
+<a name="line235">235: </a>    <font color="#4169E1">for</font> (ey=starty; ey&lt;starty+ny+extray; ++ey) {
+<a name="line236">236: </a>      <font color="#4169E1">for</font> (ex=startx; ex&lt;startx+nx+extrax; ++ex) {
+<a name="line237">237: </a>        <a href="../../../../../docs/manualpages/DMSTAG/DMStagStencil.html#DMStagStencil">DMStagStencil</a> pos;
+
+<a name="line239">239: </a>        pos.i = ex; pos.j = ey; pos.c = 0; pos.loc = <a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_DOWN_LEFT</a>;
+<a name="line240">240: </a>        <a href="../../../../../docs/manualpages/DMSTAG/DMStagVecSetValuesStencil.html#DMStagVecSetValuesStencil">DMStagVecSetValuesStencil</a>(ctx-&gt;dm_lame,ctx-&gt;lame,1,&amp;pos,&amp;ctx-&gt;mu,<a href="../../../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>);
+<a name="line241">241: </a>      }
+<a name="line242">242: </a>    }
+<a name="line243">243: </a>  } <font color="#4169E1">else</font> <font color="#4169E1">if</font> (ctx-&gt;dim == 3) {
+<a name="line244">244: </a>    <font color="#B22222">/* Element values */</font>
+<a name="line245">245: </a>    <font color="#4169E1">for</font> (ez=startz; ez&lt;startz+nz; ++ez) {
+<a name="line246">246: </a>      <font color="#4169E1">for</font> (ey=starty; ey&lt;starty+ny; ++ey) {
+<a name="line247">247: </a>        <font color="#4169E1">for</font> (ex=startx; ex&lt;startx+nx; ++ex) {
+<a name="line248">248: </a>        <a href="../../../../../docs/manualpages/DMSTAG/DMStagStencil.html#DMStagStencil">DMStagStencil</a> pos;
+
+<a name="line250">250: </a>        pos.i = ex; pos.j = ey; pos.k = ez; pos.c = 0; pos.loc = <a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_ELEMENT</a>;
+<a name="line251">251: </a>        <a href="../../../../../docs/manualpages/DMSTAG/DMStagVecSetValuesStencil.html#DMStagVecSetValuesStencil">DMStagVecSetValuesStencil</a>(ctx-&gt;dm_lame,ctx-&gt;lame,1,&amp;pos,&amp;ctx-&gt;lambda,<a href="../../../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>);
+<a name="line252">252: </a>        pos.i = ex; pos.j = ey; pos.k = ez; pos.c = 1; pos.loc = <a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_ELEMENT</a>;
+<a name="line253">253: </a>        <a href="../../../../../docs/manualpages/DMSTAG/DMStagVecSetValuesStencil.html#DMStagVecSetValuesStencil">DMStagVecSetValuesStencil</a>(ctx-&gt;dm_lame,ctx-&gt;lame,1,&amp;pos,&amp;ctx-&gt;mu,<a href="../../../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>);
+<a name="line254">254: </a>        }
+<a name="line255">255: </a>      }
+<a name="line256">256: </a>    }
+<a name="line257">257: </a>    <font color="#B22222">/* Edge Values */</font>
+<a name="line258">258: </a>    <font color="#4169E1">for</font> (ez=startz; ez&lt;startz+nz+extraz; ++ez) {
+<a name="line259">259: </a>      <font color="#4169E1">for</font> (ey=starty; ey&lt;starty+ny+extray; ++ey) {
+<a name="line260">260: </a>        <font color="#4169E1">for</font> (ex=startx; ex&lt;startx+nx+extrax; ++ex) {
+<a name="line261">261: </a>          <a href="../../../../../docs/manualpages/DMSTAG/DMStagStencil.html#DMStagStencil">DMStagStencil</a>   pos;
+
+<a name="line263">263: </a>          <font color="#4169E1">if</font> (ex &lt; N[0]) {
+<a name="line264">264: </a>            pos.i = ex; pos.j = ey; pos.k = ez; pos.c = 0; pos.loc = <a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_BACK_DOWN</a>;
+<a name="line265">265: </a>            <a href="../../../../../docs/manualpages/DMSTAG/DMStagVecSetValuesStencil.html#DMStagVecSetValuesStencil">DMStagVecSetValuesStencil</a>(ctx-&gt;dm_lame,ctx-&gt;lame,1,&amp;pos,&amp;ctx-&gt;mu,<a href="../../../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>);
+<a name="line266">266: </a>          }
+<a name="line267">267: </a>          <font color="#4169E1">if</font> (ey &lt; N[1]) {
+<a name="line268">268: </a>            pos.i = ex; pos.j = ey; pos.k = ez; pos.c = 0; pos.loc = <a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_BACK_LEFT</a>;
+<a name="line269">269: </a>            <a href="../../../../../docs/manualpages/DMSTAG/DMStagVecSetValuesStencil.html#DMStagVecSetValuesStencil">DMStagVecSetValuesStencil</a>(ctx-&gt;dm_lame,ctx-&gt;lame,1,&amp;pos,&amp;ctx-&gt;mu,<a href="../../../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>);
+<a name="line270">270: </a>          }
+<a name="line271">271: </a>          <font color="#4169E1">if</font> (ez &lt; N[2]) {
+<a name="line272">272: </a>            pos.i = ex; pos.j = ey; pos.k = ez; pos.c = 0; pos.loc = <a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_DOWN_LEFT</a>;
+<a name="line273">273: </a>            <a href="../../../../../docs/manualpages/DMSTAG/DMStagVecSetValuesStencil.html#DMStagVecSetValuesStencil">DMStagVecSetValuesStencil</a>(ctx-&gt;dm_lame,ctx-&gt;lame,1,&amp;pos,&amp;ctx-&gt;mu,<a href="../../../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>);
+<a name="line274">274: </a>          }
+<a name="line275">275: </a>        }
+<a name="line276">276: </a>      }
+<a name="line277">277: </a>    }
+<a name="line278">278: </a>  } <font color="#4169E1">else</font> <a href="../../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)ctx-&gt;dm_velocity),PETSC_ERR_SUP,<font color="#666666">"Unsupported dim %d"</font>,ctx-&gt;dim);
+<a name="line279">279: </a>  <a href="../../../../../docs/manualpages/Vec/VecAssemblyBegin.html#VecAssemblyBegin">VecAssemblyBegin</a>(ctx-&gt;lame);
+<a name="line280">280: </a>  <a href="../../../../../docs/manualpages/Vec/VecAssemblyEnd.html#VecAssemblyEnd">VecAssemblyEnd</a>(ctx-&gt;lame);
+<a name="line281">281: </a>  <font color="#4169E1">return</font>(0);
+<a name="line282">282: </a>}
+
+<a name="line284">284: </a><strong><font color="#4169E1"><a name="ForceStress"></a>static <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> ForceStress(const Ctx *ctx,<a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> stress, <a href="../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> t)</font></strong>
+<a name="line285">285: </a>{
+<a name="line286">286: </a>  <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>    ierr;
+<a name="line287">287: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>          start[3],n[3],N[3];
+<a name="line288">288: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagStencil.html#DMStagStencil">DMStagStencil</a>     pos;
+<a name="line289">289: </a>  <a href="../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>         this_rank;
+<a name="line290">290: </a>  const <a href="../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> val = PetscExpReal(-100.0 * t);
+
+<a name="line293">293: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetGlobalSizes.html#DMStagGetGlobalSizes">DMStagGetGlobalSizes</a>(ctx-&gt;dm_stress,&amp;N[0],&amp;N[1],&amp;N[2]);
+<a name="line294">294: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetCorners.html#DMStagGetCorners">DMStagGetCorners</a>(ctx-&gt;dm_stress,&amp;start[0],&amp;start[1],&amp;start[2],&amp;n[0],&amp;n[1],&amp;n[2],NULL,NULL,NULL);
+
+<a name="line296">296: </a>  <font color="#B22222">/* Normal stresses at a single point */</font>
+<a name="line297">297: </a>  this_rank = (<a href="../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>) (start[0] &lt;= N[0]/2 &amp;&amp; N[0]/2 &lt;= start[0] + n[0]);
+<a name="line298">298: </a>  this_rank = (<a href="../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>) (this_rank &amp;&amp; start[1] &lt;= N[1]/2 &amp;&amp; N[1]/2 &lt;= start[1] + n[1]);
+<a name="line299">299: </a>  <font color="#4169E1">if</font> (ctx-&gt;dim == 3) this_rank = (<a href="../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>) (this_rank &amp;&amp; start[2] &lt;= N[2]/2 &amp;&amp; N[2]/2 &lt;= start[2] + n[2]);
+<a name="line300">300: </a>  <font color="#4169E1">if</font> (this_rank) {
+<a name="line301">301: </a>    <font color="#B22222">/* Note integer division to pick element near the center */</font>
+<a name="line302">302: </a>    pos.i = N[0]/2; pos.j = N[1]/2; pos.k = N[2]/2; pos.c = 0; pos.loc = <a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_ELEMENT</a>;
+<a name="line303">303: </a>    <a href="../../../../../docs/manualpages/DMSTAG/DMStagVecSetValuesStencil.html#DMStagVecSetValuesStencil">DMStagVecSetValuesStencil</a>(ctx-&gt;dm_stress,stress,1,&amp;pos,&amp;val,<a href="../../../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>);
+<a name="line304">304: </a>    pos.i = N[0]/2; pos.j = N[1]/2; pos.k = N[2]/2; pos.c = 1; pos.loc = <a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_ELEMENT</a>;
+<a name="line305">305: </a>    <a href="../../../../../docs/manualpages/DMSTAG/DMStagVecSetValuesStencil.html#DMStagVecSetValuesStencil">DMStagVecSetValuesStencil</a>(ctx-&gt;dm_stress,stress,1,&amp;pos,&amp;val,<a href="../../../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>);
+<a name="line306">306: </a>    <font color="#4169E1">if</font> (ctx-&gt;dim == 3) {
+<a name="line307">307: </a>      pos.i = N[0]/2; pos.j = N[1]/2; pos.k = N[2]/2; pos.c = 2; pos.loc = <a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_ELEMENT</a>;
+<a name="line308">308: </a>      <a href="../../../../../docs/manualpages/DMSTAG/DMStagVecSetValuesStencil.html#DMStagVecSetValuesStencil">DMStagVecSetValuesStencil</a>(ctx-&gt;dm_stress,stress,1,&amp;pos,&amp;val,<a href="../../../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>);
+<a name="line309">309: </a>    }
+<a name="line310">310: </a>  }
+
+<a name="line312">312: </a>  <a href="../../../../../docs/manualpages/Vec/VecAssemblyBegin.html#VecAssemblyBegin">VecAssemblyBegin</a>(stress);
+<a name="line313">313: </a>  <a href="../../../../../docs/manualpages/Vec/VecAssemblyEnd.html#VecAssemblyEnd">VecAssemblyEnd</a>(stress);
+<a name="line314">314: </a>  <font color="#4169E1">return</font>(0);
+<a name="line315">315: </a>}
+
+<a name="line317">317: </a><strong><font color="#4169E1"><a name="UpdateVelocity_2d"></a>static <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> UpdateVelocity_2d(const Ctx *ctx,<a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> velocity,<a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> stress, <a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> buoyancy)</font></strong>
+<a name="line318">318: </a>{
+<a name="line319">319: </a>  <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>    ierr;
+<a name="line320">320: </a>  <a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a>               velocity_local,stress_local,buoyancy_local;
+<a name="line321">321: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>          ex,ey,startx,starty,nx,ny;
+<a name="line322">322: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>          slot_coord_next,slot_coord_element,slot_coord_prev;
+<a name="line323">323: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>          slot_vx_left,slot_vy_down,slot_buoyancy_down,slot_buoyancy_left;
+<a name="line324">324: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>          slot_txx,slot_tyy,slot_txy_downleft,slot_txy_downright,slot_txy_upleft;
+<a name="line325">325: </a>  const <a href="../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> **arr_coord_x,**arr_coord_y;
+<a name="line326">326: </a>  const <a href="../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> ***arr_stress,***arr_buoyancy;
+<a name="line327">327: </a>  <a href="../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>       ***arr_velocity;
+
+
+<a name="line331">331: </a>  <font color="#B22222">/* Prepare direct access to buoyancy data */</font>
+<a name="line332">332: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetLocationSlot.html#DMStagGetLocationSlot">DMStagGetLocationSlot</a>(ctx-&gt;dm_buoyancy,<a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_LEFT</a>,0,&amp;slot_buoyancy_left);
+<a name="line333">333: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetLocationSlot.html#DMStagGetLocationSlot">DMStagGetLocationSlot</a>(ctx-&gt;dm_buoyancy,<a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_DOWN</a>,0,&amp;slot_buoyancy_down);
+<a name="line334">334: </a>  <a href="../../../../../docs/manualpages/DM/DMGetLocalVector.html#DMGetLocalVector">DMGetLocalVector</a>(ctx-&gt;dm_buoyancy,&amp;buoyancy_local);
+<a name="line335">335: </a>  <a href="../../../../../docs/manualpages/DM/DMGlobalToLocal.html#DMGlobalToLocal">DMGlobalToLocal</a>(ctx-&gt;dm_buoyancy,buoyancy,<a href="../../../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>,buoyancy_local);
+<a name="line336">336: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagVecGetArrayRead.html#DMStagVecGetArrayRead">DMStagVecGetArrayRead</a>(ctx-&gt;dm_buoyancy,buoyancy_local,&amp;arr_buoyancy);
+
+<a name="line338">338: </a>  <font color="#B22222">/* Prepare read-only access to stress data */</font>
+<a name="line339">339: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetLocationSlot.html#DMStagGetLocationSlot">DMStagGetLocationSlot</a>(ctx-&gt;dm_stress,<a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_ELEMENT</a>,   0,&amp;slot_txx);
+<a name="line340">340: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetLocationSlot.html#DMStagGetLocationSlot">DMStagGetLocationSlot</a>(ctx-&gt;dm_stress,<a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_ELEMENT</a>,   1,&amp;slot_tyy);
+<a name="line341">341: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetLocationSlot.html#DMStagGetLocationSlot">DMStagGetLocationSlot</a>(ctx-&gt;dm_stress,<a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_UP_LEFT</a>,   0,&amp;slot_txy_upleft);
+<a name="line342">342: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetLocationSlot.html#DMStagGetLocationSlot">DMStagGetLocationSlot</a>(ctx-&gt;dm_stress,<a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_DOWN_LEFT</a>, 0,&amp;slot_txy_downleft);
+<a name="line343">343: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetLocationSlot.html#DMStagGetLocationSlot">DMStagGetLocationSlot</a>(ctx-&gt;dm_stress,<a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_DOWN_RIGHT</a>,0,&amp;slot_txy_downright);
+<a name="line344">344: </a>  <a href="../../../../../docs/manualpages/DM/DMGetLocalVector.html#DMGetLocalVector">DMGetLocalVector</a>(ctx-&gt;dm_stress,&amp;stress_local);
+<a name="line345">345: </a>  <a href="../../../../../docs/manualpages/DM/DMGlobalToLocal.html#DMGlobalToLocal">DMGlobalToLocal</a>(ctx-&gt;dm_stress,stress,<a href="../../../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>,stress_local);
+<a name="line346">346: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagVecGetArrayRead.html#DMStagVecGetArrayRead">DMStagVecGetArrayRead</a>(ctx-&gt;dm_stress,stress_local,&amp;arr_stress);
+
+<a name="line348">348: </a>  <font color="#B22222">/* Prepare read-write access to velocity data */</font>
+<a name="line349">349: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetLocationSlot.html#DMStagGetLocationSlot">DMStagGetLocationSlot</a>(ctx-&gt;dm_velocity,<a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_LEFT</a>,0,&amp;slot_vx_left);
+<a name="line350">350: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetLocationSlot.html#DMStagGetLocationSlot">DMStagGetLocationSlot</a>(ctx-&gt;dm_velocity,<a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_DOWN</a>,0,&amp;slot_vy_down);
+<a name="line351">351: </a>  <a href="../../../../../docs/manualpages/DM/DMGetLocalVector.html#DMGetLocalVector">DMGetLocalVector</a>(ctx-&gt;dm_velocity,&amp;velocity_local);
+<a name="line352">352: </a>  <a href="../../../../../docs/manualpages/DM/DMGlobalToLocal.html#DMGlobalToLocal">DMGlobalToLocal</a>(ctx-&gt;dm_velocity,velocity,<a href="../../../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>,velocity_local);
+<a name="line353">353: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagVecGetArray.html#DMStagVecGetArray">DMStagVecGetArray</a>(ctx-&gt;dm_velocity,velocity_local,&amp;arr_velocity);
+
+<a name="line355">355: </a>  <font color="#B22222">/* Prepare read-only access to coordinate data */</font>
+<a name="line356">356: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetProductCoordinateLocationSlot.html#DMStagGetProductCoordinateLocationSlot">DMStagGetProductCoordinateLocationSlot</a>(ctx-&gt;dm_velocity,<a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_LEFT</a>,&amp;slot_coord_prev);
+<a name="line357">357: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetProductCoordinateLocationSlot.html#DMStagGetProductCoordinateLocationSlot">DMStagGetProductCoordinateLocationSlot</a>(ctx-&gt;dm_velocity,<a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_RIGHT</a>,&amp;slot_coord_next);
+<a name="line358">358: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetProductCoordinateLocationSlot.html#DMStagGetProductCoordinateLocationSlot">DMStagGetProductCoordinateLocationSlot</a>(ctx-&gt;dm_velocity,<a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_ELEMENT</a>,&amp;slot_coord_element);
+<a name="line359">359: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetProductCoordinateArrays.html#DMStagGetProductCoordinateArrays">DMStagGetProductCoordinateArrays</a>(ctx-&gt;dm_velocity,&amp;arr_coord_x,&amp;arr_coord_y,NULL);
+
+<a name="line361">361: </a>  <font color="#B22222">/* Iterate over interior of the domain, updating the velocities */</font>
+<a name="line362">362: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetCorners.html#DMStagGetCorners">DMStagGetCorners</a>(ctx-&gt;dm_velocity,&amp;startx,&amp;starty,NULL,&amp;nx,&amp;ny,NULL,NULL,NULL,NULL);
+<a name="line363">363: </a>  <font color="#4169E1">for</font> (ey = starty; ey &lt; starty + ny; ++ey) {
+<a name="line364">364: </a>    <font color="#4169E1">for</font> (ex = startx; ex &lt; startx + nx; ++ex) {
+
+<a name="line366">366: </a>      <font color="#B22222">/* Update y-velocity */</font>
+<a name="line367">367: </a>      <font color="#4169E1">if</font> (ey &gt; 0) {
+<a name="line368">368: </a>        const <a href="../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> dx = arr_coord_x[ex][slot_coord_next]    - arr_coord_x[ex  ][slot_coord_prev];
+<a name="line369">369: </a>        const <a href="../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> dy = arr_coord_y[ey][slot_coord_element] - arr_coord_y[ey-1][slot_coord_element];
+<a name="line370">370: </a>        const <a href="../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> B = arr_buoyancy[ey][ex][slot_buoyancy_down];
+
+<a name="line372">372: </a>        arr_velocity[ey][ex][slot_vy_down] += B * ctx-&gt;dt * (
+<a name="line373">373: </a>              (arr_stress[ey][ex][slot_txy_downright] - arr_stress[ey  ][ex][slot_txy_downleft]) / dx
+<a name="line374">374: </a>            + (arr_stress[ey][ex][slot_tyy]           - arr_stress[ey-1][ex][slot_tyy]) / dy);
+<a name="line375">375: </a>      }
+
+<a name="line377">377: </a>      <font color="#B22222">/* Update x-velocity */</font>
+<a name="line378">378: </a>      <font color="#4169E1">if</font> (ex &gt; 0) {
+<a name="line379">379: </a>        const <a href="../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> dx = arr_coord_x[ex][slot_coord_element] - arr_coord_x[ex-1][slot_coord_element];
+<a name="line380">380: </a>        const <a href="../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> dy = arr_coord_y[ey][slot_coord_next]    - arr_coord_y[ey  ][slot_coord_prev];
+<a name="line381">381: </a>        const <a href="../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> B = arr_buoyancy[ey][ex][slot_buoyancy_left];
+
+<a name="line383">383: </a>        arr_velocity[ey][ex][slot_vx_left] += B * ctx-&gt;dt * (
+<a name="line384">384: </a>              (arr_stress[ey][ex][slot_txx]        - arr_stress[ey][ex-1][slot_txx]) / dx
+<a name="line385">385: </a>            + (arr_stress[ey][ex][slot_txy_upleft] - arr_stress[ey][ex  ][slot_txy_downleft]) / dy);
+<a name="line386">386: </a>      }
+<a name="line387">387: </a>    }
+<a name="line388">388: </a>  }
+
+<a name="line390">390: </a>  <font color="#B22222">/* Restore all access */</font>
+<a name="line391">391: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagVecRestoreArrayRead.html#DMStagVecRestoreArrayRead">DMStagVecRestoreArrayRead</a>(ctx-&gt;dm_buoyancy,buoyancy_local,&amp;arr_buoyancy);
+<a name="line392">392: </a>  <a href="../../../../../docs/manualpages/DM/DMRestoreLocalVector.html#DMRestoreLocalVector">DMRestoreLocalVector</a>(ctx-&gt;dm_buoyancy,&amp;buoyancy_local);
+<a name="line393">393: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagVecRestoreArrayRead.html#DMStagVecRestoreArrayRead">DMStagVecRestoreArrayRead</a>(ctx-&gt;dm_stress,stress_local,&amp;arr_stress);
+<a name="line394">394: </a>  <a href="../../../../../docs/manualpages/DM/DMRestoreLocalVector.html#DMRestoreLocalVector">DMRestoreLocalVector</a>(ctx-&gt;dm_stress,&amp;stress_local);
+<a name="line395">395: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagVecRestoreArray.html#DMStagVecRestoreArray">DMStagVecRestoreArray</a>(ctx-&gt;dm_velocity,velocity_local,&amp;arr_velocity);
+<a name="line396">396: </a>  <a href="../../../../../docs/manualpages/DM/DMLocalToGlobal.html#DMLocalToGlobal">DMLocalToGlobal</a>(ctx-&gt;dm_velocity,velocity_local,<a href="../../../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>,velocity);
+<a name="line397">397: </a>  <a href="../../../../../docs/manualpages/DM/DMRestoreLocalVector.html#DMRestoreLocalVector">DMRestoreLocalVector</a>(ctx-&gt;dm_velocity,&amp;velocity_local);
+<a name="line398">398: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagRestoreProductCoordinateArrays.html#DMStagRestoreProductCoordinateArrays">DMStagRestoreProductCoordinateArrays</a>(ctx-&gt;dm_velocity,&amp;arr_coord_x,&amp;arr_coord_y,NULL);
+<a name="line399">399: </a>  <font color="#4169E1">return</font>(0);
+<a name="line400">400: </a>}
+
+<a name="line402">402: </a><strong><font color="#4169E1"><a name="UpdateVelocity_3d"></a>static <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> UpdateVelocity_3d(const Ctx *ctx,<a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> velocity,<a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> stress, <a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> buoyancy)</font></strong>
+<a name="line403">403: </a>{
+<a name="line404">404: </a>  <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>    ierr;
+<a name="line405">405: </a>  <a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a>               velocity_local,stress_local,buoyancy_local;
+<a name="line406">406: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>          ex,ey,ez,startx,starty,startz,nx,ny,nz;
+<a name="line407">407: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>          slot_coord_next,slot_coord_element,slot_coord_prev;
+<a name="line408">408: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>          slot_vx_left,slot_vy_down,slot_vz_back,slot_buoyancy_down,slot_buoyancy_left,slot_buoyancy_back;
+<a name="line409">409: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>          slot_txx,slot_tyy,slot_tzz;
+<a name="line410">410: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>          slot_txy_downleft,slot_txy_downright,slot_txy_upleft;
+<a name="line411">411: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>          slot_txz_backleft,slot_txz_backright,slot_txz_frontleft;
+<a name="line412">412: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>          slot_tyz_backdown,slot_tyz_frontdown,slot_tyz_backup;
+<a name="line413">413: </a>  const <a href="../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> **arr_coord_x,**arr_coord_y,**arr_coord_z;
+<a name="line414">414: </a>  const <a href="../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> ****arr_stress,****arr_buoyancy;
+<a name="line415">415: </a>  <a href="../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>       ****arr_velocity;
+
+
+<a name="line419">419: </a>  <font color="#B22222">/* Prepare direct access to buoyancy data */</font>
+<a name="line420">420: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetLocationSlot.html#DMStagGetLocationSlot">DMStagGetLocationSlot</a>(ctx-&gt;dm_buoyancy,<a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_LEFT</a>,0,&amp;slot_buoyancy_left);
+<a name="line421">421: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetLocationSlot.html#DMStagGetLocationSlot">DMStagGetLocationSlot</a>(ctx-&gt;dm_buoyancy,<a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_DOWN</a>,0,&amp;slot_buoyancy_down);
+<a name="line422">422: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetLocationSlot.html#DMStagGetLocationSlot">DMStagGetLocationSlot</a>(ctx-&gt;dm_buoyancy,<a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_BACK</a>,0,&amp;slot_buoyancy_back);
+<a name="line423">423: </a>  <a href="../../../../../docs/manualpages/DM/DMGetLocalVector.html#DMGetLocalVector">DMGetLocalVector</a>(ctx-&gt;dm_buoyancy,&amp;buoyancy_local);
+<a name="line424">424: </a>  <a href="../../../../../docs/manualpages/DM/DMGlobalToLocal.html#DMGlobalToLocal">DMGlobalToLocal</a>(ctx-&gt;dm_buoyancy,buoyancy,<a href="../../../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>,buoyancy_local);
+<a name="line425">425: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagVecGetArrayRead.html#DMStagVecGetArrayRead">DMStagVecGetArrayRead</a>(ctx-&gt;dm_buoyancy,buoyancy_local,&amp;arr_buoyancy);
+
+<a name="line427">427: </a>  <font color="#B22222">/* Prepare read-only access to stress data */</font>
+<a name="line428">428: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetLocationSlot.html#DMStagGetLocationSlot">DMStagGetLocationSlot</a>(ctx-&gt;dm_stress,<a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_ELEMENT</a>,   0,&amp;slot_txx);
+<a name="line429">429: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetLocationSlot.html#DMStagGetLocationSlot">DMStagGetLocationSlot</a>(ctx-&gt;dm_stress,<a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_ELEMENT</a>,   1,&amp;slot_tyy);
+<a name="line430">430: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetLocationSlot.html#DMStagGetLocationSlot">DMStagGetLocationSlot</a>(ctx-&gt;dm_stress,<a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_ELEMENT</a>,   2,&amp;slot_tzz);
+<a name="line431">431: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetLocationSlot.html#DMStagGetLocationSlot">DMStagGetLocationSlot</a>(ctx-&gt;dm_stress,<a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_UP_LEFT</a>,   0,&amp;slot_txy_upleft);
+<a name="line432">432: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetLocationSlot.html#DMStagGetLocationSlot">DMStagGetLocationSlot</a>(ctx-&gt;dm_stress,<a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_DOWN_LEFT</a>, 0,&amp;slot_txy_downleft);
+<a name="line433">433: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetLocationSlot.html#DMStagGetLocationSlot">DMStagGetLocationSlot</a>(ctx-&gt;dm_stress,<a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_DOWN_RIGHT</a>,0,&amp;slot_txy_downright);
+<a name="line434">434: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetLocationSlot.html#DMStagGetLocationSlot">DMStagGetLocationSlot</a>(ctx-&gt;dm_stress,<a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_BACK_LEFT</a>, 0,&amp;slot_txz_backleft);
+<a name="line435">435: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetLocationSlot.html#DMStagGetLocationSlot">DMStagGetLocationSlot</a>(ctx-&gt;dm_stress,<a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_BACK_RIGHT</a>,0,&amp;slot_txz_backright);
+<a name="line436">436: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetLocationSlot.html#DMStagGetLocationSlot">DMStagGetLocationSlot</a>(ctx-&gt;dm_stress,<a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_FRONT_LEFT</a>,0,&amp;slot_txz_frontleft);
+<a name="line437">437: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetLocationSlot.html#DMStagGetLocationSlot">DMStagGetLocationSlot</a>(ctx-&gt;dm_stress,<a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_BACK_DOWN</a>, 0,&amp;slot_tyz_backdown);
+<a name="line438">438: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetLocationSlot.html#DMStagGetLocationSlot">DMStagGetLocationSlot</a>(ctx-&gt;dm_stress,<a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_BACK_UP</a>,   0,&amp;slot_tyz_backup);
+<a name="line439">439: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetLocationSlot.html#DMStagGetLocationSlot">DMStagGetLocationSlot</a>(ctx-&gt;dm_stress,<a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_FRONT_DOWN</a>,0,&amp;slot_tyz_frontdown);
+<a name="line440">440: </a>  <a href="../../../../../docs/manualpages/DM/DMGetLocalVector.html#DMGetLocalVector">DMGetLocalVector</a>(ctx-&gt;dm_stress,&amp;stress_local);
+<a name="line441">441: </a>  <a href="../../../../../docs/manualpages/DM/DMGlobalToLocal.html#DMGlobalToLocal">DMGlobalToLocal</a>(ctx-&gt;dm_stress,stress,<a href="../../../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>,stress_local);
+<a name="line442">442: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagVecGetArrayRead.html#DMStagVecGetArrayRead">DMStagVecGetArrayRead</a>(ctx-&gt;dm_stress,stress_local,&amp;arr_stress);
+
+<a name="line444">444: </a>  <font color="#B22222">/* Prepare read-write access to velocity data */</font>
+<a name="line445">445: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetLocationSlot.html#DMStagGetLocationSlot">DMStagGetLocationSlot</a>(ctx-&gt;dm_velocity,<a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_LEFT</a>,0,&amp;slot_vx_left);
+<a name="line446">446: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetLocationSlot.html#DMStagGetLocationSlot">DMStagGetLocationSlot</a>(ctx-&gt;dm_velocity,<a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_DOWN</a>,0,&amp;slot_vy_down);
+<a name="line447">447: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetLocationSlot.html#DMStagGetLocationSlot">DMStagGetLocationSlot</a>(ctx-&gt;dm_velocity,<a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_BACK</a>,0,&amp;slot_vz_back);
+<a name="line448">448: </a>  <a href="../../../../../docs/manualpages/DM/DMGetLocalVector.html#DMGetLocalVector">DMGetLocalVector</a>(ctx-&gt;dm_velocity,&amp;velocity_local);
+<a name="line449">449: </a>  <a href="../../../../../docs/manualpages/DM/DMGlobalToLocal.html#DMGlobalToLocal">DMGlobalToLocal</a>(ctx-&gt;dm_velocity,velocity,<a href="../../../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>,velocity_local);
+<a name="line450">450: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagVecGetArray.html#DMStagVecGetArray">DMStagVecGetArray</a>(ctx-&gt;dm_velocity,velocity_local,&amp;arr_velocity);
+
+<a name="line452">452: </a>  <font color="#B22222">/* Prepare read-only access to coordinate data */</font>
+<a name="line453">453: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetProductCoordinateLocationSlot.html#DMStagGetProductCoordinateLocationSlot">DMStagGetProductCoordinateLocationSlot</a>(ctx-&gt;dm_velocity,<a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_LEFT</a>,&amp;slot_coord_prev);
+<a name="line454">454: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetProductCoordinateLocationSlot.html#DMStagGetProductCoordinateLocationSlot">DMStagGetProductCoordinateLocationSlot</a>(ctx-&gt;dm_velocity,<a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_RIGHT</a>,&amp;slot_coord_next);
+<a name="line455">455: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetProductCoordinateLocationSlot.html#DMStagGetProductCoordinateLocationSlot">DMStagGetProductCoordinateLocationSlot</a>(ctx-&gt;dm_velocity,<a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_ELEMENT</a>,&amp;slot_coord_element);
+<a name="line456">456: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetProductCoordinateArrays.html#DMStagGetProductCoordinateArrays">DMStagGetProductCoordinateArrays</a>(ctx-&gt;dm_velocity,&amp;arr_coord_x,&amp;arr_coord_y,&amp;arr_coord_z);
+
+<a name="line458">458: </a>  <font color="#B22222">/* Iterate over interior of the domain, updating the velocities */</font>
+<a name="line459">459: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetCorners.html#DMStagGetCorners">DMStagGetCorners</a>(ctx-&gt;dm_velocity,&amp;startx,&amp;starty,&amp;startz,&amp;nx,&amp;ny,&amp;nz,NULL,NULL,NULL);
+<a name="line460">460: </a>  <font color="#4169E1">for</font> (ez = startz; ez &lt; startz + nz; ++ez) {
+<a name="line461">461: </a>    <font color="#4169E1">for</font> (ey = starty; ey &lt; starty + ny; ++ey) {
+<a name="line462">462: </a>      <font color="#4169E1">for</font> (ex = startx; ex &lt; startx + nx; ++ex) {
+
+<a name="line464">464: </a>        <font color="#B22222">/* Update y-velocity */</font>
+<a name="line465">465: </a>        <font color="#4169E1">if</font> (ey &gt; 0) {
+<a name="line466">466: </a>          const <a href="../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> dx = arr_coord_x[ex][slot_coord_next]    - arr_coord_x[ex  ][slot_coord_prev];
+<a name="line467">467: </a>          const <a href="../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> dy = arr_coord_y[ey][slot_coord_element] - arr_coord_y[ey-1][slot_coord_element];
+<a name="line468">468: </a>          const <a href="../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> dz = arr_coord_z[ez][slot_coord_next]    - arr_coord_z[ez  ][slot_coord_prev];
+<a name="line469">469: </a>          const <a href="../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> B = arr_buoyancy[ez][ey][ex][slot_buoyancy_down];
+
+<a name="line471">471: </a>          arr_velocity[ez][ey][ex][slot_vy_down] += B * ctx-&gt;dt * (
+<a name="line472">472: </a>                (arr_stress[ez][ey][ex][slot_txy_downright] - arr_stress[ez][ey  ][ex][slot_txy_downleft]) / dx
+<a name="line473">473: </a>              + (arr_stress[ez][ey][ex][slot_tyy]           - arr_stress[ez][ey-1][ex][slot_tyy]) / dy
+<a name="line474">474: </a>              + (arr_stress[ez][ey][ex][slot_tyz_frontdown] - arr_stress[ez][ey  ][ex][slot_tyz_backdown]) / dz);
+<a name="line475">475: </a>        }
+
+<a name="line477">477: </a>        <font color="#B22222">/* Update x-velocity */</font>
+<a name="line478">478: </a>        <font color="#4169E1">if</font> (ex &gt; 0) {
+<a name="line479">479: </a>          const <a href="../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> dx = arr_coord_x[ex][slot_coord_element] - arr_coord_x[ex-1][slot_coord_element];
+<a name="line480">480: </a>          const <a href="../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> dy = arr_coord_y[ey][slot_coord_next]    - arr_coord_y[ey  ][slot_coord_prev];
+<a name="line481">481: </a>          const <a href="../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> dz = arr_coord_z[ez][slot_coord_next]    - arr_coord_z[ez  ][slot_coord_prev];
+<a name="line482">482: </a>          const <a href="../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> B = arr_buoyancy[ez][ey][ex][slot_buoyancy_left];
+
+<a name="line484">484: </a>          arr_velocity[ez][ey][ex][slot_vx_left] += B * ctx-&gt;dt * (
+<a name="line485">485: </a>                (arr_stress[ez][ey][ex][slot_txx]           - arr_stress[ez][ey][ex-1][slot_txx]) / dx
+<a name="line486">486: </a>              + (arr_stress[ez][ey][ex][slot_txy_upleft]    - arr_stress[ez][ey][ex  ][slot_txy_downleft]) / dy
+<a name="line487">487: </a>              + (arr_stress[ez][ey][ex][slot_txz_frontleft] - arr_stress[ez][ey][ex  ][slot_txz_backleft]) / dz);
+<a name="line488">488: </a>        }
+
+<a name="line490">490: </a>        <font color="#B22222">/* Update z-velocity */</font>
+<a name="line491">491: </a>        <font color="#4169E1">if</font> (ez &gt; 0) {
+<a name="line492">492: </a>          const <a href="../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> dx = arr_coord_x[ex][slot_coord_next]    - arr_coord_x[ex  ][slot_coord_prev];
+<a name="line493">493: </a>          const <a href="../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> dy = arr_coord_y[ey][slot_coord_next]    - arr_coord_y[ey  ][slot_coord_prev];
+<a name="line494">494: </a>          const <a href="../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> dz = arr_coord_z[ez][slot_coord_element] - arr_coord_z[ez-1][slot_coord_element];
+<a name="line495">495: </a>          const <a href="../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> B = arr_buoyancy[ez][ey][ex][slot_buoyancy_back];
+
+<a name="line497">497: </a>          arr_velocity[ez][ey][ex][slot_vz_back] += B * ctx-&gt;dt * (
+<a name="line498">498: </a>              (arr_stress[ez][ey][ex][slot_txz_backright] - arr_stress[ez  ][ey][ex][slot_txz_backleft]) / dx
+<a name="line499">499: </a>            + (arr_stress[ez][ey][ex][slot_tyz_backup]    - arr_stress[ez  ][ey][ex][slot_tyz_backdown]) / dy
+<a name="line500">500: </a>            + (arr_stress[ez][ey][ex][slot_tzz]           - arr_stress[ez-1][ey][ex][slot_tzz]) / dz);
+<a name="line501">501: </a>        }
+<a name="line502">502: </a>      }
+<a name="line503">503: </a>    }
+<a name="line504">504: </a>  }
+
+<a name="line506">506: </a>  <font color="#B22222">/* Restore all access */</font>
+<a name="line507">507: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagVecRestoreArrayRead.html#DMStagVecRestoreArrayRead">DMStagVecRestoreArrayRead</a>(ctx-&gt;dm_buoyancy,buoyancy_local,&amp;arr_buoyancy);
+<a name="line508">508: </a>  <a href="../../../../../docs/manualpages/DM/DMRestoreLocalVector.html#DMRestoreLocalVector">DMRestoreLocalVector</a>(ctx-&gt;dm_buoyancy,&amp;buoyancy_local);
+<a name="line509">509: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagVecRestoreArrayRead.html#DMStagVecRestoreArrayRead">DMStagVecRestoreArrayRead</a>(ctx-&gt;dm_stress,stress_local,&amp;arr_stress);
+<a name="line510">510: </a>  <a href="../../../../../docs/manualpages/DM/DMRestoreLocalVector.html#DMRestoreLocalVector">DMRestoreLocalVector</a>(ctx-&gt;dm_stress,&amp;stress_local);
+<a name="line511">511: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagVecRestoreArray.html#DMStagVecRestoreArray">DMStagVecRestoreArray</a>(ctx-&gt;dm_velocity,velocity_local,&amp;arr_velocity);
+<a name="line512">512: </a>  <a href="../../../../../docs/manualpages/DM/DMLocalToGlobal.html#DMLocalToGlobal">DMLocalToGlobal</a>(ctx-&gt;dm_velocity,velocity_local,<a href="../../../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>,velocity);
+<a name="line513">513: </a>  <a href="../../../../../docs/manualpages/DM/DMRestoreLocalVector.html#DMRestoreLocalVector">DMRestoreLocalVector</a>(ctx-&gt;dm_velocity,&amp;velocity_local);
+<a name="line514">514: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagRestoreProductCoordinateArrays.html#DMStagRestoreProductCoordinateArrays">DMStagRestoreProductCoordinateArrays</a>(ctx-&gt;dm_velocity,&amp;arr_coord_x,&amp;arr_coord_y,&amp;arr_coord_z);
+<a name="line515">515: </a>  <font color="#4169E1">return</font>(0);
+<a name="line516">516: </a>}
+
+<a name="line518">518: </a><strong><font color="#4169E1"><a name="UpdateVelocity"></a>static <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> UpdateVelocity(const Ctx *ctx,<a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> velocity,<a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> stress, <a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> buoyancy)</font></strong>
+<a name="line519">519: </a>{
+
+<a name="line523">523: </a>  <font color="#4169E1">if</font> (ctx-&gt;dim == 2) {
+<a name="line524">524: </a>    UpdateVelocity_2d(ctx,velocity,stress,buoyancy);
+<a name="line525">525: </a>  } <font color="#4169E1">else</font> <font color="#4169E1">if</font> (ctx-&gt;dim == 3) {
+<a name="line526">526: </a>    UpdateVelocity_3d(ctx,velocity,stress,buoyancy);
+<a name="line527">527: </a>  } <font color="#4169E1">else</font> <a href="../../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)ctx-&gt;dm_velocity),PETSC_ERR_SUP,<font color="#666666">"Unsupported dim %d"</font>,ctx-&gt;dim);
+<a name="line528">528: </a>  <font color="#4169E1">return</font>(0);
+<a name="line529">529: </a>}
+
+<a name="line531">531: </a><strong><font color="#4169E1"><a name="UpdateStress_2d"></a>static <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> UpdateStress_2d(const Ctx *ctx,<a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> velocity,<a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> stress, <a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> lame)</font></strong>
+<a name="line532">532: </a>{
+<a name="line533">533: </a>  <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>    ierr;
+<a name="line534">534: </a>  <a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a>               velocity_local,stress_local,lame_local;
+<a name="line535">535: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>          ex,ey,startx,starty,nx,ny;
+<a name="line536">536: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>          slot_coord_next,slot_coord_element,slot_coord_prev;
+<a name="line537">537: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>          slot_vx_left,slot_vy_down,slot_vx_right,slot_vy_up;
+<a name="line538">538: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>          slot_mu_element,slot_lambda_element,slot_mu_downleft;
+<a name="line539">539: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>          slot_txx,slot_tyy,slot_txy_downleft;
+<a name="line540">540: </a>  const <a href="../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> **arr_coord_x,**arr_coord_y;
+<a name="line541">541: </a>  const <a href="../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> ***arr_velocity,***arr_lame;
+<a name="line542">542: </a>  <a href="../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>       ***arr_stress;
+
+
+<a name="line546">546: </a>  <font color="#B22222">/* Prepare read-write access to stress data */</font>
+<a name="line547">547: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetLocationSlot.html#DMStagGetLocationSlot">DMStagGetLocationSlot</a>(ctx-&gt;dm_stress,<a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_ELEMENT</a>,0,&amp;slot_txx);
+<a name="line548">548: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetLocationSlot.html#DMStagGetLocationSlot">DMStagGetLocationSlot</a>(ctx-&gt;dm_stress,<a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_ELEMENT</a>,1,&amp;slot_tyy);
+<a name="line549">549: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetLocationSlot.html#DMStagGetLocationSlot">DMStagGetLocationSlot</a>(ctx-&gt;dm_stress,<a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_DOWN_LEFT</a>,0,&amp;slot_txy_downleft);
+<a name="line550">550: </a>  <a href="../../../../../docs/manualpages/DM/DMGetLocalVector.html#DMGetLocalVector">DMGetLocalVector</a>(ctx-&gt;dm_stress,&amp;stress_local);
+<a name="line551">551: </a>  <a href="../../../../../docs/manualpages/DM/DMGlobalToLocal.html#DMGlobalToLocal">DMGlobalToLocal</a>(ctx-&gt;dm_stress,stress,<a href="../../../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>,stress_local);
+<a name="line552">552: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagVecGetArray.html#DMStagVecGetArray">DMStagVecGetArray</a>(ctx-&gt;dm_stress,stress_local,&amp;arr_stress);
+
+<a name="line554">554: </a>  <font color="#B22222">/* Prepare read-only access to velocity data */</font>
+<a name="line555">555: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetLocationSlot.html#DMStagGetLocationSlot">DMStagGetLocationSlot</a>(ctx-&gt;dm_velocity,<a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_LEFT</a>,0,&amp;slot_vx_left);
+<a name="line556">556: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetLocationSlot.html#DMStagGetLocationSlot">DMStagGetLocationSlot</a>(ctx-&gt;dm_velocity,<a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_RIGHT</a>,0,&amp;slot_vx_right);
+<a name="line557">557: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetLocationSlot.html#DMStagGetLocationSlot">DMStagGetLocationSlot</a>(ctx-&gt;dm_velocity,<a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_DOWN</a>,0,&amp;slot_vy_down);
+<a name="line558">558: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetLocationSlot.html#DMStagGetLocationSlot">DMStagGetLocationSlot</a>(ctx-&gt;dm_velocity,<a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_UP</a>,0,&amp;slot_vy_up);
+<a name="line559">559: </a>  <a href="../../../../../docs/manualpages/DM/DMGetLocalVector.html#DMGetLocalVector">DMGetLocalVector</a>(ctx-&gt;dm_velocity,&amp;velocity_local);
+<a name="line560">560: </a>  <a href="../../../../../docs/manualpages/DM/DMGlobalToLocal.html#DMGlobalToLocal">DMGlobalToLocal</a>(ctx-&gt;dm_velocity,velocity,<a href="../../../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>,velocity_local);
+<a name="line561">561: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagVecGetArrayRead.html#DMStagVecGetArrayRead">DMStagVecGetArrayRead</a>(ctx-&gt;dm_velocity,velocity_local,&amp;arr_velocity);
+
+<a name="line563">563: </a>  <font color="#B22222">/* Prepare read-only access to Lame' data */</font>
+<a name="line564">564: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetLocationSlot.html#DMStagGetLocationSlot">DMStagGetLocationSlot</a>(ctx-&gt;dm_lame,<a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_ELEMENT</a>,0,&amp;slot_lambda_element);
+<a name="line565">565: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetLocationSlot.html#DMStagGetLocationSlot">DMStagGetLocationSlot</a>(ctx-&gt;dm_lame,<a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_ELEMENT</a>,1,&amp;slot_mu_element);
+<a name="line566">566: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetLocationSlot.html#DMStagGetLocationSlot">DMStagGetLocationSlot</a>(ctx-&gt;dm_lame,<a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_DOWN_LEFT</a>,0,&amp;slot_mu_downleft);
+<a name="line567">567: </a>  <a href="../../../../../docs/manualpages/DM/DMGetLocalVector.html#DMGetLocalVector">DMGetLocalVector</a>(ctx-&gt;dm_lame,&amp;lame_local);
+<a name="line568">568: </a>  <a href="../../../../../docs/manualpages/DM/DMGlobalToLocal.html#DMGlobalToLocal">DMGlobalToLocal</a>(ctx-&gt;dm_lame,lame,<a href="../../../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>,lame_local);
+<a name="line569">569: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagVecGetArrayRead.html#DMStagVecGetArrayRead">DMStagVecGetArrayRead</a>(ctx-&gt;dm_lame,lame_local,&amp;arr_lame);
+
+<a name="line571">571: </a>  <font color="#B22222">/* Prepare read-only access to coordinate data */</font>
+<a name="line572">572: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetProductCoordinateLocationSlot.html#DMStagGetProductCoordinateLocationSlot">DMStagGetProductCoordinateLocationSlot</a>(ctx-&gt;dm_velocity,<a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_LEFT</a>,&amp;slot_coord_prev);
+<a name="line573">573: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetProductCoordinateLocationSlot.html#DMStagGetProductCoordinateLocationSlot">DMStagGetProductCoordinateLocationSlot</a>(ctx-&gt;dm_velocity,<a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_RIGHT</a>,&amp;slot_coord_next);
+<a name="line574">574: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetProductCoordinateLocationSlot.html#DMStagGetProductCoordinateLocationSlot">DMStagGetProductCoordinateLocationSlot</a>(ctx-&gt;dm_velocity,<a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_ELEMENT</a>,&amp;slot_coord_element);
+<a name="line575">575: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetProductCoordinateArrays.html#DMStagGetProductCoordinateArrays">DMStagGetProductCoordinateArrays</a>(ctx-&gt;dm_velocity,&amp;arr_coord_x,&amp;arr_coord_y,NULL);
+
+<a name="line577">577: </a>  <font color="#B22222">/* Iterate over the interior of the domain, updating the stresses */</font>
+<a name="line578">578: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetCorners.html#DMStagGetCorners">DMStagGetCorners</a>(ctx-&gt;dm_velocity,&amp;startx,&amp;starty,NULL,&amp;nx,&amp;ny,NULL,NULL,NULL,NULL);
+<a name="line579">579: </a>  <font color="#4169E1">for</font> (ey = starty; ey &lt; starty + ny; ++ey) {
+<a name="line580">580: </a>    <font color="#4169E1">for</font> (ex = startx; ex &lt; startx + nx; ++ex) {
+
+<a name="line582">582: </a>      <font color="#B22222">/* Update tau_xx and tau_yy*/</font>
+<a name="line583">583: </a>      {
+<a name="line584">584: </a>        const <a href="../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> dx   = arr_coord_x[ex][slot_coord_next] - arr_coord_x[ex][slot_coord_prev];
+<a name="line585">585: </a>        const <a href="../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> dy   = arr_coord_y[ey][slot_coord_next] - arr_coord_y[ey][slot_coord_prev];
+<a name="line586">586: </a>        const <a href="../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> L    = arr_lame[ey][ex][slot_lambda_element];
+<a name="line587">587: </a>        const <a href="../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> Lp2M = arr_lame[ey][ex][slot_lambda_element] + 2 * arr_lame[ey][ex][slot_mu_element];
+
+<a name="line589">589: </a>        arr_stress[ey][ex][slot_txx] +=
+<a name="line590">590: </a>            Lp2M * ctx-&gt;dt * (arr_velocity[ey][ex][slot_vx_right] - arr_velocity[ey][ex][slot_vx_left]) / dx
+<a name="line591">591: </a>          + L    * ctx-&gt;dt * (arr_velocity[ey][ex][slot_vy_up]    - arr_velocity[ey][ex][slot_vy_down]) / dy;
+
+<a name="line593">593: </a>        arr_stress[ey][ex][slot_tyy] +=
+<a name="line594">594: </a>            Lp2M * ctx-&gt;dt * (arr_velocity[ey][ex][slot_vy_up]    - arr_velocity[ey][ex][slot_vy_down]) / dy
+<a name="line595">595: </a>          + L    * ctx-&gt;dt * (arr_velocity[ey][ex][slot_vx_right] - arr_velocity[ey][ex][slot_vx_left]) / dx;
+<a name="line596">596: </a>      }
+
+<a name="line598">598: </a>      <font color="#B22222">/* Update tau_xy */</font>
+<a name="line599">599: </a>      <font color="#4169E1">if</font> (ex &gt; 0 &amp;&amp; ey &gt; 0) {
+<a name="line600">600: </a>        const <a href="../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> dx = arr_coord_x[ex][slot_coord_element] - arr_coord_x[ex-1][slot_coord_element];
+<a name="line601">601: </a>        const <a href="../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> dy = arr_coord_y[ey][slot_coord_element] - arr_coord_y[ey-1][slot_coord_element];
+<a name="line602">602: </a>        const <a href="../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> M  = arr_lame[ey][ex][slot_mu_downleft];
+
+<a name="line604">604: </a>        arr_stress[ey][ex][slot_txy_downleft] += M * ctx-&gt;dt * (
+<a name="line605">605: </a>            (arr_velocity[ey][ex][slot_vx_left] - arr_velocity[ey-1][ex][slot_vx_left]) / dy
+<a name="line606">606: </a>          + (arr_velocity[ey][ex][slot_vy_down] - arr_velocity[ey][ex-1][slot_vy_down]) / dx);
+<a name="line607">607: </a>      }
+<a name="line608">608: </a>    }
+<a name="line609">609: </a>  }
+
+<a name="line611">611: </a>  <font color="#B22222">/* Restore all access */</font>
+<a name="line612">612: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagVecRestoreArray.html#DMStagVecRestoreArray">DMStagVecRestoreArray</a>(ctx-&gt;dm_stress,stress_local,&amp;arr_stress);
+<a name="line613">613: </a>  <a href="../../../../../docs/manualpages/DM/DMLocalToGlobal.html#DMLocalToGlobal">DMLocalToGlobal</a>(ctx-&gt;dm_stress,stress_local,<a href="../../../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>,stress);
+<a name="line614">614: </a>  <a href="../../../../../docs/manualpages/DM/DMRestoreLocalVector.html#DMRestoreLocalVector">DMRestoreLocalVector</a>(ctx-&gt;dm_stress,&amp;stress_local);
+<a name="line615">615: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagVecRestoreArrayRead.html#DMStagVecRestoreArrayRead">DMStagVecRestoreArrayRead</a>(ctx-&gt;dm_velocity,velocity_local,&amp;arr_velocity);
+<a name="line616">616: </a>  <a href="../../../../../docs/manualpages/DM/DMRestoreLocalVector.html#DMRestoreLocalVector">DMRestoreLocalVector</a>(ctx-&gt;dm_velocity,&amp;velocity_local);
+<a name="line617">617: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagVecRestoreArrayRead.html#DMStagVecRestoreArrayRead">DMStagVecRestoreArrayRead</a>(ctx-&gt;dm_lame,lame_local,&amp;arr_lame);
+<a name="line618">618: </a>  <a href="../../../../../docs/manualpages/DM/DMRestoreLocalVector.html#DMRestoreLocalVector">DMRestoreLocalVector</a>(ctx-&gt;dm_lame,&amp;lame_local);
+<a name="line619">619: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagRestoreProductCoordinateArrays.html#DMStagRestoreProductCoordinateArrays">DMStagRestoreProductCoordinateArrays</a>(ctx-&gt;dm_velocity,&amp;arr_coord_x,&amp;arr_coord_y,NULL);
+<a name="line620">620: </a>  <font color="#4169E1">return</font>(0);
+<a name="line621">621: </a>}
+
+<a name="line623">623: </a><strong><font color="#4169E1"><a name="UpdateStress_3d"></a>static <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> UpdateStress_3d(const Ctx *ctx,<a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> velocity,<a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> stress, <a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> lame)</font></strong>
+<a name="line624">624: </a>{
+<a name="line625">625: </a>  <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>    ierr;
+<a name="line626">626: </a>  <a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a>               velocity_local,stress_local,lame_local;
+<a name="line627">627: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>          ex,ey,ez,startx,starty,startz,nx,ny,nz;
+<a name="line628">628: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>          slot_coord_next,slot_coord_element,slot_coord_prev;
+<a name="line629">629: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>          slot_vx_left,slot_vy_down,slot_vx_right,slot_vy_up,slot_vz_back,slot_vz_front;
+<a name="line630">630: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>          slot_mu_element,slot_lambda_element,slot_mu_downleft,slot_mu_backdown,slot_mu_backleft;
+<a name="line631">631: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>          slot_txx,slot_tyy,slot_tzz,slot_txy_downleft,slot_txz_backleft,slot_tyz_backdown;
+<a name="line632">632: </a>  const <a href="../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> **arr_coord_x,**arr_coord_y,**arr_coord_z;
+<a name="line633">633: </a>  const <a href="../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> ****arr_velocity,****arr_lame;
+<a name="line634">634: </a>  <a href="../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>       ****arr_stress;
+
+
+<a name="line638">638: </a>  <font color="#B22222">/* Prepare read-write access to stress data */</font>
+<a name="line639">639: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetLocationSlot.html#DMStagGetLocationSlot">DMStagGetLocationSlot</a>(ctx-&gt;dm_stress,<a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_ELEMENT</a>,0,&amp;slot_txx);
+<a name="line640">640: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetLocationSlot.html#DMStagGetLocationSlot">DMStagGetLocationSlot</a>(ctx-&gt;dm_stress,<a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_ELEMENT</a>,1,&amp;slot_tyy);
+<a name="line641">641: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetLocationSlot.html#DMStagGetLocationSlot">DMStagGetLocationSlot</a>(ctx-&gt;dm_stress,<a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_ELEMENT</a>,2,&amp;slot_tzz);
+<a name="line642">642: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetLocationSlot.html#DMStagGetLocationSlot">DMStagGetLocationSlot</a>(ctx-&gt;dm_stress,<a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_DOWN_LEFT</a>,0,&amp;slot_txy_downleft);
+<a name="line643">643: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetLocationSlot.html#DMStagGetLocationSlot">DMStagGetLocationSlot</a>(ctx-&gt;dm_stress,<a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_BACK_LEFT</a>,0,&amp;slot_txz_backleft);
+<a name="line644">644: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetLocationSlot.html#DMStagGetLocationSlot">DMStagGetLocationSlot</a>(ctx-&gt;dm_stress,<a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_BACK_DOWN</a>,0,&amp;slot_tyz_backdown);
+<a name="line645">645: </a>  <a href="../../../../../docs/manualpages/DM/DMGetLocalVector.html#DMGetLocalVector">DMGetLocalVector</a>(ctx-&gt;dm_stress,&amp;stress_local);
+<a name="line646">646: </a>  <a href="../../../../../docs/manualpages/DM/DMGlobalToLocal.html#DMGlobalToLocal">DMGlobalToLocal</a>(ctx-&gt;dm_stress,stress,<a href="../../../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>,stress_local);
+<a name="line647">647: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagVecGetArray.html#DMStagVecGetArray">DMStagVecGetArray</a>(ctx-&gt;dm_stress,stress_local,&amp;arr_stress);
+
+<a name="line649">649: </a>  <font color="#B22222">/* Prepare read-only access to velocity data */</font>
+<a name="line650">650: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetLocationSlot.html#DMStagGetLocationSlot">DMStagGetLocationSlot</a>(ctx-&gt;dm_velocity,<a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_LEFT</a>, 0,&amp;slot_vx_left);
+<a name="line651">651: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetLocationSlot.html#DMStagGetLocationSlot">DMStagGetLocationSlot</a>(ctx-&gt;dm_velocity,<a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_RIGHT</a>,0,&amp;slot_vx_right);
+<a name="line652">652: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetLocationSlot.html#DMStagGetLocationSlot">DMStagGetLocationSlot</a>(ctx-&gt;dm_velocity,<a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_DOWN</a>, 0,&amp;slot_vy_down);
+<a name="line653">653: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetLocationSlot.html#DMStagGetLocationSlot">DMStagGetLocationSlot</a>(ctx-&gt;dm_velocity,<a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_UP</a>,   0,&amp;slot_vy_up);
+<a name="line654">654: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetLocationSlot.html#DMStagGetLocationSlot">DMStagGetLocationSlot</a>(ctx-&gt;dm_velocity,<a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_BACK</a>, 0,&amp;slot_vz_back);
+<a name="line655">655: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetLocationSlot.html#DMStagGetLocationSlot">DMStagGetLocationSlot</a>(ctx-&gt;dm_velocity,<a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_FRONT</a>,0,&amp;slot_vz_front);
+<a name="line656">656: </a>  <a href="../../../../../docs/manualpages/DM/DMGetLocalVector.html#DMGetLocalVector">DMGetLocalVector</a>(ctx-&gt;dm_velocity,&amp;velocity_local);
+<a name="line657">657: </a>  <a href="../../../../../docs/manualpages/DM/DMGlobalToLocal.html#DMGlobalToLocal">DMGlobalToLocal</a>(ctx-&gt;dm_velocity,velocity,<a href="../../../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>,velocity_local);
+<a name="line658">658: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagVecGetArrayRead.html#DMStagVecGetArrayRead">DMStagVecGetArrayRead</a>(ctx-&gt;dm_velocity,velocity_local,&amp;arr_velocity);
+
+<a name="line660">660: </a>  <font color="#B22222">/* Prepare read-only access to Lame' data */</font>
+<a name="line661">661: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetLocationSlot.html#DMStagGetLocationSlot">DMStagGetLocationSlot</a>(ctx-&gt;dm_lame,<a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_ELEMENT</a>,  0,&amp;slot_lambda_element);
+<a name="line662">662: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetLocationSlot.html#DMStagGetLocationSlot">DMStagGetLocationSlot</a>(ctx-&gt;dm_lame,<a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_ELEMENT</a>,  1,&amp;slot_mu_element);
+<a name="line663">663: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetLocationSlot.html#DMStagGetLocationSlot">DMStagGetLocationSlot</a>(ctx-&gt;dm_lame,<a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_DOWN_LEFT</a>,0,&amp;slot_mu_downleft);
+<a name="line664">664: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetLocationSlot.html#DMStagGetLocationSlot">DMStagGetLocationSlot</a>(ctx-&gt;dm_lame,<a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_BACK_LEFT</a>,0,&amp;slot_mu_backleft);
+<a name="line665">665: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetLocationSlot.html#DMStagGetLocationSlot">DMStagGetLocationSlot</a>(ctx-&gt;dm_lame,<a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_BACK_DOWN</a>,0,&amp;slot_mu_backdown);
+<a name="line666">666: </a>  <a href="../../../../../docs/manualpages/DM/DMGetLocalVector.html#DMGetLocalVector">DMGetLocalVector</a>(ctx-&gt;dm_lame,&amp;lame_local);
+<a name="line667">667: </a>  <a href="../../../../../docs/manualpages/DM/DMGlobalToLocal.html#DMGlobalToLocal">DMGlobalToLocal</a>(ctx-&gt;dm_lame,lame,<a href="../../../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>,lame_local);
+<a name="line668">668: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagVecGetArrayRead.html#DMStagVecGetArrayRead">DMStagVecGetArrayRead</a>(ctx-&gt;dm_lame,lame_local,&amp;arr_lame);
+
+<a name="line670">670: </a>  <font color="#B22222">/* Prepare read-only access to coordinate data */</font>
+<a name="line671">671: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetProductCoordinateLocationSlot.html#DMStagGetProductCoordinateLocationSlot">DMStagGetProductCoordinateLocationSlot</a>(ctx-&gt;dm_velocity,<a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_LEFT</a>,&amp;slot_coord_prev);
+<a name="line672">672: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetProductCoordinateLocationSlot.html#DMStagGetProductCoordinateLocationSlot">DMStagGetProductCoordinateLocationSlot</a>(ctx-&gt;dm_velocity,<a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_RIGHT</a>,&amp;slot_coord_next);
+<a name="line673">673: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetProductCoordinateLocationSlot.html#DMStagGetProductCoordinateLocationSlot">DMStagGetProductCoordinateLocationSlot</a>(ctx-&gt;dm_velocity,<a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_ELEMENT</a>,&amp;slot_coord_element);
+<a name="line674">674: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetProductCoordinateArrays.html#DMStagGetProductCoordinateArrays">DMStagGetProductCoordinateArrays</a>(ctx-&gt;dm_velocity,&amp;arr_coord_x,&amp;arr_coord_y,&amp;arr_coord_z);
+
+<a name="line676">676: </a>  <font color="#B22222">/* Iterate over the interior of the domain, updating the stresses */</font>
+<a name="line677">677: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetCorners.html#DMStagGetCorners">DMStagGetCorners</a>(ctx-&gt;dm_velocity,&amp;startx,&amp;starty,&amp;startz,&amp;nx,&amp;ny,&amp;nz,NULL,NULL,NULL);
+<a name="line678">678: </a>  <font color="#4169E1">for</font> (ez = startz; ez &lt; startz + nz; ++ez) {
+<a name="line679">679: </a>    <font color="#4169E1">for</font> (ey = starty; ey &lt; starty + ny; ++ey) {
+<a name="line680">680: </a>      <font color="#4169E1">for</font> (ex = startx; ex &lt; startx + nx; ++ex) {
+
+<a name="line682">682: </a>        <font color="#B22222">/* Update tau_xx, tau_yy, and tau_zz*/</font>
+<a name="line683">683: </a>        {
+<a name="line684">684: </a>          const <a href="../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> dx   = arr_coord_x[ex][slot_coord_next] - arr_coord_x[ex][slot_coord_prev];
+<a name="line685">685: </a>          const <a href="../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> dy   = arr_coord_y[ey][slot_coord_next] - arr_coord_y[ey][slot_coord_prev];
+<a name="line686">686: </a>          const <a href="../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> dz   = arr_coord_z[ez][slot_coord_next] - arr_coord_z[ez][slot_coord_prev];
+<a name="line687">687: </a>          const <a href="../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> L    = arr_lame[ez][ey][ex][slot_lambda_element];
+<a name="line688">688: </a>          const <a href="../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> Lp2M = arr_lame[ez][ey][ex][slot_lambda_element] + 2 * arr_lame[ez][ey][ex][slot_mu_element];
+
+<a name="line690">690: </a>          arr_stress[ez][ey][ex][slot_txx] +=
+<a name="line691">691: </a>              Lp2M * ctx-&gt;dt * (arr_velocity[ez][ey][ex][slot_vx_right] - arr_velocity[ez][ey][ex][slot_vx_left]) / dx
+<a name="line692">692: </a>            + L    * ctx-&gt;dt * (arr_velocity[ez][ey][ex][slot_vy_up]    - arr_velocity[ez][ey][ex][slot_vy_down]) / dy
+<a name="line693">693: </a>            + L    * ctx-&gt;dt * (arr_velocity[ez][ey][ex][slot_vz_front] - arr_velocity[ez][ey][ex][slot_vz_back]) / dz;
+
+<a name="line695">695: </a>          arr_stress[ez][ey][ex][slot_tyy] +=
+<a name="line696">696: </a>              Lp2M * ctx-&gt;dt * (arr_velocity[ez][ey][ex][slot_vy_up]    - arr_velocity[ez][ey][ex][slot_vy_down]) / dy
+<a name="line697">697: </a>            + L    * ctx-&gt;dt * (arr_velocity[ez][ey][ex][slot_vz_front] - arr_velocity[ez][ey][ex][slot_vz_back]) / dz
+<a name="line698">698: </a>            + L    * ctx-&gt;dt * (arr_velocity[ez][ey][ex][slot_vx_right] - arr_velocity[ez][ey][ex][slot_vx_left]) / dx;
+
+<a name="line700">700: </a>          arr_stress[ez][ey][ex][slot_tzz] +=
+<a name="line701">701: </a>              Lp2M * ctx-&gt;dt * (arr_velocity[ez][ey][ex][slot_vz_front] - arr_velocity[ez][ey][ex][slot_vz_back]) / dz
+<a name="line702">702: </a>            + L    * ctx-&gt;dt * (arr_velocity[ez][ey][ex][slot_vx_right] - arr_velocity[ez][ey][ex][slot_vx_left]) / dx
+<a name="line703">703: </a>            + L    * ctx-&gt;dt * (arr_velocity[ez][ey][ex][slot_vy_up]    - arr_velocity[ez][ey][ex][slot_vy_down]) / dy;
+<a name="line704">704: </a>        }
+
+<a name="line706">706: </a>        <font color="#B22222">/* Update tau_xy, tau_xz, tau_yz */</font>
+<a name="line707">707: </a>        {
+<a name="line708">708: </a>          <a href="../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> dx,dy,dz;
+
+<a name="line710">710: </a>          <font color="#4169E1">if</font> (ex &gt; 0)  dx = arr_coord_x[ex][slot_coord_element] - arr_coord_x[ex-1][slot_coord_element];
+<a name="line711">711: </a>          <font color="#4169E1">if</font> (ey &gt; 0)  dy = arr_coord_y[ey][slot_coord_element] - arr_coord_y[ey-1][slot_coord_element];
+<a name="line712">712: </a>          <font color="#4169E1">if</font> (ez &gt; 0)  dz = arr_coord_z[ez][slot_coord_element] - arr_coord_z[ez-1][slot_coord_element];
+
+<a name="line714">714: </a>          <font color="#4169E1">if</font> (ex &gt; 0 &amp;&amp; ey &gt; 0) {
+<a name="line715">715: </a>            const <a href="../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> M = arr_lame[ez][ey][ex][slot_mu_downleft];
+
+<a name="line717">717: </a>            arr_stress[ez][ey][ex][slot_txy_downleft] += M * ctx-&gt;dt * (
+<a name="line718">718: </a>                  (arr_velocity[ez][ey][ex][slot_vx_left] - arr_velocity[ez][ey-1][ex][slot_vx_left]) / dy
+<a name="line719">719: </a>                + (arr_velocity[ez][ey][ex][slot_vy_down] - arr_velocity[ez][ey][ex-1][slot_vy_down]) / dx);
+<a name="line720">720: </a>          }
+
+<a name="line722">722: </a>          <font color="#B22222">/* Update tau_xz */</font>
+<a name="line723">723: </a>          <font color="#4169E1">if</font> (ex &gt; 0 &amp;&amp; ez &gt; 0) {
+<a name="line724">724: </a>            const <a href="../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> M  = arr_lame[ez][ey][ex][slot_mu_backleft];
+
+<a name="line726">726: </a>            arr_stress[ez][ey][ex][slot_txz_backleft] += M * ctx-&gt;dt * (
+<a name="line727">727: </a>                (arr_velocity[ez][ey][ex][slot_vx_left] - arr_velocity[ez-1][ey][ex][slot_vx_left]) / dz
+<a name="line728">728: </a>              + (arr_velocity[ez][ey][ex][slot_vz_back] - arr_velocity[ez][ey][ex-1][slot_vz_back]) / dx);
+<a name="line729">729: </a>          }
+
+<a name="line731">731: </a>          <font color="#B22222">/* Update tau_yz */</font>
+<a name="line732">732: </a>          <font color="#4169E1">if</font> (ey &gt; 0 &amp;&amp; ez &gt; 0) {
+<a name="line733">733: </a>            const <a href="../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> M  = arr_lame[ez][ey][ex][slot_mu_backdown];
+
+<a name="line735">735: </a>            arr_stress[ez][ey][ex][slot_tyz_backdown] += M * ctx-&gt;dt * (
+<a name="line736">736: </a>                (arr_velocity[ez][ey][ex][slot_vy_down] - arr_velocity[ez-1][ey][ex][slot_vy_down]) / dz
+<a name="line737">737: </a>              + (arr_velocity[ez][ey][ex][slot_vz_back] - arr_velocity[ez][ey-1][ex][slot_vz_back]) / dy);
+<a name="line738">738: </a>          }
+<a name="line739">739: </a>        }
+<a name="line740">740: </a>      }
+<a name="line741">741: </a>    }
+<a name="line742">742: </a>  }
+
+<a name="line744">744: </a>  <font color="#B22222">/* Restore all access */</font>
+<a name="line745">745: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagVecRestoreArray.html#DMStagVecRestoreArray">DMStagVecRestoreArray</a>(ctx-&gt;dm_stress,stress_local,&amp;arr_stress);
+<a name="line746">746: </a>  <a href="../../../../../docs/manualpages/DM/DMLocalToGlobal.html#DMLocalToGlobal">DMLocalToGlobal</a>(ctx-&gt;dm_stress,stress_local,<a href="../../../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>,stress);
+<a name="line747">747: </a>  <a href="../../../../../docs/manualpages/DM/DMRestoreLocalVector.html#DMRestoreLocalVector">DMRestoreLocalVector</a>(ctx-&gt;dm_stress,&amp;stress_local);
+<a name="line748">748: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagVecRestoreArrayRead.html#DMStagVecRestoreArrayRead">DMStagVecRestoreArrayRead</a>(ctx-&gt;dm_velocity,velocity_local,&amp;arr_velocity);
+<a name="line749">749: </a>  <a href="../../../../../docs/manualpages/DM/DMRestoreLocalVector.html#DMRestoreLocalVector">DMRestoreLocalVector</a>(ctx-&gt;dm_velocity,&amp;velocity_local);
+<a name="line750">750: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagVecRestoreArrayRead.html#DMStagVecRestoreArrayRead">DMStagVecRestoreArrayRead</a>(ctx-&gt;dm_lame,lame_local,&amp;arr_lame);
+<a name="line751">751: </a>  <a href="../../../../../docs/manualpages/DM/DMRestoreLocalVector.html#DMRestoreLocalVector">DMRestoreLocalVector</a>(ctx-&gt;dm_lame,&amp;lame_local);
+<a name="line752">752: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagRestoreProductCoordinateArrays.html#DMStagRestoreProductCoordinateArrays">DMStagRestoreProductCoordinateArrays</a>(ctx-&gt;dm_velocity,&amp;arr_coord_x,&amp;arr_coord_y,&amp;arr_coord_z);
+<a name="line753">753: </a>  <font color="#4169E1">return</font>(0);
+<a name="line754">754: </a>}
+
+<a name="line756">756: </a><strong><font color="#4169E1"><a name="UpdateStress"></a>static <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> UpdateStress(const Ctx *ctx,<a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> velocity,<a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> stress, <a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> lame)</font></strong>
+<a name="line757">757: </a>{
+
+<a name="line761">761: </a>  <font color="#4169E1">if</font> (ctx-&gt;dim == 2) {
+<a name="line762">762: </a>    UpdateStress_2d(ctx,velocity,stress,lame);
+<a name="line763">763: </a>  } <font color="#4169E1">else</font> <font color="#4169E1">if</font> (ctx-&gt;dim ==3) {
+<a name="line764">764: </a>    UpdateStress_3d(ctx,velocity,stress,lame);
+<a name="line765">765: </a>  }
+<a name="line766">766: </a>  <font color="#4169E1">return</font>(0);
+<a name="line767">767: </a>}
+
+<a name="line769">769: </a><strong><font color="#4169E1"><a name="DumpStress"></a>static <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> DumpStress(const Ctx *ctx,<a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> stress,<a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> timestep)</font></strong>
+<a name="line770">770: </a>{
+<a name="line772">772: </a>  <a href="../../../../../docs/manualpages/DM/DM.html#DM">DM</a>             da_normal,da_shear = NULL;
+<a name="line773">773: </a>  <a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a>            vec_normal,vec_shear = NULL;
+
+
+<a name="line777">777: </a>    <a href="../../../../../docs/manualpages/DMSTAG/DMStagVecSplitToDMDA.html#DMStagVecSplitToDMDA">DMStagVecSplitToDMDA</a>(ctx-&gt;dm_stress,stress,<a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_ELEMENT</a>,-ctx-&gt;dim,&amp;da_normal,&amp;vec_normal);
+<a name="line778">778: </a>    <a href="../../../../../docs/manualpages/Sys/PetscObjectSetName.html#PetscObjectSetName">PetscObjectSetName</a>((<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)vec_normal,<font color="#666666">"normal stresses"</font>);
+
+<a name="line780">780: </a>    <font color="#B22222">/* Dump element-based fields to a .vtr file */</font>
+<a name="line781">781: </a>    {
+<a name="line782">782: </a>      <a href="../../../../../docs/manualpages/Viewer/PetscViewer.html#PetscViewer">PetscViewer</a> viewer;
+<a name="line783">783: </a>      char        filename[PETSC_MAX_PATH_LEN];
+
+<a name="line785">785: </a>      <a href="../../../../../docs/manualpages/Sys/PetscSNPrintf.html#PetscSNPrintf">PetscSNPrintf</a>(filename,<font color="#4169E1">sizeof</font>(filename),<font color="#666666">"ex6_stress_normal_%.4D.vtr"</font>,timestep);
+<a name="line786">786: </a>      <a href="../../../../../docs/manualpages/Viewer/PetscViewerVTKOpen.html#PetscViewerVTKOpen">PetscViewerVTKOpen</a>(<a href="../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)da_normal),filename,<a href="../../../../../docs/manualpages/Sys/PetscFileMode.html#PetscFileMode">FILE_MODE_WRITE</a>,&amp;viewer);
+<a name="line787">787: </a>      <a href="../../../../../docs/manualpages/Vec/VecView.html#VecView">VecView</a>(vec_normal,viewer);
+<a name="line788">788: </a>      <a href="../../../../../docs/manualpages/Viewer/PetscViewerDestroy.html#PetscViewerDestroy">PetscViewerDestroy</a>(&amp;viewer);
+<a name="line789">789: </a>      <a href="../../../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,<font color="#666666">"Created %s\n"</font>,filename);
+<a name="line790">790: </a>    }
+
+<a name="line792">792: </a>  <font color="#4169E1">if</font> (ctx-&gt;dim == 2) {
+<a name="line793">793: </a>    <font color="#B22222">/* (2D only) Dump vertex-based fields to a second .vtr file */</font>
+<a name="line794">794: </a>    <a href="../../../../../docs/manualpages/DMSTAG/DMStagVecSplitToDMDA.html#DMStagVecSplitToDMDA">DMStagVecSplitToDMDA</a>(ctx-&gt;dm_stress,stress,<a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_DOWN_LEFT</a>,0,&amp;da_shear,&amp;vec_shear);
+<a name="line795">795: </a>    <a href="../../../../../docs/manualpages/Sys/PetscObjectSetName.html#PetscObjectSetName">PetscObjectSetName</a>((<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)vec_shear,<font color="#666666">"shear stresses"</font>);
+
+<a name="line797">797: </a>    {
+<a name="line798">798: </a>      <a href="../../../../../docs/manualpages/Viewer/PetscViewer.html#PetscViewer">PetscViewer</a> viewer;
+<a name="line799">799: </a>      char        filename[PETSC_MAX_PATH_LEN];
+
+<a name="line801">801: </a>      <a href="../../../../../docs/manualpages/Sys/PetscSNPrintf.html#PetscSNPrintf">PetscSNPrintf</a>(filename,<font color="#4169E1">sizeof</font>(filename),<font color="#666666">"ex6_stress_shear_%.4D.vtr"</font>,timestep);
+<a name="line802">802: </a>      <a href="../../../../../docs/manualpages/Viewer/PetscViewerVTKOpen.html#PetscViewerVTKOpen">PetscViewerVTKOpen</a>(<a href="../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)da_normal),filename,<a href="../../../../../docs/manualpages/Sys/PetscFileMode.html#PetscFileMode">FILE_MODE_WRITE</a>,&amp;viewer);
+<a name="line803">803: </a>      <a href="../../../../../docs/manualpages/Vec/VecView.html#VecView">VecView</a>(vec_shear,viewer);
+<a name="line804">804: </a>      <a href="../../../../../docs/manualpages/Viewer/PetscViewerDestroy.html#PetscViewerDestroy">PetscViewerDestroy</a>(&amp;viewer);
+<a name="line805">805: </a>      <a href="../../../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,<font color="#666666">"Created %s\n"</font>,filename);
+<a name="line806">806: </a>    }
+<a name="line807">807: </a>  }
+
+<a name="line809">809: </a>  <font color="#B22222">/* Destroy DMDAs and <a href="../../../../../docs/manualpages/Vec/Vecs.html#Vecs">Vecs</a> */</font>
+<a name="line810">810: </a>  <a href="../../../../../docs/manualpages/DM/DMDestroy.html#DMDestroy">DMDestroy</a>(&amp;da_normal);
+<a name="line811">811: </a>  <a href="../../../../../docs/manualpages/DM/DMDestroy.html#DMDestroy">DMDestroy</a>(&amp;da_shear);
+<a name="line812">812: </a>  <a href="../../../../../docs/manualpages/Vec/VecDestroy.html#VecDestroy">VecDestroy</a>(&amp;vec_normal);
+<a name="line813">813: </a>  <a href="../../../../../docs/manualpages/Vec/VecDestroy.html#VecDestroy">VecDestroy</a>(&amp;vec_shear);
+<a name="line814">814: </a>  <font color="#4169E1">return</font>(0);
+<a name="line815">815: </a>}
+
+<a name="line817">817: </a><strong><font color="#4169E1"><a name="DumpVelocity"></a>static <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> DumpVelocity(const Ctx *ctx,<a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> velocity,<a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> timestep)</font></strong>
+<a name="line818">818: </a>{
+<a name="line820">820: </a>  <a href="../../../../../docs/manualpages/DM/DM.html#DM">DM</a>             dmVelAvg;
+<a name="line821">821: </a>  <a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a>            velAvg;
+<a name="line822">822: </a>  <a href="../../../../../docs/manualpages/DM/DM.html#DM">DM</a>             daVelAvg;
+<a name="line823">823: </a>  <a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a>            vecVelAvg;
+<a name="line824">824: </a>  <a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a>            velocity_local;
+<a name="line825">825: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       ex,ey,ez,startx,starty,startz,nx,ny,nz;
+
+
+<a name="line829">829: </a>  <font color="#4169E1">if</font> (ctx-&gt;dim == 2) {
+<a name="line830">830: </a>    <a href="../../../../../docs/manualpages/DMSTAG/DMStagCreateCompatibleDMStag.html#DMStagCreateCompatibleDMStag">DMStagCreateCompatibleDMStag</a>(ctx-&gt;dm_velocity,0,0,2,0,&amp;dmVelAvg); <font color="#B22222">/* 2 dof per element */</font>
+<a name="line831">831: </a>  } <font color="#4169E1">else</font> <font color="#4169E1">if</font> (ctx-&gt;dim == 3) {
+<a name="line832">832: </a>    <a href="../../../../../docs/manualpages/DMSTAG/DMStagCreateCompatibleDMStag.html#DMStagCreateCompatibleDMStag">DMStagCreateCompatibleDMStag</a>(ctx-&gt;dm_velocity,0,0,0,3,&amp;dmVelAvg); <font color="#B22222">/* 3 dof per element */</font>
+<a name="line833">833: </a>  } <font color="#4169E1">else</font> <a href="../../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)ctx-&gt;dm_velocity),PETSC_ERR_SUP,<font color="#666666">"Unsupported dim %d"</font>,ctx-&gt;dim);
+<a name="line834">834: </a>  <a href="../../../../../docs/manualpages/DM/DMSetUp.html#DMSetUp">DMSetUp</a>(dmVelAvg);
+<a name="line835">835: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagSetUniformCoordinatesProduct.html#DMStagSetUniformCoordinatesProduct">DMStagSetUniformCoordinatesProduct</a>(dmVelAvg,ctx-&gt;xmin,ctx-&gt;xmax,ctx-&gt;ymin,ctx-&gt;ymax,ctx-&gt;zmin,ctx-&gt;zmax);
+<a name="line836">836: </a>  <a href="../../../../../docs/manualpages/DM/DMCreateGlobalVector.html#DMCreateGlobalVector">DMCreateGlobalVector</a>(dmVelAvg,&amp;velAvg);
+<a name="line837">837: </a>  <a href="../../../../../docs/manualpages/DM/DMGetLocalVector.html#DMGetLocalVector">DMGetLocalVector</a>(ctx-&gt;dm_velocity,&amp;velocity_local);
+<a name="line838">838: </a>  <a href="../../../../../docs/manualpages/DM/DMGlobalToLocal.html#DMGlobalToLocal">DMGlobalToLocal</a>(ctx-&gt;dm_velocity,velocity,<a href="../../../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>,velocity_local);
+<a name="line839">839: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagGetCorners.html#DMStagGetCorners">DMStagGetCorners</a>(dmVelAvg,&amp;startx,&amp;starty,&amp;startz,&amp;nx,&amp;ny,&amp;nz,NULL,NULL,NULL);
+<a name="line840">840: </a>  <font color="#4169E1">if</font> (ctx-&gt;dim == 2) {
+<a name="line841">841: </a>    <font color="#4169E1">for</font> (ey = starty; ey&lt;starty+ny; ++ey) {
+<a name="line842">842: </a>      <font color="#4169E1">for</font> (ex = startx; ex&lt;startx+nx; ++ex) {
+<a name="line843">843: </a>        <a href="../../../../../docs/manualpages/DMSTAG/DMStagStencil.html#DMStagStencil">DMStagStencil</a> from[4],to[2];
+<a name="line844">844: </a>        <a href="../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>   valFrom[4],valTo[2];
+
+<a name="line846">846: </a>        from[0].i = ex; from[0].j = ey; from[0].loc = <a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_UP</a>;    from[0].c = 0;
+<a name="line847">847: </a>        from[1].i = ex; from[1].j = ey; from[1].loc = <a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_DOWN</a>;  from[1].c = 0;
+<a name="line848">848: </a>        from[2].i = ex; from[2].j = ey; from[2].loc = <a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_LEFT</a>;  from[2].c = 0;
+<a name="line849">849: </a>        from[3].i = ex; from[3].j = ey; from[3].loc = <a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_RIGHT</a>; from[3].c = 0;
+<a name="line850">850: </a>        <a href="../../../../../docs/manualpages/DMSTAG/DMStagVecGetValuesStencil.html#DMStagVecGetValuesStencil">DMStagVecGetValuesStencil</a>(ctx-&gt;dm_velocity,velocity_local,4,from,valFrom);
+<a name="line851">851: </a>        to[0].i = ex; to[0].j = ey; to[0].loc = <a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_ELEMENT</a>;    to[0].c = 0; valTo[0] = 0.5 * (valFrom[2] + valFrom[3]);
+<a name="line852">852: </a>        to[1].i = ex; to[1].j = ey; to[1].loc = <a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_ELEMENT</a>;    to[1].c = 1; valTo[1] = 0.5 * (valFrom[0] + valFrom[1]);
+<a name="line853">853: </a>        <a href="../../../../../docs/manualpages/DMSTAG/DMStagVecSetValuesStencil.html#DMStagVecSetValuesStencil">DMStagVecSetValuesStencil</a>(dmVelAvg,velAvg,2,to,valTo,<a href="../../../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>);
+<a name="line854">854: </a>      }
+<a name="line855">855: </a>    }
+<a name="line856">856: </a>  } <font color="#4169E1">else</font> <font color="#4169E1">if</font> (ctx-&gt;dim == 3) {
+<a name="line857">857: </a>    <font color="#4169E1">for</font> (ez = startz; ez&lt;startz+nz; ++ez) {
+<a name="line858">858: </a>      <font color="#4169E1">for</font> (ey = starty; ey&lt;starty+ny; ++ey) {
+<a name="line859">859: </a>        <font color="#4169E1">for</font> (ex = startx; ex&lt;startx+nx; ++ex) {
+<a name="line860">860: </a>          <a href="../../../../../docs/manualpages/DMSTAG/DMStagStencil.html#DMStagStencil">DMStagStencil</a> from[6],to[3];
+<a name="line861">861: </a>          <a href="../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>   valFrom[6],valTo[3];
+
+<a name="line863">863: </a>          from[0].i = ex; from[0].j = ey; from[0].k = ez; from[0].loc = <a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_UP</a>;    from[0].c = 0;
+<a name="line864">864: </a>          from[1].i = ex; from[1].j = ey; from[1].k = ez; from[1].loc = <a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_DOWN</a>;  from[1].c = 0;
+<a name="line865">865: </a>          from[2].i = ex; from[2].j = ey; from[2].k = ez; from[2].loc = <a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_LEFT</a>;  from[2].c = 0;
+<a name="line866">866: </a>          from[3].i = ex; from[3].j = ey; from[3].k = ez; from[3].loc = <a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_RIGHT</a>; from[3].c = 0;
+<a name="line867">867: </a>          from[4].i = ex; from[4].j = ey; from[4].k = ez; from[4].loc = <a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_FRONT</a>; from[4].c = 0;
+<a name="line868">868: </a>          from[5].i = ex; from[5].j = ey; from[5].k = ez; from[5].loc = <a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_BACK</a>;  from[5].c = 0;
+<a name="line869">869: </a>          <a href="../../../../../docs/manualpages/DMSTAG/DMStagVecGetValuesStencil.html#DMStagVecGetValuesStencil">DMStagVecGetValuesStencil</a>(ctx-&gt;dm_velocity,velocity_local,6,from,valFrom);
+<a name="line870">870: </a>          to[0].i = ex; to[0].j = ey; to[0].k = ez; to[0].loc = <a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_ELEMENT</a>;    to[0].c = 0; valTo[0] = 0.5 * (valFrom[2] + valFrom[3]);
+<a name="line871">871: </a>          to[1].i = ex; to[1].j = ey; to[1].k = ez; to[1].loc = <a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_ELEMENT</a>;    to[1].c = 1; valTo[1] = 0.5 * (valFrom[0] + valFrom[1]);
+<a name="line872">872: </a>          to[2].i = ex; to[2].j = ey; to[2].k = ez; to[2].loc = <a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_ELEMENT</a>;    to[2].c = 2; valTo[2] = 0.5 * (valFrom[4] + valFrom[5]);
+<a name="line873">873: </a>          <a href="../../../../../docs/manualpages/DMSTAG/DMStagVecSetValuesStencil.html#DMStagVecSetValuesStencil">DMStagVecSetValuesStencil</a>(dmVelAvg,velAvg,3,to,valTo,<a href="../../../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>);
+<a name="line874">874: </a>        }
+<a name="line875">875: </a>      }
+<a name="line876">876: </a>    }
+<a name="line877">877: </a>  } <font color="#4169E1">else</font> <a href="../../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)ctx-&gt;dm_velocity),PETSC_ERR_SUP,<font color="#666666">"Unsupported dim %d"</font>,ctx-&gt;dim);
+<a name="line878">878: </a>  <a href="../../../../../docs/manualpages/Vec/VecAssemblyBegin.html#VecAssemblyBegin">VecAssemblyBegin</a>(velAvg);
+<a name="line879">879: </a>  <a href="../../../../../docs/manualpages/Vec/VecAssemblyEnd.html#VecAssemblyEnd">VecAssemblyEnd</a>(velAvg);
+<a name="line880">880: </a>  <a href="../../../../../docs/manualpages/DM/DMRestoreLocalVector.html#DMRestoreLocalVector">DMRestoreLocalVector</a>(ctx-&gt;dm_velocity,&amp;velocity_local);
+
+<a name="line882">882: </a>  <a href="../../../../../docs/manualpages/DMSTAG/DMStagVecSplitToDMDA.html#DMStagVecSplitToDMDA">DMStagVecSplitToDMDA</a>(dmVelAvg,velAvg,<a href="../../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMSTAG_ELEMENT</a>,-3,&amp;daVelAvg,&amp;vecVelAvg); <font color="#B22222">/* note -3 : pad with zero in 2D case */</font>
+<a name="line883">883: </a>  <a href="../../../../../docs/manualpages/Sys/PetscObjectSetName.html#PetscObjectSetName">PetscObjectSetName</a>((<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)vecVelAvg,<font color="#666666">"Velocity (Averaged)"</font>);
+
+<a name="line885">885: </a>  <font color="#B22222">/* Dump element-based fields to a .vtr file */</font>
+<a name="line886">886: </a>  {
+<a name="line887">887: </a>    <a href="../../../../../docs/manualpages/Viewer/PetscViewer.html#PetscViewer">PetscViewer</a> viewer;
+<a name="line888">888: </a>    char        filename[PETSC_MAX_PATH_LEN];
+
+<a name="line890">890: </a>    <a href="../../../../../docs/manualpages/Sys/PetscSNPrintf.html#PetscSNPrintf">PetscSNPrintf</a>(filename,<font color="#4169E1">sizeof</font>(filename),<font color="#666666">"ex6_velavg_%.4D.vtr"</font>,timestep);
+<a name="line891">891: </a>    <a href="../../../../../docs/manualpages/Viewer/PetscViewerVTKOpen.html#PetscViewerVTKOpen">PetscViewerVTKOpen</a>(<a href="../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)daVelAvg),filename,<a href="../../../../../docs/manualpages/Sys/PetscFileMode.html#PetscFileMode">FILE_MODE_WRITE</a>,&amp;viewer);
+<a name="line892">892: </a>    <a href="../../../../../docs/manualpages/Vec/VecView.html#VecView">VecView</a>(vecVelAvg,viewer);
+<a name="line893">893: </a>    <a href="../../../../../docs/manualpages/Viewer/PetscViewerDestroy.html#PetscViewerDestroy">PetscViewerDestroy</a>(&amp;viewer);
+<a name="line894">894: </a>    <a href="../../../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,<font color="#666666">"Created %s\n"</font>,filename);
+<a name="line895">895: </a>  }
+
+<a name="line897">897: </a>  <font color="#B22222">/* Destroy DMDAs and <a href="../../../../../docs/manualpages/Vec/Vecs.html#Vecs">Vecs</a> */</font>
+<a name="line898">898: </a>  <a href="../../../../../docs/manualpages/Vec/VecDestroy.html#VecDestroy">VecDestroy</a>(&amp;vecVelAvg);
+<a name="line899">899: </a>  <a href="../../../../../docs/manualpages/DM/DMDestroy.html#DMDestroy">DMDestroy</a>(&amp;daVelAvg);
+<a name="line900">900: </a>  <a href="../../../../../docs/manualpages/Vec/VecDestroy.html#VecDestroy">VecDestroy</a>(&amp;velAvg);
+<a name="line901">901: </a>  <a href="../../../../../docs/manualpages/DM/DMDestroy.html#DMDestroy">DMDestroy</a>(&amp;dmVelAvg);
+<a name="line902">902: </a>  <font color="#4169E1">return</font>(0);
+<a name="line903">903: </a>}
+
+<a name="line905">905: </a><font color="#B22222">/*TEST</font>
+
+<a name="line907">907: </a><font color="#B22222">   test:</font>
+<a name="line908">908: </a><font color="#B22222">      suffix: 1</font>
+<a name="line909">909: </a><font color="#B22222">      requires: !complex</font>
+<a name="line910">910: </a><font color="#B22222">      nsize: 1</font>
+<a name="line911">911: </a><font color="#B22222">      args: -stag_grid_x 12 -stag_grid_y 7 -nsteps 4 -dump_output 0</font>
+
+<a name="line913">913: </a><font color="#B22222">   test:</font>
+<a name="line914">914: </a><font color="#B22222">      suffix: 2</font>
+<a name="line915">915: </a><font color="#B22222">      requires: !complex</font>
+<a name="line916">916: </a><font color="#B22222">      nsize: 9</font>
+<a name="line917">917: </a><font color="#B22222">      args: -stag_grid_x 12 -stag_grid_y 15 -nsteps 3 -dump_output 0</font>
+
+<a name="line919">919: </a><font color="#B22222">   test:</font>
+<a name="line920">920: </a><font color="#B22222">      suffix: 3</font>
+<a name="line921">921: </a><font color="#B22222">      requires: !complex</font>
+<a name="line922">922: </a><font color="#B22222">      nsize: 1</font>
+<a name="line923">923: </a><font color="#B22222">      args: -stag_grid_x 12 -stag_grid_y 7 -stag_grid_z 11 -nsteps 2 -dim 3 -dump_output 0</font>
+
+<a name="line925">925: </a><font color="#B22222">   test:</font>
+<a name="line926">926: </a><font color="#B22222">      suffix: 4</font>
+<a name="line927">927: </a><font color="#B22222">      requires: !complex</font>
+<a name="line928">928: </a><font color="#B22222">      nsize: 12</font>
+<a name="line929">929: </a><font color="#B22222">      args: -stag_grid_x 12 -stag_grid_y 15 -stag_grid_z 8 -nsteps 3 -dim 3 -dump_output 0</font>
+
+<a name="line931">931: </a><font color="#B22222">TEST*/</font>
+</pre>
+</body>
+
+</html>

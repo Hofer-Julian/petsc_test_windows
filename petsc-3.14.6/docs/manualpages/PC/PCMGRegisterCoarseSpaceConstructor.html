@@ -1,0 +1,63 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/PC/PCMGRegisterCoarseSpaceConstructor.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>PCMGRegisterCoarseSpaceConstructor</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/PC/PCMGRegisterCoarseSpaceConstructor.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="PCMGRegisterCoarseSpaceConstructor"><H1>PCMGRegisterCoarseSpaceConstructor</H1></A>
+Adds a method to the <A HREF="../PC/PCMG.html#PCMG">PCMG</A> package for coarse space construction. 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscksp.h" 
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../PC/PCMGRegisterCoarseSpaceConstructor.html#PCMGRegisterCoarseSpaceConstructor">PCMGRegisterCoarseSpaceConstructor</A>(const char name[], <A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> (*function)(<A HREF="../PC/PC.html#PC">PC</A>, <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A>, <A HREF="../DM/DM.html#DM">DM</A>, <A HREF="../KSP/KSP.html#KSP">KSP</A>, <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A>, const <A HREF="../Vec/Vec.html#Vec">Vec</A>[], <A HREF="../Vec/Vec.html#Vec">Vec</A> **))
+</PRE>
+Not collective
+<P>
+<H3><FONT COLOR="#CC3333">Input Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>name     </B></TD><TD>- name of the constructor
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>function </B></TD><TD>- constructor routine
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Notes</FONT></H3>
+<H3><FONT COLOR="#CC3333">Calling sequence for the routine</FONT></H3>
+<pre>
+my_csp(<A HREF="../PC/PC.html#PC">PC</A> pc, <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> l, <A HREF="../DM/DM.html#DM">DM</A> dm, <A HREF="../KSP/KSP.html#KSP">KSP</A> smooth, <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> Nc, const <A HREF="../Vec/Vec.html#Vec">Vec</A> initGuess[], <A HREF="../Vec/Vec.html#Vec">Vec</A> **coarseSp)
+</pre>
+<pre>
+  pc        - The <A HREF="../PC/PC.html#PC">PC</A> object
+</pre>
+<pre>
+  l         - The multigrid level, 0 is the coarse level
+</pre>
+<pre>
+  dm        - The <A HREF="../DM/DM.html#DM">DM</A> for this level
+</pre>
+<pre>
+  smooth    - The level smoother
+</pre>
+<pre>
+  Nc        - The size of the coarse space
+</pre>
+<pre>
+  initGuess - Basis for an initial guess for the space
+</pre>
+<pre>
+  coarseSp  - A basis for the computed coarse space
+</pre>
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../PC/PCMGGetCoarseSpaceConstructor.html#PCMGGetCoarseSpaceConstructor">PCMGGetCoarseSpaceConstructor</A>(), <A HREF="../PC/PCRegister.html#PCRegister">PCRegister</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>advanced<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/ksp/pc/impls/mg/mg.c.html#PCMGRegisterCoarseSpaceConstructor">src/ksp/pc/impls/mg/mg.c</A>
+<BR><A HREF="./index.html">Index of all PC routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

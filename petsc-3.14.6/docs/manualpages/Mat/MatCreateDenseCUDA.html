@@ -1,0 +1,52 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatCreateDenseCUDA.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>MatCreateDenseCUDA</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/Mat/MatCreateDenseCUDA.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="MatCreateDenseCUDA"><H1>MatCreateDenseCUDA</H1></A>
+Creates a matrix in dense format using CUDA. 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscmat.h"  
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A>  <A HREF="../Mat/MatCreateDenseCUDA.html#MatCreateDenseCUDA">MatCreateDenseCUDA</A>(<A HREF="../Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</A> comm,<A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> m,<A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> n,<A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> M,<A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> N,<A HREF="../Sys/PetscScalar.html#PetscScalar">PetscScalar</A> *data,<A HREF="../Mat/Mat.html#Mat">Mat</A> *A)
+</PRE>
+Collective
+<P>
+<H3><FONT COLOR="#CC3333">Input Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>comm </B></TD><TD>- MPI communicator
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>m </B></TD><TD>- number of local rows (or <A HREF="../Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</A> to have calculated if M is given)
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>n </B></TD><TD>- number of local columns (or <A HREF="../Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</A> to have calculated if N is given)
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>M </B></TD><TD>- number of global rows (or <A HREF="../Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</A> to have calculated if m is given)
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>N </B></TD><TD>- number of global columns (or <A HREF="../Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</A> to have calculated if n is given)
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>data </B></TD><TD>- optional location of GPU matrix data.  Set data=NULL for PETSc
+to control matrix memory allocation.
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Output Parameter</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>A </B></TD><TD>- the matrix
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Notes</FONT></H3>
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../Mat/MatCreate.html#MatCreate">MatCreate</A>(), <A HREF="../Mat/MatCreateDense.html#MatCreateDense">MatCreateDense</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>intermediate<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/mat/impls/dense/mpi/mpidense.c.html#MatCreateDenseCUDA">src/mat/impls/dense/mpi/mpidense.c</A>
+<BR><A HREF="./index.html">Index of all Mat routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

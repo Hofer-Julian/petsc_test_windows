@@ -1,0 +1,492 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/sphinx_docs/html/developers/objects.html" />
+    <meta charset="utf-8" />
+    <title>Basic Object Design and Implementation &#8212; PETSc 3.14.6 documentation</title>
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/katex-math.css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/contrib/auto-render.min.js"></script>
+    <script src="../_static/katex_autorenderer.js"></script>
+    <link rel="shortcut icon" href="../_static/PETSc_RGB-logo.png"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="How the Solvers Handle User Provided Callbacks" href="callbacks.html" />
+    <link rel="prev" title="The PETSc Kernel" href="kernel.html" /> 
+  </head><body>
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/sphinx_docs/html/developers/objects.html "><small>Report Typos and Errors</small></a></div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="callbacks.html" title="How the Solvers Handle User Provided Callbacks"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="kernel.html" title="The PETSc Kernel"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">PETSc 3.14.6 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >PETSc Developer’s Documentation</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="design.html" accesskey="U">The Design of PETSc</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/PETSc-TAO_RGB.svg" alt="Logo"/>
+            </a></p>
+  <h3><a href="../index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Basic Object Design and Implementation</a><ul>
+<li><a class="reference internal" href="#introduction">Introduction</a></li>
+<li><a class="reference internal" href="#organization-of-the-source-code">Organization of the Source Code</a></li>
+<li><a class="reference internal" href="#common-object-header">Common Object Header</a></li>
+<li><a class="reference internal" href="#common-object-functions">Common Object Functions</a></li>
+<li><a class="reference internal" href="#object-function-implementation">Object Function Implementation</a><ul>
+<li><a class="reference internal" href="#compose-and-query-objects">Compose and Query Objects</a></li>
+<li><a class="reference internal" href="#compose-and-query-functions">Compose and Query Functions</a></li>
+<li><a class="reference internal" href="#simple-petsc-objects">Simple PETSc Objects</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#petsc-packages">PETSc Packages</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="kernel.html"
+                        title="previous chapter">The PETSc Kernel</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="callbacks.html"
+                        title="next chapter">How the Solvers Handle User Provided Callbacks</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/developers/objects.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="basic-object-design-and-implementation">
+<h1>Basic Object Design and Implementation<a class="headerlink" href="#basic-object-design-and-implementation" title="Permalink to this headline">¶</a></h1>
+<p>PETSc is designed by using strong data encapsulation. Hence, any
+collection of data (for instance, a sparse matrix) is stored in a way
+that is completely private from the application code. The application
+code can manipulate the data only through a well-defined interface,
+since it does <em>not</em> “know” how the data is stored internally.</p>
+<div class="section" id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>PETSc is designed around several classes including <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span></code> (vectors) and
+<code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/Mat.html#Mat">Mat</a></span></code> (matrices, both dense and sparse). Each class is implemented by
+using a C <code class="docutils literal notranslate"><span class="pre">struct</span></code> that contains the data and function pointers for
+operations on the data (much like virtual functions in C++ classes).
+Each class consists of three parts:</p>
+<p>A (small) common part shared by all PETSc classes (for example, both
+<code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSP.html#KSP">KSP</a></span></code> and <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/PC/PC.html#PC">PC</a></span></code> have this same header).</p>
+<p>Another common part shared by all PETSc implementations of the class
+(for example, both <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSPGMRES.html#KSPGMRES">KSPGMRES</a></span></code> and <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSPCG.html#KSPCG">KSPCG</a></span></code> have this common
+subheader).</p>
+<p>A private part used by only one particular implementation written in
+PETSc.</p>
+<p>For example, all matrix (<code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/Mat.html#Mat">Mat</a></span></code>) classes share a function table of
+operations that may be performed on the matrix; all PETSc matrix
+implementations share some additional data fields, including matrix
+parallel layout, while a particular matrix implementation in PETSc (say
+compressed sparse row) has its own data fields for storing the actual
+matrix values and sparsity pattern. This will be explained in more
+detail in the following sections. New class implementations <em>must</em> use
+the PETSc common part.</p>
+<p>We will use <code class="docutils literal notranslate"><span class="pre">&lt;class&gt;_&lt;implementation&gt;</span></code> to denote the actual source code
+and data structures used for a particular implementation of an object
+that has the <code class="docutils literal notranslate"><span class="pre">&lt;class&gt;</span></code> interface.</p>
+</div>
+<div class="section" id="organization-of-the-source-code">
+<h2>Organization of the Source Code<a class="headerlink" href="#organization-of-the-source-code" title="Permalink to this headline">¶</a></h2>
+<p>Each class has the following organization.</p>
+<p>Its own, application-public, include file <code class="docutils literal notranslate"><span class="pre">include/petsc&lt;class&gt;.h</span></code>.</p>
+<p>Its own directory, <code class="docutils literal notranslate"><span class="pre">src/&lt;class&gt;</span></code> or <code class="docutils literal notranslate"><span class="pre">src/&lt;package&gt;/&lt;class&gt;</span></code>.</p>
+<p>A data structure defined in the file
+<code class="docutils literal notranslate"><span class="pre">include/petsc/private/&lt;class&gt;impl.h</span></code>. This data structure is shared
+by all the different PETSc implementations of the class. For example,
+for matrices it is shared by dense, sparse, parallel, and sequential
+formats.</p>
+<p>An abstract interface that defines the application-callable functions
+for the class. These are defined in the directory
+<code class="docutils literal notranslate"><span class="pre">src/&lt;class&gt;/interface</span></code>. This is how polymorphism is supported with
+code that implements the abstract interface to the operations on the
+object. Essentially, these routines do some error checking of arguments
+and logging of profiling information and then call the function
+appropriate for the particular implementation of the object. The name of
+the abstract function is <code class="docutils literal notranslate"><span class="pre">&lt;class&gt;Operation</span></code>, for instance,
+<code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatMult.html#MatMult">MatMult</a>()</span></code> or <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/PC/PCCreate.html#PCCreate">PCCreate</a>(</span></code>), while the name of a particular
+implementation is <code class="docutils literal notranslate"><span class="pre">&lt;class&gt;Operation_&lt;implementation&gt;</span></code>, for instance,
+<code class="docutils literal notranslate"><span class="pre">MatMult_SeqAIJ()</span></code> or <code class="docutils literal notranslate"><span class="pre">PCCreate_ILU()</span></code>. These naming conventions are
+used to simplify code maintenance (also see Section [sec:stylenames]).</p>
+<p>One or more actual implementations of the class (for example, sparse
+uniprocessor and parallel matrices implemented with the AIJ storage
+format). These are each in a subdirectory of <code class="docutils literal notranslate"><span class="pre">src/&lt;class&gt;/impls</span></code>.
+Except in rare circumstances, data structures defined here should not be
+referenced from outside this directory.</p>
+<p>Each type of object (for instance, a vector) is defined in its own
+public include file, by <code class="docutils literal notranslate"><span class="pre">typedef</span> <span class="pre">_p&lt;class&gt;*</span> <span class="pre">&lt;class&gt;</span></code>; (for example,
+<code class="docutils literal notranslate"><span class="pre">typedef</span> <span class="pre">_p_Vec*</span> <span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a>;</span></code>). This organization allows the compiler to
+perform type checking on all subroutine calls while at the same time
+completely removing the details of the implementation of <code class="docutils literal notranslate"><span class="pre">_p&lt;class&gt;</span></code>
+from the application code. This capability is extremely important
+because it allows the library internals to be changed without altering
+or recompiling the application code.</p>
+</div>
+<div class="section" id="common-object-header">
+<h2>Common Object Header<a class="headerlink" href="#common-object-header" title="Permalink to this headline">¶</a></h2>
+<p>All PETSc/PETSc objects have the following common header structures
+defined in
+<a class="reference external" href="https://www.mcs.anl.gov/petsc/petsc-master/include/petsc/private/petscimpl.h.html">include/petsc/private/petscimpl.h</a>:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">typedef</span> <span class="k">struct</span> <span class="p">{</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a></span> <span class="p">(</span><span class="o">*</span><span class="n">getcomm</span><span class="p">)(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a></span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</a></span><span class="o">*</span><span class="p">);</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a></span> <span class="p">(</span><span class="o">*</span><span class="n">view</span><span class="p">)(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a></span><span class="p">,</span><span class="n">Viewer</span><span class="p">);</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a></span> <span class="p">(</span><span class="o">*</span><span class="n">destroy</span><span class="p">)(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a></span><span class="p">);</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a></span> <span class="p">(</span><span class="o">*</span><span class="n">query</span><span class="p">)(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a></span><span class="p">,</span><span class="k">const</span> <span class="kt">char</span><span class="o">*</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a></span><span class="o">*</span><span class="p">);</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a></span> <span class="p">(</span><span class="o">*</span><span class="n">compose</span><span class="p">)(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a></span><span class="p">,</span><span class="k">const</span> <span class="kt">char</span><span class="o">*</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a></span><span class="p">);</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a></span> <span class="p">(</span><span class="o">*</span><span class="n">composefunction</span><span class="p">)(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a></span><span class="p">,</span><span class="k">const</span> <span class="kt">char</span><span class="o">*</span><span class="p">,</span><span class="kt">void</span><span class="p">(</span><span class="o">*</span><span class="p">)(</span><span class="kt">void</span><span class="p">));</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a></span> <span class="p">(</span><span class="o">*</span><span class="n">queryfunction</span><span class="p">)(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a></span><span class="p">,</span><span class="k">const</span> <span class="kt">char</span><span class="o">*</span><span class="p">,</span><span class="kt">void</span> <span class="p">(</span><span class="o">**</span><span class="p">)(</span><span class="kt">void</span><span class="p">));</span>
+<span class="p">}</span> <span class="n">PetscOps</span><span class="p">;</span>
+</pre></div>
+</div>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="nc">_p_</span><span class="o">&lt;</span><span class="n">class</span><span class="o">&gt;</span> <span class="p">{</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscClassId.html#PetscClassId">PetscClassId</a></span>     <span class="n">classid</span><span class="p">;</span>
+  <span class="n">PetscOps</span>         <span class="o">*</span><span class="n">bops</span><span class="p">;</span>
+  <span class="o">&lt;</span><span class="n">class</span><span class="o">&gt;</span><span class="n">Ops</span>       <span class="o">*</span><span class="n">ops</span><span class="p">;</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</a></span>         <span class="n">comm</span><span class="p">;</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscLogDouble.html#PetscLogDouble">PetscLogDouble</a></span>   <span class="n">flops</span><span class="p">,</span><span class="n">time</span><span class="p">,</span><span class="n">mem</span><span class="p">;</span>
+  <span class="kt">int</span>              <span class="n">id</span><span class="p">;</span>
+  <span class="kt">int</span>              <span class="n">refct</span><span class="p">;</span>
+  <span class="kt">int</span>              <span class="n">tag</span><span class="p">;</span>
+  <span class="n">DLList</span>           <span class="n">qlist</span><span class="p">;</span>
+  <span class="n">OList</span>            <span class="n">olist</span><span class="p">;</span>
+  <span class="kt">char</span>             <span class="o">*</span><span class="n">type_name</span><span class="p">;</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a></span>      <span class="n">parent</span><span class="p">;</span>
+  <span class="kt">char</span>             <span class="o">*</span><span class="n">name</span><span class="p">;</span>
+  <span class="kt">char</span>             <span class="o">*</span><span class="n">prefix</span><span class="p">;</span>
+  <span class="kt">void</span>             <span class="o">*</span><span class="n">cpp</span><span class="p">;</span>
+  <span class="kt">void</span>             <span class="o">**</span><span class="n">fortran_func_pointers</span><span class="p">;</span>
+  <span class="p">..........</span>
+  <span class="n">CLASS</span><span class="o">-</span><span class="n">SPECIFIC</span> <span class="n">DATASTRUCTURES</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<p>Here <code class="docutils literal notranslate"><span class="pre">&lt;class&gt;ops</span></code> is a function table (like the <code class="docutils literal notranslate"><span class="pre">PetscOps</span></code> above)
+that contains the function pointers for the operations specific to that
+class. For example, the PETSc vector class object operations in
+<a class="reference external" href="https://www.mcs.anl.gov/petsc/petsc-master/include/petsc/private/vecimpl.h.html">include/petsc/private/vecimpl.h</a>
+include the following.</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">typedef</span> <span class="k">struct</span> <span class="nc">_VecOps</span><span class="o">*</span> <span class="n">VecOps</span><span class="p">;</span>
+<span class="k">struct</span> <span class="nc">_VecOps</span> <span class="p">{</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a></span> <span class="p">(</span><span class="o">*</span><span class="n">duplicate</span><span class="p">)(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span><span class="o">*</span><span class="p">);</span> <span class="cm">/* get single vector */</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a></span> <span class="p">(</span><span class="o">*</span><span class="n">duplicatevecs</span><span class="p">)(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span><span class="o">**</span><span class="p">);</span> <span class="cm">/* get array of vectors */</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a></span> <span class="p">(</span><span class="o">*</span><span class="n">destroyvecs</span><span class="p">)(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span><span class="p">[]);</span> <span class="cm">/* free array of vectors */</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a></span> <span class="p">(</span><span class="o">*</span><span class="n">dot</span><span class="p">)(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a></span><span class="o">*</span><span class="p">);</span> <span class="cm">/* z = x^H * y */</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a></span> <span class="p">(</span><span class="o">*</span><span class="n">mdot</span><span class="p">)(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span><span class="p">,</span><span class="k">const</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span><span class="p">[],</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a></span><span class="o">*</span><span class="p">);</span> <span class="cm">/* z[j] = x dot y[j] */</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a></span> <span class="p">(</span><span class="o">*</span><span class="n">norm</span><span class="p">)(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/NormType.html#NormType">NormType</a></span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a></span><span class="o">*</span><span class="p">);</span> <span class="cm">/* z = sqrt(x^H * x) */</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a></span> <span class="p">(</span><span class="o">*</span><span class="n">tdot</span><span class="p">)(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a></span><span class="o">*</span><span class="p">);</span> <span class="cm">/* x&#39;*y */</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a></span> <span class="p">(</span><span class="o">*</span><span class="n">mtdot</span><span class="p">)(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span><span class="p">,</span><span class="k">const</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span><span class="p">[],</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a></span><span class="o">*</span><span class="p">);</span><span class="cm">/* z[j] = x dot y[j] */</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a></span> <span class="p">(</span><span class="o">*</span><span class="n">scale</span><span class="p">)(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a></span><span class="p">);</span>  <span class="cm">/* x = alpha * x   */</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a></span> <span class="p">(</span><span class="o">*</span><span class="n">copy</span><span class="p">)(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span><span class="p">);</span> <span class="cm">/* y = x */</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a></span> <span class="p">(</span><span class="o">*</span><span class="n">set</span><span class="p">)(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a></span><span class="p">);</span> <span class="cm">/* y = alpha  */</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a></span> <span class="p">(</span><span class="o">*</span><span class="n">swap</span><span class="p">)(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span><span class="p">);</span> <span class="cm">/* exchange x and y */</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a></span> <span class="p">(</span><span class="o">*</span><span class="n">axpy</span><span class="p">)(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a></span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span><span class="p">);</span> <span class="cm">/* y = y + alpha * x */</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a></span> <span class="p">(</span><span class="o">*</span><span class="n">axpby</span><span class="p">)(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a></span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a></span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span><span class="p">);</span> <span class="cm">/* y = alpha * x + beta * y*/</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a></span> <span class="p">(</span><span class="o">*</span><span class="n">maxpy</span><span class="p">)(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span><span class="p">,</span><span class="k">const</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a></span><span class="o">*</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span><span class="o">*</span><span class="p">);</span> <span class="cm">/* y = y + alpha[j] x[j] */</span>
+  <span class="p">...</span> <span class="p">(</span><span class="n">AND</span> <span class="n">SO</span> <span class="n">ON</span><span class="p">)</span> <span class="p">...</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="nc">_p_Vec</span> <span class="p">{</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscClassId.html#PetscClassId">PetscClassId</a></span>           <span class="n">classid</span><span class="p">;</span>
+  <span class="n">PetscOps</span>               <span class="o">*</span><span class="n">bops</span><span class="p">;</span>
+  <span class="n">VecOps</span>                 <span class="o">*</span><span class="n">ops</span><span class="p">;</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</a></span>               <span class="n">comm</span><span class="p">;</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscLogDouble.html#PetscLogDouble">PetscLogDouble</a></span>         <span class="n">flops</span><span class="p">,</span><span class="n">time</span><span class="p">,</span><span class="n">mem</span><span class="p">;</span>
+  <span class="kt">int</span>                    <span class="n">id</span><span class="p">;</span>
+  <span class="kt">int</span>                    <span class="n">refct</span><span class="p">;</span>
+  <span class="kt">int</span>                    <span class="n">tag</span><span class="p">;</span>
+  <span class="n">DLList</span>                 <span class="n">qlist</span><span class="p">;</span>
+  <span class="n">OList</span>                  <span class="n">olist</span><span class="p">;</span>
+  <span class="kt">char</span>                   <span class="o">*</span><span class="n">type_name</span><span class="p">;</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a></span>            <span class="n">parent</span><span class="p">;</span>
+  <span class="kt">char</span>                   <span class="o">*</span><span class="n">name</span><span class="p">;</span>
+  <span class="kt">char</span>                   <span class="o">*</span><span class="n">prefix</span><span class="p">;</span>
+  <span class="kt">void</span>                   <span class="o">**</span><span class="n">fortran_func_pointers</span><span class="p">;</span>
+  <span class="kt">void</span>                   <span class="o">*</span><span class="n">data</span><span class="p">;</span>     <span class="cm">/* implementation-specific data */</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/IS/PetscLayout.html#PetscLayout">PetscLayout</a></span>            <span class="n">map</span><span class="p">;</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/IS/ISLocalToGlobalMapping.html#ISLocalToGlobalMapping">ISLocalToGlobalMapping</a></span> <span class="n">mapping</span><span class="p">;</span>   <span class="cm">/* mapping used in <a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/VecSetValuesLocal.html#VecSetValuesLocal">VecSetValuesLocal</a>() */</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<p>Each PETSc object begins with a <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscClassId.html#PetscClassId">PetscClassId</a></span></code>, which is used for
+error checking. Each different class of objects has its value for
+<code class="docutils literal notranslate"><span class="pre">classid</span></code>; these are used to distinguish between classes. When a new
+class is created you need to call</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Profiling/PetscClassIdRegister.html#PetscClassIdRegister">PetscClassIdRegister</a></span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">classname</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscClassId.html#PetscClassId">PetscClassId</a></span> <span class="o">*</span><span class="n">classid</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>For example,</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Profiling/PetscClassIdRegister.html#PetscClassIdRegister">PetscClassIdRegister</a></span><span class="p">(</span><span class="s">&quot;index set&quot;</span><span class="p">,</span><span class="o">&amp;</span><span class="n">IS_CLASSID</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>you can verify that an object is valid of a particular class with
+<code class="docutils literal notranslate"><span class="pre">PetscValidHeaderSpecific</span></code>, for example,</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">PetscValidHeaderSpecific</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">VEC_CLASSID</span><span class="p">,</span><span class="mi">1</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>The third argument to this macro indicates the position in the calling
+sequence of the function the object was passed in. This is to generate
+more complete error messages.</p>
+<p>To check for an object of any type, use</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">PetscValidHeader</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="mi">1</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="common-object-functions">
+<h2>Common Object Functions<a class="headerlink" href="#common-object-functions" title="Permalink to this headline">¶</a></h2>
+<p>Several routines are provided for manipulating data within the header.
+These include the specific functions in the PETSc common function table.
+The function pointers are not called directly; rather you should call
+<code class="docutils literal notranslate"><span class="pre">PetscObjectFunctionName()</span></code>, where <code class="docutils literal notranslate"><span class="pre">FunctionName</span></code> is one of the
+functions listed below with the first letter of each word capitalized.</p>
+<p><code class="docutils literal notranslate"><span class="pre">getcomm(<a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>,<a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</a>*)</span></code> obtains the MPI communicator
+associated with this object.</p>
+<p><code class="docutils literal notranslate"><span class="pre">view(<a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>,<a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Viewer/PetscViewer.html#PetscViewer">PetscViewer</a>)</span></code> allows you to store or visualize the
+data inside an object. If the Viewer is NULL, then it should cause the
+object to print information on the object to textttstdout.</p>
+<p><code class="docutils literal notranslate"><span class="pre">destroy(<a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)</span></code> causes the reference count of the object to be
+decreased by one or the object to be destroyed and all memory used by
+the object to be freed when the reference count drops to zero. If the
+object has any other objects composed with it, they are each sent a
+<code class="docutils literal notranslate"><span class="pre">destroy()</span></code>; that is, the <code class="docutils literal notranslate"><span class="pre">destroy()</span></code> function is called on them
+also.</p>
+<p><code class="docutils literal notranslate"><span class="pre">compose(<a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>,const</span> <span class="pre">char</span> <span class="pre">*name,<a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)</span></code> associates the
+second object with the first object and increases the reference count of
+the second object. If an object with the same name was previously
+composed, that object is dereferenced and replaced with the new object.
+If the second object is NULL and an object with the same name has
+already been composed, that object is dereferenced (the <code class="docutils literal notranslate"><span class="pre">destroy()</span></code>
+function is called on it, and that object is removed from the first
+object). This is a way to remove, by name, an object that was previously
+composed.</p>
+<p><code class="docutils literal notranslate"><span class="pre">query(<a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>,const</span> <span class="pre">char</span> <span class="pre">*name,<a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>*)</span></code> retrieves an object
+that was previously composed with the first object via
+<code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscObjectCompose.html#PetscObjectCompose">PetscObjectCompose</a>()</span></code>. It retrieves a NULL if no object with that
+name was previously composed.</p>
+<p><code class="docutils literal notranslate"><span class="pre">composefunction(<a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>,const</span> <span class="pre">char</span> <span class="pre">*name,void</span> <span class="pre">*func)</span></code> associates
+a function pointer with an object. If the object already had a composed
+function with the same name, the old one is replaced. If <code class="docutils literal notranslate"><span class="pre">func</span></code> is
+<code class="docutils literal notranslate"><span class="pre">NULL</span></code>, the existing function is removed from the object. The string
+<code class="docutils literal notranslate"><span class="pre">name</span></code> is the character string name of the function.</p>
+<p>For example, <code class="docutils literal notranslate"><span class="pre">fname</span></code> may be <code class="docutils literal notranslate"><span class="pre">PCCreate_LU</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">queryfunction(<a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>,const</span> <span class="pre">char</span> <span class="pre">*name,void</span> <span class="pre">**func)</span></code> retrieves a
+function pointer that was associated with the object via
+<code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscObjectComposeFunction.html#PetscObjectComposeFunction">PetscObjectComposeFunction</a>()</span></code>. If dynamic libraries are used, the
+function is loaded into memory at this time (if it has not been
+previously loaded), not when the <code class="docutils literal notranslate"><span class="pre">composefunction()</span></code> routine was
+called.</p>
+<p>Since the object composition allows one to compose PETSc objects <em>only</em>
+with PETSc objects rather than any arbitrary pointer, PETSc provides the
+convenience object <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscContainer.html#PetscContainer">PetscContainer</a></span></code>, created with the routine
+<code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscContainerCreate.html#PetscContainerCreate">PetscContainerCreate</a>(<a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</a>,<a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscContainer.html#PetscContainer">PetscContainer</a>*)</span></code>, to allow wrapping any
+kind of data into a PETSc object that can then be composed with a PETSc
+object.</p>
+</div>
+<div class="section" id="object-function-implementation">
+<h2>Object Function Implementation<a class="headerlink" href="#object-function-implementation" title="Permalink to this headline">¶</a></h2>
+<p>This section discusses how PETSc implements the <code class="docutils literal notranslate"><span class="pre">compose()</span></code>,
+<code class="docutils literal notranslate"><span class="pre">query()</span></code>, <code class="docutils literal notranslate"><span class="pre">composefunction()</span></code>, and <code class="docutils literal notranslate"><span class="pre">queryfunction()</span></code> functions
+for its object implementations. Other PETSc-compatible class
+implementations are free to manage these functions in any manner; but
+unless there is a specific reason, they should use the PETSc defaults so
+that the library writer does not have to “reinvent the wheel.”</p>
+<div class="section" id="compose-and-query-objects">
+<h3>Compose and Query Objects<a class="headerlink" href="#compose-and-query-objects" title="Permalink to this headline">¶</a></h3>
+<p>In
+<a class="reference external" href="https://www.mcs.anl.gov/petsc/petsc-master/src/sys/objects/olist.c.html">src/sys/objects/olist.c</a>,
+PETSc defines a C <code class="docutils literal notranslate"><span class="pre">struct</span></code></p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">typedef</span> <span class="k">struct</span> <span class="nc">_PetscObjectList</span><span class="o">*</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscObjectList.html#PetscObjectList">PetscObjectList</a></span><span class="p">;</span>
+<span class="k">struct</span> <span class="nc">_PetscObjectList</span> <span class="p">{</span>
+    <span class="kt">char</span>             <span class="n">name</span><span class="p">[</span><span class="mi">128</span><span class="p">];</span>
+    <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a></span>      <span class="n">obj</span><span class="p">;</span>
+    <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscObjectList.html#PetscObjectList">PetscObjectList</a></span>  <span class="n">next</span><span class="p">;</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<p>from which linked lists of composed objects may be constructed. The
+routines to manipulate these elementary objects are</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscObjectListAdd.html#PetscObjectListAdd">PetscObjectListAdd</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscObjectList.html#PetscObjectList">PetscObjectList</a></span> <span class="o">*</span><span class="n">fl</span><span class="p">,</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">name</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a></span> <span class="n">obj</span><span class="p">);</span>
+<span class="kt">int</span> <span class="nf"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscObjectListDestroy.html#PetscObjectListDestroy">PetscObjectListDestroy</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscObjectList.html#PetscObjectList">PetscObjectList</a></span> <span class="o">*</span><span class="n">fl</span><span class="p">);</span>
+<span class="kt">int</span> <span class="nf"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscObjectListFind.html#PetscObjectListFind">PetscObjectListFind</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscObjectList.html#PetscObjectList">PetscObjectList</a></span> <span class="n">fl</span><span class="p">,</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">name</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a></span> <span class="o">*</span><span class="n">obj</span><span class="p">)</span>
+<span class="kt">int</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscObjectListDuplicate.html#PetscObjectListDuplicate">PetscObjectListDuplicate</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscObjectList.html#PetscObjectList">PetscObjectList</a></span> <span class="n">fl</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscObjectList.html#PetscObjectList">PetscObjectList</a></span> <span class="o">*</span><span class="n">nl</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>The function <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscObjectListAdd.html#PetscObjectListAdd">PetscObjectListAdd</a>()</span></code> will create the initial
+PetscObjectList if the argument <code class="docutils literal notranslate"><span class="pre">fl</span></code> points to a NULL.</p>
+<p>The PETSc object <code class="docutils literal notranslate"><span class="pre">compose()</span></code> and <code class="docutils literal notranslate"><span class="pre">query()</span></code> functions are as follows
+(defined in
+<a class="reference external" href="https://www.mcs.anl.gov/petsc/petsc-master/src/sys/objects/inherit.c.html">src/sys/objects/inherit.c</a>).</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a></span> <span class="nf">PetscObjectCompose_Petsc</span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a></span> <span class="n">obj</span><span class="p">,</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">name</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a></span> <span class="n">ptr</span><span class="p">)</span>
+<span class="p">{</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a></span> <span class="n">ierr</span><span class="p">;</span>
+
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscFunctionBegin.html#PetscFunctionBegin">PetscFunctionBegin</a></span><span class="p">;</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscObjectListAdd.html#PetscObjectListAdd">PetscObjectListAdd</a></span><span class="p">(</span><span class="o">&amp;</span><span class="n">obj</span><span class="o">-&gt;</span><span class="n">olist</span><span class="p">,</span><span class="n">name</span><span class="p">,</span><span class="n">ptr</span><span class="p">);</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscFunctionReturn.html#PetscFunctionReturn">PetscFunctionReturn</a></span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a></span> <span class="nf">PetscObjectQuery_Petsc</span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a></span> <span class="n">obj</span><span class="p">,</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">name</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a></span> <span class="o">*</span><span class="n">ptr</span><span class="p">)</span>
+<span class="p">{</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a></span> <span class="n">ierr</span><span class="p">;</span>
+
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscFunctionBegin.html#PetscFunctionBegin">PetscFunctionBegin</a></span><span class="p">;</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscObjectListFind.html#PetscObjectListFind">PetscObjectListFind</a></span><span class="p">(</span><span class="n">obj</span><span class="o">-&gt;</span><span class="n">olist</span><span class="p">,</span><span class="n">name</span><span class="p">,</span><span class="n">ptr</span><span class="p">);</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscFunctionReturn.html#PetscFunctionReturn">PetscFunctionReturn</a></span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="compose-and-query-functions">
+<h3>Compose and Query Functions<a class="headerlink" href="#compose-and-query-functions" title="Permalink to this headline">¶</a></h3>
+<p>PETSc allows you to compose functions by specifying a name and function
+pointer. In
+<a class="reference external" href="https://www.mcs.anl.gov/petsc/petsc-master/src/sys/dll/reg.c.html">src/sys/dll/reg.c</a>,
+PETSc defines the following linked list structure.</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="nc">_n_PetscFunctionList</span> <span class="p">{</span>
+  <span class="kt">void</span>              <span class="p">(</span><span class="o">*</span><span class="n">routine</span><span class="p">)(</span><span class="kt">void</span><span class="p">);</span>    <span class="cm">/* the routine */</span>
+  <span class="kt">char</span>              <span class="o">*</span><span class="n">name</span><span class="p">;</span>               <span class="cm">/* string to identify routine */</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscFunctionList.html#PetscFunctionList">PetscFunctionList</a></span> <span class="n">next</span><span class="p">;</span>                <span class="cm">/* next pointer */</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscFunctionList.html#PetscFunctionList">PetscFunctionList</a></span> <span class="n">next_list</span><span class="p">;</span>           <span class="cm">/* used to maintain list of all lists for freeing */</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<p>Each PETSc object contains a <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscFunctionList.html#PetscFunctionList">PetscFunctionList</a></span></code> object. The
+<code class="docutils literal notranslate"><span class="pre">composefunction()</span></code> and <code class="docutils literal notranslate"><span class="pre">queryfunction()</span></code> are given by the
+following.</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a></span> <span class="nf">PetscObjectComposeFunction_Petsc</span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a></span> <span class="n">obj</span><span class="p">,</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">name</span><span class="p">,</span><span class="kt">void</span> <span class="o">*</span><span class="n">ptr</span><span class="p">)</span>
+<span class="p">{</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a></span> <span class="n">ierr</span><span class="p">;</span>
+
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscFunctionBegin.html#PetscFunctionBegin">PetscFunctionBegin</a></span><span class="p">;</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscFunctionListAdd.html#PetscFunctionListAdd">PetscFunctionListAdd</a></span><span class="p">(</span><span class="o">&amp;</span><span class="n">obj</span><span class="o">-&gt;</span><span class="n">qlist</span><span class="p">,</span><span class="n">name</span><span class="p">,</span><span class="n">fname</span><span class="p">,</span><span class="n">ptr</span><span class="p">);</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscFunctionReturn.html#PetscFunctionReturn">PetscFunctionReturn</a></span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a></span> <span class="nf">PetscObjectQueryFunction_Petsc</span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a></span> <span class="n">obj</span><span class="p">,</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">name</span><span class="p">,</span><span class="kt">void</span> <span class="p">(</span><span class="o">**</span><span class="n">ptr</span><span class="p">)(</span><span class="kt">void</span><span class="p">))</span>
+<span class="p">{</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a></span> <span class="n">ierr</span><span class="p">;</span>
+
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscFunctionBegin.html#PetscFunctionBegin">PetscFunctionBegin</a></span><span class="p">;</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscFunctionListFind.html#PetscFunctionListFind">PetscFunctionListFind</a></span><span class="p">(</span><span class="n">obj</span><span class="o">-&gt;</span><span class="n">qlist</span><span class="p">,</span><span class="n">name</span><span class="p">,</span><span class="n">ptr</span><span class="p">);</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscFunctionReturn.html#PetscFunctionReturn">PetscFunctionReturn</a></span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>In addition to using the <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscFunctionList.html#PetscFunctionList">PetscFunctionList</a></span></code> mechanism to compose
+functions into PETSc objects, it is also used to allow registration of
+new class implementations; for example, new preconditioners.</p>
+</div>
+<div class="section" id="simple-petsc-objects">
+<h3>Simple PETSc Objects<a class="headerlink" href="#simple-petsc-objects" title="Permalink to this headline">¶</a></h3>
+<p>Some simple PETSc objects do not need <code class="docutils literal notranslate"><span class="pre">PETSCHEADER</span></code> and the associated
+functionality. These objects are internally named as <code class="docutils literal notranslate"><span class="pre">_n_&lt;class&gt;</span></code> as
+opposed to <code class="docutils literal notranslate"><span class="pre">_p_&lt;class&gt;</span></code>, for example, <code class="docutils literal notranslate"><span class="pre">_n_PetscTable</span></code> vs <code class="docutils literal notranslate"><span class="pre">_p_Vec</span></code>.</p>
+</div>
+</div>
+<div class="section" id="petsc-packages">
+<h2>PETSc Packages<a class="headerlink" href="#petsc-packages" title="Permalink to this headline">¶</a></h2>
+<p>The PETSc source code is divided into the following library-level
+packages: <code class="docutils literal notranslate"><span class="pre">sys</span></code>, <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span></code>, <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/Mat.html#Mat">Mat</a></span></code>, <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DM/DM.html#DM">DM</a></span></code>, <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSP.html#KSP">KSP</a></span></code>, <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/SNES/SNES.html#SNES">SNES</a></span></code>, <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/TS/TS.html#TS">TS</a></span></code>,
+<code class="docutils literal notranslate"><span class="pre">TAO</span></code>. Each of these has a directory under the <code class="docutils literal notranslate"><span class="pre">src</span></code> directory in
+the PETSc tree and, optionally, can be compiled into separate libraries.
+Each package defines one or more classes; for example, the <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSP.html#KSP">KSP</a></span></code>
+package defines the <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSP.html#KSP">KSP</a></span></code> and <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/PC/PC.html#PC">PC</a></span></code> classes, as well as several
+utility classes. In addition, each library-level package may contain
+several class-level packages associated with individual classes in the
+library-level package. In general, most “important” classes in PETSc
+have their own class level package. Each package provides a registration
+function <code class="docutils literal notranslate"><span class="pre">XXXInitializePackage()</span></code>, for example
+<code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSPInitializePackage.html#KSPInitializePackage">KSPInitializePackage</a>()</span></code>, which registers all the classes and events
+for that package. Each package also registers a finalization routine,
+<code class="docutils literal notranslate"><span class="pre">XXXFinalizePackage()</span></code>, that releases all the resources used in
+registering the package, using <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscRegisterFinalize.html#PetscRegisterFinalize">PetscRegisterFinalize</a>()</span></code>. The
+registration for each package is performed “on demand” the first time a
+class in the package is utilized. This is handled, for example, with
+code such as</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a></span>  <span class="nf"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/VecCreate.html#VecCreate">VecCreate</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</a></span> <span class="n">comm</span><span class="p">,</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span> <span class="o">*</span><span class="n">vec</span><span class="p">)</span>
+<span class="p">{</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span>            <span class="n">v</span><span class="p">;</span>
+
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscFunctionBegin.html#PetscFunctionBegin">PetscFunctionBegin</a></span><span class="p">;</span>
+  <span class="n">PetscValidPointer</span><span class="p">(</span><span class="n">vec</span><span class="p">,</span><span class="mi">2</span><span class="p">);</span>
+  <span class="o">*</span><span class="n">vec</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/VecInitializePackage.html#VecInitializePackage">VecInitializePackage</a></span><span class="p">();</span>
+  <span class="p">...</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="callbacks.html" title="How the Solvers Handle User Provided Callbacks"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="kernel.html" title="The PETSc Kernel"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">PETSc 3.14.6 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >PETSc Developer’s Documentation</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="design.html" >The Design of PETSc</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 1991-2021, UChicago Argonne, LLC and the PETSc Development Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.4.
+    </div>
+  </body>
+</html>

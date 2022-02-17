@@ -1,0 +1,40 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Tao/TaoMatGetSubMat.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>TaoMatGetSubMat</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/Tao/TaoMatGetSubMat.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="TaoMatGetSubMat"><H1>TaoMatGetSubMat</H1></A>
+Gets a submatrix using the <A HREF="../IS/IS.html#IS">IS</A> 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petsctao.h" 
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../Tao/TaoMatGetSubMat.html#TaoMatGetSubMat">TaoMatGetSubMat</A>(<A HREF="../Mat/Mat.html#Mat">Mat</A> M, <A HREF="../IS/IS.html#IS">IS</A> is, <A HREF="../Vec/Vec.html#Vec">Vec</A> v1, <A HREF="../Tao/TaoSubsetType.html#TaoSubsetType">TaoSubsetType</A> subset_type, <A HREF="../Mat/Mat.html#Mat">Mat</A> *Msub)
+</PRE>
+<H3><FONT COLOR="#CC3333">Input Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>M </B></TD><TD>- the full matrix (n x n)
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>is </B></TD><TD>- the index set for the submatrix (both row and column index sets need to be the same)
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>v1 </B></TD><TD>- work vector of dimension n, needed for <A HREF="../Tao/TaoSubsetType.html#TaoSubsetType">TAO_SUBSET_MASK</A> option
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>subset_type &lt;<A HREF="../Tao/TaoSubsetType.html#TaoSubsetType">TAO_SUBSET_SUBVEC</A>,<A HREF="../Tao/TaoSubsetType.html#TaoSubsetType">TAO_SUBSET_MASK</A>,<A HREF="../Tao/TaoSubsetType.html#TaoSubsetType">TAO_SUBSET_MATRIXFREE</A>&gt; </B></TD><TD>- the method TAO is using for subsetting
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Output Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>Msub </B></TD><TD>- the submatrix
+</TD></TR></TABLE>
+<P>
+
+<P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>developer<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/tao/bound/utils/isutil.c.html#TaoMatGetSubMat">src/tao/bound/utils/isutil.c</A>
+<BR><A HREF="./index.html">Index of all Tao routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

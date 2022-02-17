@@ -1,0 +1,54 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/PC/PCFactorSetMatOrderingType.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>PCFactorSetMatOrderingType</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/PC/PCFactorSetMatOrderingType.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="PCFactorSetMatOrderingType"><H1>PCFactorSetMatOrderingType</H1></A>
+Sets the ordering routine (to reduce fill) to be used in the LU, ILU, Cholesky, and ICC factorizations. 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscpc.h" 
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A>  <A HREF="../PC/PCFactorSetMatOrderingType.html#PCFactorSetMatOrderingType">PCFactorSetMatOrderingType</A>(<A HREF="../PC/PC.html#PC">PC</A> pc,<A HREF="../Mat/MatOrderingType.html#MatOrderingType">MatOrderingType</A> ordering)
+</PRE>
+Logically Collective on <A HREF="../PC/PC.html#PC">PC</A>
+<P>
+<H3><FONT COLOR="#CC3333">Input Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>pc </B></TD><TD>- the preconditioner context
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>ordering </B></TD><TD>- the matrix ordering name, for example, MATORDERINGND or MATORDERINGRCM
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Options Database Key</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>-pc_factor_mat_ordering_type &lt;nd,rcm,...,external&gt; </B></TD><TD>- Sets ordering routine
+</TD></TR></TABLE>
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">Notes</FONT></H3>
+nested dissection is used by default
+<P>
+For Cholesky and ICC and the SBAIJ format the only reordering available is natural since only the upper half of the matrix is stored
+and reordering this matrix is very expensive.
+<P>
+You can use SeqAIJ matrix with Cholesky and ICC and use any ordering
+<P>
+external means PETSc will not compute an ordering and the package will use its own ordering, for <A HREF="../Mat/MATSOLVERCHOLMOD.html#MATSOLVERCHOLMOD">MATSOLVERCHOLMOD</A> and <A HREF="../Mat/MATSOLVERUMFPACK.html#MATSOLVERUMFPACK">MATSOLVERUMFPACK</A>
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../Mat/MatOrderingType.html#MatOrderingType">MatOrderingType</A>
+<BR>
+<P>
+<P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>intermediate<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/ksp/pc/impls/factor/factor.c.html#PCFactorSetMatOrderingType">src/ksp/pc/impls/factor/factor.c</A>
+<P><H3><FONT COLOR="CC3333">Implementations</FONT></H3><A HREF="../../../src/ksp/pc/impls/factor/factimpl.c.html#PCFactorSetMatOrderingType_Factor">PCFactorSetMatOrderingType_Factor in src/ksp/pc/impls/factor/factimpl.c</A><BR>
+<BR><A HREF="./index.html">Index of all PC routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

@@ -1,0 +1,158 @@
+<center><a href="ex76f.F90">Actual source code: ex76f.F90</a></center><br>
+
+<html>
+<head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/src/ksp/ksp/tutorials/ex76f.F90.html" />
+<title></title>
+<meta name="generator" content="c2html 0.9.4">
+<meta name="date" content="2021-03-30T16:51:32+00:00">
+</head>
+
+<body bgcolor="#FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 src/ksp/ksp/tutorials/ex76f.F90.html "><small>Report Typos and Errors</small></a></div>
+<pre width="80">
+<a name="line1">  1: </a>!
+<a name="line2">  2: </a>!   Description: Solves a linear systems using <a href="../../../../docs/manualpages/PC/PCHPDDM.html#PCHPDDM">PCHPDDM</a>.
+<a name="line3">  3: </a>!
+
+<a name="line5">  5: </a>      program main
+<a name="line6">  6: </a>#include <A href="../../../../include/petsc/finclude/petscksp.h.html">&lt;petsc/finclude/petscksp.h&gt;</A>
+<a name="line7">  7: </a>      use petscksp
+<a name="line8">  8: </a>      use petscisdef
+<a name="line9">  9: </a>      implicit none
+<a name="line10"> 10: </a>      <a href="../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a>                            x,b
+<a name="line11"> 11: </a>      <a href="../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a>                            A,aux,Y,C
+<a name="line12"> 12: </a>      <a href="../../../../docs/manualpages/KSP/KSP.html#KSP">KSP</a>                            ksp
+<a name="line13"> 13: </a>      <a href="../../../../docs/manualpages/PC/PC.html#PC">PC</a>                             pc
+<a name="line14"> 14: </a>      <a href="../../../../docs/manualpages/IS/IS.html#IS">IS</a>                             is,sizes
+<a name="line15"> 15: </a>      <a href="../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>                    one
+<a name="line16"> 16: </a>      <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>, pointer ::           idx(:)
+<a name="line17"> 17: </a>      <a href="../../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a>                    rank,size
+<a name="line18"> 18: </a>      <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>                       m,N
+<a name="line19"> 19: </a>      <a href="../../../../docs/manualpages/Viewer/PetscViewer.html#PetscViewer">PetscViewer</a>                    viewer
+<a name="line20"> 20: </a>      character*(PETSC_MAX_PATH_LEN) dir,name
+<a name="line21"> 21: </a>      character*(8)                  fmt
+<a name="line22"> 22: </a>      character(1)                   crank,csize
+<a name="line23"> 23: </a>      <a href="../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>                      flg
+<a name="line24"> 24: </a>      <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>                 ierr
+
+<a name="line26"> 26: </a>      call <a href="../../../../docs/manualpages/Sys/PetscInitialize.html#PetscInitialize">PetscInitialize</a>(PETSC_NULL_CHARACTER,ierr)
+<a name="line27"> 27: </a>      <font color="#4169E1">if</font> (ierr .ne. 0) then
+<a name="line28"> 28: </a>        print *,'Unable to initialize PETSc'
+<a name="line29"> 29: </a>        stop
+<a name="line30"> 30: </a>      endif
+<a name="line31"> 31: </a>      call <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_size.html#MPI_Comm_size">MPI_Comm_size</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,size,ierr)
+<a name="line32"> 32: </a>      <font color="#4169E1">if</font> (size .ne. 4) then
+<a name="line33"> 33: </a>        print *,'This example requires 4 processes'
+<a name="line34"> 34: </a>        stop
+<a name="line35"> 35: </a>      endif
+<a name="line36"> 36: </a>      N = 1
+<a name="line37"> 37: </a>      call <a href="../../../../docs/manualpages/Sys/PetscOptionsGetInt.html#PetscOptionsGetInt">PetscOptionsGetInt</a>(PETSC_NULL_OPTIONS,PETSC_NULL_CHARACTER,'-rhs',N,flg,ierr);CHKERRA(ierr)
+<a name="line38"> 38: </a>      call <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_rank.html#MPI_Comm_rank">MPI_Comm_rank</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,rank,ierr)
+<a name="line39"> 39: </a>      call <a href="../../../../docs/manualpages/Mat/MatCreate.html#MatCreate">MatCreate</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,A,ierr);CHKERRA(ierr)
+<a name="line40"> 40: </a>      call <a href="../../../../docs/manualpages/Mat/MatCreate.html#MatCreate">MatCreate</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,aux,ierr);CHKERRA(ierr)
+<a name="line41"> 41: </a>      call <a href="../../../../docs/manualpages/IS/ISCreate.html#ISCreate">ISCreate</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,is,ierr);CHKERRA(ierr)
+<a name="line42"> 42: </a>      dir = '.'
+<a name="line43"> 43: </a>      call <a href="../../../../docs/manualpages/Sys/PetscOptionsGetString.html#PetscOptionsGetString">PetscOptionsGetString</a>(PETSC_NULL_OPTIONS,PETSC_NULL_CHARACTER,'-load_dir',dir,flg,ierr);CHKERRA(ierr)
+<a name="line44"> 44: </a>      fmt = '(I1)'
+<a name="line45"> 45: </a>      write (crank,fmt) rank
+<a name="line46"> 46: </a>      write (csize,fmt) size
+<a name="line47"> 47: </a>      write (name,'(a)')trim(dir)//'/sizes_'//crank//'_'//csize//'.dat'
+<a name="line48"> 48: </a>      call <a href="../../../../docs/manualpages/Viewer/PetscViewerBinaryOpen.html#PetscViewerBinaryOpen">PetscViewerBinaryOpen</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,name,<a href="../../../../docs/manualpages/Sys/PetscFileMode.html#PetscFileMode">FILE_MODE_READ</a>, viewer,ierr);CHKERRA(ierr)
+<a name="line49"> 49: </a>      call <a href="../../../../docs/manualpages/IS/ISCreate.html#ISCreate">ISCreate</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,sizes,ierr);CHKERRA(ierr)
+<a name="line50"> 50: </a>      call <a href="../../../../docs/manualpages/IS/ISLoad.html#ISLoad">ISLoad</a>(sizes,viewer,ierr);CHKERRA(ierr)
+<a name="line51"> 51: </a>      call <a href="../../../../docs/manualpages/IS/ISGetIndicesF90.html#ISGetIndicesF90">ISGetIndicesF90</a>(sizes,idx,ierr);CHKERRA(ierr)
+<a name="line52"> 52: </a>      call <a href="../../../../docs/manualpages/Mat/MatSetSizes.html#MatSetSizes">MatSetSizes</a>(A,idx(1),idx(2),idx(3),idx(4),ierr);CHKERRA(ierr)
+<a name="line53"> 53: </a>      call <a href="../../../../docs/manualpages/IS/ISRestoreIndicesF90.html#ISRestoreIndicesF90">ISRestoreIndicesF90</a>(sizes,idx,ierr);CHKERRA(ierr)
+<a name="line54"> 54: </a>      call <a href="../../../../docs/manualpages/IS/ISDestroy.html#ISDestroy">ISDestroy</a>(sizes,ierr);CHKERRA(ierr)
+<a name="line55"> 55: </a>      call <a href="../../../../docs/manualpages/Viewer/PetscViewerDestroy.html#PetscViewerDestroy">PetscViewerDestroy</a>(viewer,ierr);CHKERRA(ierr)
+<a name="line56"> 56: </a>      call <a href="../../../../docs/manualpages/Mat/MatSetUp.html#MatSetUp">MatSetUp</a>(A,ierr);CHKERRA(ierr)
+<a name="line57"> 57: </a>      write (name,'(a)')trim(dir)//'/A.dat'
+<a name="line58"> 58: </a>      call <a href="../../../../docs/manualpages/Viewer/PetscViewerBinaryOpen.html#PetscViewerBinaryOpen">PetscViewerBinaryOpen</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,name,<a href="../../../../docs/manualpages/Sys/PetscFileMode.html#PetscFileMode">FILE_MODE_READ</a>,viewer,ierr);CHKERRA(ierr)
+<a name="line59"> 59: </a>      call <a href="../../../../docs/manualpages/Mat/MatLoad.html#MatLoad">MatLoad</a>(A,viewer,ierr);CHKERRA(ierr)
+<a name="line60"> 60: </a>      call <a href="../../../../docs/manualpages/Viewer/PetscViewerDestroy.html#PetscViewerDestroy">PetscViewerDestroy</a>(viewer,ierr);CHKERRA(ierr)
+<a name="line61"> 61: </a>      write (name,'(a)')trim(dir)//'/is_'//crank//'_'//csize//'.dat'
+<a name="line62"> 62: </a>      call <a href="../../../../docs/manualpages/Viewer/PetscViewerBinaryOpen.html#PetscViewerBinaryOpen">PetscViewerBinaryOpen</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,name,<a href="../../../../docs/manualpages/Sys/PetscFileMode.html#PetscFileMode">FILE_MODE_READ</a>,viewer,ierr);CHKERRA(ierr)
+<a name="line63"> 63: </a>      call <a href="../../../../docs/manualpages/IS/ISLoad.html#ISLoad">ISLoad</a>(is,viewer,ierr);CHKERRA(ierr)
+<a name="line64"> 64: </a>      call <a href="../../../../docs/manualpages/Viewer/PetscViewerDestroy.html#PetscViewerDestroy">PetscViewerDestroy</a>(viewer,ierr);CHKERRA(ierr)
+<a name="line65"> 65: </a>      write (name,'(a)')trim(dir)//'/Neumann_'//crank//'_'//csize//'.dat'
+<a name="line66"> 66: </a>      call <a href="../../../../docs/manualpages/Viewer/PetscViewerBinaryOpen.html#PetscViewerBinaryOpen">PetscViewerBinaryOpen</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,name,<a href="../../../../docs/manualpages/Sys/PetscFileMode.html#PetscFileMode">FILE_MODE_READ</a>,viewer,ierr);CHKERRA(ierr)
+<a name="line67"> 67: </a>      call <a href="../../../../docs/manualpages/Mat/MatSetBlockSizesFromMats.html#MatSetBlockSizesFromMats">MatSetBlockSizesFromMats</a>(aux,A,A,ierr);CHKERRA(ierr)
+<a name="line68"> 68: </a>      call <a href="../../../../docs/manualpages/Mat/MatLoad.html#MatLoad">MatLoad</a>(aux,viewer,ierr);CHKERRA(ierr)
+<a name="line69"> 69: </a>      call <a href="../../../../docs/manualpages/Viewer/PetscViewerDestroy.html#PetscViewerDestroy">PetscViewerDestroy</a>(viewer,ierr);CHKERRA(ierr)
+<a name="line70"> 70: </a>      call <a href="../../../../docs/manualpages/Mat/MatSetOption.html#MatSetOption">MatSetOption</a>(A,<a href="../../../../docs/manualpages/Mat/MatOption.html#MatOption">MAT_SYMMETRIC</a>,<a href="../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>,ierr);CHKERRA(ierr)
+<a name="line71"> 71: </a>      call <a href="../../../../docs/manualpages/Mat/MatSetOption.html#MatSetOption">MatSetOption</a>(aux,<a href="../../../../docs/manualpages/Mat/MatOption.html#MatOption">MAT_SYMMETRIC</a>,<a href="../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>,ierr);CHKERRA(ierr)
+<a name="line72"> 72: </a>      call <a href="../../../../docs/manualpages/KSP/KSPCreate.html#KSPCreate">KSPCreate</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,ksp,ierr);CHKERRA(ierr)
+<a name="line73"> 73: </a>      call <a href="../../../../docs/manualpages/KSP/KSPSetOperators.html#KSPSetOperators">KSPSetOperators</a>(ksp,A,A,ierr);CHKERRA(ierr)
+<a name="line74"> 74: </a>      call <a href="../../../../docs/manualpages/KSP/KSPGetPC.html#KSPGetPC">KSPGetPC</a>(ksp,pc,ierr);CHKERRA(ierr)
+<a name="line75"> 75: </a>      call <a href="../../../../docs/manualpages/PC/PCSetType.html#PCSetType">PCSetType</a>(pc,<a href="../../../../docs/manualpages/PC/PCHPDDM.html#PCHPDDM">PCHPDDM</a>,ierr);CHKERRA(ierr)
+<a name="line76"> 76: </a><font color="#A020F0">#if defined(PETSC_HAVE_HPDDM)</font>
+<a name="line77"> 77: </a>      call <a href="../../../../docs/manualpages/PC/PCHPDDMSetAuxiliaryMat.html#PCHPDDMSetAuxiliaryMat">PCHPDDMSetAuxiliaryMat</a>(pc,is,aux,PETSC_NULL_FUNCTION,PETSC_NULL_INTEGER,ierr);CHKERRA(ierr)
+<a name="line78"> 78: </a>      call <a href="../../../../docs/manualpages/PC/PCHPDDMHasNeumannMat.html#PCHPDDMHasNeumannMat">PCHPDDMHasNeumannMat</a>(pc,<a href="../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>,ierr);CHKERRA(ierr)
+<a name="line79"> 79: </a><font color="#A020F0">#endif</font>
+<a name="line80"> 80: </a>      call <a href="../../../../docs/manualpages/IS/ISDestroy.html#ISDestroy">ISDestroy</a>(is,ierr);CHKERRA(ierr)
+<a name="line81"> 81: </a>      call <a href="../../../../docs/manualpages/Mat/MatDestroy.html#MatDestroy">MatDestroy</a>(aux,ierr);CHKERRA(ierr)
+<a name="line82"> 82: </a>      call <a href="../../../../docs/manualpages/KSP/KSPSetFromOptions.html#KSPSetFromOptions">KSPSetFromOptions</a>(ksp,ierr);CHKERRA(ierr)
+<a name="line83"> 83: </a>      call <a href="../../../../docs/manualpages/Mat/MatCreateVecs.html#MatCreateVecs">MatCreateVecs</a>(A,x,b,ierr);CHKERRA(ierr)
+<a name="line84"> 84: </a>      one = 1.0
+<a name="line85"> 85: </a>      call <a href="../../../../docs/manualpages/Vec/VecSet.html#VecSet">VecSet</a>(b,one,ierr);CHKERRA(ierr)
+<a name="line86"> 86: </a>      call <a href="../../../../docs/manualpages/KSP/KSPSolve.html#KSPSolve">KSPSolve</a>(ksp,b,x,ierr);CHKERRA(ierr)
+<a name="line87"> 87: </a>      call <a href="../../../../docs/manualpages/Vec/VecGetLocalSize.html#VecGetLocalSize">VecGetLocalSize</a>(x,m,ierr);CHKERRA(ierr)
+<a name="line88"> 88: </a>      call <a href="../../../../docs/manualpages/Vec/VecDestroy.html#VecDestroy">VecDestroy</a>(x,ierr);CHKERRA(ierr)
+<a name="line89"> 89: </a>      call <a href="../../../../docs/manualpages/Vec/VecDestroy.html#VecDestroy">VecDestroy</a>(b,ierr);CHKERRA(ierr)
+<a name="line90"> 90: </a>      <font color="#4169E1">if</font> (N .gt. 1) then
+<a name="line91"> 91: </a>        call <a href="../../../../docs/manualpages/Sys/PetscOptionsClearValue.html#PetscOptionsClearValue">PetscOptionsClearValue</a>(PETSC_NULL_OPTIONS,'-ksp_converged_reason',ierr);CHKERRA(ierr)
+<a name="line92"> 92: </a>        call <a href="../../../../docs/manualpages/KSP/KSPSetFromOptions.html#KSPSetFromOptions">KSPSetFromOptions</a>(ksp,ierr);CHKERRA(ierr)
+<a name="line93"> 93: </a>        call <a href="../../../../docs/manualpages/Mat/MatCreateDense.html#MatCreateDense">MatCreateDense</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,m,<a href="../../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a>,<a href="../../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a>,N,PETSC_NULL_SCALAR,C,ierr);CHKERRA(ierr)
+<a name="line94"> 94: </a>        call <a href="../../../../docs/manualpages/Mat/MatCreateDense.html#MatCreateDense">MatCreateDense</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,m,<a href="../../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a>,<a href="../../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a>,N,PETSC_NULL_SCALAR,Y,ierr);CHKERRA(ierr)
+<a name="line95"> 95: </a>        call <a href="../../../../docs/manualpages/Mat/MatSetRandom.html#MatSetRandom">MatSetRandom</a>(C,PETSC_NULL_RANDOM,ierr);CHKERRA(ierr)
+<a name="line96"> 96: </a>        call <a href="../../../../docs/manualpages/KSP/KSPMatSolve.html#KSPMatSolve">KSPMatSolve</a>(ksp,C,Y,ierr);CHKERRA(ierr)
+<a name="line97"> 97: </a>        call <a href="../../../../docs/manualpages/Mat/MatDestroy.html#MatDestroy">MatDestroy</a>(Y,ierr);CHKERRA(ierr)
+<a name="line98"> 98: </a>        call <a href="../../../../docs/manualpages/Mat/MatDestroy.html#MatDestroy">MatDestroy</a>(C,ierr);CHKERRA(ierr)
+<a name="line99"> 99: </a>      endif
+<a name="line100">100: </a>      call <a href="../../../../docs/manualpages/KSP/KSPDestroy.html#KSPDestroy">KSPDestroy</a>(ksp,ierr);CHKERRA(ierr)
+<a name="line101">101: </a>      call <a href="../../../../docs/manualpages/Mat/MatDestroy.html#MatDestroy">MatDestroy</a>(A,ierr);CHKERRA(ierr)
+<a name="line102">102: </a>      call <a href="../../../../docs/manualpages/Sys/PetscFinalize.html#PetscFinalize">PetscFinalize</a>(ierr)
+<a name="line103">103: </a>      end
+
+<a name="line105">105: </a>!<font color="#B22222">/*TEST</font>
+<a name="line106">106: </a><font color="#B22222">!</font>
+<a name="line107">107: </a><font color="#B22222">!   test:</font>
+<a name="line108">108: </a><font color="#B22222">!      requires: hpddm slepc datafilespath double !complex !define(PETSC_USE_64BIT_INDICES)</font>
+<a name="line109">109: </a><font color="#B22222">!      output_file: output/ex76_1.out</font>
+<a name="line110">110: </a><font color="#B22222">!      nsize: 4</font>
+<a name="line111">111: </a><font color="#B22222">!      args: -ksp_rtol 1e-3 -ksp_converged_reason -pc_type {{bjacobi hpddm}shared output} -pc_hpddm_coarse_sub_pc_type lu -sub_pc_type lu -options_left no -load_dir ${DATAFILESPATH}/matrices/hpddm/GENEO</font>
+<a name="line112">112: </a><font color="#B22222">!</font>
+<a name="line113">113: </a><font color="#B22222">!   test:</font>
+<a name="line114">114: </a><font color="#B22222">!      requires: hpddm slepc datafilespath double !complex !define(PETSC_USE_64BIT_INDICES)</font>
+<a name="line115">115: </a><font color="#B22222">!      suffix: geneo</font>
+<a name="line116">116: </a><font color="#B22222">!      output_file: output/ex76_geneo_pc_hpddm_levels_1_eps_nev-5.out</font>
+<a name="line117">117: </a><font color="#B22222">!      nsize: 4</font>
+<a name="line118">118: </a><font color="#B22222">!      args: -ksp_converged_reason -pc_type hpddm -pc_hpddm_levels_1_sub_pc_type cholesky -pc_hpddm_levels_1_eps_nev 5 -pc_hpddm_levels_1_st_pc_type cholesky -pc_hpddm_coarse_p {{1 2}shared output} -pc_hpddm_coarse_pc_type redundant -load_dir ${DATAFILESPATH}/matrices/hpddm/GENEO</font>
+<a name="line119">119: </a><font color="#B22222">!</font>
+<a name="line120">120: </a><font color="#B22222">!   test:</font>
+<a name="line121">121: </a><font color="#B22222">!      requires: hpddm slepc datafilespath double !complex !define(PETSC_USE_64BIT_INDICES)</font>
+<a name="line122">122: </a><font color="#B22222">!      suffix: fgmres_geneo_20_p_2</font>
+<a name="line123">123: </a><font color="#B22222">!      output_file: output/ex76_fgmres_geneo_20_p_2.out</font>
+<a name="line124">124: </a><font color="#B22222">!      nsize: 4</font>
+<a name="line125">125: </a><font color="#B22222">!      args: -ksp_converged_reason -pc_type hpddm -pc_hpddm_levels_1_sub_pc_type lu -pc_hpddm_levels_1_eps_nev 20 -pc_hpddm_coarse_p 2 -pc_hpddm_coarse_pc_type redundant -ksp_type fgmres -pc_hpddm_coarse_mat_type {{baij sbaij}shared output} -load_dir ${DATAFILESPATH}/matrices/hpddm/GENEO</font>
+<a name="line126">126: </a><font color="#B22222">!</font>
+<a name="line127">127: </a><font color="#B22222">!   test:</font>
+<a name="line128">128: </a><font color="#B22222">!      requires: hpddm slepc datafilespath double !complex !define(PETSC_USE_64BIT_INDICES)</font>
+<a name="line129">129: </a><font color="#B22222">!      suffix: fgmres_geneo_20_p_2_geneo</font>
+<a name="line130">130: </a><font color="#B22222">!      output_file: output/ex76_fgmres_geneo_20_p_2.out</font>
+<a name="line131">131: </a><font color="#B22222">!      nsize: 4</font>
+<a name="line132">132: </a><font color="#B22222">!      args: -ksp_converged_reason -pc_type hpddm -pc_hpddm_levels_1_sub_pc_type cholesky -pc_hpddm_levels_1_eps_nev 20 -pc_hpddm_levels_2_p 2 -pc_hpddm_levels_2_mat_type {{baij sbaij}shared output} -pc_hpddm_levels_2_eps_nev {{5 20}shared output} -pc_hpddm_levels_2_sub_pc_type cholesky -pc_hpddm_levels_2_ksp_type gmres -ksp_type fgmres -pc_hpddm_coarse_mat_type {{baij sbaij}shared output} -load_dir ${DATAFILESPATH}/matrices/hpddm/GENEO</font>
+<a name="line133">133: </a><font color="#B22222">!   # <a href="../../../../docs/manualpages/PC/PCHPDDM.html#PCHPDDM">PCHPDDM</a> + <a href="../../../../docs/manualpages/KSP/KSPHPDDM.html#KSPHPDDM">KSPHPDDM</a> test to exercise multilevel + multiple RHS in one go</font>
+<a name="line134">134: </a><font color="#B22222">!   test:</font>
+<a name="line135">135: </a><font color="#B22222">!      requires: hpddm slepc datafilespath double !complex !define(PETSC_USE_64BIT_INDICES)</font>
+<a name="line136">136: </a><font color="#B22222">!      suffix: fgmres_geneo_20_p_2_geneo_rhs</font>
+<a name="line137">137: </a><font color="#B22222">!      output_file: output/ex76_fgmres_geneo_20_p_2.out</font>
+<a name="line138">138: </a><font color="#B22222">!      nsize: 4</font>
+<a name="line139">139: </a><font color="#B22222">!      args: -ksp_converged_reason -pc_type hpddm -pc_hpddm_levels_1_sub_pc_type cholesky -pc_hpddm_levels_1_eps_nev 20 -pc_hpddm_levels_2_p 2 -pc_hpddm_levels_2_mat_type baij -pc_hpddm_levels_2_eps_nev 5 -pc_hpddm_levels_2_sub_pc_type cholesky -pc_hpddm_levels_2_ksp_max_it 10 -pc_hpddm_levels_2_ksp_type hpddm -pc_hpddm_levels_2_ksp_hpddm_type gmres -ksp_type hpddm -ksp_hpddm_variant flexible -pc_hpddm_coarse_mat_type baij -load_dir ${DATAFILESPATH}/matrices/hpddm/GENEO -rhs 4</font>
+<a name="line140">140: </a><font color="#B22222">!</font>
+<a name="line141">141: </a><font color="#B22222">!TEST*/</font>
+</pre>
+</body>
+
+</html>

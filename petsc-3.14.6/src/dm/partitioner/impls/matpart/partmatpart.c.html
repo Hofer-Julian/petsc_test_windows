@@ -1,0 +1,232 @@
+<center><a href="partmatpart.c">Actual source code: partmatpart.c</a></center><br>
+
+<html>
+<head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/src/dm/partitioner/impls/matpart/partmatpart.c.html" />
+<title></title>
+<meta name="generator" content="c2html 0.9.4">
+<meta name="date" content="2021-03-30T16:51:07+00:00">
+</head>
+
+<body bgcolor="#FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 src/dm/partitioner/impls/matpart/partmatpart.c.html "><small>Report Typos and Errors</small></a></div>
+<pre width="80">
+<a name="line1">  1: </a>#include <A href="../../../../../include/petscmat.h.html">&lt;petscmat.h&gt;</A>
+<a name="line2">  2: </a>#include <A href="../../../../../include/petsc/private/partitionerimpl.h.html">&lt;petsc/private/partitionerimpl.h&gt;</A>
+
+<a name="line4">  4: </a><font color="#4169E1">typedef</font> <font color="#4169E1">struct</font> {
+<a name="line5">  5: </a>  <a href="../../../../../docs/manualpages/Mat/MatPartitioning.html#MatPartitioning">MatPartitioning</a> mp;
+<a name="line6">  6: </a>} PetscPartitioner_MatPartitioning;
+
+<a name="line8">  8: </a><strong><font color="#4169E1"><a name="PetscPartitionerMatPartitioningGetMatPartitioning_MatPartitioning"></a>static <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscPartitionerMatPartitioningGetMatPartitioning_MatPartitioning(<a href="../../../../../docs/manualpages/DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</a> part, <a href="../../../../../docs/manualpages/Mat/MatPartitioning.html#MatPartitioning">MatPartitioning</a> *mp)</font></strong>
+<a name="line9">  9: </a>{
+<a name="line10"> 10: </a>  PetscPartitioner_MatPartitioning  *p = (PetscPartitioner_MatPartitioning *) part-&gt;data;
+
+<a name="line13"> 13: </a>  *mp = p-&gt;mp;
+<a name="line14"> 14: </a>  <font color="#4169E1">return</font>(0);
+<a name="line15"> 15: </a>}
+
+<a name="line17"> 17: </a><font color="#B22222">/*@C</font>
+<a name="line18"> 18: </a><font color="#B22222">  <a href="../../../../../docs/manualpages/DM/PetscPartitionerMatPartitioningGetMatPartitioning.html#PetscPartitionerMatPartitioningGetMatPartitioning">PetscPartitionerMatPartitioningGetMatPartitioning</a> - Get a <a href="../../../../../docs/manualpages/Mat/MatPartitioning.html#MatPartitioning">MatPartitioning</a> instance wrapped by this <a href="../../../../../docs/manualpages/DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</a>.</font>
+
+<a name="line20"> 20: </a><font color="#B22222">  Not Collective</font>
+
+<a name="line22"> 22: </a><font color="#B22222">  Input Parameters:</font>
+<a name="line23"> 23: </a><font color="#B22222">. part     - The <a href="../../../../../docs/manualpages/DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</a></font>
+
+<a name="line25"> 25: </a><font color="#B22222">  Output Parameters:</font>
+<a name="line26"> 26: </a><font color="#B22222">. mp       - The <a href="../../../../../docs/manualpages/Mat/MatPartitioning.html#MatPartitioning">MatPartitioning</a></font>
+
+<a name="line28"> 28: </a><font color="#B22222">  Level: developer</font>
+
+<a name="line30"> 30: </a><font color="#B22222">.seealso <a href="../../../../../docs/manualpages/DMPLEX/DMPlexDistribute.html#DMPlexDistribute">DMPlexDistribute</a>(), <a href="../../../../../docs/manualpages/DM/PetscPartitionerCreate.html#PetscPartitionerCreate">PetscPartitionerCreate</a>()</font>
+<a name="line31"> 31: </a><font color="#B22222">@*/</font>
+<a name="line32"> 32: </a><strong><font color="#4169E1"><a name="PetscPartitionerMatPartitioningGetMatPartitioning"></a><a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../../../docs/manualpages/DM/PetscPartitionerMatPartitioningGetMatPartitioning.html#PetscPartitionerMatPartitioningGetMatPartitioning">PetscPartitionerMatPartitioningGetMatPartitioning</a>(<a href="../../../../../docs/manualpages/DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</a> part, <a href="../../../../../docs/manualpages/Mat/MatPartitioning.html#MatPartitioning">MatPartitioning</a> *mp)</font></strong>
+<a name="line33"> 33: </a>{
+<a name="line34"> 34: </a>  <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>          ierr;
+
+<a name="line39"> 39: </a>  PetscUseMethod(part,<font color="#666666">"PetscPartitionerMatPartitioningGetMatPartitioning_C"</font>,(<a href="../../../../../docs/manualpages/DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</a>,<a href="../../../../../docs/manualpages/Mat/MatPartitioning.html#MatPartitioning">MatPartitioning</a>*),(part,mp));
+<a name="line40"> 40: </a>  <font color="#4169E1">return</font>(0);
+<a name="line41"> 41: </a>}
+
+<a name="line43"> 43: </a><strong><font color="#4169E1"><a name="PetscPartitionerDestroy_MatPartitioning"></a>static <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscPartitionerDestroy_MatPartitioning(<a href="../../../../../docs/manualpages/DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</a> part)</font></strong>
+<a name="line44"> 44: </a>{
+<a name="line45"> 45: </a>  PetscPartitioner_MatPartitioning  *p = (PetscPartitioner_MatPartitioning *) part-&gt;data;
+<a name="line46"> 46: </a>  <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>                    ierr;
+
+<a name="line49"> 49: </a>  <a href="../../../../../docs/manualpages/MatOrderings/MatPartitioningDestroy.html#MatPartitioningDestroy">MatPartitioningDestroy</a>(&amp;p-&gt;mp);
+<a name="line50"> 50: </a>  <a href="../../../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(part-&gt;data);
+<a name="line51"> 51: </a>  <font color="#4169E1">return</font>(0);
+<a name="line52"> 52: </a>}
+
+<a name="line54"> 54: </a><strong><font color="#4169E1"><a name="PetscPartitionerView_MatPartitioning_ASCII"></a>static <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscPartitionerView_MatPartitioning_ASCII(<a href="../../../../../docs/manualpages/DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</a> part, <a href="../../../../../docs/manualpages/Viewer/PetscViewer.html#PetscViewer">PetscViewer</a> viewer)</font></strong>
+<a name="line55"> 55: </a>{
+<a name="line56"> 56: </a>  PetscPartitioner_MatPartitioning  *p = (PetscPartitioner_MatPartitioning *) part-&gt;data;
+<a name="line57"> 57: </a>  <a href="../../../../../docs/manualpages/Viewer/PetscViewerFormat.html#PetscViewerFormat">PetscViewerFormat</a>                 format;
+<a name="line58"> 58: </a>  <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>                    ierr;
+
+<a name="line61"> 61: </a>  PetscViewerGetFormat(viewer, &amp;format);
+<a name="line62"> 62: </a>  <a href="../../../../../docs/manualpages/Viewer/PetscViewerASCIIPrintf.html#PetscViewerASCIIPrintf">PetscViewerASCIIPrintf</a>(viewer, <font color="#666666">"<a href="../../../../../docs/manualpages/Mat/MatPartitioning.html#MatPartitioning">MatPartitioning</a> Graph Partitioner:\n"</font>);
+<a name="line63"> 63: </a>  <a href="../../../../../docs/manualpages/Viewer/PetscViewerASCIIPushTab.html#PetscViewerASCIIPushTab">PetscViewerASCIIPushTab</a>(viewer);
+<a name="line64"> 64: </a>  <font color="#4169E1">if</font> (p-&gt;mp) {<a href="../../../../../docs/manualpages/MatOrderings/MatPartitioningView.html#MatPartitioningView">MatPartitioningView</a>(p-&gt;mp, viewer);}
+<a name="line65"> 65: </a>  <a href="../../../../../docs/manualpages/Viewer/PetscViewerASCIIPopTab.html#PetscViewerASCIIPopTab">PetscViewerASCIIPopTab</a>(viewer);
+<a name="line66"> 66: </a>  <font color="#4169E1">return</font>(0);
+<a name="line67"> 67: </a>}
+
+<a name="line69"> 69: </a><strong><font color="#4169E1"><a name="PetscPartitionerView_MatPartitioning"></a>static <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscPartitionerView_MatPartitioning(<a href="../../../../../docs/manualpages/DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</a> part, <a href="../../../../../docs/manualpages/Viewer/PetscViewer.html#PetscViewer">PetscViewer</a> viewer)</font></strong>
+<a name="line70"> 70: </a>{
+<a name="line71"> 71: </a>  <a href="../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>      iascii;
+
+<a name="line77"> 77: </a>  <a href="../../../../../docs/manualpages/Sys/PetscObjectTypeCompare.html#PetscObjectTypeCompare">PetscObjectTypeCompare</a>((<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>) viewer, <a href="../../../../../docs/manualpages/Viewer/PETSCVIEWERASCII.html#PETSCVIEWERASCII">PETSCVIEWERASCII</a>, &amp;iascii);
+<a name="line78"> 78: </a>  <font color="#4169E1">if</font> (iascii) {PetscPartitionerView_MatPartitioning_ASCII(part, viewer);}
+<a name="line79"> 79: </a>  <font color="#4169E1">return</font>(0);
+<a name="line80"> 80: </a>}
+
+<a name="line82"> 82: </a><strong><font color="#4169E1"><a name="PetscPartitionerSetFromOptions_MatPartitioning"></a>static <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscPartitionerSetFromOptions_MatPartitioning(PetscOptionItems *PetscOptionsObject, <a href="../../../../../docs/manualpages/DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</a> part)</font></strong>
+<a name="line83"> 83: </a>{
+<a name="line84"> 84: </a>  PetscPartitioner_MatPartitioning  *p = (PetscPartitioner_MatPartitioning *) part-&gt;data;
+<a name="line85"> 85: </a>  <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>                    ierr;
+
+<a name="line88"> 88: </a>  <a href="../../../../../docs/manualpages/Sys/PetscObjectSetOptionsPrefix.html#PetscObjectSetOptionsPrefix">PetscObjectSetOptionsPrefix</a>((<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)p-&gt;mp,((<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)part)-&gt;prefix);
+<a name="line89"> 89: </a>  <a href="../../../../../docs/manualpages/MatOrderings/MatPartitioningSetFromOptions.html#MatPartitioningSetFromOptions">MatPartitioningSetFromOptions</a>(p-&gt;mp);
+<a name="line90"> 90: </a>  <font color="#4169E1">return</font>(0);
+<a name="line91"> 91: </a>}
+
+<a name="line93"> 93: </a><strong><font color="#4169E1"><a name="PetscPartitionerPartition_MatPartitioning"></a>static <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscPartitionerPartition_MatPartitioning(<a href="../../../../../docs/manualpages/DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</a> part, <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> nparts, <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> numVertices, <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> start[], <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> adjacency[], <a href="../../../../../docs/manualpages/PetscSection/PetscSection.html#PetscSection">PetscSection</a> vertSection, <a href="../../../../../docs/manualpages/PetscSection/PetscSection.html#PetscSection">PetscSection</a> targetSection, <a href="../../../../../docs/manualpages/PetscSection/PetscSection.html#PetscSection">PetscSection</a> partSection, <a href="../../../../../docs/manualpages/IS/IS.html#IS">IS</a> *is)</font></strong>
+<a name="line94"> 94: </a>{
+<a name="line95"> 95: </a>  PetscPartitioner_MatPartitioning  *p = (PetscPartitioner_MatPartitioning *) part-&gt;data;
+<a name="line96"> 96: </a>  <a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a>                               matadj;
+<a name="line97"> 97: </a>  <a href="../../../../../docs/manualpages/IS/IS.html#IS">IS</a>                                is1, is2, is3;
+<a name="line98"> 98: </a>  <a href="../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>                         *tpwgts = NULL;
+<a name="line99"> 99: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>                          numVerticesGlobal, numEdges;
+<a name="line100">100: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>                          *i, *j, *vwgt = NULL;
+<a name="line101">101: </a>  <a href="../../../../../docs/manualpages/Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</a>                          comm;
+<a name="line102">102: </a>  <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>                    ierr;
+
+<a name="line105">105: </a>  <a href="../../../../../docs/manualpages/Sys/PetscObjectGetComm.html#PetscObjectGetComm">PetscObjectGetComm</a>((<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)part, &amp;comm);
+
+<a name="line107">107: </a>  <font color="#B22222">/* TODO: <a href="../../../../../docs/manualpages/Mat/MatCreateMPIAdj.html#MatCreateMPIAdj">MatCreateMPIAdj</a> should maybe take global number of ROWS */</font>
+<a name="line108">108: </a>  <font color="#B22222">/* TODO: And vertex distribution in PetscPartitionerPartition_ParMetis should be done using <a href="../../../../../docs/manualpages/Sys/PetscSplitOwnership.html#PetscSplitOwnership">PetscSplitOwnership</a> */</font>
+<a name="line109">109: </a>  numVerticesGlobal = <a href="../../../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a>;
+<a name="line110">110: </a>  <a href="../../../../../docs/manualpages/Sys/PetscSplitOwnership.html#PetscSplitOwnership">PetscSplitOwnership</a>(comm, &amp;numVertices, &amp;numVerticesGlobal);
+
+<a name="line112">112: </a>  <font color="#B22222">/* copy arrays to avoid memory errors because <a href="../../../../../docs/manualpages/Mat/MatMPIAdjSetPreallocation.html#MatMPIAdjSetPreallocation">MatMPIAdjSetPreallocation</a> copies just pointers */</font>
+<a name="line113">113: </a>  numEdges = start[numVertices];
+<a name="line114">114: </a>  <a href="../../../../../docs/manualpages/Sys/PetscMalloc1.html#PetscMalloc1">PetscMalloc1</a>(numVertices+1, &amp;i);
+<a name="line115">115: </a>  <a href="../../../../../docs/manualpages/Sys/PetscMalloc1.html#PetscMalloc1">PetscMalloc1</a>(numEdges, &amp;j);
+<a name="line116">116: </a>  <a href="../../../../../docs/manualpages/Sys/PetscArraycpy.html#PetscArraycpy">PetscArraycpy</a>(i, start, numVertices+1);
+<a name="line117">117: </a>  <a href="../../../../../docs/manualpages/Sys/PetscArraycpy.html#PetscArraycpy">PetscArraycpy</a>(j, adjacency, numEdges);
+
+<a name="line119">119: </a>  <font color="#B22222">/* construct the adjacency matrix */</font>
+<a name="line120">120: </a>  <a href="../../../../../docs/manualpages/Mat/MatCreateMPIAdj.html#MatCreateMPIAdj">MatCreateMPIAdj</a>(comm, numVertices, numVerticesGlobal, i, j, NULL, &amp;matadj);
+<a name="line121">121: </a>  <a href="../../../../../docs/manualpages/MatOrderings/MatPartitioningSetAdjacency.html#MatPartitioningSetAdjacency">MatPartitioningSetAdjacency</a>(p-&gt;mp, matadj);
+<a name="line122">122: </a>  <a href="../../../../../docs/manualpages/MatOrderings/MatPartitioningSetNParts.html#MatPartitioningSetNParts">MatPartitioningSetNParts</a>(p-&gt;mp, nparts);
+
+<a name="line124">124: </a>  <font color="#B22222">/* calculate partition weights */</font>
+<a name="line125">125: </a>  <font color="#4169E1">if</font> (targetSection) {
+<a name="line126">126: </a>    <a href="../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> sumt;
+<a name="line127">127: </a>    <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>  p;
+
+<a name="line129">129: </a>    sumt = 0.0;
+<a name="line130">130: </a>    <a href="../../../../../docs/manualpages/Sys/PetscMalloc1.html#PetscMalloc1">PetscMalloc1</a>(nparts,&amp;tpwgts);
+<a name="line131">131: </a>    <font color="#4169E1">for</font> (p = 0; p &lt; nparts; ++p) {
+<a name="line132">132: </a>      <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> tpd;
+
+<a name="line134">134: </a>      <a href="../../../../../docs/manualpages/PetscSection/PetscSectionGetDof.html#PetscSectionGetDof">PetscSectionGetDof</a>(targetSection,p,&amp;tpd);
+<a name="line135">135: </a>      sumt += tpd;
+<a name="line136">136: </a>      tpwgts[p] = tpd;
+<a name="line137">137: </a>    }
+<a name="line138">138: </a>    <font color="#4169E1">if</font> (sumt) { <font color="#B22222">/* METIS/ParMETIS do not like exactly zero weight */</font>
+<a name="line139">139: </a>      <font color="#4169E1">for</font> (p = 0, sumt = 0.0; p &lt; nparts; ++p) {
+<a name="line140">140: </a>        tpwgts[p] = <a href="../../../../../docs/manualpages/Sys/PetscMax.html#PetscMax">PetscMax</a>(tpwgts[p],PETSC_SMALL);
+<a name="line141">141: </a>        sumt += tpwgts[p];
+<a name="line142">142: </a>      }
+<a name="line143">143: </a>      <font color="#4169E1">for</font> (p = 0; p &lt; nparts; ++p) tpwgts[p] /= sumt;
+<a name="line144">144: </a>      <font color="#4169E1">for</font> (p = 0, sumt = 0.0; p &lt; nparts-1; ++p) sumt += tpwgts[p];
+<a name="line145">145: </a>      tpwgts[nparts - 1] = 1. - sumt;
+<a name="line146">146: </a>    } <font color="#4169E1">else</font> {
+<a name="line147">147: </a>      <a href="../../../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(tpwgts);
+<a name="line148">148: </a>    }
+<a name="line149">149: </a>  }
+<a name="line150">150: </a>  <a href="../../../../../docs/manualpages/MatOrderings/MatPartitioningSetPartitionWeights.html#MatPartitioningSetPartitionWeights">MatPartitioningSetPartitionWeights</a>(p-&gt;mp, tpwgts);
+
+<a name="line152">152: </a>  <font color="#B22222">/* calculate vertex weights */</font>
+<a name="line153">153: </a>  <font color="#4169E1">if</font> (vertSection) {
+<a name="line154">154: </a>    <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> v;
+
+<a name="line156">156: </a>    <a href="../../../../../docs/manualpages/Sys/PetscMalloc1.html#PetscMalloc1">PetscMalloc1</a>(numVertices,&amp;vwgt);
+<a name="line157">157: </a>    <font color="#4169E1">for</font> (v = 0; v &lt; numVertices; ++v) {
+<a name="line158">158: </a>      <a href="../../../../../docs/manualpages/PetscSection/PetscSectionGetDof.html#PetscSectionGetDof">PetscSectionGetDof</a>(vertSection, v, &amp;vwgt[v]);
+<a name="line159">159: </a>    }
+<a name="line160">160: </a>  }
+<a name="line161">161: </a>  <a href="../../../../../docs/manualpages/MatOrderings/MatPartitioningSetVertexWeights.html#MatPartitioningSetVertexWeights">MatPartitioningSetVertexWeights</a>(p-&gt;mp, vwgt);
+
+<a name="line163">163: </a>  <font color="#B22222">/* apply the partitioning */</font>
+<a name="line164">164: </a>  <a href="../../../../../docs/manualpages/MatOrderings/MatPartitioningApply.html#MatPartitioningApply">MatPartitioningApply</a>(p-&gt;mp, &amp;is1);
+
+<a name="line166">166: </a>  <font color="#B22222">/* construct the <a href="../../../../../docs/manualpages/PetscSection/PetscSection.html#PetscSection">PetscSection</a> */</font>
+<a name="line167">167: </a>  {
+<a name="line168">168: </a>    <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> v;
+<a name="line169">169: </a>    const <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *assignment_arr;
+
+<a name="line171">171: </a>    <a href="../../../../../docs/manualpages/IS/ISGetIndices.html#ISGetIndices">ISGetIndices</a>(is1, &amp;assignment_arr);
+<a name="line172">172: </a>    <font color="#4169E1">for</font> (v = 0; v &lt; numVertices; ++v) {<a href="../../../../../docs/manualpages/PetscSection/PetscSectionAddDof.html#PetscSectionAddDof">PetscSectionAddDof</a>(partSection, assignment_arr[v], 1);}
+<a name="line173">173: </a>    <a href="../../../../../docs/manualpages/IS/ISRestoreIndices.html#ISRestoreIndices">ISRestoreIndices</a>(is1, &amp;assignment_arr);
+<a name="line174">174: </a>  }
+
+<a name="line176">176: </a>  <font color="#B22222">/* convert assignment <a href="../../../../../docs/manualpages/IS/IS.html#IS">IS</a> to global numbering <a href="../../../../../docs/manualpages/IS/IS.html#IS">IS</a> */</font>
+<a name="line177">177: </a>  <a href="../../../../../docs/manualpages/IS/ISPartitioningToNumbering.html#ISPartitioningToNumbering">ISPartitioningToNumbering</a>(is1, &amp;is2);
+<a name="line178">178: </a>  <a href="../../../../../docs/manualpages/IS/ISDestroy.html#ISDestroy">ISDestroy</a>(&amp;is1);
+
+<a name="line180">180: </a>  <font color="#B22222">/* renumber <a href="../../../../../docs/manualpages/IS/IS.html#IS">IS</a> into local numbering */</font>
+<a name="line181">181: </a>  <a href="../../../../../docs/manualpages/IS/ISOnComm.html#ISOnComm">ISOnComm</a>(is2, <a href="../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, <a href="../../../../../docs/manualpages/Sys/PetscCopyMode.html#PetscCopyMode">PETSC_USE_POINTER</a>, &amp;is1);
+<a name="line182">182: </a>  <a href="../../../../../docs/manualpages/IS/ISRenumber.html#ISRenumber">ISRenumber</a>(is1, NULL, NULL, &amp;is3);
+<a name="line183">183: </a>  <a href="../../../../../docs/manualpages/IS/ISDestroy.html#ISDestroy">ISDestroy</a>(&amp;is1);
+<a name="line184">184: </a>  <a href="../../../../../docs/manualpages/IS/ISDestroy.html#ISDestroy">ISDestroy</a>(&amp;is2);
+
+<a name="line186">186: </a>  <font color="#B22222">/* invert <a href="../../../../../docs/manualpages/IS/IS.html#IS">IS</a> */</font>
+<a name="line187">187: </a>  <a href="../../../../../docs/manualpages/IS/ISSetPermutation.html#ISSetPermutation">ISSetPermutation</a>(is3);
+<a name="line188">188: </a>  <a href="../../../../../docs/manualpages/IS/ISInvertPermutation.html#ISInvertPermutation">ISInvertPermutation</a>(is3, numVertices, &amp;is1);
+<a name="line189">189: </a>  <a href="../../../../../docs/manualpages/IS/ISDestroy.html#ISDestroy">ISDestroy</a>(&amp;is3);
+
+<a name="line191">191: </a>  <a href="../../../../../docs/manualpages/Mat/MatDestroy.html#MatDestroy">MatDestroy</a>(&amp;matadj);
+<a name="line192">192: </a>  *is = is1;
+<a name="line193">193: </a>  <font color="#4169E1">return</font>(0);
+<a name="line194">194: </a>}
+
+<a name="line196">196: </a><strong><font color="#4169E1"><a name="PetscPartitionerInitialize_MatPartitioning"></a>static <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscPartitionerInitialize_MatPartitioning(<a href="../../../../../docs/manualpages/DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</a> part)</font></strong>
+<a name="line197">197: </a>{
+<a name="line198">198: </a>  <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>                    ierr;
+
+<a name="line201">201: </a>  part-&gt;ops-&gt;view           = PetscPartitionerView_MatPartitioning;
+<a name="line202">202: </a>  part-&gt;ops-&gt;setfromoptions = PetscPartitionerSetFromOptions_MatPartitioning;
+<a name="line203">203: </a>  part-&gt;ops-&gt;destroy        = PetscPartitionerDestroy_MatPartitioning;
+<a name="line204">204: </a>  part-&gt;ops-&gt;partition      = PetscPartitionerPartition_MatPartitioning;
+<a name="line205">205: </a>  <a href="../../../../../docs/manualpages/Sys/PetscObjectComposeFunction.html#PetscObjectComposeFunction">PetscObjectComposeFunction</a>((<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)part,<font color="#666666">"PetscPartitionerMatPartitioningGetMatPartitioning_C"</font>,PetscPartitionerMatPartitioningGetMatPartitioning_MatPartitioning);
+<a name="line206">206: </a>  <font color="#4169E1">return</font>(0);
+<a name="line207">207: </a>}
+
+<a name="line209">209: </a><font color="#B22222">/*MC</font>
+<a name="line210">210: </a><font color="#B22222">  <a href="../../../../../docs/manualpages/DM/PETSCPARTITIONERMATPARTITIONING.html#PETSCPARTITIONERMATPARTITIONING">PETSCPARTITIONERMATPARTITIONING</a> = "matpartitioning" - A <a href="../../../../../docs/manualpages/DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</a> object</font>
+
+<a name="line212">212: </a><font color="#B22222">  Level: developer</font>
+
+<a name="line214">214: </a><font color="#B22222">.seealso: <a href="../../../../../docs/manualpages/DM/PetscPartitionerType.html#PetscPartitionerType">PetscPartitionerType</a>, <a href="../../../../../docs/manualpages/DM/PetscPartitionerCreate.html#PetscPartitionerCreate">PetscPartitionerCreate</a>(), <a href="../../../../../docs/manualpages/DM/PetscPartitionerSetType.html#PetscPartitionerSetType">PetscPartitionerSetType</a>()</font>
+<a name="line215">215: </a><font color="#B22222">M*/</font>
+
+<a name="line217">217: </a><strong><font color="#4169E1"><a name="PetscPartitionerCreate_MatPartitioning"></a>PETSC_EXTERN <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscPartitionerCreate_MatPartitioning(<a href="../../../../../docs/manualpages/DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</a> part)</font></strong>
+<a name="line218">218: </a>{
+<a name="line219">219: </a>  PetscPartitioner_MatPartitioning  *p;
+<a name="line220">220: </a>  <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>                    ierr;
+
+<a name="line224">224: </a>  <a href="../../../../../docs/manualpages/Sys/PetscNewLog.html#PetscNewLog">PetscNewLog</a>(part, &amp;p);
+<a name="line225">225: </a>  part-&gt;data = p;
+<a name="line226">226: </a>  PetscPartitionerInitialize_MatPartitioning(part);
+<a name="line227">227: </a>  <a href="../../../../../docs/manualpages/MatOrderings/MatPartitioningCreate.html#MatPartitioningCreate">MatPartitioningCreate</a>(<a href="../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)part), &amp;p-&gt;mp);
+<a name="line228">228: </a>  <font color="#4169E1">return</font>(0);
+<a name="line229">229: </a>}
+
+</pre>
+</body>
+
+</html>

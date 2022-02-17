@@ -1,0 +1,43 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Tao/TaoVecGetSubVec.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>TaoVecGetSubVec</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/Tao/TaoVecGetSubVec.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="TaoVecGetSubVec"><H1>TaoVecGetSubVec</H1></A>
+Gets a subvector using the <A HREF="../IS/IS.html#IS">IS</A> 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petsctao.h" 
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../Tao/TaoVecGetSubVec.html#TaoVecGetSubVec">TaoVecGetSubVec</A>(<A HREF="../Vec/Vec.html#Vec">Vec</A> vfull, <A HREF="../IS/IS.html#IS">IS</A> is, <A HREF="../Tao/TaoSubsetType.html#TaoSubsetType">TaoSubsetType</A> reduced_type, <A HREF="../Sys/PetscReal.html#PetscReal">PetscReal</A> maskvalue, <A HREF="../Vec/Vec.html#Vec">Vec</A> *vreduced)
+</PRE>
+<H3><FONT COLOR="#CC3333">Input Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>vfull </B></TD><TD>- the full matrix
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>is </B></TD><TD>- the index set for the subvector
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>reduced_type </B></TD><TD>- the method TAO is using for subsetting (<A HREF="../Tao/TaoSubsetType.html#TaoSubsetType">TAO_SUBSET_SUBVEC</A>, <A HREF="../Tao/TaoSubsetType.html#TaoSubsetType">TAO_SUBSET_MASK</A>,  <A HREF="../Tao/TaoSubsetType.html#TaoSubsetType">TAO_SUBSET_MATRIXFREE</A>)
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>maskvalue </B></TD><TD>- the value to set the unused vector elements to (for <A HREF="../Tao/TaoSubsetType.html#TaoSubsetType">TAO_SUBSET_MASK</A> or <A HREF="../Tao/TaoSubsetType.html#TaoSubsetType">TAO_SUBSET_MATRIXFREE</A>)
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Output Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>vreduced </B></TD><TD>- the subvector
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Notes</FONT></H3>
+maskvalue should usually be 0.0, unless a pointwise divide will be used.
+<P>
+
+<P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>developer<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/tao/bound/utils/isutil.c.html#TaoVecGetSubVec">src/tao/bound/utils/isutil.c</A>
+<BR><A HREF="./index.html">Index of all Tao routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

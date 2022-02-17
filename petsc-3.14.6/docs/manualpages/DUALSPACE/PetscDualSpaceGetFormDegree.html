@@ -1,0 +1,42 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DUALSPACE/PetscDualSpaceGetFormDegree.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>PetscDualSpaceGetFormDegree</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/DUALSPACE/PetscDualSpaceGetFormDegree.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="PetscDualSpaceGetFormDegree"><H1>PetscDualSpaceGetFormDegree</H1></A>
+Get the form degree k for the k-form the describes the pushforwards/pullbacks of this dual space's functionals. 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscfe.h" 
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../DUALSPACE/PetscDualSpaceGetFormDegree.html#PetscDualSpaceGetFormDegree">PetscDualSpaceGetFormDegree</A>(<A HREF="../FE/PetscDualSpace.html#PetscDualSpace">PetscDualSpace</A> dsp, <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> *k)
+</PRE>
+<H3><FONT COLOR="#CC3333">Input Parameter</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>dsp </B></TD><TD>- The <A HREF="../FE/PetscDualSpace.html#PetscDualSpace">PetscDualSpace</A>
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Output Parameter</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>k   </B></TD><TD>- The *signed* degree k of the k.  If k &gt;= 0, this means that the degrees of freedom are k-forms, and are stored
+in lexicographic order according to the basis of k-forms constructed from the wedge product of 1-forms.  So for example,
+the 1-form basis in 3-D is (dx, dy, dz), and the 2-form basis in 3-D is (dx wedge dy, dx wedge dz, dy wedge dz).
+If k &lt; 0, this means that the degrees transform as k-forms, but are stored as (N-k) forms according to the
+Hodge star map.  So for example if k = -2 and N = 3, this means that the degrees of freedom transform as 2-forms
+but are stored as 1-forms.
+</TD></TR></TABLE>
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../DT/PetscDTAltV.html#PetscDTAltV">PetscDTAltV</A>, <A HREF="../DUALSPACE/PetscDualSpacePullback.html#PetscDualSpacePullback">PetscDualSpacePullback</A>(), <A HREF="../DUALSPACE/PetscDualSpacePushforward.html#PetscDualSpacePushforward">PetscDualSpacePushforward</A>(), <A HREF="../DUALSPACE/PetscDualSpaceTransform.html#PetscDualSpaceTransform">PetscDualSpaceTransform</A>(), <A HREF="../FE/PetscDualSpaceTransformType.html#PetscDualSpaceTransformType">PetscDualSpaceTransformType</A>
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>developer<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/dm/dt/dualspace/interface/dualspace.c.html#PetscDualSpaceGetFormDegree">src/dm/dt/dualspace/interface/dualspace.c</A>
+<BR><A HREF="./index.html">Index of all DUALSPACE routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

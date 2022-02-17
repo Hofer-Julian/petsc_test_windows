@@ -1,0 +1,31 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/SPACE/PetscSpaceSumSetConcatenate.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>PetscSpaceSumSetConcatenate</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/SPACE/PetscSpaceSumSetConcatenate.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="PetscSpaceSumSetConcatenate"><H1>PetscSpaceSumSetConcatenate</H1></A>
+Sets the concatenate flag for this space. A concatenated sum space will have number of components equal to the sum of the number of components of all subspaces.A non-concatenated, or direct sum space will have the same number of components as its subspaces . 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscfe.h" 
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../SPACE/PetscSpaceSumSetConcatenate.html#PetscSpaceSumSetConcatenate">PetscSpaceSumSetConcatenate</A>(<A HREF="../FE/PetscSpace.html#PetscSpace">PetscSpace</A> sp,<A HREF="../Sys/PetscBool.html#PetscBool">PetscBool</A> concatenate)
+</PRE>
+<H3><FONT COLOR="#CC3333">Input Parameters</FONT></H3>
++ sp - the function space object
+- concatenate - are subspaces concatenated components (true) or direct summands (false)
+<P>
+
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../SPACE/PetscSpaceSumGetConcatenate.html#PetscSpaceSumGetConcatenate">PetscSpaceSumGetConcatenate</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>intermediate<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/dm/dt/space/impls/sum/spacesum.c.html#PetscSpaceSumSetConcatenate">src/dm/dt/space/impls/sum/spacesum.c</A>
+<P><H3><FONT COLOR="CC3333">Implementations</FONT></H3><A HREF="../../../src/dm/dt/space/impls/sum/spacesum.c.html#PetscSpaceSumSetConcatenate_Sum">PetscSpaceSumSetConcatenate_Sum in src/dm/dt/space/impls/sum/spacesum.c</A><BR>
+<BR><A HREF="./index.html">Index of all SPACE routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

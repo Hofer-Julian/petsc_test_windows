@@ -1,0 +1,325 @@
+<center><a href="cupminit.inc">Actual source code: cupminit.inc</a></center><br>
+
+<html>
+<head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/src/sys/objects/cupminit.inc.html" />
+<title></title>
+<meta name="generator" content="c2html 0.9.4">
+<meta name="date" content="2021-03-30T16:49:28+00:00">
+</head>
+
+<body bgcolor="#FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 src/sys/objects/cupminit.inc.html "><small>Report Typos and Errors</small></a></div>
+<pre width="80">
+<a name="line1">  1: </a><font color="#B22222">/* A template file for the CUDA Programming Model (CUPM) initialization, to be included in init.c. CUPM is either CUDA or HIP. */</font>
+
+<a name="line3">  3: </a><a href="../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> PetscCUPMSynchronize     = <a href="../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line4">  4: </a><a href="../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> PetscCUPMInitialized     = <a href="../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+
+<a name="line6">  6: </a>static <a href="../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> PetscNotUseCUPM   = <a href="../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>; <font color="#B22222">/* Assert the code will not use this type of devices */</font>
+
+<a name="line8">  8: </a><font color="#B22222">/* Device validation after it is lazily initialized */</font>
+<a name="line9">  9: </a><strong><font color="#4169E1"><a name="PetscCUPMValidate"></a>static <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscCUPMValidate(void)</font></strong>
+<a name="line10"> 10: </a>{
+<a name="line11"> 11: </a>  <a href="../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>  mpi_gpu_awareness;
+
+<a name="line14"> 14: </a>  <font color="#4169E1">if</font> (use_gpu_aware_mpi) {
+<a name="line15"> 15: </a><font color="#A020F0">#if defined(PETSC_HAVE_OMPI_MAJOR_VERSION) &amp;&amp; defined(MPIX_CUDA_AWARE_SUPPORT) &amp;&amp; MPIX_CUDA_AWARE_SUPPORT</font>
+<a name="line16"> 16: </a>    <font color="#B22222">/* Trust OpenMPI's compile time gpu query interface */</font>
+<a name="line17"> 17: </a>    mpi_gpu_awareness = <a href="../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>;
+<a name="line18"> 18: </a><font color="#A020F0">#else</font>
+<a name="line19"> 19: </a>    <font color="#B22222">/* For other MPI implementations without gpu query API, we do a GPU MPI call to see if it segfaults.</font>
+<a name="line20"> 20: </a><font color="#B22222">      Note that Spectrum MPI sets OMPI_MAJOR_VERSION and is CUDA-aware, but does not have MPIX_CUDA_AWARE_SUPPORT.</font>
+<a name="line21"> 21: </a><font color="#B22222">    */</font>
+<a name="line22"> 22: </a>    mpi_gpu_awareness = PetscMPICUPMAwarenessCheck();
+<a name="line23"> 23: </a><font color="#A020F0">#endif</font>
+<a name="line24"> 24: </a>    <font color="#4169E1">if</font> (!mpi_gpu_awareness) {
+<a name="line25"> 25: </a>      (*<a href="../../../docs/manualpages/Sys/PetscErrorPrintf.html#PetscErrorPrintf">PetscErrorPrintf</a>)(<font color="#666666">"PETSc is configured with GPU support, but your MPI is not GPU-aware. For better performance, please use a GPU-aware MPI.\n"</font>);
+<a name="line26"> 26: </a>      (*<a href="../../../docs/manualpages/Sys/PetscErrorPrintf.html#PetscErrorPrintf">PetscErrorPrintf</a>)(<font color="#666666">"If you do not care, add option -use_gpu_aware_mpi 0. To not see the message again, add the option to your .petscrc, OR add it to the env var PETSC_OPTIONS.\n"</font>);
+<a name="line27"> 27: </a>      (*<a href="../../../docs/manualpages/Sys/PetscErrorPrintf.html#PetscErrorPrintf">PetscErrorPrintf</a>)(<font color="#666666">"If you do care, for IBM Spectrum MPI on OLCF Summit, you may need jsrun --smpiargs=-gpu.\n"</font>);
+<a name="line28"> 28: </a>      (*<a href="../../../docs/manualpages/Sys/PetscErrorPrintf.html#PetscErrorPrintf">PetscErrorPrintf</a>)(<font color="#666666">"For OpenMPI, you need to configure it --with-cuda (https://www.open-mpi.org/faq/?category=buildcuda)\n"</font>);
+<a name="line29"> 29: </a>      (*<a href="../../../docs/manualpages/Sys/PetscErrorPrintf.html#PetscErrorPrintf">PetscErrorPrintf</a>)(<font color="#666666">"For MVAPICH2-GDR, you need to set MV2_USE_CUDA=1 (http://mvapich.cse.ohio-state.edu/userguide/gdr/)\n"</font>);
+<a name="line30"> 30: </a>      (*<a href="../../../docs/manualpages/Sys/PetscErrorPrintf.html#PetscErrorPrintf">PetscErrorPrintf</a>)(<font color="#666666">"For Cray-MPICH, you need to set MPICH_RDMA_ENABLED_CUDA=1 (https://www.olcf.ornl.gov/tutorials/gpudirect-mpich-enabled-cuda/)\n"</font>);
+<a name="line31"> 31: </a>      <a href="../../../docs/manualpages/Sys/PETSCABORT.html#PETSCABORT">PETSCABORT</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_LIB);
+<a name="line32"> 32: </a>    }
+<a name="line33"> 33: </a>  }
+<a name="line34"> 34: </a>  <font color="#4169E1">return</font>(0);
+<a name="line35"> 35: </a>}
+
+<a name="line37"> 37: </a><font color="#B22222">/*@C</font>
+<a name="line38"> 38: </a><font color="#B22222">     <a href="../../../docs/manualpages/Sys/PetscCUDAInitializeCheck.html#PetscCUDAInitializeCheck">PetscCUDAInitializeCheck</a> - Check if CUDA is initialized. If not, initialize it.</font>
+
+<a name="line40"> 40: </a><font color="#B22222">  Logically collective</font>
+
+<a name="line42"> 42: </a><font color="#B22222">  Level: beginner</font>
+
+<a name="line44"> 44: </a><font color="#B22222">  Notes:</font>
+<a name="line45"> 45: </a><font color="#B22222">    In PETSc lazy device initialization, PETSc calls this function right before creating the first CUDA/HIP object.</font>
+<a name="line46"> 46: </a><font color="#B22222">    It can be used by application developers who want to lazily initialize CUDA/HIP when they start to use it (which may before a PETSc CUDA/HIP object is created.)</font>
+
+<a name="line48"> 48: </a><font color="#B22222">  .seealso: <a href="../../../docs/manualpages/Sys/PetscCUDAInitialize.html#PetscCUDAInitialize">PetscCUDAInitialize</a>(), <a href="../../../docs/manualpages/Sys/PetscHIPInitialize.html#PetscHIPInitialize">PetscHIPInitialize</a>(), <a href="../../../docs/manualpages/Sys/PetscHIPInitializeCheck.html#PetscHIPInitializeCheck">PetscHIPInitializeCheck</a>()</font>
+<a name="line49"> 49: </a><font color="#B22222">@*/</font>
+<a name="line50"> 50: </a><strong><font color="#4169E1">PETSC_EXTERN <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../docs/manualpages/Sys/PetscCUDAInitializeCheck.html#PetscCUDAInitializeCheck">PetscCUDAInitializeCheck</a>(void)</font></strong>;
+
+
+<a name="line53"> 53: </a><font color="#B22222">/*@C</font>
+<a name="line54"> 54: </a><font color="#B22222">     <a href="../../../docs/manualpages/Sys/PetscHIPInitializeCheck.html#PetscHIPInitializeCheck">PetscHIPInitializeCheck</a> - Check if HIP is initialized. If not, initialize it.</font>
+
+<a name="line56"> 56: </a><font color="#B22222">  Logically collective</font>
+
+<a name="line58"> 58: </a><font color="#B22222">  Level: beginner</font>
+
+<a name="line60"> 60: </a><font color="#B22222">  Notes:</font>
+<a name="line61"> 61: </a><font color="#B22222">    See notes of <a href="../../../docs/manualpages/Sys/PetscCUDAInitializeCheck.html#PetscCUDAInitializeCheck">PetscCUDAInitializeCheck</a>() for details.</font>
+
+<a name="line63"> 63: </a><font color="#B22222">  .seealso: <a href="../../../docs/manualpages/Sys/PetscHIPInitialize.html#PetscHIPInitialize">PetscHIPInitialize</a>(), <a href="../../../docs/manualpages/Sys/PetscCUDAInitialize.html#PetscCUDAInitialize">PetscCUDAInitialize</a>(), <a href="../../../docs/manualpages/Sys/PetscCUDAInitializeCheck.html#PetscCUDAInitializeCheck">PetscCUDAInitializeCheck</a>()</font>
+<a name="line64"> 64: </a><font color="#B22222">@*/</font>
+<a name="line65"> 65: </a><strong><font color="#4169E1">PETSC_EXTERN <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../docs/manualpages/Sys/PetscCUDAInitializeCheck.html#PetscCUDAInitializeCheck">PetscCUDAInitializeCheck</a>(void)</font></strong>;
+
+<a name="line67"> 67: </a><strong><font color="#4169E1"><a name="PetscCUPMInitializeCheck"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscCUPMInitializeCheck(void)</font></strong>
+<a name="line68"> 68: </a>{
+<a name="line69"> 69: </a>  <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>        ierr;
+<a name="line70"> 70: </a>  cupmError_t           cerr;
+<a name="line71"> 71: </a>  int                   devId,devCount;
+<a name="line72"> 72: </a>  <a href="../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a>           rank;
+<a name="line73"> 73: </a>  static <a href="../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>      cupmValdidateChecked = <a href="../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+
+<a name="line76"> 76: </a>  <font color="#4169E1">if</font> (PetscNotUseCUPM) <a href="../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_ARG_WRONG,<font color="#666666">"You asserted the code wouldn't use devices with -device_set none, but now trying to create a device object. Remove this option or see manpage of PetscCUPMInitialize()."</font>);
+<a name="line77"> 77: </a>  <font color="#4169E1">if</font> (!PetscCUPMInitialized) {
+<a name="line78"> 78: </a>    cerr = cupmGetDeviceCount(&amp;devCount);CHKERRCUPM(cerr);
+<a name="line79"> 79: </a>    <font color="#4169E1">if</font> (devCount &gt; 1) {
+<a name="line80"> 80: </a>      cerr = cupmSetDeviceFlags(cupmDeviceMapHost);
+<a name="line81"> 81: </a>      cupmGetLastError(); <font color="#B22222">/* Reset the last error */</font>
+<a name="line82"> 82: </a>      <font color="#4169E1">if</font> (cerr == cupmSuccess) { <font color="#B22222">/* It implies device runtime has not been initialized? */</font>
+<a name="line83"> 83: </a>        <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_rank.html#MPI_Comm_rank">MPI_Comm_rank</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,&amp;rank);
+<a name="line84"> 84: </a>        devId = rank % devCount;
+<a name="line85"> 85: </a>        <font color="#4169E1">for</font> (int i=0; i&lt;3; i++) {
+<a name="line86"> 86: </a>          cerr  = cupmSetDevice(devId);
+<a name="line87"> 87: </a>          <font color="#4169E1">if</font> (cerr == cupmSuccess) <font color="#4169E1">break</font>;
+<a name="line88"> 88: </a>          <font color="#4169E1">if</font> (cerr != cupmErrorMemoryAllocation &amp;&amp; cerr != cupmErrorLaunchOutOfResources) CHKERRCUPM(cerr);
+<a name="line89"> 89: </a>          <font color="#4169E1">if</font> (i &lt; 2) {<a href="../../../docs/manualpages/Sys/PetscSleep.html#PetscSleep">PetscSleep</a>(3);}
+<a name="line90"> 90: </a>        }
+<a name="line91"> 91: </a>        <font color="#4169E1">if</font> (cerr) <a href="../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_GPU_RESOURCE,<font color="#666666">"Unable to initialize the GPU"</font>);
+<a name="line92"> 92: </a>      } <font color="#4169E1">else</font> <font color="#4169E1">if</font> (cerr == cupmErrorSetOnActiveProcess) {
+<a name="line93"> 93: </a>        <font color="#B22222">/* It implies user has initialized device runtime outside of petsc. We do nothing to respect the device choice. */</font>
+<a name="line94"> 94: </a>      }
+<a name="line95"> 95: </a>    }
+<a name="line96"> 96: </a>    PetscCUPMBLASInitializeHandle();
+<a name="line97"> 97: </a>    PetscCUPMSOLVERDnInitializeHandle();
+<a name="line98"> 98: </a>    PetscCUPMInitialized = <a href="../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>;
+<a name="line99"> 99: </a><font color="#A020F0">#if defined(PETSC_HAVE_KOKKOS)</font>
+<a name="line100">100: </a>    PetscKokkosInitialize_Private();
+<a name="line101">101: </a>    PetscBeganKokkos = <a href="../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>;
+<a name="line102">102: </a><font color="#A020F0">#endif</font>
+<a name="line103">103: </a>  }
+
+<a name="line105">105: </a>  <font color="#4169E1">if</font> (!cupmValdidateChecked) {
+<a name="line106">106: </a>    PetscCUPMValidate();
+<a name="line107">107: </a>    cupmValdidateChecked = <a href="../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>;
+<a name="line108">108: </a>  }
+<a name="line109">109: </a>  PetscCreatedGpuObjects = <a href="../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>;
+<a name="line110">110: </a>  <font color="#4169E1">return</font>(0);
+<a name="line111">111: </a>}
+
+<a name="line113">113: </a><font color="#B22222">/*@C</font>
+<a name="line114">114: </a><font color="#B22222">     <a href="../../../docs/manualpages/Sys/PetscCUDAInitialize.html#PetscCUDAInitialize">PetscCUDAInitialize</a> - Initializes CUDA (eagerly in <a href="../../../docs/manualpages/Sys/PetscInitialize.html#PetscInitialize">PetscInitialize</a>() or soon after <a href="../../../docs/manualpages/Sys/PetscInitialize.html#PetscInitialize">PetscInitialize</a>()) and cuBLAS/cuSPARSE libraries on the device</font>
+
+<a name="line116">116: </a><font color="#B22222">     Logically collective</font>
+
+<a name="line118">118: </a><font color="#B22222">  Input Parameter:</font>
+<a name="line119">119: </a><font color="#B22222">+ comm   - the MPI communicator that will utilize the devices</font>
+<a name="line120">120: </a><font color="#B22222">- device - the device assigned to current MPI process. Special values like <a href="../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a> or <a href="../../../docs/manualpages/Sys/PETSC_DEFAULT.html#PETSC_DEFAULT">PETSC_DEFAULT</a> have special meanings (see details below)</font>
+
+<a name="line122">122: </a><font color="#B22222">  Options Database:</font>
+<a name="line123">123: </a><font color="#B22222">+  -cuda_device &lt;device&gt; - the device assigned to current MPI rank. &lt;device&gt; is case-insensitive and can be:</font>
+<a name="line124">124: </a><font color="#B22222">       NONE (or none, or -3) : the code will not use any device, otherwise it will error out;</font>
+<a name="line125">125: </a><font color="#B22222">       <a href="../../../docs/manualpages/Sys/PETSC_DEFAULT.html#PETSC_DEFAULT">PETSC_DEFAULT</a>(or DEFAULT, or -2) : do not explicitly set device, i.e., use whatever device already set by user (probably before <a href="../../../docs/manualpages/Sys/PetscInitialize.html#PetscInitialize">PetscInitialize</a>()). Init device runtime etc;</font>
+<a name="line126">126: </a><font color="#B22222">       <a href="../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a> (or DECIDE, or -1) : assign MPI ranks in comm to available devices in round-robin, and init device runtime etc on the selected device;</font>
+<a name="line127">127: </a><font color="#B22222">       &gt;= 0 integer  : assign the device with this id to current MPI process. Error out if &lt;device&gt; is invalid. Init device runtime etc on this device;</font>
+<a name="line128">128: </a><font color="#B22222">     With PETSC_{DECIDE, DEFAULT}, if there are actually no devices, the code can still run, but it will error out when trying to create device objects.</font>
+<a name="line129">129: </a><font color="#B22222">.  -cuda_view              - view information about the devices.</font>
+<a name="line130">130: </a><font color="#B22222">.  -cuda_synchronize       - wait at the end of asynchronize device calls so that their time gets credited to the current event. With -log_view, the default is true, otherwise false.</font>
+<a name="line131">131: </a><font color="#B22222">.  -log_view               - logging, however if alone or combined with `-cuda_set_device DEFAULT | DECIDE | &gt;=0 int`, will init device; if combined with `-cuda_set_device none`, won't init device.</font>
+<a name="line132">132: </a><font color="#B22222">-  -use_gpu_aware_mpi      - assume the MPI is device/GPU-aware when communicating data on devices. Default true.</font>
+
+<a name="line134">134: </a><font color="#B22222">  Level: beginner</font>
+
+<a name="line136">136: </a><font color="#B22222">  Notes:</font>
+<a name="line137">137: </a><font color="#B22222">    Unless the input parameter &lt;device&gt; = -3, this routine initializes the CUDA device. It also initializes the cuBLAS/cuSPARSE libraries, which</font>
+<a name="line138">138: </a><font color="#B22222">    takes a lot of time. Initializing them early helps avoid skewing timings in -log_view.</font>
+
+<a name="line140">140: </a><font color="#B22222">    If this routine is triggered by command line options, it is called in <a href="../../../docs/manualpages/Sys/PetscInitialize.html#PetscInitialize">PetscInitialize</a>(). If users want to directly call it, they should call it immediately after <a href="../../../docs/manualpages/Sys/PetscInitialize.html#PetscInitialize">PetscInitialize</a>().</font>
+
+<a name="line142">142: </a><font color="#B22222">    If this is not called then the CUDA initialization is delayed until first creation of a CUDA object and this can affect the timing since they happen asynchronously on different nodes and take a lot of time.</font>
+
+<a name="line144">144: </a><font color="#B22222">   .seealso: <a href="../../../docs/manualpages/Sys/PetscCUDAInitializeCheck.html#PetscCUDAInitializeCheck">PetscCUDAInitializeCheck</a>(), <a href="../../../docs/manualpages/Sys/PetscHIPInitialize.html#PetscHIPInitialize">PetscHIPInitialize</a>(), <a href="../../../docs/manualpages/Sys/PetscHIPInitializeCheck.html#PetscHIPInitializeCheck">PetscHIPInitializeCheck</a>()</font>
+<a name="line145">145: </a><font color="#B22222">@*/</font>
+<a name="line146">146: </a><strong><font color="#4169E1">PETSC_EXTERN <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../docs/manualpages/Sys/PetscCUDAInitialize.html#PetscCUDAInitialize">PetscCUDAInitialize</a>(<a href="../../../docs/manualpages/Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</a> comm,<a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> device)</font></strong>;
+
+<a name="line148">148: </a><font color="#B22222">/*@C</font>
+<a name="line149">149: </a><font color="#B22222">     <a href="../../../docs/manualpages/Sys/PetscHIPInitialize.html#PetscHIPInitialize">PetscHIPInitialize</a> - Initializes HIP (eagerly in <a href="../../../docs/manualpages/Sys/PetscInitialize.html#PetscInitialize">PetscInitialize</a>() or soon after <a href="../../../docs/manualpages/Sys/PetscInitialize.html#PetscInitialize">PetscInitialize</a>()) and hipBLAS/hipSPARSE libraries on the device</font>
+
+<a name="line151">151: </a><font color="#B22222">     Logically collective</font>
+
+<a name="line153">153: </a><font color="#B22222">  Input Parameter:</font>
+<a name="line154">154: </a><font color="#B22222">   (see notes)</font>
+
+<a name="line156">156: </a><font color="#B22222">  Options Database:</font>
+<a name="line157">157: </a><font color="#B22222">   (see notes)</font>
+
+<a name="line159">159: </a><font color="#B22222">  Level: beginner</font>
+
+<a name="line161">161: </a><font color="#B22222">  Notes:</font>
+<a name="line162">162: </a><font color="#B22222">    The functionality, parameters and options database of this routine are similar to that of <a href="../../../docs/manualpages/Sys/PetscCUDAInitialize.html#PetscCUDAInitialize">PetscCUDAInitialize</a>(), except that the option names</font>
+<a name="line163">163: </a><font color="#B22222">    are -hip_device, -hip_view, -hip_synchronize instead. See manpage of <a href="../../../docs/manualpages/Sys/PetscCUDAInitialize.html#PetscCUDAInitialize">PetscCUDAInitialize</a>() for details.</font>
+
+<a name="line165">165: </a><font color="#B22222">  .seealso: <a href="../../../docs/manualpages/Sys/PetscHIPInitializeCheck.html#PetscHIPInitializeCheck">PetscHIPInitializeCheck</a>(), <a href="../../../docs/manualpages/Sys/PetscCUDAInitialize.html#PetscCUDAInitialize">PetscCUDAInitialize</a>(), <a href="../../../docs/manualpages/Sys/PetscCUDAInitializeCheck.html#PetscCUDAInitializeCheck">PetscCUDAInitializeCheck</a>()</font>
+<a name="line166">166: </a><font color="#B22222">@*/</font>
+<a name="line167">167: </a><strong><font color="#4169E1">PETSC_EXTERN <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../docs/manualpages/Sys/PetscHIPInitialize.html#PetscHIPInitialize">PetscHIPInitialize</a>(<a href="../../../docs/manualpages/Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</a> comm,<a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> device)</font></strong>;
+
+<a name="line169">169: </a><strong><font color="#4169E1"><a name="PetscCUPMInitialize"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscCUPMInitialize(<a href="../../../docs/manualpages/Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</a> comm,<a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> device)</font></strong>
+<a name="line170">170: </a>{
+<a name="line171">171: </a>  <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>        ierr;
+<a name="line172">172: </a>  cupmError_t           cerr;
+<a name="line173">173: </a>  int                   devId,devCount=0;
+<a name="line174">174: </a>  const <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>        PETSC_NONE=-3; <font color="#B22222">/* Unlike <a href="../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a>, we don't have a macro PETSC_NONE in petsc headers */</font>
+<a name="line175">175: </a>  <a href="../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a>           rank;
+
+<a name="line178">178: </a>  <font color="#4169E1">if</font> (!PetscCUPMInitialized) {
+<a name="line179">179: </a>    cerr = cupmGetDeviceCount(&amp;devCount);
+<a name="line180">180: </a>    cupmGetLastError(); <font color="#B22222">/* Reset the last error */</font>
+<a name="line181">181: </a>    <font color="#4169E1">if</font> (cerr != cupmSuccess) devCount = 0;
+<a name="line182">182: </a>    <font color="#4169E1">if</font> (device &gt;= 0) { <font color="#B22222">/* User wants to use this specific device */</font>
+<a name="line183">183: </a>      cerr = cupmSetDeviceFlags(cupmDeviceMapHost); <font color="#B22222">/* Allow it to fail since user might have already initialized the device. */</font>
+<a name="line184">184: </a>      cupmGetLastError(); <font color="#B22222">/* Reset the last error */</font>
+<a name="line185">185: </a>      cerr = cupmSetDevice((int)device);CHKERRCUPM(cerr);
+<a name="line186">186: </a>    } <font color="#4169E1">else</font> <font color="#4169E1">if</font> (device == <a href="../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a>) { <font color="#B22222">/* Assign MPI ranks to available devices in round-robin */</font>
+<a name="line187">187: </a>      <font color="#4169E1">if</font> (devCount &gt; 0) { <font color="#B22222">/* Allow no device as long as user does not use devices */</font>
+<a name="line188">188: </a>        <font color="#B22222">/* Set the device flags so that it can map host memory */</font>
+<a name="line189">189: </a>        cerr  = cupmSetDeviceFlags(cupmDeviceMapHost);CHKERRCUPM(cerr);
+<a name="line190">190: </a>        <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_rank.html#MPI_Comm_rank">MPI_Comm_rank</a>(comm,&amp;rank);
+<a name="line191">191: </a>        devId = rank % devCount;
+<a name="line192">192: </a>        cerr  = cupmSetDevice(devId);CHKERRCUPM(cerr);
+<a name="line193">193: </a>      }
+<a name="line194">194: </a>    } <font color="#4169E1">else</font> <font color="#4169E1">if</font> (device == <a href="../../../docs/manualpages/Sys/PETSC_DEFAULT.html#PETSC_DEFAULT">PETSC_DEFAULT</a>) {
+<a name="line195">195: </a>      <font color="#B22222">/* Do nothing, i.e., use whatever device set by user before <a href="../../../docs/manualpages/Sys/PetscInitialize.html#PetscInitialize">PetscInitialize</a>() */</font>
+<a name="line196">196: </a>    } <font color="#4169E1">else</font> <font color="#4169E1">if</font> (device == PETSC_NONE) {
+<a name="line197">197: </a>      PetscNotUseCUPM = <a href="../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>; <font color="#B22222">/* Assert the code won't use devices even there are */</font>
+<a name="line198">198: </a>    } <font color="#4169E1">else</font> <a href="../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(comm,PETSC_ERR_ARG_OUTOFRANGE,<font color="#666666">"Wrong device (%D) passed to -device_set &lt;dev&gt;. Must be NONE(-3),<a href="../../../docs/manualpages/Sys/PETSC_DEFAULT.html#PETSC_DEFAULT">PETSC_DEFAULT</a>(-2),<a href="../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a>(-1) or a non-negative integer."</font>,device);
+
+<a name="line200">200: </a>    <font color="#4169E1">if</font> (devCount &gt; 0 &amp;&amp; device != PETSC_NONE) {
+<a name="line201">201: </a>      <font color="#B22222">/* Do costly device handles initialization here to not to distort petsc logging later */</font>
+<a name="line202">202: </a>      PetscCUPMBLASInitializeHandle();
+<a name="line203">203: </a>      PetscCUPMSOLVERDnInitializeHandle();
+<a name="line204">204: </a>      PetscCUPMInitialized = <a href="../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>;
+<a name="line205">205: </a>    }
+<a name="line206">206: </a>  }
+<a name="line207">207: </a>  <font color="#4169E1">return</font>(0);
+<a name="line208">208: </a>}
+
+<a name="line210">210: </a><font color="#B22222">/*</font>
+<a name="line211">211: </a><font color="#B22222">  The routine works as a driver to initialize and view the device</font>
+
+<a name="line213">213: </a><font color="#B22222">  Input Parameter:</font>
+<a name="line214">214: </a><font color="#B22222">    initDevice: True if user explicitly has -cuda/hip_set_device xxx</font>
+<a name="line215">215: </a><font color="#B22222">    device:     Significant when &lt;initDeivce&gt;. Basically, it is the integer presentation of the xxx above</font>
+<a name="line216">216: </a><font color="#B22222">    logView:    True if -log_view or -log_summary</font>
+<a name="line217">217: </a><font color="#B22222">    devView:    True if -{cuda,hip}_view</font>
+<a name="line218">218: </a><font color="#B22222"> */</font>
+<a name="line219">219: </a><strong><font color="#4169E1"><a name="PetscCUPMInitializeAndView"></a>static <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscCUPMInitializeAndView(<a href="../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> initDevice,<a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> device,<a href="../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> logView,<a href="../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> devView)</font></strong>
+<a name="line220">220: </a>{
+<a name="line221">221: </a>  <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>        ierr;
+<a name="line222">222: </a>  cupmError_t           cerr;
+<a name="line223">223: </a>  <a href="../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a>           rank;
+<a name="line224">224: </a>  int                   devId,devCount;
+<a name="line225">225: </a>  cupmDeviceProp        prop;
+
+<a name="line228">228: </a>  PetscCUPMSynchronize = logView;
+<a name="line229">229: </a>  <font color="#4169E1">if</font> (initDevice) {PetscCUPMInitialize(<a href="../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,device);}
+<a name="line230">230: </a>  <font color="#4169E1">else</font> <font color="#4169E1">if</font> (logView) { <font color="#B22222">/* With -log_view, we want to do costly gpu runtime initialization early so that not to distort the timing later. */</font>
+<a name="line231">231: </a>    devCount = 0;
+<a name="line232">232: </a>    cerr = cupmGetDeviceCount(&amp;devCount);
+<a name="line233">233: </a>    cupmGetLastError(); <font color="#B22222">/* Reset the last error */</font>
+<a name="line234">234: </a>    <font color="#4169E1">if</font> (cerr == cupmSuccess &amp;&amp; devCount &gt;= 1) { <font color="#B22222">/* There are devices */</font>
+<a name="line235">235: </a>      devId = 0;
+<a name="line236">236: </a>      <font color="#4169E1">if</font> (devCount &gt; 1) { <font color="#B22222">/* Decide which device to init when there are multiple */</font>
+<a name="line237">237: </a>        cerr = cupmSetDeviceFlags(cupmDeviceMapHost);
+<a name="line238">238: </a>        cupmGetLastError(); <font color="#B22222">/* Reset the last error */</font>
+<a name="line239">239: </a>        <font color="#4169E1">if</font> (cerr == cupmSuccess) { <font color="#B22222">/* It implies gpu runtime has not been initialized */</font>
+<a name="line240">240: </a>          <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_rank.html#MPI_Comm_rank">MPI_Comm_rank</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,&amp;rank);
+<a name="line241">241: </a>          devId = rank % devCount;
+<a name="line242">242: </a>          cerr  = cupmSetDevice(devId);CHKERRCUPM(cerr);
+<a name="line243">243: </a>        } <font color="#4169E1">else</font> <font color="#4169E1">if</font> (cerr == cupmErrorSetOnActiveProcess) {
+<a name="line244">244: </a>          <font color="#B22222">/* It means user initialized gpu runtime outside of petsc. We respect the device choice. */</font>
+<a name="line245">245: </a>          cerr = cupmGetDevice(&amp;devId);CHKERRCUPM(cerr);
+<a name="line246">246: </a>        }
+<a name="line247">247: </a>      }
+<a name="line248">248: </a>      PetscCUPMInitialize(<a href="../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,(<a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>)devId);
+<a name="line249">249: </a>    }
+<a name="line250">250: </a>  }
+
+<a name="line252">252: </a>  <font color="#4169E1">if</font> (devView) {
+<a name="line253">253: </a>    <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_rank.html#MPI_Comm_rank">MPI_Comm_rank</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,&amp;rank);
+<a name="line254">254: </a>    cerr = cupmGetDeviceCount(&amp;devCount);CHKERRCUPM(cerr);
+<a name="line255">255: </a>    <font color="#4169E1">for</font> (devId = 0; devId &lt; devCount; ++devId) {
+<a name="line256">256: </a>      cerr = cupmGetDeviceProperties(&amp;prop,devId);CHKERRCUPM(cerr);
+<a name="line257">257: </a>      <a href="../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>, <font color="#666666">"device %d: %s\n"</font>, devId, prop.name);
+<a name="line258">258: </a>    }
+<a name="line259">259: </a>    cerr = cupmGetDevice(&amp;devId);CHKERRCUPM(cerr);
+<a name="line260">260: </a>    <a href="../../../docs/manualpages/Sys/PetscSynchronizedPrintf.html#PetscSynchronizedPrintf">PetscSynchronizedPrintf</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,<font color="#666666">"[%d] Using device %d.\n"</font>,rank,devId);
+<a name="line261">261: </a>    <a href="../../../docs/manualpages/Sys/PetscSynchronizedFlush.html#PetscSynchronizedFlush">PetscSynchronizedFlush</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,PETSC_STDOUT);
+<a name="line262">262: </a>  }
+<a name="line263">263: </a>  <font color="#4169E1">return</font>(0);
+<a name="line264">264: </a>}
+
+<a name="line266">266: </a><font color="#B22222">/*</font>
+<a name="line267">267: </a><font color="#B22222">  The routine checks user's device related options and initializes the device if instructed.</font>
+
+<a name="line269">269: </a><font color="#B22222">  Input Parameter:</font>
+<a name="line270">270: </a><font color="#B22222">    logView:    True if -log_view or -log_summary</font>
+<a name="line271">271: </a><font color="#B22222"> */</font>
+<a name="line272">272: </a><strong><font color="#4169E1"><a name="PetscOptionsCheckCUPM"></a>static <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscOptionsCheckCUPM(<a href="../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> logView)</font></strong>
+<a name="line273">273: </a>{
+<a name="line275">275: </a>  <a href="../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>      initDevice = <a href="../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>,devView = <a href="../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>,devNone = <a href="../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line276">276: </a>  <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       device = 0;
+<a name="line277">277: </a>  char           devStr[32]={0};
+<a name="line278">278: </a><font color="#A020F0">#if defined(PETSC_HAVE_KOKKOS)</font>
+<a name="line279">279: </a>  <a href="../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>      set,kinited,devDefault;
+<a name="line280">280: </a><font color="#A020F0">#endif</font>
+
+<a name="line283">283: </a><font color="#A020F0">#if defined(PETSC_HAVE_KOKKOS)</font>
+<a name="line284">284: </a>  PetscKokkosIsInitialized_Private(&amp;kinited);
+<a name="line285">285: </a>  <font color="#4169E1">if</font> (kinited) { <font color="#B22222">/* Check if Petsc device options conform with Kokkos' device */</font>
+<a name="line286">286: </a>    <a href="../../../docs/manualpages/Sys/PetscOptionsGetString.html#PetscOptionsGetString">PetscOptionsGetString</a>(NULL,NULL,cupmSetDeviceStr,devStr,<font color="#4169E1">sizeof</font>(devStr),&amp;set);
+<a name="line287">287: </a>    <font color="#4169E1">if</font> (set) { <font color="#B22222">/* If users have initialized Kokkos themselves, but also had e.g., -cuda_set_device XXX, for simplicity, make sure XXX is DEFAULT */</font>
+<a name="line288">288: </a>      <a href="../../../docs/manualpages/Sys/PetscStrcasecmp.html#PetscStrcasecmp">PetscStrcasecmp</a>(<font color="#666666">"DEFAULT"</font>,devStr,&amp;devDefault);
+<a name="line289">289: </a>      <font color="#4169E1">if</font> (!devDefault) {<a href="../../../docs/manualpages/Sys/PetscStrcasecmp.html#PetscStrcasecmp">PetscStrcasecmp</a>(<font color="#666666">"<a href="../../../docs/manualpages/Sys/PETSC_DEFAULT.html#PETSC_DEFAULT">PETSC_DEFAULT</a>"</font>,devStr,&amp;devDefault);}
+<a name="line290">290: </a>      <font color="#4169E1">if</font> (!devDefault)  <a href="../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_ARG_INCOMP,<font color="#666666">"Kokkos was initialized before <a href="../../../docs/manualpages/Sys/PetscInitialize.html#PetscInitialize">PetscInitialize</a>(), but you have "</font>cupmSetDeviceStr<font color="#666666">" %s. Remove the option or use "</font>cupmSetDeviceStr<font color="#666666">" default."</font>,devStr);
+<a name="line291">291: </a>    } <font color="#4169E1">else</font> { <font color="#B22222">/* If users did not have e.g., '-cuda_set_device XXX', insert one here so that petsc can continue its own device initialization */</font>
+<a name="line292">292: </a>      <a href="../../../docs/manualpages/Sys/PetscOptionsSetValue.html#PetscOptionsSetValue">PetscOptionsSetValue</a>(NULL,cupmSetDeviceStr,<font color="#666666">"DEFAULT"</font>);
+<a name="line293">293: </a>    }
+<a name="line294">294: </a>  }
+<a name="line295">295: </a><font color="#A020F0">#endif</font>
+
+<a name="line297">297: </a>  <a href="../../../docs/manualpages/Sys/PetscOptionsBegin.html#PetscOptionsBegin">PetscOptionsBegin</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,NULL,cupmOptionsStr,<font color="#666666">"Sys"</font>);
+<a name="line298">298: </a>  <a href="../../../docs/manualpages/Sys/PetscOptionsString.html#PetscOptionsString">PetscOptionsString</a>(cupmSetDeviceStr,NULL,PetscCUPMInitializeStr,devStr,devStr,<font color="#4169E1">sizeof</font>(devStr),&amp;initDevice);
+<a name="line299">299: </a>  <a href="../../../docs/manualpages/Sys/PetscStrcasecmp.html#PetscStrcasecmp">PetscStrcasecmp</a>(<font color="#666666">"none"</font>,devStr,&amp;devNone);
+<a name="line300">300: </a>  <font color="#4169E1">if</font> (devNone) device = -3; <font color="#B22222">/* -3 is the locally used PETSC_NONE in Petsc{CUDA/HIP}Initialize() */</font>
+<a name="line301">301: </a>  <font color="#4169E1">else</font> {<a href="../../../docs/manualpages/Sys/PetscOptionsInt.html#PetscOptionsInt">PetscOptionsInt</a>(cupmSetDeviceStr,<font color="#666666">"Set which MPI ranks to use which devices"</font>,PetscCUPMInitializeStr,device,&amp;device,&amp;initDevice);}
+<a name="line302">302: </a>  <a href="../../../docs/manualpages/Sys/PetscOptionsBool.html#PetscOptionsBool">PetscOptionsBool</a>(cupmSynchronizeStr,<font color="#666666">"Wait for the device to complete operations before returning to the CPU (on by default with -log_summary or -log_view)"</font>,NULL,PetscCUPMSynchronize,&amp;PetscCUPMSynchronize,NULL);
+<a name="line303">303: </a>  <a href="../../../docs/manualpages/Sys/PetscOptionsName.html#PetscOptionsName">PetscOptionsName</a>(cupmViewStr,<font color="#666666">"Display device information and assignments"</font>,NULL,&amp;devView);
+<a name="line304">304: </a>  <a href="../../../docs/manualpages/Sys/PetscOptionsEnd.html#PetscOptionsEnd">PetscOptionsEnd</a>();
+<a name="line305">305: </a>  PetscCUPMInitializeAndView(initDevice,device,logView,devView);
+
+<a name="line307">307: </a><font color="#A020F0">#if defined(PETSC_HAVE_KOKKOS)</font>
+<a name="line308">308: </a>  <font color="#4169E1">if</font> (PetscCUPMInitialized &amp;&amp; !kinited) {
+<a name="line309">309: </a>    PetscKokkosInitialize_Private();
+<a name="line310">310: </a>    PetscBeganKokkos = <a href="../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>;
+<a name="line311">311: </a>  }
+<a name="line312">312: </a><font color="#A020F0">#endif</font>
+<a name="line313">313: </a>  <font color="#4169E1">return</font>(0);
+<a name="line314">314: </a>}
+</pre>
+</body>
+
+</html>

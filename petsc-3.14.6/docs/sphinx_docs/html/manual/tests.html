@@ -1,0 +1,237 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/sphinx_docs/html/manual/tests.html" />
+    <meta charset="utf-8" />
+    <title>Running PETSc Tests &#8212; PETSc 3.14.6 documentation</title>
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/katex-math.css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/contrib/auto-render.min.js"></script>
+    <script src="../_static/katex_autorenderer.js"></script>
+    <link rel="shortcut icon" href="../_static/PETSc_RGB-logo.png"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Acknowledgments" href="acknowledgements.html" />
+    <link rel="prev" title="Unimportant and Advanced Features of Matrices and Solvers" href="advanced.html" /> 
+  </head><body>
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/sphinx_docs/html/manual/tests.html "><small>Report Typos and Errors</small></a></div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="acknowledgements.html" title="Acknowledgments"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="advanced.html" title="Unimportant and Advanced Features of Matrices and Solvers"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">PETSc 3.14.6 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >PETSc Users Manual</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="additional.html" accesskey="U">Additional Information</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/PETSc-TAO_RGB.svg" alt="Logo"/>
+            </a></p>
+  <h3><a href="../index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Running PETSc Tests</a><ul>
+<li><a class="reference internal" href="#quick-start-with-the-tests">Quick start with the tests</a></li>
+<li><a class="reference internal" href="#understanding-test-output-and-more-information">Understanding test output and more information</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="advanced.html"
+                        title="previous chapter">Unimportant and Advanced Features of Matrices and Solvers</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="acknowledgements.html"
+                        title="next chapter">Acknowledgments</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/manual/tests.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="running-petsc-tests">
+<span id="sec-runningtests"></span><h1>Running PETSc Tests<a class="headerlink" href="#running-petsc-tests" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="quick-start-with-the-tests">
+<h2>Quick start with the tests<a class="headerlink" href="#quick-start-with-the-tests" title="Permalink to this headline">¶</a></h2>
+<p>For testing builds, the general invocation from the <code class="docutils literal notranslate"><span class="pre">PETSC_DIR</span></code> is:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make <span class="o">[</span>-j &lt;n&gt;<span class="o">]</span> -f gmakefile <span class="nb">test</span> <span class="nv">PETSC_ARCH</span><span class="o">=</span>&lt;PETSC_ARCH&gt;
+</pre></div>
+</div>
+<p>For testing <code class="docutils literal notranslate"><span class="pre">./configure</span></code> that used the <code class="docutils literal notranslate"><span class="pre">--prefix</span></code> option, the
+general invocation from the installation (prefix) directory is:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make <span class="o">[</span>-j &lt;n&gt;<span class="o">]</span> -f share/petsc/examples/gmakefile <span class="nb">test</span>
+</pre></div>
+</div>
+<p>For a full list of options, use</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make -f gmakefile help-test
+</pre></div>
+</div>
+</div>
+<div class="section" id="understanding-test-output-and-more-information">
+<h2>Understanding test output and more information<a class="headerlink" href="#understanding-test-output-and-more-information" title="Permalink to this headline">¶</a></h2>
+<p>As discussed in <a class="reference internal" href="#sec-runningtests"><span class="std std-ref">Running PETSc Tests</span></a>, users should set
+<code class="docutils literal notranslate"><span class="pre">PETSC_DIR</span></code> and <code class="docutils literal notranslate"><span class="pre">PETSC_ARCH</span></code> before running the tests, or can
+provide them on the command line as below.</p>
+<p>To check if the libraries are working do:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make <span class="nv">PETSC_DIR</span><span class="o">=</span>&lt;PETSC_DIR&gt; <span class="nv">PETSC_ARCH</span><span class="o">=</span>&lt;PETSC_ARCH&gt; <span class="nb">test</span>
+</pre></div>
+</div>
+<p>A comprehensive set of tests can be run with</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make <span class="nv">PETSC_DIR</span><span class="o">=</span>&lt;PETSC_DIR&gt; <span class="nv">PETSC_ARCH</span><span class="o">=</span>&lt;PETSC_ARCH&gt; alltests
+</pre></div>
+</div>
+<p>or</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make <span class="o">[</span>-j &lt;n&gt;<span class="o">]</span> -f gmakefile <span class="nb">test</span> <span class="nv">PETSC_ARCH</span><span class="o">=</span>&lt;PETSC_ARCH&gt;
+</pre></div>
+</div>
+<p>Depending on your machine’s configuration running the full test suite
+(above) can take from a few minutes to a couple hours. Note that
+currently we do not have a mechanism for automatically running the test
+suite on batch computer systems except to obtain an interactive compute
+node (via the batch system) and run the tests on that node (this assumes
+that the compilers are available on the interactive compute nodes.</p>
+<p>The test reporting system classifies them according to the Test Anywhere
+Protocal (TAP) <a class="footnote-reference brackets" href="#id2" id="id1">11</a>. In brief, the categories are</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">ok</span></code> The test passed.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">not</span> <span class="pre">ok</span></code> The test failed.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">not</span> <span class="pre">ok</span> <span class="pre">#SKIP</span></code> The test was skipped, usually because build
+requirements were not met (for example, an external solver library
+was required, but PETSc was not <code class="docutils literal notranslate"><span class="pre">./configure</span></code> for that library.)
+compiled against it).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ok</span> <span class="pre">#TODO</span></code> The test is under development by the developers.</p></li>
+</ul>
+<p>The tests are a series of shell scripts, generated by information
+contained within the test source file, that are invoked by the makefile
+system. The tests are run in <code class="docutils literal notranslate"><span class="pre">${PETSC_DIR}/${PETSC_ARCH}/tests</span></code> with
+the same directory as the source tree underneath. For testing installs,
+the default location is <code class="docutils literal notranslate"><span class="pre">${PREFIX_DIR}/tests</span></code> but this can be changed
+with the <code class="docutils literal notranslate"><span class="pre">TESTDIR</span></code> location. (See <a class="reference internal" href="getting_started.html#sec-directory"><span class="std std-ref">Directory Structure</span></a>). A
+label is used to denote where it can be found within the source tree.
+For example, test <code class="docutils literal notranslate"><span class="pre">vec_vec_tutorials-ex6</span></code>, which can be run e.g. with</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make -f gmakefile <span class="nb">test</span> <span class="nv">search</span><span class="o">=</span><span class="s1">&#39;vec_vec_tutorials-ex6&#39;</span>
+</pre></div>
+</div>
+<p>(see the discussion of <code class="docutils literal notranslate"><span class="pre">search</span></code> below), denotes the shell script:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="si">${</span><span class="nv">PETSC_DIR</span><span class="si">}</span>/<span class="si">${</span><span class="nv">PETSC_ARCH</span><span class="si">}</span>/tests/vec/vec/tutorials/runex6.sh
+</pre></div>
+</div>
+<p>These shell scripts can be run independently in those directories, and
+take arguments to show the commands run, change arguments, etc. Use the
+<code class="docutils literal notranslate"><span class="pre">-h</span></code> option to the shell script to see these options.</p>
+<p>Often, you want to run only a subset of tests. Our makefiles use
+<code class="docutils literal notranslate"><span class="pre">gmake</span></code>’s wildcard syntax. In this syntax, <code class="docutils literal notranslate"><span class="pre">%</span></code> is a wild card
+character and is passed in using the <code class="docutils literal notranslate"><span class="pre">search</span></code> argument. Two wildcard
+characters cannot be used in a search, so the <code class="docutils literal notranslate"><span class="pre">searchin</span></code> argument is
+used to provide the equivalent of <code class="docutils literal notranslate"><span class="pre">%pattern%</span></code> search. The default
+examples have default arguments, and we often wish to test examples with
+various arguments; we use the <code class="docutils literal notranslate"><span class="pre">argsearch</span></code> argument for these searches.
+Like <code class="docutils literal notranslate"><span class="pre">searchin</span></code>, it does not use wildcards, but rather whether the
+string is within the arguments.</p>
+<p>Some examples are:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make -f gmakefile <span class="nb">test</span> <span class="nv">search</span><span class="o">=</span><span class="s1">&#39;ts%&#39;</span>                      <span class="c1"># Run all <a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/TS/TS.html#TS">TS</a> examples</span>
+make -f gmakefile <span class="nb">test</span> <span class="nv">searchin</span><span class="o">=</span><span class="s1">&#39;tutorials&#39;</span>              <span class="c1"># Run all tutorials</span>
+make -f gmakefile <span class="nb">test</span> <span class="nv">search</span><span class="o">=</span><span class="s1">&#39;ts%&#39;</span> <span class="nv">searchin</span><span class="o">=</span><span class="s1">&#39;tutorials&#39;</span> <span class="c1"># Run all <a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/TS/TS.html#TS">TS</a> tutorials</span>
+make -f gmakefile <span class="nb">test</span> <span class="nv">argsearch</span><span class="o">=</span><span class="s1">&#39;cuda&#39;</span>                  <span class="c1"># Run examples with cuda in arguments</span>
+make -f gmakefile <span class="nb">test</span> test-fail<span class="o">=</span><span class="s1">&#39;1&#39;</span>
+make -f gmakefile <span class="nb">test</span> <span class="nv">query</span><span class="o">=</span><span class="s1">&#39;requires&#39;</span> <span class="nv">queryval</span><span class="o">=</span><span class="s1">&#39;*MPI_PROCESS_SHARED_MEMORY*&#39;</span>
+</pre></div>
+</div>
+<p>It is useful before invoking the tests to see what targets will be run.
+The <code class="docutils literal notranslate"><span class="pre">print-test</span></code> target helps with this:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make -f gmakefile print-test <span class="nv">argsearch</span><span class="o">=</span><span class="s1">&#39;cuda&#39;</span>
+</pre></div>
+</div>
+<p>To see all of the test targets which would be run, this command can be
+used:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make -f gmakefile print-test
+</pre></div>
+</div>
+<p>For testing in install directories, some examples are:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> <span class="si">${</span><span class="nv">PREFIX_DIR</span><span class="si">}</span><span class="p">;</span> make -f share/petsc/examples/gmakefile.test <span class="nb">test</span> <span class="nv">TESTDIR</span><span class="o">=</span>mytests
+</pre></div>
+</div>
+<p>or</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> <span class="si">${</span><span class="nv">PREFIX_DIR</span><span class="si">}</span>/share/petsc/examples<span class="p">;</span> make -f gmakefile <span class="nb">test</span> <span class="nv">TESTDIR</span><span class="o">=</span><span class="nv">$PWD</span>/mytests
+</pre></div>
+</div>
+<p>where the latter is needed to make have it run in the local directory
+instead of <code class="docutils literal notranslate"><span class="pre">$PREFIX_DIR</span></code>.</p>
+<p>To learn more about the test system details, one can look at the
+<a class="reference external" href="https://docs.petsc.org/en/latest/developers">the PETSc developers documentation</a>.</p>
+<dl class="footnote brackets">
+<dt class="label" id="id2"><span class="brackets"><a class="fn-backref" href="#id1">11</a></span></dt>
+<dd><p>See <a class="reference external" href="https://testanything.org/tap-specification.html">https://testanything.org/tap-specification.html</a></p>
+</dd>
+</dl>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="acknowledgements.html" title="Acknowledgments"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="advanced.html" title="Unimportant and Advanced Features of Matrices and Solvers"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">PETSc 3.14.6 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >PETSc Users Manual</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="additional.html" >Additional Information</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 1991-2021, UChicago Argonne, LLC and the PETSc Development Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.4.
+    </div>
+  </body>
+</html>

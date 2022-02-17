@@ -1,0 +1,69 @@
+<center><a href="aijkokkosimpl.hpp">Actual source code: aijkokkosimpl.hpp</a></center><br>
+
+<html>
+<head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/src/mat/impls/aij/seq/kokkos/aijkokkosimpl.hpp.html" />
+<title></title>
+<meta name="generator" content="c2html 0.9.4">
+<meta name="date" content="2021-03-30T16:50:06+00:00">
+</head>
+
+<body bgcolor="#FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 src/mat/impls/aij/seq/kokkos/aijkokkosimpl.hpp.html "><small>Report Typos and Errors</small></a></div>
+<pre width="80">
+
+<a name="line4">  4: </a><font color="#A020F0">#include </font><font color="#666666">"Kokkos_Core.hpp"</font><font color="#A020F0"></font>
+<a name="line5">  5: </a><font color="#A020F0">#include &lt;Kokkos_DualView.hpp&gt;</font>
+<a name="line6">  6: </a><font color="#A020F0">#include </font><font color="#666666">"KokkosSparse_CrsMatrix.hpp"</font><font color="#A020F0"></font>
+<a name="line7">  7: </a>#include <A href="../../../../../../include/petscvec.hpp.html">&lt;petscvec.hpp&gt;</A>
+
+<a name="line9">  9: </a>using MatRowMap_t                = <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>; <font color="#B22222">/* RowMap, not RowOffset, to distinguish from Kokkos OffsetView */</font>
+<a name="line10"> 10: </a>using MatColumnIndex_t           = <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>;
+<a name="line11"> 11: </a>using MatValue_t                 = <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>;
+<a name="line12"> 12: </a>using MatDevice_t                = typename Kokkos::Device&lt;DeviceExecutionSpace,DeviceMemorySpace&gt;;
+
+<a name="line14"> 14: </a>using KokkosCsrMatrix_t          = typename KokkosSparse::CrsMatrix&lt;MatValue_t,MatColumnIndex_t,MatDevice_t,void<font color="#B22222">/* MemoryTraits */</font>,MatRowMap_t&gt;;
+<a name="line15"> 15: </a>using KokkosCsrGraph_t           = typename KokkosCsrMatrix_t::staticcrsgraph_type;
+
+<a name="line17"> 17: </a>using MatColumnIndexViewDevice_t = typename KokkosCsrGraph_t::entries_type;
+<a name="line18"> 18: </a>using MatRowMapViewDevice_t      = typename KokkosCsrGraph_t::row_map_type;
+<a name="line19"> 19: </a>using MatValueViewDevice_t       = typename KokkosCsrMatrix_t::values_type;
+
+<a name="line21"> 21: </a>using MatColumnIndexViewHost_t   = MatColumnIndexViewDevice_t::HostMirror;
+<a name="line22"> 22: </a>using MatRowMapViewHost_t        = MatRowMapViewDevice_t::HostMirror;
+<a name="line23"> 23: </a>using MatValueViewHost_t         = MatValueViewDevice_t::HostMirror;
+
+<a name="line25"> 25: </a>using MatValueDualView_t         = Kokkos::DualView&lt;MatValue_t*&gt;;
+
+
+<a name="line28"> 28: </a><font color="#4169E1"><a name="Mat_SeqAIJKokkos"></a>struct Mat_SeqAIJKokkos </font>{
+<a name="line29"> 29: </a>  MatRowMapViewHost_t        i_h;
+<a name="line30"> 30: </a>  MatColumnIndexViewHost_t   j_h;
+<a name="line31"> 31: </a>  MatValueViewHost_t         a_h;
+
+<a name="line33"> 33: </a>  MatRowMapViewDevice_t      i_d;
+<a name="line34"> 34: </a>  MatColumnIndexViewDevice_t j_d;
+<a name="line35"> 35: </a>  MatValueViewDevice_t       a_d;
+
+<a name="line37"> 37: </a>  MatValueDualView_t         a_dual;
+
+<a name="line39"> 39: </a>  KokkosCsrMatrix_t          csr;
+<a name="line40"> 40: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscObjectState.html#PetscObjectState">PetscObjectState</a>           nonzerostate; <font color="#B22222">/* State of the nonzero pattern (graph) on device */</font>
+
+<a name="line42"> 42: </a>  Mat_SeqAIJKokkos(MatColumnIndex_t nrows,MatColumnIndex_t ncols,MatRowMap_t nnz,MatRowMap_t *i,MatColumnIndex_t *j,MatValue_t *a)
+<a name="line43"> 43: </a>   : i_h(i,nrows+1),
+<a name="line44"> 44: </a>     j_h(j,nnz),
+<a name="line45"> 45: </a>     a_h(a,nnz),
+<a name="line46"> 46: </a>     i_d(Kokkos::create_mirror_view_and_copy(DeviceMemorySpace(),i_h)),
+<a name="line47"> 47: </a>     j_d(Kokkos::create_mirror_view_and_copy(DeviceMemorySpace(),j_h)),
+<a name="line48"> 48: </a>     a_d(Kokkos::create_mirror_view_and_copy(DeviceMemorySpace(),a_h)),
+<a name="line49"> 49: </a>     a_dual(a_d,a_h),
+<a name="line50"> 50: </a>     csr(<font color="#666666">"AIJKokkos"</font>,nrows,ncols,nnz,a_d,i_d,j_d)
+<a name="line51"> 51: </a>     {};
+<a name="line52"> 52: </a>};
+
+<a name="line54"> 54: </a><font color="#A020F0">#endif</font>
+</pre>
+</body>
+
+</html>

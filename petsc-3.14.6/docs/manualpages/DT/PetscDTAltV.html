@@ -1,0 +1,65 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DT/PetscDTAltV.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>PetscDTAltV</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/DT/PetscDTAltV.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="PetscDTAltV"><H1>PetscDTAltV</H1></A>
+An interface for common operations on k-forms, also known as alternating algebraic forms or alternating k-linear maps. The name of the interface comes from the notation "Alt V" for the algebra of all k-forms acting vectors in the space V, also known as the exterior algebra of V*. A recommended reference for this material is Section 2 "Exterior algebra and exterior calculus" in "Finite element
+exterior calculus, homological techniques, and applications", by Arnold, Falk, &amp; Winther (2006, doi:10.1017/S0962492906210018).
+<P>
+A k-form w (k is called the "form degree" of w) is an alternating k-linear map acting on tuples (v_1, ..., v_k) of
+<H3><FONT COLOR="#CC3333">vectors from a vector space V and producing a real number</FONT></H3>
+- alternating: swapping any two vectors in a tuple reverses the sign of the result, e.g. w(v_1, v_2, ..., v_k) = -w(v_2, v_1, ..., v_k)
+- k-linear: w acts linear in each vector separately, e.g. w(a*v + b*y, v_2, ..., v_k) = a*w(v,v_2,...,v_k) + b*w(y,v_2,...,v_k)
+This action is implemented as <A HREF="../DT/PetscDTAltVApply.html#PetscDTAltVApply">PetscDTAltVApply</A>.
+<P>
+The k-forms on a vector space form a vector space themselves, Alt^k V.  The dimension of Alt^k V, if V is N dimensional, is N choose k.  (This
+shows that for an N dimensional space, only 0 &lt;= k &lt;= N are valid form degrees.)
+<H3><FONT COLOR="#CC3333">The standard basis for Alt^k V, used in PetscDTAltV, has one basis k-form for each ordered subset of k coordinates of the N dimensional space</FONT></H3>
+For example, if the coordinate directions of a four dimensional space are (t, x, y, z), then there are 4 choose 2 = 6 ordered subsets of two coordinates.
+They are, in lexicographic order, (t, x), (t, y), (t, z), (x, y), (x, z) and (y, z).  <A HREF="../DT/PetscDTAltV.html#PetscDTAltV">PetscDTAltV</A> also orders the basis of Alt^k V lexicographically
+by the associated subsets.
+<P>
+The unit basis k-form associated with coordinates (c_1, ..., c_k) acts on a set of k vectors (v_1, ..., v_k) by creating a square matrix V where
+V[i,j] = v_i[c_j] and taking the determinant of V.
+<P>
+If j + k &lt;= N, then a j-form f and a k-form g can be multiplied to create a (j+k)-form using the wedge or exterior product, (f wedge g).
+This is an anticommutative product, (f wedge g) = -(g wedge f).  It is sufficient to describe the wedge product of two basis forms.
+<H3><FONT COLOR="#CC3333">Let f be the basis j-form associated with coordinates (f_1,...,f_j) and g be the basis k-form associated with coordinates (g_1,...,g_k)</FONT></H3>
+- If there is any coordinate in both sets, then (f wedge g) = 0.
+- Otherwise, (f wedge g) is a multiple of the basis (j+k)-form h associated with (f_1,...,f_j,g_1,...,g_k).
+- In fact it is equal to either h or -h depending on how (f_1,...,f_j,g_1,...,g_k) compares to the same list of coordinates given in ascending order: if it is an even permutation of that list, then (f wedge g) = h, otherwise (f wedge g) = -h.
+The wedge product is implemented for either two inputs (f and g) in <A HREF="../DT/PetscDTAltVWedge.html#PetscDTAltVWedge">PetscDTAltVWedge</A>, or for one (just f, giving a
+matrix to multiply against multiple choices of g) in <A HREF="../DT/PetscDTAltVWedgeMatrix.html#PetscDTAltVWedgeMatrix">PetscDTAltVWedgeMatrix</A>.
+<P>
+If k &gt; 0, a k-form w and a vector v can combine to make a (k-1)-formm through the interior product, (w int v),
+defined by (w int v)(v_1,...,v_{k-1}) = w(v,v_1,...,v_{k-1}).
+<P>
+The interior product is implemented for either two inputs (w and v) in <A HREF="../DT/PetscDTAltVInterior.html#PetscDTAltVInterior">PetscDTAltVInterior</A>, for one (just v, giving a
+matrix to multiply against multiple choices of w) in <A HREF="../DT/PetscDTAltVInteriorMatrix.html#PetscDTAltVInteriorMatrix">PetscDTAltVInteriorMatrix</A>,
+or for no inputs (giving the sparsity pattern of <A HREF="../DT/PetscDTAltVInteriorMatrix.html#PetscDTAltVInteriorMatrix">PetscDTAltVInteriorMatrix</A>) in <A HREF="../DT/PetscDTAltVInteriorPattern.html#PetscDTAltVInteriorPattern">PetscDTAltVInteriorPattern</A>.
+<P>
+When there is a linear map L: V -&gt; W from an N dimensional vector space to an M dimensional vector space,
+it induces the linear pullback map L^* : Alt^k W -&gt; Alt^k V, defined by L^* w(v_1,...,v_k) = w(L v_1, ..., L v_k).
+The pullback is implemented as <A HREF="../DT/PetscDTAltVPullback.html#PetscDTAltVPullback">PetscDTAltVPullback</A> (acting on a known w) and <A HREF="../DT/PetscDTAltVPullbackMatrix.html#PetscDTAltVPullbackMatrix">PetscDTAltVPullbackMatrix</A> (creating a matrix that computes the actin of L^*).
+<P>
+Alt^k V and Alt^(N-k) V have the same dimension, and the Hodge star operator maps between them.  We note that Alt^N V is a one dimensional space, and its
+basis vector is sometime called vol.  The Hodge star operator has the property that (f wedge (star g)) = (f,g) vol, where (f,g) is the simple inner product
+of the basis coefficients of f and g.
+Powers of the Hodge star operator can be applied with <A HREF="../DT/PetscDTAltVStar.html#PetscDTAltVStar">PetscDTAltVStar</A>
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../DT/PetscDTAltVApply.html#PetscDTAltVApply">PetscDTAltVApply</A>(), <A HREF="../DT/PetscDTAltVWedge.html#PetscDTAltVWedge">PetscDTAltVWedge</A>(), <A HREF="../DT/PetscDTAltVInterior.html#PetscDTAltVInterior">PetscDTAltVInterior</A>(), <A HREF="../DT/PetscDTAltVPullback.html#PetscDTAltVPullback">PetscDTAltVPullback</A>(), <A HREF="../DT/PetscDTAltVStar.html#PetscDTAltVStar">PetscDTAltVStar</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>intermediate<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/dm/dt/interface/dtaltv.c.html#PetscDTAltV">src/dm/dt/interface/dtaltv.c</A>
+<BR><A HREF="./index.html">Index of all DT routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

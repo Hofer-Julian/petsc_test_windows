@@ -1,0 +1,410 @@
+<center><a href="stride.c">Actual source code: stride.c</a></center><br>
+
+<html>
+<head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/src/vec/is/is/impls/stride/stride.c.html" />
+<title></title>
+<meta name="generator" content="c2html 0.9.4">
+<meta name="date" content="2021-03-30T16:49:51+00:00">
+</head>
+
+<body bgcolor="#FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 src/vec/is/is/impls/stride/stride.c.html "><small>Report Typos and Errors</small></a></div>
+<pre width="80">
+
+<a name="line2">  2: </a><font color="#B22222">/*</font>
+<a name="line3">  3: </a><font color="#B22222">       Index sets of evenly space integers, defined by a</font>
+<a name="line4">  4: </a><font color="#B22222">    start, stride and length.</font>
+<a name="line5">  5: </a><font color="#B22222">*/</font>
+<a name="line6">  6: </a>#include <A href="../../../../../../include/petsc/private/isimpl.h.html">&lt;petsc/private/isimpl.h&gt;</A>
+<a name="line7">  7: </a>#include <A href="../../../../../../include/petscviewer.h.html">&lt;petscviewer.h&gt;</A>
+
+<a name="line9">  9: </a><font color="#4169E1">typedef</font> <font color="#4169E1">struct</font> {
+<a name="line10"> 10: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> first,step;
+<a name="line11"> 11: </a>} IS_Stride;
+
+<a name="line13"> 13: </a><strong><font color="#4169E1"><a name="ISCopy_Stride"></a>static <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> ISCopy_Stride(<a href="../../../../../../docs/manualpages/IS/IS.html#IS">IS</a> is,<a href="../../../../../../docs/manualpages/IS/IS.html#IS">IS</a> isy)</font></strong>
+<a name="line14"> 14: </a>{
+<a name="line15"> 15: </a>  IS_Stride      *is_stride = (IS_Stride*)is-&gt;data,*isy_stride = (IS_Stride*)isy-&gt;data;
+
+<a name="line19"> 19: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscMemcpy.html#PetscMemcpy">PetscMemcpy</a>(isy_stride,is_stride,<font color="#4169E1">sizeof</font>(IS_Stride));
+<a name="line20"> 20: </a>  <font color="#4169E1">return</font>(0);
+<a name="line21"> 21: </a>}
+
+<a name="line23"> 23: </a><strong><font color="#4169E1"><a name="ISDuplicate_Stride"></a><a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> ISDuplicate_Stride(<a href="../../../../../../docs/manualpages/IS/IS.html#IS">IS</a> is,<a href="../../../../../../docs/manualpages/IS/IS.html#IS">IS</a> *newIS)</font></strong>
+<a name="line24"> 24: </a>{
+<a name="line26"> 26: </a>  IS_Stride      *sub = (IS_Stride*)is-&gt;data;
+
+<a name="line29"> 29: </a>  <a href="../../../../../../docs/manualpages/IS/ISCreateStride.html#ISCreateStride">ISCreateStride</a>(<a href="../../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)is),is-&gt;map-&gt;n,sub-&gt;first,sub-&gt;step,newIS);
+<a name="line30"> 30: </a>  <font color="#4169E1">return</font>(0);
+<a name="line31"> 31: </a>}
+
+<a name="line33"> 33: </a><strong><font color="#4169E1"><a name="ISInvertPermutation_Stride"></a><a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> ISInvertPermutation_Stride(<a href="../../../../../../docs/manualpages/IS/IS.html#IS">IS</a> is,<a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> nlocal,<a href="../../../../../../docs/manualpages/IS/IS.html#IS">IS</a> *perm)</font></strong>
+<a name="line34"> 34: </a>{
+<a name="line35"> 35: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>      isident;
+
+<a name="line39"> 39: </a>  <a href="../../../../../../docs/manualpages/IS/ISGetInfo.html#ISGetInfo">ISGetInfo</a>(is,<a href="../../../../../../docs/manualpages/IS/ISInfo.html#ISInfo">IS_IDENTITY</a>,IS_GLOBAL,<a href="../../../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>,&amp;isident);
+<a name="line40"> 40: </a>  <font color="#4169E1">if</font> (isident) {
+<a name="line41"> 41: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> rStart, rEnd;
+
+<a name="line43"> 43: </a>    <a href="../../../../../../docs/manualpages/IS/PetscLayoutGetRange.html#PetscLayoutGetRange">PetscLayoutGetRange</a>(is-&gt;map, &amp;rStart, &amp;rEnd);
+<a name="line44"> 44: </a>    <a href="../../../../../../docs/manualpages/IS/ISCreateStride.html#ISCreateStride">ISCreateStride</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,<a href="../../../../../../docs/manualpages/Sys/PetscMax.html#PetscMax">PetscMax</a>(rEnd - rStart, 0),rStart,1,perm);
+<a name="line45"> 45: </a>  } <font color="#4169E1">else</font> {
+<a name="line46"> 46: </a>    <a href="../../../../../../docs/manualpages/IS/IS.html#IS">IS</a>             tmp;
+<a name="line47"> 47: </a>    const <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *indices,n = is-&gt;map-&gt;n;
+
+<a name="line49"> 49: </a>    <a href="../../../../../../docs/manualpages/IS/ISGetIndices.html#ISGetIndices">ISGetIndices</a>(is,&amp;indices);
+<a name="line50"> 50: </a>    <a href="../../../../../../docs/manualpages/IS/ISCreateGeneral.html#ISCreateGeneral">ISCreateGeneral</a>(<a href="../../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)is),n,indices,<a href="../../../../../../docs/manualpages/Sys/PetscCopyMode.html#PetscCopyMode">PETSC_COPY_VALUES</a>,&amp;tmp);
+<a name="line51"> 51: </a>    <a href="../../../../../../docs/manualpages/IS/ISSetPermutation.html#ISSetPermutation">ISSetPermutation</a>(tmp);
+<a name="line52"> 52: </a>    <a href="../../../../../../docs/manualpages/IS/ISRestoreIndices.html#ISRestoreIndices">ISRestoreIndices</a>(is,&amp;indices);
+<a name="line53"> 53: </a>    <a href="../../../../../../docs/manualpages/IS/ISInvertPermutation.html#ISInvertPermutation">ISInvertPermutation</a>(tmp,nlocal,perm);
+<a name="line54"> 54: </a>    <a href="../../../../../../docs/manualpages/IS/ISDestroy.html#ISDestroy">ISDestroy</a>(&amp;tmp);
+<a name="line55"> 55: </a>  }
+<a name="line56"> 56: </a>  <font color="#4169E1">return</font>(0);
+<a name="line57"> 57: </a>}
+
+<a name="line59"> 59: </a><font color="#B22222">/*@</font>
+<a name="line60"> 60: </a><font color="#B22222">   <a href="../../../../../../docs/manualpages/IS/ISStrideGetInfo.html#ISStrideGetInfo">ISStrideGetInfo</a> - Returns the first index in a stride index set and the stride width.</font>
+
+<a name="line62"> 62: </a><font color="#B22222">   Not Collective</font>
+
+<a name="line64"> 64: </a><font color="#B22222">   Input Parameter:</font>
+<a name="line65"> 65: </a><font color="#B22222">.  is - the index set</font>
+
+<a name="line67"> 67: </a><font color="#B22222">   Output Parameters:</font>
+<a name="line68"> 68: </a><font color="#B22222">+  first - the first index</font>
+<a name="line69"> 69: </a><font color="#B22222">-  step - the stride width</font>
+
+<a name="line71"> 71: </a><font color="#B22222">   Level: intermediate</font>
+
+<a name="line73"> 73: </a><font color="#B22222">   Notes:</font>
+<a name="line74"> 74: </a><font color="#B22222">   Returns info on stride index set. This is a pseudo-public function that</font>
+<a name="line75"> 75: </a><font color="#B22222">   should not be needed by most users.</font>
+
+
+<a name="line78"> 78: </a><font color="#B22222">.seealso: <a href="../../../../../../docs/manualpages/IS/ISCreateStride.html#ISCreateStride">ISCreateStride</a>(), <a href="../../../../../../docs/manualpages/IS/ISGetSize.html#ISGetSize">ISGetSize</a>(), ISSTRIDE</font>
+<a name="line79"> 79: </a><font color="#B22222">@*/</font>
+<a name="line80"> 80: </a><strong><font color="#4169E1"><a name="ISStrideGetInfo"></a><a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  <a href="../../../../../../docs/manualpages/IS/ISStrideGetInfo.html#ISStrideGetInfo">ISStrideGetInfo</a>(<a href="../../../../../../docs/manualpages/IS/IS.html#IS">IS</a> is,<a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *first,<a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *step)</font></strong>
+<a name="line81"> 81: </a>{
+<a name="line82"> 82: </a>  IS_Stride      *sub;
+<a name="line83"> 83: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>      flg;
+
+<a name="line90"> 90: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscObjectTypeCompare.html#PetscObjectTypeCompare">PetscObjectTypeCompare</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)is,ISSTRIDE,&amp;flg);
+<a name="line91"> 91: </a>  <font color="#4169E1">if</font> (!flg) <a href="../../../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)is),PETSC_ERR_ARG_WRONG,<font color="#666666">"<a href="../../../../../../docs/manualpages/IS/IS.html#IS">IS</a> must be of type ISSTRIDE"</font>);
+
+<a name="line93"> 93: </a>  sub = (IS_Stride*)is-&gt;data;
+<a name="line94"> 94: </a>  <font color="#4169E1">if</font> (first) *first = sub-&gt;first;
+<a name="line95"> 95: </a>  <font color="#4169E1">if</font> (step)  *step  = sub-&gt;step;
+<a name="line96"> 96: </a>  <font color="#4169E1">return</font>(0);
+<a name="line97"> 97: </a>}
+
+<a name="line99"> 99: </a><strong><font color="#4169E1"><a name="ISDestroy_Stride"></a><a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> ISDestroy_Stride(<a href="../../../../../../docs/manualpages/IS/IS.html#IS">IS</a> is)</font></strong>
+<a name="line100">100: </a>{
+
+<a name="line104">104: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscObjectComposeFunction.html#PetscObjectComposeFunction">PetscObjectComposeFunction</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)is,<font color="#666666">"ISStrideSetStride_C"</font>,NULL);
+<a name="line105">105: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(is-&gt;data);
+<a name="line106">106: </a>  <font color="#4169E1">return</font>(0);
+<a name="line107">107: </a>}
+
+<a name="line109">109: </a><strong><font color="#4169E1"><a name="ISToGeneral_Stride"></a><a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  ISToGeneral_Stride(<a href="../../../../../../docs/manualpages/IS/IS.html#IS">IS</a> inis)</font></strong>
+<a name="line110">110: </a>{
+<a name="line112">112: </a>  const <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *idx;
+<a name="line113">113: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       n;
+
+<a name="line116">116: </a>  <a href="../../../../../../docs/manualpages/IS/ISGetLocalSize.html#ISGetLocalSize">ISGetLocalSize</a>(inis,&amp;n);
+<a name="line117">117: </a>  <a href="../../../../../../docs/manualpages/IS/ISGetIndices.html#ISGetIndices">ISGetIndices</a>(inis,&amp;idx);
+<a name="line118">118: </a>  <a href="../../../../../../docs/manualpages/IS/ISSetType.html#ISSetType">ISSetType</a>(inis,ISGENERAL);
+<a name="line119">119: </a>  <a href="../../../../../../docs/manualpages/IS/ISGeneralSetIndices.html#ISGeneralSetIndices">ISGeneralSetIndices</a>(inis,n,idx,<a href="../../../../../../docs/manualpages/Sys/PetscCopyMode.html#PetscCopyMode">PETSC_OWN_POINTER</a>);
+<a name="line120">120: </a>  <font color="#4169E1">return</font>(0);
+<a name="line121">121: </a>}
+
+<a name="line123">123: </a><strong><font color="#4169E1"><a name="ISLocate_Stride"></a><a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> ISLocate_Stride(<a href="../../../../../../docs/manualpages/IS/IS.html#IS">IS</a> is,<a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> key,<a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *location)</font></strong>
+<a name="line124">124: </a>{
+<a name="line125">125: </a>  IS_Stride      *sub = (IS_Stride*)is-&gt;data;
+<a name="line126">126: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       rem, step;
+
+<a name="line129">129: </a>  *location = -1;
+<a name="line130">130: </a>  step      = sub-&gt;step;
+<a name="line131">131: </a>  key      -= sub-&gt;first;
+<a name="line132">132: </a>  rem       = key / step;
+<a name="line133">133: </a>  <font color="#4169E1">if</font> ((rem &lt; is-&gt;map-&gt;n) &amp;&amp; !(key % step)) {
+<a name="line134">134: </a>    *location = rem;
+<a name="line135">135: </a>  }
+<a name="line136">136: </a>  <font color="#4169E1">return</font>(0);
+<a name="line137">137: </a>}
+
+<a name="line139">139: </a><font color="#B22222">/*</font>
+<a name="line140">140: </a><font color="#B22222">     Returns a legitimate index memory even if</font>
+<a name="line141">141: </a><font color="#B22222">   the stride index set is empty.</font>
+<a name="line142">142: </a><font color="#B22222">*/</font>
+<a name="line143">143: </a><strong><font color="#4169E1"><a name="ISGetIndices_Stride"></a><a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> ISGetIndices_Stride(<a href="../../../../../../docs/manualpages/IS/IS.html#IS">IS</a> is,const <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *idx[])</font></strong>
+<a name="line144">144: </a>{
+<a name="line145">145: </a>  IS_Stride      *sub = (IS_Stride*)is-&gt;data;
+<a name="line147">147: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       i,**dx = (<a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>**)idx;
+
+<a name="line150">150: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscMalloc1.html#PetscMalloc1">PetscMalloc1</a>(is-&gt;map-&gt;n,(<a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>**)idx);
+<a name="line151">151: </a>  <font color="#4169E1">if</font> (is-&gt;map-&gt;n) {
+<a name="line152">152: </a>    (*dx)[0] = sub-&gt;first;
+<a name="line153">153: </a>    <font color="#4169E1">for</font> (i=1; i&lt;is-&gt;map-&gt;n; i++) (*dx)[i] = (*dx)[i-1] + sub-&gt;step;
+<a name="line154">154: </a>  }
+<a name="line155">155: </a>  <font color="#4169E1">return</font>(0);
+<a name="line156">156: </a>}
+
+<a name="line158">158: </a><strong><font color="#4169E1"><a name="ISRestoreIndices_Stride"></a><a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> ISRestoreIndices_Stride(<a href="../../../../../../docs/manualpages/IS/IS.html#IS">IS</a> in,const <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *idx[])</font></strong>
+<a name="line159">159: </a>{
+
+<a name="line163">163: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(*(void**)idx);
+<a name="line164">164: </a>  <font color="#4169E1">return</font>(0);
+<a name="line165">165: </a>}
+
+<a name="line167">167: </a><strong><font color="#4169E1"><a name="ISView_Stride"></a><a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> ISView_Stride(<a href="../../../../../../docs/manualpages/IS/IS.html#IS">IS</a> is,<a href="../../../../../../docs/manualpages/Viewer/PetscViewer.html#PetscViewer">PetscViewer</a> viewer)</font></strong>
+<a name="line168">168: </a>{
+<a name="line169">169: </a>  IS_Stride         *sub = (IS_Stride*)is-&gt;data;
+<a name="line170">170: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>          i,n = is-&gt;map-&gt;n;
+<a name="line171">171: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a>       rank,size;
+<a name="line172">172: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>         iascii,ibinary;
+<a name="line173">173: </a>  <a href="../../../../../../docs/manualpages/Viewer/PetscViewerFormat.html#PetscViewerFormat">PetscViewerFormat</a> fmt;
+<a name="line174">174: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>    ierr;
+
+<a name="line177">177: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscObjectTypeCompare.html#PetscObjectTypeCompare">PetscObjectTypeCompare</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)viewer,<a href="../../../../../../docs/manualpages/Viewer/PETSCVIEWERASCII.html#PETSCVIEWERASCII">PETSCVIEWERASCII</a>,&amp;iascii);
+<a name="line178">178: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscObjectTypeCompare.html#PetscObjectTypeCompare">PetscObjectTypeCompare</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)viewer,<a href="../../../../../../docs/manualpages/Viewer/PETSCVIEWERBINARY.html#PETSCVIEWERBINARY">PETSCVIEWERBINARY</a>,&amp;ibinary);
+<a name="line179">179: </a>  <font color="#4169E1">if</font> (iascii) {
+<a name="line180">180: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> matl, isperm;
+
+<a name="line182">182: </a>    <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_rank.html#MPI_Comm_rank">MPI_Comm_rank</a>(<a href="../../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)is),&amp;rank);
+<a name="line183">183: </a>    <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_size.html#MPI_Comm_size">MPI_Comm_size</a>(<a href="../../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)is),&amp;size);
+<a name="line184">184: </a>    PetscViewerGetFormat(viewer,&amp;fmt);
+<a name="line185">185: </a>    matl = (<a href="../../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>)(fmt == <a href="../../../../../../docs/manualpages/Viewer/PetscViewerFormat.html#PetscViewerFormat">PETSC_VIEWER_ASCII_MATLAB</a>);
+<a name="line186">186: </a>    <a href="../../../../../../docs/manualpages/IS/ISGetInfo.html#ISGetInfo">ISGetInfo</a>(is,<a href="../../../../../../docs/manualpages/IS/ISInfo.html#ISInfo">IS_PERMUTATION</a>,IS_GLOBAL,<a href="../../../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>,&amp;isperm);
+<a name="line187">187: </a>    <font color="#4169E1">if</font> (isperm &amp;&amp; !matl) {<a href="../../../../../../docs/manualpages/Viewer/PetscViewerASCIIPrintf.html#PetscViewerASCIIPrintf">PetscViewerASCIIPrintf</a>(viewer,<font color="#666666">"Index set is permutation\n"</font>);}
+<a name="line188">188: </a>    <font color="#4169E1">if</font> (size == 1) {
+<a name="line189">189: </a>      <font color="#4169E1">if</font> (matl) {
+<a name="line190">190: </a>        const char* name;
+
+<a name="line192">192: </a>        <a href="../../../../../../docs/manualpages/Sys/PetscObjectGetName.html#PetscObjectGetName">PetscObjectGetName</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)is,&amp;name);
+<a name="line193">193: </a>        <a href="../../../../../../docs/manualpages/Viewer/PetscViewerASCIIPrintf.html#PetscViewerASCIIPrintf">PetscViewerASCIIPrintf</a>(viewer,<font color="#666666">"%s = [%D : %D : %D];\n"</font>,name,sub-&gt;first+1,sub-&gt;step,sub-&gt;first + sub-&gt;step*(n-1)+1);
+<a name="line194">194: </a>      } <font color="#4169E1">else</font> {
+<a name="line195">195: </a>        <a href="../../../../../../docs/manualpages/Viewer/PetscViewerASCIIPrintf.html#PetscViewerASCIIPrintf">PetscViewerASCIIPrintf</a>(viewer,<font color="#666666">"Number of indices in (stride) set %D\n"</font>,n);
+<a name="line196">196: </a>        <font color="#4169E1">for</font> (i=0; i&lt;n; i++) {
+<a name="line197">197: </a>          <a href="../../../../../../docs/manualpages/Viewer/PetscViewerASCIIPrintf.html#PetscViewerASCIIPrintf">PetscViewerASCIIPrintf</a>(viewer,<font color="#666666">"%D %D\n"</font>,i,sub-&gt;first + i*sub-&gt;step);
+<a name="line198">198: </a>        }
+<a name="line199">199: </a>      }
+<a name="line200">200: </a>      <a href="../../../../../../docs/manualpages/Viewer/PetscViewerFlush.html#PetscViewerFlush">PetscViewerFlush</a>(viewer);
+<a name="line201">201: </a>    } <font color="#4169E1">else</font> {
+<a name="line202">202: </a>      <a href="../../../../../../docs/manualpages/Viewer/PetscViewerASCIIPushSynchronized.html#PetscViewerASCIIPushSynchronized">PetscViewerASCIIPushSynchronized</a>(viewer);
+<a name="line203">203: </a>      <font color="#4169E1">if</font> (matl) {
+<a name="line204">204: </a>        const char* name;
+
+<a name="line206">206: </a>        <a href="../../../../../../docs/manualpages/Sys/PetscObjectGetName.html#PetscObjectGetName">PetscObjectGetName</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)is,&amp;name);
+<a name="line207">207: </a>        <a href="../../../../../../docs/manualpages/Viewer/PetscViewerASCIISynchronizedPrintf.html#PetscViewerASCIISynchronizedPrintf">PetscViewerASCIISynchronizedPrintf</a>(viewer,<font color="#666666">"%s_%d = [%D : %D : %D];\n"</font>,name,rank,sub-&gt;first+1,sub-&gt;step,sub-&gt;first + sub-&gt;step*(n-1)+1);
+<a name="line208">208: </a>      } <font color="#4169E1">else</font> {
+<a name="line209">209: </a>        <a href="../../../../../../docs/manualpages/Viewer/PetscViewerASCIISynchronizedPrintf.html#PetscViewerASCIISynchronizedPrintf">PetscViewerASCIISynchronizedPrintf</a>(viewer,<font color="#666666">"[%d] Number of indices in (stride) set %D\n"</font>,rank,n);
+<a name="line210">210: </a>        <font color="#4169E1">for</font> (i=0; i&lt;n; i++) {
+<a name="line211">211: </a>          <a href="../../../../../../docs/manualpages/Viewer/PetscViewerASCIISynchronizedPrintf.html#PetscViewerASCIISynchronizedPrintf">PetscViewerASCIISynchronizedPrintf</a>(viewer,<font color="#666666">"[%d] %D %D\n"</font>,rank,i,sub-&gt;first + i*sub-&gt;step);
+<a name="line212">212: </a>        }
+<a name="line213">213: </a>      }
+<a name="line214">214: </a>      <a href="../../../../../../docs/manualpages/Viewer/PetscViewerFlush.html#PetscViewerFlush">PetscViewerFlush</a>(viewer);
+<a name="line215">215: </a>      <a href="../../../../../../docs/manualpages/Viewer/PetscViewerASCIIPopSynchronized.html#PetscViewerASCIIPopSynchronized">PetscViewerASCIIPopSynchronized</a>(viewer);
+<a name="line216">216: </a>    }
+<a name="line217">217: </a>  } <font color="#4169E1">else</font> <font color="#4169E1">if</font> (ibinary) {
+<a name="line218">218: </a>    ISView_Binary(is,viewer);
+<a name="line219">219: </a>  }
+<a name="line220">220: </a>  <font color="#4169E1">return</font>(0);
+<a name="line221">221: </a>}
+
+<a name="line223">223: </a><strong><font color="#4169E1"><a name="ISSort_Stride"></a><a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> ISSort_Stride(<a href="../../../../../../docs/manualpages/IS/IS.html#IS">IS</a> is)</font></strong>
+<a name="line224">224: </a>{
+<a name="line225">225: </a>  IS_Stride *sub = (IS_Stride*)is-&gt;data;
+
+<a name="line228">228: </a>  <font color="#4169E1">if</font> (sub-&gt;step &gt;= 0) <font color="#4169E1">return</font>(0);
+<a name="line229">229: </a>  sub-&gt;first += (is-&gt;map-&gt;n - 1)*sub-&gt;step;
+<a name="line230">230: </a>  sub-&gt;step  *= -1;
+<a name="line231">231: </a>  <font color="#4169E1">return</font>(0);
+<a name="line232">232: </a>}
+
+<a name="line234">234: </a><strong><font color="#4169E1"><a name="ISSorted_Stride"></a><a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> ISSorted_Stride(<a href="../../../../../../docs/manualpages/IS/IS.html#IS">IS</a> is,<a href="../../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> * flg)</font></strong>
+<a name="line235">235: </a>{
+<a name="line236">236: </a>  IS_Stride *sub = (IS_Stride*)is-&gt;data;
+
+<a name="line239">239: </a>  <font color="#4169E1">if</font> (sub-&gt;step &gt;= 0) *flg = <a href="../../../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>;
+<a name="line240">240: </a>  <font color="#4169E1">else</font> *flg = <a href="../../../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line241">241: </a>  <font color="#4169E1">return</font>(0);
+<a name="line242">242: </a>}
+
+<a name="line244">244: </a><strong><font color="#4169E1"><a name="ISUniqueLocal_Stride"></a>static <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> ISUniqueLocal_Stride(<a href="../../../../../../docs/manualpages/IS/IS.html#IS">IS</a> is, <a href="../../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> *flg)</font></strong>
+<a name="line245">245: </a>{
+<a name="line246">246: </a>  IS_Stride *sub = (IS_Stride*)is-&gt;data;
+
+<a name="line249">249: </a>  <font color="#4169E1">if</font> (!(is-&gt;map-&gt;n) || sub-&gt;step != 0) *flg = <a href="../../../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>;
+<a name="line250">250: </a>  <font color="#4169E1">else</font> *flg = <a href="../../../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line251">251: </a>  <font color="#4169E1">return</font>(0);
+<a name="line252">252: </a>}
+
+<a name="line254">254: </a><strong><font color="#4169E1"><a name="ISPermutationLocal_Stride"></a>static <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> ISPermutationLocal_Stride(<a href="../../../../../../docs/manualpages/IS/IS.html#IS">IS</a> is, <a href="../../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> *flg)</font></strong>
+<a name="line255">255: </a>{
+<a name="line256">256: </a>  IS_Stride *sub = (IS_Stride*)is-&gt;data;
+
+<a name="line259">259: </a>  <font color="#4169E1">if</font> (!(is-&gt;map-&gt;n) || (<a href="../../../../../../docs/manualpages/Sys/PetscAbsInt.html#PetscAbsInt">PetscAbsInt</a>(sub-&gt;step) == 1 &amp;&amp; is-&gt;min == 0)) *flg = <a href="../../../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>;
+<a name="line260">260: </a>  <font color="#4169E1">else</font> *flg = <a href="../../../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line261">261: </a>  <font color="#4169E1">return</font>(0);
+<a name="line262">262: </a>}
+
+<a name="line264">264: </a><strong><font color="#4169E1"><a name="ISIntervalLocal_Stride"></a>static <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> ISIntervalLocal_Stride(<a href="../../../../../../docs/manualpages/IS/IS.html#IS">IS</a> is, <a href="../../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> *flg)</font></strong>
+<a name="line265">265: </a>{
+<a name="line266">266: </a>  IS_Stride *sub = (IS_Stride*)is-&gt;data;
+
+<a name="line269">269: </a>  <font color="#4169E1">if</font> (!(is-&gt;map-&gt;n) || sub-&gt;step == 1) *flg = <a href="../../../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>;
+<a name="line270">270: </a>  <font color="#4169E1">else</font> *flg = <a href="../../../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line271">271: </a>  <font color="#4169E1">return</font>(0);
+<a name="line272">272: </a>}
+
+<a name="line274">274: </a><strong><font color="#4169E1"><a name="ISOnComm_Stride"></a>static <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> ISOnComm_Stride(<a href="../../../../../../docs/manualpages/IS/IS.html#IS">IS</a> is,<a href="../../../../../../docs/manualpages/Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</a> comm,<a href="../../../../../../docs/manualpages/Sys/PetscCopyMode.html#PetscCopyMode">PetscCopyMode</a> mode,<a href="../../../../../../docs/manualpages/IS/IS.html#IS">IS</a> *newis)</font></strong>
+<a name="line275">275: </a>{
+<a name="line277">277: </a>  IS_Stride      *sub = (IS_Stride*)is-&gt;data;
+
+<a name="line280">280: </a>  <a href="../../../../../../docs/manualpages/IS/ISCreateStride.html#ISCreateStride">ISCreateStride</a>(comm,is-&gt;map-&gt;n,sub-&gt;first,sub-&gt;step,newis);
+<a name="line281">281: </a>  <font color="#4169E1">return</font>(0);
+<a name="line282">282: </a>}
+
+<a name="line284">284: </a><strong><font color="#4169E1"><a name="ISSetBlockSize_Stride"></a>static <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> ISSetBlockSize_Stride(<a href="../../../../../../docs/manualpages/IS/IS.html#IS">IS</a> is,<a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> bs)</font></strong>
+<a name="line285">285: </a>{
+<a name="line286">286: </a>  IS_Stride     *sub = (IS_Stride*)is-&gt;data;
+
+<a name="line290">290: </a>  <font color="#4169E1">if</font> (sub-&gt;step != 1 &amp;&amp; bs != 1) <a href="../../../../../../docs/manualpages/Sys/SETERRQ2.html#SETERRQ2">SETERRQ2</a>(<a href="../../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)is),PETSC_ERR_ARG_SIZ,<font color="#666666">"ISSTRIDE has stride %D, cannot be blocked of size %D"</font>,sub-&gt;step,bs);
+<a name="line291">291: </a>  <a href="../../../../../../docs/manualpages/IS/PetscLayoutSetBlockSize.html#PetscLayoutSetBlockSize">PetscLayoutSetBlockSize</a>(is-&gt;map, bs);
+<a name="line292">292: </a>  <font color="#4169E1">return</font>(0);
+<a name="line293">293: </a>}
+
+<a name="line295">295: </a><strong><font color="#4169E1"><a name="ISContiguousLocal_Stride"></a>static <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> ISContiguousLocal_Stride(<a href="../../../../../../docs/manualpages/IS/IS.html#IS">IS</a> is,<a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> gstart,<a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> gend,<a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *start,<a href="../../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> *contig)</font></strong>
+<a name="line296">296: </a>{
+<a name="line297">297: </a>  IS_Stride *sub = (IS_Stride*)is-&gt;data;
+
+<a name="line300">300: </a>  <font color="#4169E1">if</font> (sub-&gt;step == 1 &amp;&amp; sub-&gt;first &gt;= gstart &amp;&amp; sub-&gt;first+is-&gt;map-&gt;n &lt;= gend) {
+<a name="line301">301: </a>    *start  = sub-&gt;first - gstart;
+<a name="line302">302: </a>    *contig = <a href="../../../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>;
+<a name="line303">303: </a>  } <font color="#4169E1">else</font> {
+<a name="line304">304: </a>    *start  = -1;
+<a name="line305">305: </a>    *contig = <a href="../../../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line306">306: </a>  }
+<a name="line307">307: </a>  <font color="#4169E1">return</font>(0);
+<a name="line308">308: </a>}
+
+
+<a name="line311">311: </a>static <font color="#4169E1">struct _ISOps</font> myops = { ISGetIndices_Stride,
+<a name="line312">312: </a>                               ISRestoreIndices_Stride,
+<a name="line313">313: </a>                               ISInvertPermutation_Stride,
+<a name="line314">314: </a>                               ISSort_Stride,
+<a name="line315">315: </a>                               ISSort_Stride,
+<a name="line316">316: </a>                               ISSorted_Stride,
+<a name="line317">317: </a>                               ISDuplicate_Stride,
+<a name="line318">318: </a>                               ISDestroy_Stride,
+<a name="line319">319: </a>                               ISView_Stride,
+<a name="line320">320: </a>                               ISLoad_Default,
+<a name="line321">321: </a>                               ISCopy_Stride,
+<a name="line322">322: </a>                               ISToGeneral_Stride,
+<a name="line323">323: </a>                               ISOnComm_Stride,
+<a name="line324">324: </a>                               ISSetBlockSize_Stride,
+<a name="line325">325: </a>                               ISContiguousLocal_Stride,
+<a name="line326">326: </a>                               ISLocate_Stride,
+<a name="line327">327: </a>                               ISSorted_Stride,
+<a name="line328">328: </a>                               NULL,
+<a name="line329">329: </a>                               ISUniqueLocal_Stride,
+<a name="line330">330: </a>                               NULL,
+<a name="line331">331: </a>                               ISPermutationLocal_Stride,
+<a name="line332">332: </a>                               NULL,
+<a name="line333">333: </a>                               ISIntervalLocal_Stride,
+<a name="line334">334: </a>                               NULL};
+
+
+<a name="line337">337: </a><font color="#B22222">/*@</font>
+<a name="line338">338: </a><font color="#B22222">   <a href="../../../../../../docs/manualpages/IS/ISStrideSetStride.html#ISStrideSetStride">ISStrideSetStride</a> - Sets the stride information for a stride index set.</font>
+
+<a name="line340">340: </a><font color="#B22222">   Collective on <a href="../../../../../../docs/manualpages/IS/IS.html#IS">IS</a></font>
+
+<a name="line342">342: </a><font color="#B22222">   Input Parameters:</font>
+<a name="line343">343: </a><font color="#B22222">+  is - the index set</font>
+<a name="line344">344: </a><font color="#B22222">.  n - the length of the locally owned portion of the index set</font>
+<a name="line345">345: </a><font color="#B22222">.  first - the first element of the locally owned portion of the index set</font>
+<a name="line346">346: </a><font color="#B22222">-  step - the change to the next index</font>
+
+<a name="line348">348: </a><font color="#B22222">   Level: beginner</font>
+
+<a name="line350">350: </a><font color="#B22222">.seealso: <a href="../../../../../../docs/manualpages/IS/ISCreateGeneral.html#ISCreateGeneral">ISCreateGeneral</a>(), <a href="../../../../../../docs/manualpages/IS/ISCreateBlock.html#ISCreateBlock">ISCreateBlock</a>(), <a href="../../../../../../docs/manualpages/IS/ISAllGather.html#ISAllGather">ISAllGather</a>(), ISSTRIDE, <a href="../../../../../../docs/manualpages/IS/ISCreateStride.html#ISCreateStride">ISCreateStride</a>(), <a href="../../../../../../docs/manualpages/IS/ISStrideGetInfo.html#ISStrideGetInfo">ISStrideGetInfo</a>()</font>
+<a name="line351">351: </a><font color="#B22222">@*/</font>
+<a name="line352">352: </a><strong><font color="#4169E1"><a name="ISStrideSetStride"></a><a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  <a href="../../../../../../docs/manualpages/IS/ISStrideSetStride.html#ISStrideSetStride">ISStrideSetStride</a>(<a href="../../../../../../docs/manualpages/IS/IS.html#IS">IS</a> is,<a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> n,<a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> first,<a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> step)</font></strong>
+<a name="line353">353: </a>{
+
+<a name="line357">357: </a>  <font color="#4169E1">if</font> (n &lt; 0) <a href="../../../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)is), PETSC_ERR_ARG_OUTOFRANGE, <font color="#666666">"Negative length %D not valid"</font>, n);
+<a name="line358">358: </a>  <a href="../../../../../../docs/manualpages/IS/ISClearInfoCache.html#ISClearInfoCache">ISClearInfoCache</a>(is,<a href="../../../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>);
+<a name="line359">359: </a>  PetscUseMethod(is,<font color="#666666">"ISStrideSetStride_C"</font>,(<a href="../../../../../../docs/manualpages/IS/IS.html#IS">IS</a>,<a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>,<a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>,<a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>),(is,n,first,step));
+<a name="line360">360: </a>  <font color="#4169E1">return</font>(0);
+<a name="line361">361: </a>}
+
+<a name="line363">363: </a><strong><font color="#4169E1"><a name="ISStrideSetStride_Stride"></a><a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  ISStrideSetStride_Stride(<a href="../../../../../../docs/manualpages/IS/IS.html#IS">IS</a> is,<a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> n,<a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> first,<a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> step)</font></strong>
+<a name="line364">364: </a>{
+<a name="line366">366: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       min,max;
+<a name="line367">367: </a>  IS_Stride      *sub = (IS_Stride*)is-&gt;data;
+<a name="line368">368: </a>  <a href="../../../../../../docs/manualpages/IS/PetscLayout.html#PetscLayout">PetscLayout</a>    map;
+
+<a name="line371">371: </a>  <a href="../../../../../../docs/manualpages/IS/PetscLayoutCreateFromSizes.html#PetscLayoutCreateFromSizes">PetscLayoutCreateFromSizes</a>(<a href="../../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)is),n,is-&gt;map-&gt;N,is-&gt;map-&gt;bs,&amp;map);
+<a name="line372">372: </a>  <a href="../../../../../../docs/manualpages/IS/PetscLayoutDestroy.html#PetscLayoutDestroy">PetscLayoutDestroy</a>(&amp;is-&gt;map);
+<a name="line373">373: </a>  is-&gt;map = map;
+
+<a name="line375">375: </a>  sub-&gt;first = first;
+<a name="line376">376: </a>  sub-&gt;step  = step;
+<a name="line377">377: </a>  <font color="#4169E1">if</font> (step &gt; 0) {min = first; max = first + step*(n-1);}
+<a name="line378">378: </a>  <font color="#4169E1">else</font>          {max = first; min = first + step*(n-1);}
+
+<a name="line380">380: </a>  is-&gt;min  = n &gt; 0 ? min : PETSC_MAX_INT;
+<a name="line381">381: </a>  is-&gt;max  = n &gt; 0 ? max : PETSC_MIN_INT;
+<a name="line382">382: </a>  is-&gt;data = (void*)sub;
+<a name="line383">383: </a>  <font color="#4169E1">return</font>(0);
+<a name="line384">384: </a>}
+
+<a name="line386">386: </a><font color="#B22222">/*@</font>
+<a name="line387">387: </a><font color="#B22222">   <a href="../../../../../../docs/manualpages/IS/ISCreateStride.html#ISCreateStride">ISCreateStride</a> - Creates a data structure for an index set</font>
+<a name="line388">388: </a><font color="#B22222">   containing a list of evenly spaced integers.</font>
+
+<a name="line390">390: </a><font color="#B22222">   Collective</font>
+
+<a name="line392">392: </a><font color="#B22222">   Input Parameters:</font>
+<a name="line393">393: </a><font color="#B22222">+  comm - the MPI communicator</font>
+<a name="line394">394: </a><font color="#B22222">.  n - the length of the locally owned portion of the index set</font>
+<a name="line395">395: </a><font color="#B22222">.  first - the first element of the locally owned portion of the index set</font>
+<a name="line396">396: </a><font color="#B22222">-  step - the change to the next index</font>
+
+<a name="line398">398: </a><font color="#B22222">   Output Parameter:</font>
+<a name="line399">399: </a><font color="#B22222">.  is - the new index set</font>
+
+<a name="line401">401: </a><font color="#B22222">   Notes:</font>
+<a name="line402">402: </a><font color="#B22222">   When the communicator is not MPI_COMM_SELF, the operations on <a href="../../../../../../docs/manualpages/IS/IS.html#IS">IS</a> are NOT</font>
+<a name="line403">403: </a><font color="#B22222">   conceptually the same as MPI_Group operations. The <a href="../../../../../../docs/manualpages/IS/IS.html#IS">IS</a> are the</font>
+<a name="line404">404: </a><font color="#B22222">   distributed sets of indices and thus certain operations on them are collective.</font>
+
+<a name="line406">406: </a><font color="#B22222">   Level: beginner</font>
+
+<a name="line408">408: </a><font color="#B22222">.seealso: <a href="../../../../../../docs/manualpages/IS/ISCreateGeneral.html#ISCreateGeneral">ISCreateGeneral</a>(), <a href="../../../../../../docs/manualpages/IS/ISCreateBlock.html#ISCreateBlock">ISCreateBlock</a>(), <a href="../../../../../../docs/manualpages/IS/ISAllGather.html#ISAllGather">ISAllGather</a>(), ISSTRIDE</font>
+<a name="line409">409: </a><font color="#B22222">@*/</font>
+<a name="line410">410: </a><strong><font color="#4169E1"><a name="ISCreateStride"></a><a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  <a href="../../../../../../docs/manualpages/IS/ISCreateStride.html#ISCreateStride">ISCreateStride</a>(<a href="../../../../../../docs/manualpages/Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</a> comm,<a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> n,<a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> first,<a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> step,<a href="../../../../../../docs/manualpages/IS/IS.html#IS">IS</a> *is)</font></strong>
+<a name="line411">411: </a>{
+
+<a name="line415">415: </a>  <a href="../../../../../../docs/manualpages/IS/ISCreate.html#ISCreate">ISCreate</a>(comm,is);
+<a name="line416">416: </a>  <a href="../../../../../../docs/manualpages/IS/ISSetType.html#ISSetType">ISSetType</a>(*is,ISSTRIDE);
+<a name="line417">417: </a>  <a href="../../../../../../docs/manualpages/IS/ISStrideSetStride.html#ISStrideSetStride">ISStrideSetStride</a>(*is,n,first,step);
+<a name="line418">418: </a>  <font color="#4169E1">return</font>(0);
+<a name="line419">419: </a>}
+
+<a name="line421">421: </a><strong><font color="#4169E1"><a name="ISCreate_Stride"></a>PETSC_EXTERN <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> ISCreate_Stride(<a href="../../../../../../docs/manualpages/IS/IS.html#IS">IS</a> is)</font></strong>
+<a name="line422">422: </a>{
+<a name="line424">424: </a>  IS_Stride      *sub;
+
+<a name="line427">427: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscNewLog.html#PetscNewLog">PetscNewLog</a>(is,&amp;sub);
+<a name="line428">428: </a>  is-&gt;data = (void *) sub;
+<a name="line429">429: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscMemcpy.html#PetscMemcpy">PetscMemcpy</a>(is-&gt;ops,&amp;myops,<font color="#4169E1">sizeof</font>(myops));
+<a name="line430">430: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscObjectComposeFunction.html#PetscObjectComposeFunction">PetscObjectComposeFunction</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)is,<font color="#666666">"ISStrideSetStride_C"</font>,ISStrideSetStride_Stride);
+<a name="line431">431: </a>  <font color="#4169E1">return</font>(0);
+<a name="line432">432: </a>}
+</pre>
+</body>
+
+</html>

@@ -1,0 +1,47 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatProductNumeric.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>MatProductNumeric</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/Mat/MatProductNumeric.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="MatProductNumeric"><H1>MatProductNumeric</H1></A>
+Implement a matrix product with numerical values. 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscmat.h" 
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../Mat/MatProductNumeric.html#MatProductNumeric">MatProductNumeric</A>(<A HREF="../Mat/Mat.html#Mat">Mat</A> mat)
+</PRE>
+Collective on <A HREF="../Mat/Mat.html#Mat">Mat</A>
+<P>
+<H3><FONT COLOR="#CC3333">Input/Output Parameter</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>mat </B></TD><TD>- the matrix holding the product
+</TD></TR></TABLE>
+<P>
+
+<P>
+Notes: <A HREF="../Mat/MatProductSymbolic.html#MatProductSymbolic">MatProductSymbolic</A>() must have been called on mat before calling this function
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../Mat/MatProductCreate.html#MatProductCreate">MatProductCreate</A>(), <A HREF="../Mat/MatSetType.html#MatSetType">MatSetType</A>(), <A HREF="../Mat/MatProductSymbolic.html#MatProductSymbolic">MatProductSymbolic</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>intermediate<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/mat/interface/matproduct.c.html#MatProductNumeric">src/mat/interface/matproduct.c</A>
+<P><H3><FONT COLOR="#CC3333">Examples</FONT></H3>
+<A HREF="../../../src/tao/pde_constrained/tutorials/elliptic.c.html">src/tao/pde_constrained/tutorials/elliptic.c.html</A><BR>
+<A HREF="../../../src/tao/pde_constrained/tutorials/parabolic.c.html">src/tao/pde_constrained/tutorials/parabolic.c.html</A><BR>
+<P><H3><FONT COLOR="CC3333">Implementations</FONT></H3><A HREF="../../../src/mat/impls/aij/mpi/mpimatmatmatmult.c.html#MatProductNumeric_ABC_Transpose_AIJ_AIJ">MatProductNumeric_ABC_Transpose_AIJ_AIJ in src/mat/impls/aij/mpi/mpimatmatmatmult.c</A><BR>
+<A HREF="../../../src/mat/impls/aij/mpi/mpimatmatmatmult.c.html#MatProductNumeric_RARt_MPIAIJ_MPIAIJ">MatProductNumeric_RARt_MPIAIJ_MPIAIJ in src/mat/impls/aij/mpi/mpimatmatmatmult.c</A><BR>
+<A HREF="../../../src/mat/impls/aij/seq/aijmkl/aijmkl.c.html#MatProductNumeric_AtB_SeqAIJMKL_SeqAIJMKL">MatProductNumeric_AtB_SeqAIJMKL_SeqAIJMKL in src/mat/impls/aij/seq/aijmkl/aijmkl.c</A><BR>
+<A HREF="../../../src/mat/impls/aij/seq/matmatmult.c.html#MatProductNumeric_AtB_SeqAIJ_SeqAIJ">MatProductNumeric_AtB_SeqAIJ_SeqAIJ in src/mat/impls/aij/seq/matmatmult.c</A><BR>
+<A HREF="../../../src/mat/impls/aij/seq/seqcusparse/aijcusparse.cu.html#MatProductNumeric_SeqAIJCUSPARSE_SeqDENSECUDA">MatProductNumeric_SeqAIJCUSPARSE_SeqDENSECUDA in src/mat/impls/aij/seq/seqcusparse/aijcusparse.cu</A><BR>
+<A HREF="../../../src/mat/impls/hara/mathara.cu.html#MatProductNumeric_HARA">MatProductNumeric_HARA in src/mat/impls/hara/mathara.cu</A><BR>
+<A HREF="../../../src/mat/impls/nest/matnest.c.html#MatProductNumeric_Nest_Dense">MatProductNumeric_Nest_Dense in src/mat/impls/nest/matnest.c</A><BR>
+<A HREF="../../../src/mat/impls/shell/shell.c.html#MatProductNumeric_Shell_X">MatProductNumeric_Shell_X in src/mat/impls/shell/shell.c</A><BR>
+<BR><A HREF="./index.html">Index of all Mat routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

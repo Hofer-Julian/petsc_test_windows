@@ -1,0 +1,41 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscGetDate.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>PetscGetDate</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/Sys/PetscGetDate.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="PetscGetDate"><H1>PetscGetDate</H1></A>
+Gets the current date. 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A>  <A HREF="../Sys/PetscGetDate.html#PetscGetDate">PetscGetDate</A>(char date[],size_t len)
+</PRE>
+Not collective
+<P>
+<H3><FONT COLOR="#CC3333">Input Parameter</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>len </B></TD><TD>- length of string to hold date
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Output Parameter</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>date </B></TD><TD>- the date
+</TD></TR></TABLE>
+<P>
+
+<P>
+This function DOES make a system call and thus SHOULD NOT be called
+from an error handler.
+<P>
+<P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>beginner<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/sys/time/fdate.c.html#PetscGetDate">src/sys/time/fdate.c</A>
+<P><H3><FONT COLOR="#CC3333">Examples</FONT></H3>
+<A HREF="../../../src/snes/tutorials/ex30.c.html">src/snes/tutorials/ex30.c.html</A><BR>
+<BR><A HREF="./index.html">Index of all Sys routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

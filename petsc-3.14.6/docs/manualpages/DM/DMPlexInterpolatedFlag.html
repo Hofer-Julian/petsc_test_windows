@@ -1,0 +1,51 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DM/DMPlexInterpolatedFlag.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>DMPlexInterpolatedFlag</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/DM/DMPlexInterpolatedFlag.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="DMPlexInterpolatedFlag"><H1>DMPlexInterpolatedFlag</H1></A>
+Describes level of topological interpolatedness. It is a local or collective property depending on whether it is returned by <A HREF="../DMPLEX/DMPlexIsInterpolated.html#DMPlexIsInterpolated">DMPlexIsInterpolated</A>() or <A HREF="../DMPLEX/DMPlexIsInterpolatedCollective.html#DMPlexIsInterpolatedCollective">DMPlexIsInterpolatedCollective</A>(). 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+typedef enum {
+  <A HREF="../DM/DMPlexInterpolatedFlag.html#DMPlexInterpolatedFlag">DMPLEX_INTERPOLATED_INVALID</A> = -1,
+  <A HREF="../DM/DMPlexInterpolatedFlag.html#DMPlexInterpolatedFlag">DMPLEX_INTERPOLATED_NONE</A> = 0,
+  <A HREF="../DM/DMPlexInterpolatedFlag.html#DMPlexInterpolatedFlag">DMPLEX_INTERPOLATED_PARTIAL</A>,
+  <A HREF="../DM/DMPlexInterpolatedFlag.html#DMPlexInterpolatedFlag">DMPLEX_INTERPOLATED_MIXED</A>,
+  <A HREF="../DM/DMPlexInterpolatedFlag.html#DMPlexInterpolatedFlag">DMPLEX_INTERPOLATED_FULL</A>
+} <A HREF="../DM/DMPlexInterpolatedFlag.html#DMPlexInterpolatedFlag">DMPlexInterpolatedFlag</A>;
+</PRE>
+<pre>
+ <A HREF="../DM/DMPlexInterpolatedFlag.html#DMPlexInterpolatedFlag">DMPLEX_INTERPOLATED_INVALID</A> - Uninitialized value (internal use only; never returned by <A HREF="../DMPLEX/DMPlexIsInterpolated.html#DMPlexIsInterpolated">DMPlexIsInterpolated</A>() or <A HREF="../DMPLEX/DMPlexIsInterpolatedCollective.html#DMPlexIsInterpolatedCollective">DMPlexIsInterpolatedCollective</A>())
+</pre>
+<pre>
+ <A HREF="../DM/DMPlexInterpolatedFlag.html#DMPlexInterpolatedFlag">DMPLEX_INTERPOLATED_NONE</A>    - Mesh is not interpolated
+</pre>
+<pre>
+ <A HREF="../DM/DMPlexInterpolatedFlag.html#DMPlexInterpolatedFlag">DMPLEX_INTERPOLATED_PARTIAL</A> - Mesh is partially interpolated. This can e.g. mean DMPlex with cells, faces and vertices but no edges represented, or a mesh with mixed cones (see <A HREF="../DMPLEX/DMPlexStratify.html#DMPlexStratify">DMPlexStratify</A>() for an example)
+</pre>
+<pre>
+ <A HREF="../DM/DMPlexInterpolatedFlag.html#DMPlexInterpolatedFlag">DMPLEX_INTERPOLATED_MIXED</A>   - Can be returned only by <A HREF="../DMPLEX/DMPlexIsInterpolatedCollective.html#DMPlexIsInterpolatedCollective">DMPlexIsInterpolatedCollective</A>(), meaning that <A HREF="../DMPLEX/DMPlexIsInterpolated.html#DMPlexIsInterpolated">DMPlexIsInterpolated</A>() returns different interpolatedness on different ranks
+</pre>
+<pre>
+ <A HREF="../DM/DMPlexInterpolatedFlag.html#DMPlexInterpolatedFlag">DMPLEX_INTERPOLATED_FULL</A>    - Mesh is fully interpolated
+</pre>
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">Developer Note</FONT></H3>
+Any additions/changes here MUST also be made in include/petsc/finclude/petscdmplex.h and src/dm/f90-mod/petscdmplex.h
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../DMPLEX/DMPlexIsInterpolated.html#DMPlexIsInterpolated">DMPlexIsInterpolated</A>(), <A HREF="../DMPLEX/DMPlexIsInterpolatedCollective.html#DMPlexIsInterpolatedCollective">DMPlexIsInterpolatedCollective</A>(), <A HREF="../DMPLEX/DMPlexInterpolate.html#DMPlexInterpolate">DMPlexInterpolate</A>(), <A HREF="../DMPLEX/DMPlexUninterpolate.html#DMPlexUninterpolate">DMPlexUninterpolate</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>intermediate<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/dm/../../include/petscdmplex.h.html#DMPlexInterpolatedFlag">src/dm/../../include/petscdmplex.h</A>
+<BR><A HREF="./index.html">Index of all DM routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

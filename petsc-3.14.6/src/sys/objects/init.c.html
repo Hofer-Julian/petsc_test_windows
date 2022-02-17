@@ -1,0 +1,805 @@
+<center><a href="init.c">Actual source code: init.c</a></center><br>
+
+<html>
+<head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/src/sys/objects/init.c.html" />
+<title></title>
+<meta name="generator" content="c2html 0.9.4">
+<meta name="date" content="2021-03-30T16:49:27+00:00">
+</head>
+
+<body bgcolor="#FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 src/sys/objects/init.c.html "><small>Report Typos and Errors</small></a></div>
+<pre width="80">
+<a name="line1">  1: </a><font color="#B22222">/*</font>
+
+<a name="line3">  3: </a><font color="#B22222">   This file defines part of the initialization of PETSc</font>
+
+<a name="line5">  5: </a><font color="#B22222">  This file uses regular malloc and free because it cannot be known</font>
+<a name="line6">  6: </a><font color="#B22222">  what malloc is being used until it has already processed the input.</font>
+<a name="line7">  7: </a><font color="#B22222">*/</font>
+
+<a name="line9">  9: </a>#include <A href="../../../include/petscsys.h.html">&lt;petscsys.h&gt;</A>
+<a name="line10"> 10: </a>#include <A href="../../../include/petsc/private/petscimpl.h.html">&lt;petsc/private/petscimpl.h&gt;</A>
+<a name="line11"> 11: </a>#include <A href="../../../include/petscvalgrind.h.html">&lt;petscvalgrind.h&gt;</A>
+<a name="line12"> 12: </a>#include <A href="../../../include/petscviewer.h.html">&lt;petscviewer.h&gt;</A>
+<a name="line13"> 13: </a><font color="#A020F0">#if defined(PETSC_USE_LOG)</font>
+<a name="line14"> 14: </a><strong><font color="#4169E1">PETSC_INTERN <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscLogInitialize(void)</font></strong>;
+<a name="line15"> 15: </a><font color="#A020F0">#endif</font>
+
+<a name="line17"> 17: </a><font color="#A020F0">#if defined(PETSC_HAVE_SYS_SYSINFO_H)</font>
+<a name="line18"> 18: </a><font color="#A020F0">#include &lt;sys/sysinfo.h&gt;</font>
+<a name="line19"> 19: </a><font color="#A020F0">#endif</font>
+<a name="line20"> 20: </a><font color="#A020F0">#if defined(PETSC_HAVE_UNISTD_H)</font>
+<a name="line21"> 21: </a><font color="#A020F0">#include &lt;unistd.h&gt;</font>
+<a name="line22"> 22: </a><font color="#A020F0">#endif</font>
+
+<a name="line24"> 24: </a><font color="#A020F0">#if defined(PETSC_HAVE_CUDA)</font>
+<a name="line25"> 25: </a><font color="#A020F0">  #include &lt;cuda_runtime.h&gt;</font>
+<a name="line26"> 26: </a>#include <A href="../../../include/petsccublas.h.html">&lt;petsccublas.h&gt;</A>
+<a name="line27"> 27: </a><font color="#A020F0">#endif</font>
+
+<a name="line29"> 29: </a><font color="#A020F0">#if defined(PETSC_HAVE_HIP)</font>
+<a name="line30"> 30: </a><font color="#A020F0">  #include &lt;hip/hip_runtime.h&gt;</font>
+<a name="line31"> 31: </a><font color="#A020F0">#endif</font>
+
+<a name="line33"> 33: </a><font color="#A020F0">#if defined(PETSC_HAVE_DEVICE)</font>
+<a name="line34"> 34: </a><font color="#A020F0">  #if defined(PETSC_HAVE_OMPI_MAJOR_VERSION)</font>
+<a name="line35"> 35: </a><font color="#A020F0">    #include </font><font color="#666666">"mpi-ext.h"</font><font color="#A020F0"> </font><font color="#B22222">/* Needed for OpenMPI CUDA-aware check */</font><font color="#A020F0"></font>
+<a name="line36"> 36: </a><font color="#A020F0">  #endif</font>
+<a name="line37"> 37: </a><font color="#A020F0">#endif</font>
+
+<a name="line39"> 39: </a><font color="#A020F0">#if defined(PETSC_HAVE_VIENNACL)</font>
+<a name="line40"> 40: </a><strong><font color="#4169E1">PETSC_EXTERN <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscViennaCLInit()</font></strong>;
+<a name="line41"> 41: </a><font color="#A020F0">#endif</font>
+
+
+<a name="line44"> 44: </a><font color="#B22222">/* ------------------------Nasty global variables -------------------------------*/</font>
+<a name="line45"> 45: </a><font color="#B22222">/*</font>
+<a name="line46"> 46: </a><font color="#B22222">     Indicates if PETSc started up MPI, or it was</font>
+<a name="line47"> 47: </a><font color="#B22222">   already started before PETSc was initialized.</font>
+<a name="line48"> 48: </a><font color="#B22222">*/</font>
+<a name="line49"> 49: </a><a href="../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>   PetscBeganMPI                 = <a href="../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line50"> 50: </a><a href="../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>   PetscErrorHandlingInitialized = <a href="../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line51"> 51: </a><a href="../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>   PetscInitializeCalled         = <a href="../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line52"> 52: </a><a href="../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>   PetscFinalizeCalled           = <a href="../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+
+<a name="line54"> 54: </a><a href="../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a> PetscGlobalRank               = -1;
+<a name="line55"> 55: </a><a href="../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a> PetscGlobalSize               = -1;
+
+<a name="line57"> 57: </a><font color="#A020F0">#if defined(PETSC_HAVE_KOKKOS)</font>
+<a name="line58"> 58: </a><a href="../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>   PetscBeganKokkos              = <a href="../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line59"> 59: </a><font color="#A020F0">#endif</font>
+
+<a name="line61"> 61: </a><a href="../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>   use_gpu_aware_mpi             = <a href="../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>;
+<a name="line62"> 62: </a><a href="../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>   PetscCreatedGpuObjects        = <a href="../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+
+<a name="line64"> 64: </a><font color="#A020F0">#if defined(PETSC_HAVE_COMPLEX)</font>
+<a name="line65"> 65: </a><font color="#A020F0">#if defined(PETSC_COMPLEX_INSTANTIATE)</font>
+<a name="line66"> 66: </a>template &lt;&gt; class std::complex&lt;double&gt;; <font color="#B22222">/* instantiate complex template class */</font>
+<a name="line67"> 67: </a><font color="#A020F0">#endif</font>
+<a name="line68"> 68: </a><font color="#A020F0">#if !defined(PETSC_HAVE_MPI_C_DOUBLE_COMPLEX)</font>
+<a name="line69"> 69: </a>MPI_Datatype MPIU_C_DOUBLE_COMPLEX;
+<a name="line70"> 70: </a>MPI_Datatype MPIU_C_COMPLEX;
+<a name="line71"> 71: </a><font color="#A020F0">#endif</font>
+
+<a name="line73"> 73: </a><font color="#B22222">/*MC</font>
+<a name="line74"> 74: </a><font color="#B22222">   <a href="../../../docs/manualpages/Sys/PETSC_i.html#PETSC_i">PETSC_i</a> - the imaginary number i</font>
+
+<a name="line76"> 76: </a><font color="#B22222">   Synopsis:</font>
+<a name="line77"> 77: </a>#include <A href="../../../include/petscsys.h.html">&lt;petscsys.h&gt;</A>
+<a name="line78"> 78: </a><font color="#B22222">   <a href="../../../docs/manualpages/Sys/PetscComplex.html#PetscComplex">PetscComplex</a> <a href="../../../docs/manualpages/Sys/PETSC_i.html#PETSC_i">PETSC_i</a>;</font>
+
+<a name="line80"> 80: </a><font color="#B22222">   Level: beginner</font>
+
+<a name="line82"> 82: </a><font color="#B22222">   Note:</font>
+<a name="line83"> 83: </a><font color="#B22222">   Complex numbers are automatically available if PETSc located a working complex implementation</font>
+
+<a name="line85"> 85: </a><font color="#B22222">.seealso: <a href="../../../docs/manualpages/Sys/PetscRealPart.html#PetscRealPart">PetscRealPart</a>(), <a href="../../../docs/manualpages/Sys/PetscImaginaryPart.html#PetscImaginaryPart">PetscImaginaryPart</a>(), PetscRealPartComplex(), PetscImaginaryPartComplex()</font>
+<a name="line86"> 86: </a><font color="#B22222">M*/</font>
+<a name="line87"> 87: </a><a href="../../../docs/manualpages/Sys/PetscComplex.html#PetscComplex">PetscComplex</a> <a href="../../../docs/manualpages/Sys/PETSC_i.html#PETSC_i">PETSC_i</a>;
+<a name="line88"> 88: </a><font color="#A020F0">#endif</font>
+<a name="line89"> 89: </a><font color="#A020F0">#if defined(PETSC_USE_REAL___FLOAT128)</font>
+<a name="line90"> 90: </a>MPI_Datatype MPIU___FLOAT128 = 0;
+<a name="line91"> 91: </a><font color="#A020F0">#if defined(PETSC_HAVE_COMPLEX)</font>
+<a name="line92"> 92: </a>MPI_Datatype MPIU___COMPLEX128 = 0;
+<a name="line93"> 93: </a><font color="#A020F0">#endif</font>
+<a name="line94"> 94: </a><font color="#A020F0">#elif defined(PETSC_USE_REAL___FP16)</font>
+<a name="line95"> 95: </a>MPI_Datatype MPIU___FP16 = 0;
+<a name="line96"> 96: </a><font color="#A020F0">#endif</font>
+<a name="line97"> 97: </a>MPI_Datatype MPIU_2SCALAR = 0;
+<a name="line98"> 98: </a><font color="#A020F0">#if defined(PETSC_USE_64BIT_INDICES)</font>
+<a name="line99"> 99: </a>MPI_Datatype MPIU_2INT = 0;
+<a name="line100">100: </a><font color="#A020F0">#endif</font>
+<a name="line101">101: </a>MPI_Datatype MPIU_BOOL;
+<a name="line102">102: </a>MPI_Datatype MPIU_ENUM;
+<a name="line103">103: </a>MPI_Datatype MPIU_FORTRANADDR;
+<a name="line104">104: </a>MPI_Datatype MPIU_SIZE_T;
+
+<a name="line106">106: </a><font color="#B22222">/*</font>
+<a name="line107">107: </a><font color="#B22222">       Function that is called to display all error messages</font>
+<a name="line108">108: </a><font color="#B22222">*/</font>
+<a name="line109">109: </a><strong><font color="#4169E1"><a name="etscErrorCode"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> (*<a href="../../../docs/manualpages/Sys/PetscErrorPrintf.html#PetscErrorPrintf">PetscErrorPrintf</a>)(const char [],...)</font></strong>          = PetscErrorPrintfDefault;
+<a name="line110">110: </a><strong><font color="#4169E1"><a name="etscErrorCode"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> (*<a href="../../../docs/manualpages/Sys/PetscHelpPrintf.html#PetscHelpPrintf">PetscHelpPrintf</a>)(<a href="../../../docs/manualpages/Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</a>,const char [],...)</font></strong>  = PetscHelpPrintfDefault;
+<a name="line111">111: </a><strong><font color="#4169E1"><a name="etscErrorCode"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> (*<a href="../../../docs/manualpages/Sys/PetscVFPrintf.html#PetscVFPrintf">PetscVFPrintf</a>)(FILE*,const char[],va_list)</font></strong>    = PetscVFPrintfDefault;
+<a name="line112">112: </a><font color="#B22222">/*</font>
+<a name="line113">113: </a><font color="#B22222">  This is needed to turn on/off GPU synchronization</font>
+<a name="line114">114: </a><font color="#B22222">*/</font>
+<a name="line115">115: </a><a href="../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> PetscViennaCLSynchronize = <a href="../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+
+<a name="line117">117: </a><font color="#B22222">/* ------------------------------------------------------------------------------*/</font>
+<a name="line118">118: </a><font color="#B22222">/*</font>
+<a name="line119">119: </a><font color="#B22222">   Optional file where all PETSc output from various prints is saved</font>
+<a name="line120">120: </a><font color="#B22222">*/</font>
+<a name="line121">121: </a>PETSC_INTERN FILE *petsc_history;
+<a name="line122">122: </a>FILE *petsc_history = NULL;
+
+<a name="line124">124: </a><strong><font color="#4169E1"><a name="PetscOpenHistoryFile"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  PetscOpenHistoryFile(const char filename[],FILE **fd)</font></strong>
+<a name="line125">125: </a>{
+<a name="line127">127: </a>  <a href="../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a>    rank,size;
+<a name="line128">128: </a>  char           pfile[PETSC_MAX_PATH_LEN],pname[PETSC_MAX_PATH_LEN],fname[PETSC_MAX_PATH_LEN],date[64];
+<a name="line129">129: </a>  char           version[256];
+
+<a name="line132">132: </a>  <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_rank.html#MPI_Comm_rank">MPI_Comm_rank</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,&amp;rank);
+<a name="line133">133: </a>  <font color="#4169E1">if</font> (!rank) {
+<a name="line134">134: </a>    char        arch[10];
+<a name="line135">135: </a>    int         err;
+
+<a name="line137">137: </a>    <a href="../../../docs/manualpages/Sys/PetscGetArchType.html#PetscGetArchType">PetscGetArchType</a>(arch,10);
+<a name="line138">138: </a>    <a href="../../../docs/manualpages/Sys/PetscGetDate.html#PetscGetDate">PetscGetDate</a>(date,64);
+<a name="line139">139: </a>    <a href="../../../docs/manualpages/Sys/PetscGetVersion.html#PetscGetVersion">PetscGetVersion</a>(version,256);
+<a name="line140">140: </a>    <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_size.html#MPI_Comm_size">MPI_Comm_size</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,&amp;size);
+<a name="line141">141: </a>    <font color="#4169E1">if</font> (filename) {
+<a name="line142">142: </a>      <a href="../../../docs/manualpages/Sys/PetscFixFilename.html#PetscFixFilename">PetscFixFilename</a>(filename,fname);
+<a name="line143">143: </a>    } <font color="#4169E1">else</font> {
+<a name="line144">144: </a>      <a href="../../../docs/manualpages/Sys/PetscGetHomeDirectory.html#PetscGetHomeDirectory">PetscGetHomeDirectory</a>(pfile,<font color="#4169E1">sizeof</font>(pfile));
+<a name="line145">145: </a>      <a href="../../../docs/manualpages/Sys/PetscStrlcat.html#PetscStrlcat">PetscStrlcat</a>(pfile,<font color="#666666">"/.petschistory"</font>,<font color="#4169E1">sizeof</font>(pfile));
+<a name="line146">146: </a>      <a href="../../../docs/manualpages/Sys/PetscFixFilename.html#PetscFixFilename">PetscFixFilename</a>(pfile,fname);
+<a name="line147">147: </a>    }
+
+<a name="line149">149: </a>    *fd = fopen(fname,<font color="#666666">"a"</font>);
+<a name="line150">150: </a>    <font color="#4169E1">if</font> (!fd) <a href="../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_FILE_OPEN,<font color="#666666">"Cannot open file: %s"</font>,fname);
+
+<a name="line152">152: </a>    <a href="../../../docs/manualpages/Sys/PetscFPrintf.html#PetscFPrintf">PetscFPrintf</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,*fd,<font color="#666666">"----------------------------------------\n"</font>);
+<a name="line153">153: </a>    <a href="../../../docs/manualpages/Sys/PetscFPrintf.html#PetscFPrintf">PetscFPrintf</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,*fd,<font color="#666666">"%s %s\n"</font>,version,date);
+<a name="line154">154: </a>    <a href="../../../docs/manualpages/Sys/PetscGetProgramName.html#PetscGetProgramName">PetscGetProgramName</a>(pname,<font color="#4169E1">sizeof</font>(pname));
+<a name="line155">155: </a>    <a href="../../../docs/manualpages/Sys/PetscFPrintf.html#PetscFPrintf">PetscFPrintf</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,*fd,<font color="#666666">"%s on a %s, %d proc. with options:\n"</font>,pname,arch,size);
+<a name="line156">156: </a>    <a href="../../../docs/manualpages/Sys/PetscFPrintf.html#PetscFPrintf">PetscFPrintf</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,*fd,<font color="#666666">"----------------------------------------\n"</font>);
+
+<a name="line158">158: </a>    err = fflush(*fd);
+<a name="line159">159: </a>    <font color="#4169E1">if</font> (err) <a href="../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_SYS,<font color="#666666">"fflush() failed on file"</font>);
+<a name="line160">160: </a>  }
+<a name="line161">161: </a>  <font color="#4169E1">return</font>(0);
+<a name="line162">162: </a>}
+
+<a name="line164">164: </a><strong><font color="#4169E1"><a name="PetscCloseHistoryFile"></a>PETSC_INTERN <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscCloseHistoryFile(FILE **fd)</font></strong>
+<a name="line165">165: </a>{
+<a name="line167">167: </a>  <a href="../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a>    rank;
+<a name="line168">168: </a>  char           date[64];
+<a name="line169">169: </a>  int            err;
+
+<a name="line172">172: </a>  <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_rank.html#MPI_Comm_rank">MPI_Comm_rank</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,&amp;rank);
+<a name="line173">173: </a>  <font color="#4169E1">if</font> (!rank) {
+<a name="line174">174: </a>    <a href="../../../docs/manualpages/Sys/PetscGetDate.html#PetscGetDate">PetscGetDate</a>(date,64);
+<a name="line175">175: </a>    <a href="../../../docs/manualpages/Sys/PetscFPrintf.html#PetscFPrintf">PetscFPrintf</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,*fd,<font color="#666666">"----------------------------------------\n"</font>);
+<a name="line176">176: </a>    <a href="../../../docs/manualpages/Sys/PetscFPrintf.html#PetscFPrintf">PetscFPrintf</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,*fd,<font color="#666666">"Finished at %s\n"</font>,date);
+<a name="line177">177: </a>    <a href="../../../docs/manualpages/Sys/PetscFPrintf.html#PetscFPrintf">PetscFPrintf</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,*fd,<font color="#666666">"----------------------------------------\n"</font>);
+<a name="line178">178: </a>    err  = fflush(*fd);
+<a name="line179">179: </a>    <font color="#4169E1">if</font> (err) <a href="../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_SYS,<font color="#666666">"fflush() failed on file"</font>);
+<a name="line180">180: </a>    err = fclose(*fd);
+<a name="line181">181: </a>    <font color="#4169E1">if</font> (err) <a href="../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_SYS,<font color="#666666">"fclose() failed on file"</font>);
+<a name="line182">182: </a>  }
+<a name="line183">183: </a>  <font color="#4169E1">return</font>(0);
+<a name="line184">184: </a>}
+
+<a name="line186">186: </a><font color="#B22222">/* ------------------------------------------------------------------------------*/</font>
+
+<a name="line188">188: </a><font color="#B22222">/*</font>
+<a name="line189">189: </a><font color="#B22222">   This is ugly and probably belongs somewhere else, but I want to</font>
+<a name="line190">190: </a><font color="#B22222">  be able to put a true MPI abort error handler with command line args.</font>
+
+<a name="line192">192: </a><font color="#B22222">    This is so MPI errors in the debugger will leave all the stack</font>
+<a name="line193">193: </a><font color="#B22222">  frames. The default MP_Abort() cleans up and exits thus providing no useful information</font>
+<a name="line194">194: </a><font color="#B22222">  in the debugger hence we call abort() instead of <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Abort.html#MPI_Abort">MPI_Abort</a>().</font>
+<a name="line195">195: </a><font color="#B22222">*/</font>
+
+<a name="line197">197: </a><strong><font color="#4169E1"><a name="Petsc_MPI_AbortOnError"></a>void Petsc_MPI_AbortOnError(<a href="../../../docs/manualpages/Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</a> *comm,<a href="../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a> *flag,...)</font></strong>
+<a name="line198">198: </a>{
+<a name="line200">200: </a>  (*<a href="../../../docs/manualpages/Sys/PetscErrorPrintf.html#PetscErrorPrintf">PetscErrorPrintf</a>)(<font color="#666666">"MPI error %d\n"</font>,*flag);
+<a name="line201">201: </a>  abort();
+<a name="line202">202: </a>}
+
+<a name="line204">204: </a><strong><font color="#4169E1"><a name="Petsc_MPI_DebuggerOnError"></a>void Petsc_MPI_DebuggerOnError(<a href="../../../docs/manualpages/Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</a> *comm,<a href="../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a> *flag,...)</font></strong>
+<a name="line205">205: </a>{
+
+<a name="line209">209: </a>  (*<a href="../../../docs/manualpages/Sys/PetscErrorPrintf.html#PetscErrorPrintf">PetscErrorPrintf</a>)(<font color="#666666">"MPI error %d\n"</font>,*flag);
+<a name="line210">210: </a>  <a href="../../../docs/manualpages/Sys/PetscAttachDebugger.html#PetscAttachDebugger">PetscAttachDebugger</a>();
+<a name="line211">211: </a>  <font color="#4169E1">if</font> (ierr) <a href="../../../docs/manualpages/Sys/PETSCABORT.html#PETSCABORT">PETSCABORT</a>(*comm,*flag); <font color="#B22222">/* hopeless so get out */</font>
+<a name="line212">212: </a>}
+
+<a name="line214">214: </a><font color="#B22222">/*@C</font>
+<a name="line215">215: </a><font color="#B22222">   <a href="../../../docs/manualpages/Sys/PetscEnd.html#PetscEnd">PetscEnd</a> - Calls <a href="../../../docs/manualpages/Sys/PetscFinalize.html#PetscFinalize">PetscFinalize</a>() and then ends the program. This is useful if one</font>
+<a name="line216">216: </a><font color="#B22222">     wishes a clean exit somewhere deep in the program.</font>
+
+<a name="line218">218: </a><font color="#B22222">   Collective on <a href="../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a></font>
+
+<a name="line220">220: </a><font color="#B22222">   Options Database Keys are the same as for <a href="../../../docs/manualpages/Sys/PetscFinalize.html#PetscFinalize">PetscFinalize</a>()</font>
+
+<a name="line222">222: </a><font color="#B22222">   Level: advanced</font>
+
+<a name="line224">224: </a><font color="#B22222">   Note:</font>
+<a name="line225">225: </a><font color="#B22222">   See <a href="../../../docs/manualpages/Sys/PetscInitialize.html#PetscInitialize">PetscInitialize</a>() for more general runtime options.</font>
+
+<a name="line227">227: </a><font color="#B22222">.seealso: <a href="../../../docs/manualpages/Sys/PetscInitialize.html#PetscInitialize">PetscInitialize</a>(), <a href="../../../docs/manualpages/Sys/PetscOptionsView.html#PetscOptionsView">PetscOptionsView</a>(), <a href="../../../docs/manualpages/Sys/PetscMallocDump.html#PetscMallocDump">PetscMallocDump</a>(), <a href="../../../docs/manualpages/Sys/PetscMPIDump.html#PetscMPIDump">PetscMPIDump</a>(), <a href="../../../docs/manualpages/Sys/PetscFinalize.html#PetscFinalize">PetscFinalize</a>()</font>
+<a name="line228">228: </a><font color="#B22222">@*/</font>
+<a name="line229">229: </a><strong><font color="#4169E1"><a name="PetscEnd"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  <a href="../../../docs/manualpages/Sys/PetscEnd.html#PetscEnd">PetscEnd</a>(void)</font></strong>
+<a name="line230">230: </a>{
+<a name="line232">232: </a>  <a href="../../../docs/manualpages/Sys/PetscFinalize.html#PetscFinalize">PetscFinalize</a>();
+<a name="line233">233: </a>  exit(0);
+<a name="line234">234: </a>  <font color="#4169E1">return</font> 0;
+<a name="line235">235: </a>}
+
+<a name="line237">237: </a><a href="../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> PetscOptionsPublish = <a href="../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line238">238: </a><strong><font color="#4169E1">PETSC_INTERN <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscSetUseHBWMalloc_Private(void)</font></strong>;
+<a name="line239">239: </a>PETSC_INTERN <a href="../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>      petscsetmallocvisited;
+<a name="line240">240: </a>static       char           emacsmachinename[256];
+
+<a name="line242">242: </a><strong><font color="#4169E1"><a name="etscErrorCode"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> (*PetscExternalVersionFunction)(<a href="../../../docs/manualpages/Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</a>)</font></strong> = NULL;
+<a name="line243">243: </a><strong><font color="#4169E1"><a name="etscErrorCode"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> (*PetscExternalHelpFunction)(<a href="../../../docs/manualpages/Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</a>)</font></strong>    = NULL;
+
+<a name="line245">245: </a><font color="#B22222">/*@C</font>
+<a name="line246">246: </a><font color="#B22222">   <a href="../../../docs/manualpages/Sys/PetscSetHelpVersionFunctions.html#PetscSetHelpVersionFunctions">PetscSetHelpVersionFunctions</a> - Sets functions that print help and version information</font>
+<a name="line247">247: </a><font color="#B22222">   before the PETSc help and version information is printed. Must call BEFORE <a href="../../../docs/manualpages/Sys/PetscInitialize.html#PetscInitialize">PetscInitialize</a>().</font>
+<a name="line248">248: </a><font color="#B22222">   This routine enables a "higher-level" package that uses PETSc to print its messages first.</font>
+
+<a name="line250">250: </a><font color="#B22222">   Input Parameter:</font>
+<a name="line251">251: </a><font color="#B22222">+  help - the help function (may be NULL)</font>
+<a name="line252">252: </a><font color="#B22222">-  version - the version function (may be NULL)</font>
+
+<a name="line254">254: </a><font color="#B22222">   Level: developer</font>
+
+<a name="line256">256: </a><font color="#B22222">@*/</font>
+<a name="line257">257: </a><strong><font color="#4169E1"><a name="PetscSetHelpVersionFunctions"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  <a href="../../../docs/manualpages/Sys/PetscSetHelpVersionFunctions.html#PetscSetHelpVersionFunctions">PetscSetHelpVersionFunctions</a>(<a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> (*help)(<a href="../../../docs/manualpages/Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</a>),<a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> (*version)(<a href="../../../docs/manualpages/Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</a>))</font></strong>
+<a name="line258">258: </a>{
+<a name="line260">260: </a>  PetscExternalHelpFunction    = help;
+<a name="line261">261: </a>  PetscExternalVersionFunction = version;
+<a name="line262">262: </a>  <font color="#4169E1">return</font>(0);
+<a name="line263">263: </a>}
+
+<a name="line265">265: </a><font color="#A020F0">#if defined(PETSC_USE_LOG)</font>
+<a name="line266">266: </a>PETSC_INTERN <a href="../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>   PetscObjectsLog;
+<a name="line267">267: </a><font color="#A020F0">#endif</font>
+
+<a name="line269">269: </a><strong><font color="#4169E1"><a name="PetscMPI_Comm_eh"></a>void PetscMPI_Comm_eh(<a href="../../../docs/manualpages/Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</a> *comm, <a href="../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a> *err, ...)</font></strong>
+<a name="line270">270: </a>{
+<a name="line271">271: </a>  <font color="#4169E1">if</font> (<a href="../../../docs/manualpages/Sys/PetscUnlikely.html#PetscUnlikely">PetscUnlikely</a>(*err)) {
+<a name="line272">272: </a>    PETSC_UNUSED <a href="../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a> len;
+<a name="line273">273: </a>    char                     errstring[MPI_MAX_ERROR_STRING];
+
+<a name="line275">275: </a>    <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Error_string.html#MPI_Error_string">MPI_Error_string</a>(*err,errstring,&amp;len);
+<a name="line276">276: </a>    <a href="../../../docs/manualpages/Sys/PetscError.html#PetscError">PetscError</a>(MPI_COMM_SELF,__LINE__,PETSC_FUNCTION_NAME,__FILE__,PETSC_MPI_ERROR_CODE,<a href="../../../docs/manualpages/Sys/PetscErrorType.html#PetscErrorType">PETSC_ERROR_INITIAL</a>,<font color="#666666">"Internal error in MPI: %s"</font>,errstring);
+<a name="line277">277: </a>  }
+<a name="line278">278: </a>  <font color="#4169E1">return</font>;
+<a name="line279">279: </a>}
+
+<a name="line281">281: </a><font color="#B22222">/* CUPM stands for 'CUDA Programming Model', which is implemented in either CUDA or HIP.</font>
+<a name="line282">282: </a><font color="#B22222">   Use the following macros to define CUDA/HIP initialization related vars/routines.</font>
+<a name="line283">283: </a><font color="#B22222"> */</font>
+<a name="line284">284: </a><font color="#A020F0">#if defined(PETSC_HAVE_CUDA)</font>
+<a name="line285">285: </a>  <font color="#4169E1">typedef</font> cudaError_t                             cupmError_t;
+<a name="line286">286: </a>  <font color="#4169E1">typedef</font> <font color="#4169E1">struct cudaDeviceProp</font>                   cupmDeviceProp;
+<a name="line287">287: </a><strong><font color="#228B22">  #define cupmGetDeviceCount(x)                   cudaGetDeviceCount(x)</font></strong>
+<a name="line288">288: </a><strong><font color="#228B22">  #define cupmGetDevice(x)                        cudaGetDevice(x)</font></strong>
+<a name="line289">289: </a><strong><font color="#228B22">  #define cupmSetDevice(x)                        cudaSetDevice(x)</font></strong>
+<a name="line290">290: </a><strong><font color="#228B22">  #define cupmSetDeviceFlags(x)                   cudaSetDeviceFlags(x)</font></strong>
+<a name="line291">291: </a><strong><font color="#228B22">  #define cupmGetDeviceProperties(x,y)            cudaGetDeviceProperties(x,y)</font></strong>
+<a name="line292">292: </a><strong><font color="#228B22">  #define cupmGetLastError()                      cudaGetLastError()</font></strong>
+<a name="line293">293: </a><strong><font color="#228B22">  #define cupmDeviceMapHost                       cudaDeviceMapHost</font></strong>
+<a name="line294">294: </a><strong><font color="#228B22">  #define cupmSuccess                             cudaSuccess</font></strong>
+<a name="line295">295: </a><strong><font color="#228B22">  #define cupmErrorMemoryAllocation               cudaErrorMemoryAllocation</font></strong>
+<a name="line296">296: </a><strong><font color="#228B22">  #define cupmErrorLaunchOutOfResources           cudaErrorLaunchOutOfResources</font></strong>
+<a name="line297">297: </a><strong><font color="#228B22">  #define cupmErrorSetOnActiveProcess             cudaErrorSetOnActiveProcess</font></strong>
+<a name="line298">298: </a><strong><font color="#228B22">  #define CHKERRCUPM(x)                           CHKERRCUDA(x)</font></strong>
+<a name="line299">299: </a><strong><font color="#228B22">  #define PetscCUPMBLASInitializeHandle()         PetscCUBLASInitializeHandle()</font></strong>
+<a name="line300">300: </a><strong><font color="#228B22">  #define PetscCUPMSOLVERDnInitializeHandle()     PetscCUSOLVERDnInitializeHandle()</font></strong>
+<a name="line301">301: </a><strong><font color="#228B22">  #define PetscCUPMInitialize                     <a href="../../../docs/manualpages/Sys/PetscCUDAInitialize.html#PetscCUDAInitialize">PetscCUDAInitialize</a></font></strong>
+<a name="line302">302: </a><strong><font color="#228B22">  #define PetscCUPMInitialized                    PetscCUDAInitialized</font></strong>
+<a name="line303">303: </a><strong><font color="#228B22">  #define PetscCUPMInitializeCheck                <a href="../../../docs/manualpages/Sys/PetscCUDAInitializeCheck.html#PetscCUDAInitializeCheck">PetscCUDAInitializeCheck</a></font></strong>
+<a name="line304">304: </a><strong><font color="#228B22">  #define PetscCUPMInitializeAndView              PetscCUDAInitializeAndView</font></strong>
+<a name="line305">305: </a><strong><font color="#228B22">  #define PetscCUPMSynchronize                    PetscCUDASynchronize</font></strong>
+<a name="line306">306: </a><strong><font color="#228B22">  #define PetscNotUseCUPM                         PetscNotUseCUDA</font></strong>
+<a name="line307">307: </a><strong><font color="#228B22">  #define cupmOptionsStr                          </font><font color="#666666">"CUDA options"</font><font color="#228B22"></font></strong>
+<a name="line308">308: </a><strong><font color="#228B22">  #define cupmSetDeviceStr                        </font><font color="#666666">"-cuda_device"</font><font color="#228B22"></font></strong>
+<a name="line309">309: </a><strong><font color="#228B22">  #define cupmViewStr                             </font><font color="#666666">"-cuda_view"</font><font color="#228B22"></font></strong>
+<a name="line310">310: </a><strong><font color="#228B22">  #define cupmSynchronizeStr                      </font><font color="#666666">"-cuda_synchronize"</font><font color="#228B22"></font></strong>
+<a name="line311">311: </a><strong><font color="#228B22">  #define PetscCUPMInitializeStr                  </font><font color="#666666">"<a href="../../../docs/manualpages/Sys/PetscCUDAInitialize.html#PetscCUDAInitialize">PetscCUDAInitialize</a>"</font><font color="#228B22"></font></strong>
+<a name="line312">312: </a><strong><font color="#228B22">  #define PetscOptionsCheckCUPM                   PetscOptionsCheckCUDA</font></strong>
+<a name="line313">313: </a><strong><font color="#228B22">  #define PetscMPICUPMAwarenessCheck              PetscMPICUDAAwarenessCheck</font></strong>
+<a name="line314">314: </a><font color="#A020F0">  #include </font><font color="#666666">"cupminit.inc"</font><font color="#A020F0"></font>
+<a name="line315">315: </a><font color="#A020F0">#endif</font>
+
+<a name="line317">317: </a><font color="#A020F0">#if defined(PETSC_HAVE_HIP)</font>
+<a name="line318">318: </a>  <font color="#4169E1">typedef</font> hipError_t                              cupmError_t;
+<a name="line319">319: </a>  <font color="#4169E1">typedef</font> hipDeviceProp_t                         cupmDeviceProp;
+<a name="line320">320: </a><strong><font color="#228B22">  #define cupmGetDeviceCount(x)                   hipGetDeviceCount(x)</font></strong>
+<a name="line321">321: </a><strong><font color="#228B22">  #define cupmGetDevice(x)                        hipGetDevice(x)</font></strong>
+<a name="line322">322: </a><strong><font color="#228B22">  #define cupmSetDevice(x)                        hipSetDevice(x)</font></strong>
+<a name="line323">323: </a><strong><font color="#228B22">  #define cupmSetDeviceFlags(x)                   hipSetDeviceFlags(x)</font></strong>
+<a name="line324">324: </a><strong><font color="#228B22">  #define cupmGetDeviceProperties(x,y)            hipGetDeviceProperties(x,y)</font></strong>
+<a name="line325">325: </a><strong><font color="#228B22">  #define cupmGetLastError()                      hipGetLastError()</font></strong>
+<a name="line326">326: </a><strong><font color="#228B22">  #define cupmDeviceMapHost                       hipDeviceMapHost</font></strong>
+<a name="line327">327: </a><strong><font color="#228B22">  #define cupmSuccess                             hipSuccess</font></strong>
+<a name="line328">328: </a><strong><font color="#228B22">  #define cupmErrorMemoryAllocation               hipErrorMemoryAllocation</font></strong>
+<a name="line329">329: </a><strong><font color="#228B22">  #define cupmErrorLaunchOutOfResources           hipErrorLaunchOutOfResources</font></strong>
+<a name="line330">330: </a><strong><font color="#228B22">  #define cupmErrorSetOnActiveProcess             hipErrorSetOnActiveProcess</font></strong>
+<a name="line331">331: </a><strong><font color="#228B22">  #define CHKERRCUPM(x)                           <a href="../../../docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a>((x)==hipSuccess? 0:PETSC_ERR_LIB)</font></strong>
+<a name="line332">332: </a><strong><font color="#228B22">  #define PetscCUPMBLASInitializeHandle()         0</font></strong>
+<a name="line333">333: </a><strong><font color="#228B22">  #define PetscCUPMSOLVERDnInitializeHandle()     0</font></strong>
+<a name="line334">334: </a><strong><font color="#228B22">  #define PetscCUPMInitialize                     <a href="../../../docs/manualpages/Sys/PetscHIPInitialize.html#PetscHIPInitialize">PetscHIPInitialize</a></font></strong>
+<a name="line335">335: </a><strong><font color="#228B22">  #define PetscCUPMInitialized                    PetscHIPInitialized</font></strong>
+<a name="line336">336: </a><strong><font color="#228B22">  #define PetscCUPMInitializeCheck                <a href="../../../docs/manualpages/Sys/PetscHIPInitializeCheck.html#PetscHIPInitializeCheck">PetscHIPInitializeCheck</a></font></strong>
+<a name="line337">337: </a><strong><font color="#228B22">  #define PetscCUPMInitializeAndView              PetscHIPInitializeAndView</font></strong>
+<a name="line338">338: </a><strong><font color="#228B22">  #define PetscCUPMSynchronize                    PetscHIPSynchronize</font></strong>
+<a name="line339">339: </a><strong><font color="#228B22">  #define PetscNotUseCUPM                         PetscNotUseHIP</font></strong>
+<a name="line340">340: </a><strong><font color="#228B22">  #define cupmOptionsStr                          </font><font color="#666666">"HIP options"</font><font color="#228B22"></font></strong>
+<a name="line341">341: </a><strong><font color="#228B22">  #define cupmSetDeviceStr                        </font><font color="#666666">"-hip_device"</font><font color="#228B22"></font></strong>
+<a name="line342">342: </a><strong><font color="#228B22">  #define cupmViewStr                             </font><font color="#666666">"-hip_view"</font><font color="#228B22"></font></strong>
+<a name="line343">343: </a><strong><font color="#228B22">  #define cupmSynchronizeStr                      </font><font color="#666666">"-hip_synchronize"</font><font color="#228B22"></font></strong>
+<a name="line344">344: </a><strong><font color="#228B22">  #define PetscCUPMInitializeStr                  </font><font color="#666666">"<a href="../../../docs/manualpages/Sys/PetscHIPInitialize.html#PetscHIPInitialize">PetscHIPInitialize</a>"</font><font color="#228B22"></font></strong>
+<a name="line345">345: </a><strong><font color="#228B22">  #define PetscOptionsCheckCUPM                   PetscOptionsCheckHIP</font></strong>
+<a name="line346">346: </a><strong><font color="#228B22">  #define PetscMPICUPMAwarenessCheck              PetscMPIHIPAwarenessCheck</font></strong>
+<a name="line347">347: </a><font color="#A020F0">  #include </font><font color="#666666">"cupminit.inc"</font><font color="#A020F0"></font>
+<a name="line348">348: </a><font color="#A020F0">#endif</font>
+
+<a name="line350">350: </a><strong><font color="#4169E1"><a name="PetscOptionsCheckInitial_Private"></a>PETSC_INTERN <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  PetscOptionsCheckInitial_Private(const char help[])</font></strong>
+<a name="line351">351: </a>{
+<a name="line352">352: </a>  char              string[64];
+<a name="line353">353: </a>  <a href="../../../docs/manualpages/Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</a>          comm = <a href="../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>;
+<a name="line354">354: </a>  <a href="../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>         flg1 = <a href="../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>,flg2 = <a href="../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>,flg3 = <a href="../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>,flag,hasHelp,logView;
+<a name="line355">355: </a>  <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>    ierr;
+<a name="line356">356: </a>  <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>         si;
+<a name="line357">357: </a>  <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>          intensity;
+<a name="line358">358: </a>  int               i;
+<a name="line359">359: </a>  <a href="../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a>       rank;
+<a name="line360">360: </a>  char              version[256];
+<a name="line361">361: </a><font color="#A020F0">#if defined(PETSC_USE_LOG)</font>
+<a name="line362">362: </a>  char              mname[PETSC_MAX_PATH_LEN];
+<a name="line363">363: </a>  <a href="../../../docs/manualpages/Viewer/PetscViewerFormat.html#PetscViewerFormat">PetscViewerFormat</a> format;
+<a name="line364">364: </a>  <a href="../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>         flg4 = <a href="../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line365">365: </a><font color="#A020F0">#endif</font>
+
+<a name="line368">368: </a>  <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_rank.html#MPI_Comm_rank">MPI_Comm_rank</a>(comm,&amp;rank);
+
+<a name="line370">370: </a><font color="#A020F0">#if !defined(PETSC_HAVE_THREADSAFETY)</font>
+<a name="line371">371: </a>  <font color="#4169E1">if</font> (!(PETSC_RUNNING_ON_VALGRIND)) {
+<a name="line372">372: </a>    <font color="#B22222">/*</font>
+<a name="line373">373: </a><font color="#B22222">      Setup the memory management; support for tracing malloc() usage</font>
+<a name="line374">374: </a><font color="#B22222">    */</font>
+<a name="line375">375: </a>    <a href="../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>         mdebug = <a href="../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>, eachcall = <a href="../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>, initializenan = <a href="../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>, mlog = <a href="../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+
+<a name="line377">377: </a>    <font color="#4169E1">if</font> (<a href="../../../docs/manualpages/Sys/PetscDefined.html#PetscDefined">PetscDefined</a>(USE_DEBUG)) {
+<a name="line378">378: </a>      mdebug        = <a href="../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>;
+<a name="line379">379: </a>      initializenan = <a href="../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>;
+<a name="line380">380: </a>      <a href="../../../docs/manualpages/Sys/PetscOptionsHasName.html#PetscOptionsHasName">PetscOptionsHasName</a>(NULL,NULL,<font color="#666666">"-malloc_test"</font>,&amp;flg1);
+<a name="line381">381: </a>    } <font color="#4169E1">else</font> {
+<a name="line382">382: </a>      <font color="#B22222">/* don't warn about unused option */</font>
+<a name="line383">383: </a>      <a href="../../../docs/manualpages/Sys/PetscOptionsHasName.html#PetscOptionsHasName">PetscOptionsHasName</a>(NULL,NULL,<font color="#666666">"-malloc_test"</font>,&amp;flg1);
+<a name="line384">384: </a>      flg1 = <a href="../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line385">385: </a>    }
+<a name="line386">386: </a>    <a href="../../../docs/manualpages/Sys/PetscOptionsGetBool.html#PetscOptionsGetBool">PetscOptionsGetBool</a>(NULL,NULL,<font color="#666666">"-malloc_debug"</font>,&amp;flg2,&amp;flg3);
+<a name="line387">387: </a>    <font color="#4169E1">if</font> (flg1 || flg2) {
+<a name="line388">388: </a>      mdebug        = <a href="../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>;
+<a name="line389">389: </a>      eachcall      = <a href="../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>;
+<a name="line390">390: </a>      initializenan = <a href="../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>;
+<a name="line391">391: </a>    } <font color="#4169E1">else</font> <font color="#4169E1">if</font> (flg3 &amp;&amp; !flg2) {
+<a name="line392">392: </a>      mdebug        = <a href="../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line393">393: </a>      eachcall      = <a href="../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line394">394: </a>      initializenan = <a href="../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line395">395: </a>    }
+
+<a name="line397">397: </a>    <a href="../../../docs/manualpages/Sys/PetscOptionsGetBool.html#PetscOptionsGetBool">PetscOptionsGetBool</a>(NULL,NULL,<font color="#666666">"-malloc_requested_size"</font>,&amp;flg1,&amp;flg2);
+<a name="line398">398: </a>    <font color="#4169E1">if</font> (flg2) {<a href="../../../docs/manualpages/Sys/PetscMallocLogRequestedSizeSet.html#PetscMallocLogRequestedSizeSet">PetscMallocLogRequestedSizeSet</a>(flg1);}
+
+<a name="line400">400: </a>    <a href="../../../docs/manualpages/Sys/PetscOptionsHasName.html#PetscOptionsHasName">PetscOptionsHasName</a>(NULL,NULL,<font color="#666666">"-malloc_view"</font>,&amp;mlog);
+<a name="line401">401: </a>    <font color="#4169E1">if</font> (mlog) {
+<a name="line402">402: </a>      mdebug = <a href="../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>;
+<a name="line403">403: </a>    }
+<a name="line404">404: </a>    <font color="#B22222">/* the next line is deprecated */</font>
+<a name="line405">405: </a>    <a href="../../../docs/manualpages/Sys/PetscOptionsGetBool.html#PetscOptionsGetBool">PetscOptionsGetBool</a>(NULL,NULL,<font color="#666666">"-malloc"</font>,&amp;mdebug,NULL);
+<a name="line406">406: </a>    <a href="../../../docs/manualpages/Sys/PetscOptionsGetBool.html#PetscOptionsGetBool">PetscOptionsGetBool</a>(NULL,NULL,<font color="#666666">"-malloc_dump"</font>,&amp;mdebug,NULL);
+<a name="line407">407: </a>    <a href="../../../docs/manualpages/Sys/PetscOptionsGetBool.html#PetscOptionsGetBool">PetscOptionsGetBool</a>(NULL,NULL,<font color="#666666">"-log_view_memory"</font>,&amp;mdebug,NULL);
+<a name="line408">408: </a>    <font color="#4169E1">if</font> (mdebug) {
+<a name="line409">409: </a>      <a href="../../../docs/manualpages/Sys/PetscMallocSetDebug.html#PetscMallocSetDebug">PetscMallocSetDebug</a>(eachcall,initializenan);
+<a name="line410">410: </a>    }
+<a name="line411">411: </a>    <font color="#4169E1">if</font> (mlog) {
+<a name="line412">412: </a>      <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> logthreshold = 0;
+<a name="line413">413: </a>      <a href="../../../docs/manualpages/Sys/PetscOptionsGetReal.html#PetscOptionsGetReal">PetscOptionsGetReal</a>(NULL,NULL,<font color="#666666">"-malloc_view_threshold"</font>,&amp;logthreshold,NULL);
+<a name="line414">414: </a>      <a href="../../../docs/manualpages/Sys/PetscMallocViewSet.html#PetscMallocViewSet">PetscMallocViewSet</a>(logthreshold);
+<a name="line415">415: </a>    }
+<a name="line416">416: </a><font color="#A020F0">#if defined(PETSC_USE_LOG)</font>
+<a name="line417">417: </a>    <a href="../../../docs/manualpages/Sys/PetscOptionsGetBool.html#PetscOptionsGetBool">PetscOptionsGetBool</a>(NULL,NULL,<font color="#666666">"-log_view_memory"</font>,&amp;PetscLogMemory,NULL);
+<a name="line418">418: </a><font color="#A020F0">#endif</font>
+<a name="line419">419: </a>  }
+
+<a name="line421">421: </a>  <a href="../../../docs/manualpages/Sys/PetscOptionsGetBool.html#PetscOptionsGetBool">PetscOptionsGetBool</a>(NULL,NULL,<font color="#666666">"-malloc_coalesce"</font>,&amp;flg1,&amp;flg2);
+<a name="line422">422: </a>  <font color="#4169E1">if</font> (flg2) {<a href="../../../docs/manualpages/Sys/PetscMallocSetCoalesce.html#PetscMallocSetCoalesce">PetscMallocSetCoalesce</a>(flg1);}
+<a name="line423">423: </a>  flg1 = <a href="../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line424">424: </a>  <a href="../../../docs/manualpages/Sys/PetscOptionsGetBool.html#PetscOptionsGetBool">PetscOptionsGetBool</a>(NULL,NULL,<font color="#666666">"-malloc_hbw"</font>,&amp;flg1,NULL);
+<a name="line425">425: </a>  <font color="#B22222">/* ignore this option if malloc is already set */</font>
+<a name="line426">426: </a>  <font color="#4169E1">if</font> (flg1 &amp;&amp; !petscsetmallocvisited) {PetscSetUseHBWMalloc_Private();}
+
+<a name="line428">428: </a>  flg1 = <a href="../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line429">429: </a>  <a href="../../../docs/manualpages/Sys/PetscOptionsGetBool.html#PetscOptionsGetBool">PetscOptionsGetBool</a>(NULL,NULL,<font color="#666666">"-malloc_info"</font>,&amp;flg1,NULL);
+<a name="line430">430: </a>  <font color="#4169E1">if</font> (!flg1) {
+<a name="line431">431: </a>    flg1 = <a href="../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line432">432: </a>    <a href="../../../docs/manualpages/Sys/PetscOptionsGetBool.html#PetscOptionsGetBool">PetscOptionsGetBool</a>(NULL,NULL,<font color="#666666">"-memory_view"</font>,&amp;flg1,NULL);
+<a name="line433">433: </a>  }
+<a name="line434">434: </a>  <font color="#4169E1">if</font> (flg1) {
+<a name="line435">435: </a>    <a href="../../../docs/manualpages/Sys/PetscMemorySetGetMaximumUsage.html#PetscMemorySetGetMaximumUsage">PetscMemorySetGetMaximumUsage</a>();
+<a name="line436">436: </a>  }
+<a name="line437">437: </a><font color="#A020F0">#endif</font>
+
+<a name="line439">439: </a><font color="#A020F0">#if defined(PETSC_USE_LOG)</font>
+<a name="line440">440: </a>  <a href="../../../docs/manualpages/Sys/PetscOptionsHasName.html#PetscOptionsHasName">PetscOptionsHasName</a>(NULL,NULL,<font color="#666666">"-objects_dump"</font>,&amp;PetscObjectsLog);
+<a name="line441">441: </a><font color="#A020F0">#endif</font>
+
+<a name="line443">443: </a>  <font color="#B22222">/*</font>
+<a name="line444">444: </a><font color="#B22222">      Set the display variable for graphics</font>
+<a name="line445">445: </a><font color="#B22222">  */</font>
+<a name="line446">446: </a>  PetscSetDisplay();
+
+<a name="line448">448: </a>  <font color="#B22222">/*</font>
+<a name="line449">449: </a><font color="#B22222">     Print main application help message</font>
+<a name="line450">450: </a><font color="#B22222">  */</font>
+<a name="line451">451: </a>  <a href="../../../docs/manualpages/Sys/PetscOptionsHasHelp.html#PetscOptionsHasHelp">PetscOptionsHasHelp</a>(NULL,&amp;hasHelp);
+<a name="line452">452: </a>  <font color="#4169E1">if</font> (help &amp;&amp; hasHelp) {
+<a name="line453">453: </a>    <a href="../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(comm,help);
+<a name="line454">454: </a>    <a href="../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(comm,<font color="#666666">"----------------------------------------\n"</font>);
+<a name="line455">455: </a>  }
+
+<a name="line457">457: </a>  <font color="#B22222">/*</font>
+<a name="line458">458: </a><font color="#B22222">      Print the PETSc version information</font>
+<a name="line459">459: </a><font color="#B22222">  */</font>
+<a name="line460">460: </a>  <a href="../../../docs/manualpages/Sys/PetscOptionsHasName.html#PetscOptionsHasName">PetscOptionsHasName</a>(NULL,NULL,<font color="#666666">"-version"</font>,&amp;flg1);
+<a name="line461">461: </a>  <font color="#4169E1">if</font> (flg1 || hasHelp) {
+<a name="line462">462: </a>    <font color="#B22222">/*</font>
+<a name="line463">463: </a><font color="#B22222">       Print "higher-level" package version message</font>
+<a name="line464">464: </a><font color="#B22222">    */</font>
+<a name="line465">465: </a>    <font color="#4169E1">if</font> (PetscExternalVersionFunction) {
+<a name="line466">466: </a>      (*PetscExternalVersionFunction)(comm);
+<a name="line467">467: </a>    }
+
+<a name="line469">469: </a>    <a href="../../../docs/manualpages/Sys/PetscGetVersion.html#PetscGetVersion">PetscGetVersion</a>(version,256);
+<a name="line470">470: </a>    (*<a href="../../../docs/manualpages/Sys/PetscHelpPrintf.html#PetscHelpPrintf">PetscHelpPrintf</a>)(comm,<font color="#666666">"%s\n"</font>,version);
+<a name="line471">471: </a>    (*<a href="../../../docs/manualpages/Sys/PetscHelpPrintf.html#PetscHelpPrintf">PetscHelpPrintf</a>)(comm,<font color="#666666">"%s"</font>,PETSC_AUTHOR_INFO);
+<a name="line472">472: </a>    (*<a href="../../../docs/manualpages/Sys/PetscHelpPrintf.html#PetscHelpPrintf">PetscHelpPrintf</a>)(comm,<font color="#666666">"See docs/changes/index.html for recent updates.\n"</font>);
+<a name="line473">473: </a>    (*<a href="../../../docs/manualpages/Sys/PetscHelpPrintf.html#PetscHelpPrintf">PetscHelpPrintf</a>)(comm,<font color="#666666">"See docs/faq.html for problems.\n"</font>);
+<a name="line474">474: </a>    (*<a href="../../../docs/manualpages/Sys/PetscHelpPrintf.html#PetscHelpPrintf">PetscHelpPrintf</a>)(comm,<font color="#666666">"See docs/manualpages/index.html for help. \n"</font>);
+<a name="line475">475: </a>    (*<a href="../../../docs/manualpages/Sys/PetscHelpPrintf.html#PetscHelpPrintf">PetscHelpPrintf</a>)(comm,<font color="#666666">"Libraries linked from %s\n"</font>,PETSC_LIB_DIR);
+<a name="line476">476: </a>    (*<a href="../../../docs/manualpages/Sys/PetscHelpPrintf.html#PetscHelpPrintf">PetscHelpPrintf</a>)(comm,<font color="#666666">"----------------------------------------\n"</font>);
+<a name="line477">477: </a>  }
+
+<a name="line479">479: </a>  <font color="#B22222">/*</font>
+<a name="line480">480: </a><font color="#B22222">       Print "higher-level" package help message</font>
+<a name="line481">481: </a><font color="#B22222">  */</font>
+<a name="line482">482: </a>  <font color="#4169E1">if</font> (hasHelp) {
+<a name="line483">483: </a>    <a href="../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> hasHelpIntro;
+
+<a name="line485">485: </a>    <font color="#4169E1">if</font> (PetscExternalHelpFunction) {
+<a name="line486">486: </a>      (*PetscExternalHelpFunction)(comm);
+<a name="line487">487: </a>    }
+<a name="line488">488: </a>    PetscOptionsHasHelpIntro_Internal(NULL,&amp;hasHelpIntro);
+<a name="line489">489: </a>    <font color="#4169E1">if</font> (hasHelpIntro) {
+<a name="line490">490: </a>      PetscOptionsDestroyDefault();
+<a name="line491">491: </a>      PetscFreeMPIResources();
+<a name="line492">492: </a>      <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Finalize.html#MPI_Finalize">MPI_Finalize</a>();
+<a name="line493">493: </a>      exit(0);
+<a name="line494">494: </a>    }
+<a name="line495">495: </a>  }
+
+<a name="line497">497: </a>  <font color="#B22222">/*</font>
+<a name="line498">498: </a><font color="#B22222">      Setup the error handling</font>
+<a name="line499">499: </a><font color="#B22222">  */</font>
+<a name="line500">500: </a>  flg1 = <a href="../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line501">501: </a>  <a href="../../../docs/manualpages/Sys/PetscOptionsGetBool.html#PetscOptionsGetBool">PetscOptionsGetBool</a>(NULL,NULL,<font color="#666666">"-on_error_abort"</font>,&amp;flg1,NULL);
+<a name="line502">502: </a>  <font color="#4169E1">if</font> (flg1) {
+<a name="line503">503: </a>    <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_set_errhandler.html#MPI_Comm_set_errhandler">MPI_Comm_set_errhandler</a>(comm,MPI_ERRORS_ARE_FATAL);
+<a name="line504">504: </a>    <a href="../../../docs/manualpages/Sys/PetscPushErrorHandler.html#PetscPushErrorHandler">PetscPushErrorHandler</a>(<a href="../../../docs/manualpages/Sys/PetscAbortErrorHandler.html#PetscAbortErrorHandler">PetscAbortErrorHandler</a>,NULL);
+<a name="line505">505: </a>  }
+<a name="line506">506: </a>  flg1 = <a href="../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line507">507: </a>  <a href="../../../docs/manualpages/Sys/PetscOptionsGetBool.html#PetscOptionsGetBool">PetscOptionsGetBool</a>(NULL,NULL,<font color="#666666">"-on_error_mpiabort"</font>,&amp;flg1,NULL);
+<a name="line508">508: </a>  <font color="#4169E1">if</font> (flg1) { <a href="../../../docs/manualpages/Sys/PetscPushErrorHandler.html#PetscPushErrorHandler">PetscPushErrorHandler</a>(<a href="../../../docs/manualpages/Sys/PetscMPIAbortErrorHandler.html#PetscMPIAbortErrorHandler">PetscMPIAbortErrorHandler</a>,NULL);}
+<a name="line509">509: </a>  flg1 = <a href="../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line510">510: </a>  <a href="../../../docs/manualpages/Sys/PetscOptionsGetBool.html#PetscOptionsGetBool">PetscOptionsGetBool</a>(NULL,NULL,<font color="#666666">"-mpi_return_on_error"</font>,&amp;flg1,NULL);
+<a name="line511">511: </a>  <font color="#4169E1">if</font> (flg1) {
+<a name="line512">512: </a>    <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_set_errhandler.html#MPI_Comm_set_errhandler">MPI_Comm_set_errhandler</a>(comm,MPI_ERRORS_RETURN);
+<a name="line513">513: </a>  }
+<a name="line514">514: </a>  <font color="#B22222">/* experimental */</font>
+<a name="line515">515: </a>  flg1 = <a href="../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line516">516: </a>  <a href="../../../docs/manualpages/Sys/PetscOptionsGetBool.html#PetscOptionsGetBool">PetscOptionsGetBool</a>(NULL,NULL,<font color="#666666">"-mpi_return_error_string"</font>,&amp;flg1,NULL);
+<a name="line517">517: </a>  <font color="#4169E1">if</font> (flg1) {
+<a name="line518">518: </a>    MPI_Errhandler eh;
+
+<a name="line520">520: </a>    <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_create_errhandler.html#MPI_Comm_create_errhandler">MPI_Comm_create_errhandler</a>(PetscMPI_Comm_eh,&amp;eh);
+<a name="line521">521: </a>    <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_set_errhandler.html#MPI_Comm_set_errhandler">MPI_Comm_set_errhandler</a>(comm,eh);
+<a name="line522">522: </a>    <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Errhandler_free.html#MPI_Errhandler_free">MPI_Errhandler_free</a>(&amp;eh);
+<a name="line523">523: </a>  }
+<a name="line524">524: </a>  flg1 = <a href="../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line525">525: </a>  <a href="../../../docs/manualpages/Sys/PetscOptionsGetBool.html#PetscOptionsGetBool">PetscOptionsGetBool</a>(NULL,NULL,<font color="#666666">"-no_signal_handler"</font>,&amp;flg1,NULL);
+<a name="line526">526: </a>  <font color="#4169E1">if</font> (!flg1) {<a href="../../../docs/manualpages/Sys/PetscPushSignalHandler.html#PetscPushSignalHandler">PetscPushSignalHandler</a>(<a href="../../../docs/manualpages/Sys/PetscSignalHandlerDefault.html#PetscSignalHandlerDefault">PetscSignalHandlerDefault</a>,(void*)0);}
+
+<a name="line528">528: </a>  <font color="#B22222">/*</font>
+<a name="line529">529: </a><font color="#B22222">      Setup debugger information</font>
+<a name="line530">530: </a><font color="#B22222">  */</font>
+<a name="line531">531: </a>  <a href="../../../docs/manualpages/Sys/PetscSetDefaultDebugger.html#PetscSetDefaultDebugger">PetscSetDefaultDebugger</a>();
+<a name="line532">532: </a>  <a href="../../../docs/manualpages/Sys/PetscOptionsGetString.html#PetscOptionsGetString">PetscOptionsGetString</a>(NULL,NULL,<font color="#666666">"-on_error_attach_debugger"</font>,string,<font color="#4169E1">sizeof</font>(string),&amp;flg1);
+<a name="line533">533: </a>  <font color="#4169E1">if</font> (flg1) {
+<a name="line534">534: </a>    MPI_Errhandler err_handler;
+
+<a name="line536">536: </a>    <a href="../../../docs/manualpages/Sys/PetscSetDebuggerFromString.html#PetscSetDebuggerFromString">PetscSetDebuggerFromString</a>(string);
+<a name="line537">537: </a>    <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_create_errhandler.html#MPI_Comm_create_errhandler">MPI_Comm_create_errhandler</a>(Petsc_MPI_DebuggerOnError,&amp;err_handler);
+<a name="line538">538: </a>    <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_set_errhandler.html#MPI_Comm_set_errhandler">MPI_Comm_set_errhandler</a>(comm,err_handler);
+<a name="line539">539: </a>    <a href="../../../docs/manualpages/Sys/PetscPushErrorHandler.html#PetscPushErrorHandler">PetscPushErrorHandler</a>(<a href="../../../docs/manualpages/Sys/PetscAttachDebuggerErrorHandler.html#PetscAttachDebuggerErrorHandler">PetscAttachDebuggerErrorHandler</a>,NULL);
+<a name="line540">540: </a>  }
+<a name="line541">541: </a>  <a href="../../../docs/manualpages/Sys/PetscOptionsGetString.html#PetscOptionsGetString">PetscOptionsGetString</a>(NULL,NULL,<font color="#666666">"-debug_terminal"</font>,string,<font color="#4169E1">sizeof</font>(string),&amp;flg1);
+<a name="line542">542: </a>  <font color="#4169E1">if</font> (flg1) { <a href="../../../docs/manualpages/Sys/PetscSetDebugTerminal.html#PetscSetDebugTerminal">PetscSetDebugTerminal</a>(string); }
+<a name="line543">543: </a>  <a href="../../../docs/manualpages/Sys/PetscOptionsGetString.html#PetscOptionsGetString">PetscOptionsGetString</a>(NULL,NULL,<font color="#666666">"-start_in_debugger"</font>,string,<font color="#4169E1">sizeof</font>(string),&amp;flg1);
+<a name="line544">544: </a>  <a href="../../../docs/manualpages/Sys/PetscOptionsGetString.html#PetscOptionsGetString">PetscOptionsGetString</a>(NULL,NULL,<font color="#666666">"-stop_for_debugger"</font>,string,<font color="#4169E1">sizeof</font>(string),&amp;flg2);
+<a name="line545">545: </a>  <font color="#4169E1">if</font> (flg1 || flg2) {
+<a name="line546">546: </a>    <a href="../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a>    size;
+<a name="line547">547: </a>    <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       lsize,*ranks;
+<a name="line548">548: </a>    MPI_Errhandler err_handler;
+<a name="line549">549: </a>    <font color="#B22222">/*</font>
+<a name="line550">550: </a><font color="#B22222">       we have to make sure that all processors have opened</font>
+<a name="line551">551: </a><font color="#B22222">       connections to all other processors, otherwise once the</font>
+<a name="line552">552: </a><font color="#B22222">       debugger has stated it is likely to receive a SIGUSR1</font>
+<a name="line553">553: </a><font color="#B22222">       and kill the program.</font>
+<a name="line554">554: </a><font color="#B22222">    */</font>
+<a name="line555">555: </a>    <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_size.html#MPI_Comm_size">MPI_Comm_size</a>(comm,&amp;size);
+<a name="line556">556: </a>    <font color="#4169E1">if</font> (size &gt; 2) {
+<a name="line557">557: </a>      <a href="../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a> dummy = 0;
+<a name="line558">558: </a>      MPI_Status  status;
+<a name="line559">559: </a>      <font color="#4169E1">for</font> (i=0; i&lt;size; i++) {
+<a name="line560">560: </a>        <font color="#4169E1">if</font> (rank != i) {
+<a name="line561">561: </a>          <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Send.html#MPI_Send">MPI_Send</a>(&amp;dummy,1,MPI_INT,i,109,comm);
+<a name="line562">562: </a>        }
+<a name="line563">563: </a>      }
+<a name="line564">564: </a>      <font color="#4169E1">for</font> (i=0; i&lt;size; i++) {
+<a name="line565">565: </a>        <font color="#4169E1">if</font> (rank != i) {
+<a name="line566">566: </a>          <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Recv.html#MPI_Recv">MPI_Recv</a>(&amp;dummy,1,MPI_INT,i,109,comm,&amp;status);
+<a name="line567">567: </a>        }
+<a name="line568">568: </a>      }
+<a name="line569">569: </a>    }
+<a name="line570">570: </a>    <font color="#B22222">/* check if this processor node should be in debugger */</font>
+<a name="line571">571: </a>    <a href="../../../docs/manualpages/Sys/PetscMalloc1.html#PetscMalloc1">PetscMalloc1</a>(size,&amp;ranks);
+<a name="line572">572: </a>    lsize = size;
+<a name="line573">573: </a>    <font color="#B22222">/* Deprecated in 3.14 */</font>
+<a name="line574">574: </a>    <a href="../../../docs/manualpages/Sys/PetscOptionsGetIntArray.html#PetscOptionsGetIntArray">PetscOptionsGetIntArray</a>(NULL,NULL,<font color="#666666">"-debugger_nodes"</font>,ranks,&amp;lsize,&amp;flag);
+<a name="line575">575: </a>    <font color="#4169E1">if</font> (flag) {
+<a name="line576">576: </a>      const char * const quietopt=<font color="#666666">"-options_suppress_deprecated_warnings"</font>;
+<a name="line577">577: </a>      char               msg[4096];
+<a name="line578">578: </a>      <a href="../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>          quiet = <a href="../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+
+<a name="line580">580: </a>      <a href="../../../docs/manualpages/Sys/PetscOptionsGetBool.html#PetscOptionsGetBool">PetscOptionsGetBool</a>(NULL,NULL,quietopt,&amp;quiet,NULL);
+<a name="line581">581: </a>      <font color="#4169E1">if</font> (!quiet) {
+<a name="line582">582: </a>        <a href="../../../docs/manualpages/Sys/PetscStrcpy.html#PetscStrcpy">PetscStrcpy</a>(msg,<font color="#666666">"** PETSc DEPRECATION WARNING ** : the option "</font>);
+<a name="line583">583: </a>        <a href="../../../docs/manualpages/Sys/PetscStrcat.html#PetscStrcat">PetscStrcat</a>(msg,<font color="#666666">"-debugger_nodes"</font>);
+<a name="line584">584: </a>        <a href="../../../docs/manualpages/Sys/PetscStrcat.html#PetscStrcat">PetscStrcat</a>(msg,<font color="#666666">" is deprecated as of version "</font>);
+<a name="line585">585: </a>        <a href="../../../docs/manualpages/Sys/PetscStrcat.html#PetscStrcat">PetscStrcat</a>(msg,<font color="#666666">"3.14"</font>);
+<a name="line586">586: </a>        <a href="../../../docs/manualpages/Sys/PetscStrcat.html#PetscStrcat">PetscStrcat</a>(msg,<font color="#666666">" and will be removed in a future release."</font>);
+<a name="line587">587: </a>        <a href="../../../docs/manualpages/Sys/PetscStrcat.html#PetscStrcat">PetscStrcat</a>(msg,<font color="#666666">" Please use the option "</font>);
+<a name="line588">588: </a>        <a href="../../../docs/manualpages/Sys/PetscStrcat.html#PetscStrcat">PetscStrcat</a>(msg,<font color="#666666">"-debugger_ranks"</font>);
+<a name="line589">589: </a>        <a href="../../../docs/manualpages/Sys/PetscStrcat.html#PetscStrcat">PetscStrcat</a>(msg,<font color="#666666">" instead."</font>);
+<a name="line590">590: </a>        <a href="../../../docs/manualpages/Sys/PetscStrcat.html#PetscStrcat">PetscStrcat</a>(msg,<font color="#666666">" (Silence this warning with "</font>);
+<a name="line591">591: </a>        <a href="../../../docs/manualpages/Sys/PetscStrcat.html#PetscStrcat">PetscStrcat</a>(msg,quietopt);
+<a name="line592">592: </a>        <a href="../../../docs/manualpages/Sys/PetscStrcat.html#PetscStrcat">PetscStrcat</a>(msg,<font color="#666666">")\n"</font>);
+<a name="line593">593: </a>        <a href="../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(comm,msg);
+<a name="line594">594: </a>      }
+<a name="line595">595: </a>    } <font color="#4169E1">else</font> {
+<a name="line596">596: </a>      lsize = size;
+<a name="line597">597: </a>      <a href="../../../docs/manualpages/Sys/PetscOptionsGetIntArray.html#PetscOptionsGetIntArray">PetscOptionsGetIntArray</a>(NULL,NULL,<font color="#666666">"-debugger_ranks"</font>,ranks,&amp;lsize,&amp;flag);
+<a name="line598">598: </a>    }
+<a name="line599">599: </a>    <font color="#4169E1">if</font> (flag) {
+<a name="line600">600: </a>      <font color="#4169E1">for</font> (i=0; i&lt;lsize; i++) {
+<a name="line601">601: </a>        <font color="#4169E1">if</font> (ranks[i] == rank) { flag = <a href="../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>; <font color="#4169E1">break</font>; }
+<a name="line602">602: </a>      }
+<a name="line603">603: </a>    }
+<a name="line604">604: </a>    <font color="#4169E1">if</font> (!flag) {
+<a name="line605">605: </a>      <a href="../../../docs/manualpages/Sys/PetscSetDebuggerFromString.html#PetscSetDebuggerFromString">PetscSetDebuggerFromString</a>(string);
+<a name="line606">606: </a>      <a href="../../../docs/manualpages/Sys/PetscPushErrorHandler.html#PetscPushErrorHandler">PetscPushErrorHandler</a>(<a href="../../../docs/manualpages/Sys/PetscAbortErrorHandler.html#PetscAbortErrorHandler">PetscAbortErrorHandler</a>,NULL);
+<a name="line607">607: </a>      <font color="#4169E1">if</font> (flg1) {
+<a name="line608">608: </a>        <a href="../../../docs/manualpages/Sys/PetscAttachDebugger.html#PetscAttachDebugger">PetscAttachDebugger</a>();
+<a name="line609">609: </a>      } <font color="#4169E1">else</font> {
+<a name="line610">610: </a>        <a href="../../../docs/manualpages/Sys/PetscStopForDebugger.html#PetscStopForDebugger">PetscStopForDebugger</a>();
+<a name="line611">611: </a>      }
+<a name="line612">612: </a>      <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_create_errhandler.html#MPI_Comm_create_errhandler">MPI_Comm_create_errhandler</a>(Petsc_MPI_AbortOnError,&amp;err_handler);
+<a name="line613">613: </a>      <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_set_errhandler.html#MPI_Comm_set_errhandler">MPI_Comm_set_errhandler</a>(comm,err_handler);
+<a name="line614">614: </a>    } <font color="#4169E1">else</font> {
+<a name="line615">615: </a>      <a href="../../../docs/manualpages/Sys/PetscWaitOnError.html#PetscWaitOnError">PetscWaitOnError</a>();
+<a name="line616">616: </a>    }
+<a name="line617">617: </a>    <a href="../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(ranks);
+<a name="line618">618: </a>  }
+
+<a name="line620">620: </a>  <a href="../../../docs/manualpages/Sys/PetscOptionsGetString.html#PetscOptionsGetString">PetscOptionsGetString</a>(NULL,NULL,<font color="#666666">"-on_error_emacs"</font>,emacsmachinename,<font color="#4169E1">sizeof</font>(emacsmachinename),&amp;flg1);
+<a name="line621">621: </a>  <font color="#4169E1">if</font> (flg1 &amp;&amp; !rank) {<a href="../../../docs/manualpages/Sys/PetscPushErrorHandler.html#PetscPushErrorHandler">PetscPushErrorHandler</a>(<a href="../../../docs/manualpages/Sys/PetscEmacsClientErrorHandler.html#PetscEmacsClientErrorHandler">PetscEmacsClientErrorHandler</a>,emacsmachinename);}
+
+<a name="line623">623: </a>  <font color="#B22222">/*</font>
+<a name="line624">624: </a><font color="#B22222">        Setup profiling and logging</font>
+<a name="line625">625: </a><font color="#B22222">  */</font>
+<a name="line626">626: </a><font color="#A020F0">#if defined(PETSC_USE_INFO)</font>
+<a name="line627">627: </a>  {
+<a name="line628">628: </a>    <a href="../../../docs/manualpages/Profiling/PetscInfoSetFromOptions.html#PetscInfoSetFromOptions">PetscInfoSetFromOptions</a>(NULL);
+<a name="line629">629: </a>  }
+<a name="line630">630: </a><font color="#A020F0">#endif</font>
+<a name="line631">631: </a>  <a href="../../../docs/manualpages/Sys/PetscDetermineInitialFPTrap.html#PetscDetermineInitialFPTrap">PetscDetermineInitialFPTrap</a>();
+<a name="line632">632: </a>  flg1 = <a href="../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line633">633: </a>  <a href="../../../docs/manualpages/Sys/PetscOptionsGetBool.html#PetscOptionsGetBool">PetscOptionsGetBool</a>(NULL,NULL,<font color="#666666">"-fp_trap"</font>,&amp;flg1,&amp;flag);
+<a name="line634">634: </a>  <font color="#4169E1">if</font> (flag) {<a href="../../../docs/manualpages/Sys/PetscSetFPTrap.html#PetscSetFPTrap">PetscSetFPTrap</a>((PetscFPTrap)flg1);}
+<a name="line635">635: </a>  <a href="../../../docs/manualpages/Sys/PetscOptionsGetInt.html#PetscOptionsGetInt">PetscOptionsGetInt</a>(NULL,NULL,<font color="#666666">"-check_pointer_intensity"</font>,&amp;intensity,&amp;flag);
+<a name="line637">637: </a><font color="#A020F0">#if defined(PETSC_USE_LOG)</font>
+<a name="line638">638: </a>  mname[0] = 0;
+<a name="line639">639: </a>  <a href="../../../docs/manualpages/Sys/PetscOptionsGetString.html#PetscOptionsGetString">PetscOptionsGetString</a>(NULL,NULL,<font color="#666666">"-history"</font>,mname,<font color="#4169E1">sizeof</font>(mname),&amp;flg1);
+<a name="line640">640: </a>  <font color="#4169E1">if</font> (flg1) {
+<a name="line641">641: </a>    <font color="#4169E1">if</font> (mname[0]) {
+<a name="line642">642: </a>      PetscOpenHistoryFile(mname,&amp;petsc_history);
+<a name="line643">643: </a>    } <font color="#4169E1">else</font> {
+<a name="line644">644: </a>      PetscOpenHistoryFile(NULL,&amp;petsc_history);
+<a name="line645">645: </a>    }
+<a name="line646">646: </a>  }
+
+<a name="line648">648: </a>  <a href="../../../docs/manualpages/Sys/PetscOptionsGetBool.html#PetscOptionsGetBool">PetscOptionsGetBool</a>(NULL,NULL,<font color="#666666">"-log_sync"</font>,&amp;PetscLogSyncOn,NULL);
+
+<a name="line650">650: </a><font color="#A020F0">#if defined(PETSC_HAVE_MPE)</font>
+<a name="line651">651: </a>  flg1 = <a href="../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line652">652: </a>  <a href="../../../docs/manualpages/Sys/PetscOptionsHasName.html#PetscOptionsHasName">PetscOptionsHasName</a>(NULL,NULL,<font color="#666666">"-log_mpe"</font>,&amp;flg1);
+<a name="line653">653: </a>  <font color="#4169E1">if</font> (flg1) {<a href="../../../docs/manualpages/Profiling/PetscLogMPEBegin.html#PetscLogMPEBegin">PetscLogMPEBegin</a>();}
+<a name="line654">654: </a><font color="#A020F0">#endif</font>
+<a name="line655">655: </a>  flg1 = <a href="../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line656">656: </a>  flg3 = <a href="../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line657">657: </a>  <a href="../../../docs/manualpages/Sys/PetscOptionsGetBool.html#PetscOptionsGetBool">PetscOptionsGetBool</a>(NULL,NULL,<font color="#666666">"-log_all"</font>,&amp;flg1,NULL);
+<a name="line658">658: </a>  <a href="../../../docs/manualpages/Sys/PetscOptionsHasName.html#PetscOptionsHasName">PetscOptionsHasName</a>(NULL,NULL,<font color="#666666">"-log_summary"</font>,&amp;flg3);
+<a name="line659">659: </a>  <font color="#4169E1">if</font> (flg1)                      { <a href="../../../docs/manualpages/Profiling/PetscLogAllBegin.html#PetscLogAllBegin">PetscLogAllBegin</a>(); }
+<a name="line660">660: </a>  <font color="#4169E1">else</font> <font color="#4169E1">if</font> (flg3)                 { <a href="../../../docs/manualpages/Profiling/PetscLogDefaultBegin.html#PetscLogDefaultBegin">PetscLogDefaultBegin</a>();}
+
+<a name="line662">662: </a>  <a href="../../../docs/manualpages/Sys/PetscOptionsGetString.html#PetscOptionsGetString">PetscOptionsGetString</a>(NULL,NULL,<font color="#666666">"-log_trace"</font>,mname,<font color="#4169E1">sizeof</font>(mname),&amp;flg1);
+<a name="line663">663: </a>  <font color="#4169E1">if</font> (flg1) {
+<a name="line664">664: </a>    char name[PETSC_MAX_PATH_LEN],fname[PETSC_MAX_PATH_LEN];
+<a name="line665">665: </a>    FILE *file;
+<a name="line666">666: </a>    <font color="#4169E1">if</font> (mname[0]) {
+<a name="line667">667: </a>      <a href="../../../docs/manualpages/Sys/PetscSNPrintf.html#PetscSNPrintf">PetscSNPrintf</a>(name,PETSC_MAX_PATH_LEN,<font color="#666666">"%s.%d"</font>,mname,rank);
+<a name="line668">668: </a>      <a href="../../../docs/manualpages/Sys/PetscFixFilename.html#PetscFixFilename">PetscFixFilename</a>(name,fname);
+<a name="line669">669: </a>      file = fopen(fname,<font color="#666666">"w"</font>);
+<a name="line670">670: </a>      <font color="#4169E1">if</font> (!file) <a href="../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_FILE_OPEN,<font color="#666666">"Unable to open trace file: %s"</font>,fname);
+<a name="line671">671: </a>    } <font color="#4169E1">else</font> file = PETSC_STDOUT;
+<a name="line672">672: </a>    <a href="../../../docs/manualpages/Profiling/PetscLogTraceBegin.html#PetscLogTraceBegin">PetscLogTraceBegin</a>(file);
+<a name="line673">673: </a>  }
+
+<a name="line675">675: </a>  <a href="../../../docs/manualpages/Viewer/PetscOptionsGetViewer.html#PetscOptionsGetViewer">PetscOptionsGetViewer</a>(comm,NULL,NULL,<font color="#666666">"-log_view"</font>,NULL,&amp;format,&amp;flg4);
+<a name="line676">676: </a>  <font color="#4169E1">if</font> (flg4) {
+<a name="line677">677: </a>    <font color="#4169E1">if</font> (format == <a href="../../../docs/manualpages/Viewer/PetscViewerFormat.html#PetscViewerFormat">PETSC_VIEWER_ASCII_XML</a>) {
+<a name="line678">678: </a>      <a href="../../../docs/manualpages/Profiling/PetscLogNestedBegin.html#PetscLogNestedBegin">PetscLogNestedBegin</a>();
+<a name="line679">679: </a>    } <font color="#4169E1">else</font> {
+<a name="line680">680: </a>      <a href="../../../docs/manualpages/Profiling/PetscLogDefaultBegin.html#PetscLogDefaultBegin">PetscLogDefaultBegin</a>();
+<a name="line681">681: </a>    }
+<a name="line682">682: </a>  }
+<a name="line683">683: </a>  <font color="#4169E1">if</font> (flg4 &amp;&amp; format == <a href="../../../docs/manualpages/Viewer/PetscViewerFormat.html#PetscViewerFormat">PETSC_VIEWER_ASCII_XML</a>) {
+<a name="line684">684: </a>    <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> threshold = PetscRealConstant(0.01);
+<a name="line685">685: </a>    <a href="../../../docs/manualpages/Sys/PetscOptionsGetReal.html#PetscOptionsGetReal">PetscOptionsGetReal</a>(NULL,NULL,<font color="#666666">"-log_threshold"</font>,&amp;threshold,&amp;flg1);
+<a name="line686">686: </a>    <font color="#4169E1">if</font> (flg1) {<a href="../../../docs/manualpages/Profiling/PetscLogSetThreshold.html#PetscLogSetThreshold">PetscLogSetThreshold</a>((<a href="../../../docs/manualpages/Sys/PetscLogDouble.html#PetscLogDouble">PetscLogDouble</a>)threshold,NULL);}
+<a name="line687">687: </a>  }
+<a name="line688">688: </a><font color="#A020F0">#endif</font>
+
+<a name="line690">690: </a>  <a href="../../../docs/manualpages/Sys/PetscOptionsGetBool.html#PetscOptionsGetBool">PetscOptionsGetBool</a>(NULL,NULL,<font color="#666666">"-saws_options"</font>,&amp;PetscOptionsPublish,NULL);
+<a name="line691">691: </a>  <a href="../../../docs/manualpages/Sys/PetscOptionsGetBool.html#PetscOptionsGetBool">PetscOptionsGetBool</a>(NULL,NULL,<font color="#666666">"-use_gpu_aware_mpi"</font>,&amp;use_gpu_aware_mpi,NULL);
+<a name="line692">692: </a>  <font color="#B22222">/*</font>
+<a name="line693">693: </a><font color="#B22222">    If collecting logging information, by default, wait for device to complete its operations</font>
+<a name="line694">694: </a><font color="#B22222">    before returning to the CPU in order to get accurate timings of each event</font>
+<a name="line695">695: </a><font color="#B22222">  */</font>
+<a name="line696">696: </a>  <a href="../../../docs/manualpages/Sys/PetscOptionsHasName.html#PetscOptionsHasName">PetscOptionsHasName</a>(NULL,NULL,<font color="#666666">"-log_summary"</font>,&amp;logView);
+<a name="line697">697: </a>  <font color="#4169E1">if</font> (!logView) {<a href="../../../docs/manualpages/Sys/PetscOptionsHasName.html#PetscOptionsHasName">PetscOptionsHasName</a>(NULL,NULL,<font color="#666666">"-log_view"</font>,&amp;logView);}
+
+<a name="line699">699: </a><font color="#A020F0">#if defined(PETSC_HAVE_CUDA)</font>
+<a name="line700">700: </a>  PetscOptionsCheckCUDA(logView);
+<a name="line701">701: </a><font color="#A020F0">#endif</font>
+
+<a name="line703">703: </a><font color="#A020F0">#if defined(PETSC_HAVE_HIP)</font>
+<a name="line704">704: </a>  PetscOptionsCheckHIP(logView);
+<a name="line705">705: </a><font color="#A020F0">#endif</font>
+
+<a name="line707">707: </a>  <font color="#B22222">/*</font>
+<a name="line708">708: </a><font color="#B22222">       Print basic help message</font>
+<a name="line709">709: </a><font color="#B22222">  */</font>
+<a name="line710">710: </a>  <font color="#4169E1">if</font> (hasHelp) {
+<a name="line711">711: </a>    (*<a href="../../../docs/manualpages/Sys/PetscHelpPrintf.html#PetscHelpPrintf">PetscHelpPrintf</a>)(comm,<font color="#666666">"Options for all PETSc programs:\n"</font>);
+<a name="line712">712: </a>    (*<a href="../../../docs/manualpages/Sys/PetscHelpPrintf.html#PetscHelpPrintf">PetscHelpPrintf</a>)(comm,<font color="#666666">" -version: prints PETSc version\n"</font>);
+<a name="line713">713: </a>    (*<a href="../../../docs/manualpages/Sys/PetscHelpPrintf.html#PetscHelpPrintf">PetscHelpPrintf</a>)(comm,<font color="#666666">" -help intro: prints example description and PETSc version, and exits\n"</font>);
+<a name="line714">714: </a>    (*<a href="../../../docs/manualpages/Sys/PetscHelpPrintf.html#PetscHelpPrintf">PetscHelpPrintf</a>)(comm,<font color="#666666">" -help: prints example description, PETSc version, and available options for used routines\n"</font>);
+<a name="line715">715: </a>    (*<a href="../../../docs/manualpages/Sys/PetscHelpPrintf.html#PetscHelpPrintf">PetscHelpPrintf</a>)(comm,<font color="#666666">" -on_error_abort: cause an abort when an error is detected. Useful \n "</font>);
+<a name="line716">716: </a>    (*<a href="../../../docs/manualpages/Sys/PetscHelpPrintf.html#PetscHelpPrintf">PetscHelpPrintf</a>)(comm,<font color="#666666">"       only when run in the debugger\n"</font>);
+<a name="line717">717: </a>    (*<a href="../../../docs/manualpages/Sys/PetscHelpPrintf.html#PetscHelpPrintf">PetscHelpPrintf</a>)(comm,<font color="#666666">" -on_error_attach_debugger [gdb,dbx,xxgdb,ups,noxterm]\n"</font>);
+<a name="line718">718: </a>    (*<a href="../../../docs/manualpages/Sys/PetscHelpPrintf.html#PetscHelpPrintf">PetscHelpPrintf</a>)(comm,<font color="#666666">"       start the debugger in new xterm\n"</font>);
+<a name="line719">719: </a>    (*<a href="../../../docs/manualpages/Sys/PetscHelpPrintf.html#PetscHelpPrintf">PetscHelpPrintf</a>)(comm,<font color="#666666">"       unless noxterm is given\n"</font>);
+<a name="line720">720: </a>    (*<a href="../../../docs/manualpages/Sys/PetscHelpPrintf.html#PetscHelpPrintf">PetscHelpPrintf</a>)(comm,<font color="#666666">" -start_in_debugger [gdb,dbx,xxgdb,ups,noxterm]\n"</font>);
+<a name="line721">721: </a>    (*<a href="../../../docs/manualpages/Sys/PetscHelpPrintf.html#PetscHelpPrintf">PetscHelpPrintf</a>)(comm,<font color="#666666">"       start all processes in the debugger\n"</font>);
+<a name="line722">722: </a>    (*<a href="../../../docs/manualpages/Sys/PetscHelpPrintf.html#PetscHelpPrintf">PetscHelpPrintf</a>)(comm,<font color="#666666">" -on_error_emacs &lt;machinename&gt;\n"</font>);
+<a name="line723">723: </a>    (*<a href="../../../docs/manualpages/Sys/PetscHelpPrintf.html#PetscHelpPrintf">PetscHelpPrintf</a>)(comm,<font color="#666666">"    emacs jumps to error file\n"</font>);
+<a name="line724">724: </a>    (*<a href="../../../docs/manualpages/Sys/PetscHelpPrintf.html#PetscHelpPrintf">PetscHelpPrintf</a>)(comm,<font color="#666666">" -debugger_ranks [n1,n2,..] Ranks to start in debugger\n"</font>);
+<a name="line725">725: </a>    (*<a href="../../../docs/manualpages/Sys/PetscHelpPrintf.html#PetscHelpPrintf">PetscHelpPrintf</a>)(comm,<font color="#666666">" -debugger_pause [m] : delay (in seconds) to attach debugger\n"</font>);
+<a name="line726">726: </a>    (*<a href="../../../docs/manualpages/Sys/PetscHelpPrintf.html#PetscHelpPrintf">PetscHelpPrintf</a>)(comm,<font color="#666666">" -stop_for_debugger : prints message on how to attach debugger manually\n"</font>);
+<a name="line727">727: </a>    (*<a href="../../../docs/manualpages/Sys/PetscHelpPrintf.html#PetscHelpPrintf">PetscHelpPrintf</a>)(comm,<font color="#666666">"                      waits the delay for you to attach\n"</font>);
+<a name="line728">728: </a>    (*<a href="../../../docs/manualpages/Sys/PetscHelpPrintf.html#PetscHelpPrintf">PetscHelpPrintf</a>)(comm,<font color="#666666">" -display display: Location where X window graphics and debuggers are displayed\n"</font>);
+<a name="line729">729: </a>    (*<a href="../../../docs/manualpages/Sys/PetscHelpPrintf.html#PetscHelpPrintf">PetscHelpPrintf</a>)(comm,<font color="#666666">" -no_signal_handler: do not trap error signals\n"</font>);
+<a name="line730">730: </a>    (*<a href="../../../docs/manualpages/Sys/PetscHelpPrintf.html#PetscHelpPrintf">PetscHelpPrintf</a>)(comm,<font color="#666666">" -mpi_return_on_error: MPI returns error code, rather than abort on internal error\n"</font>);
+<a name="line731">731: </a>    (*<a href="../../../docs/manualpages/Sys/PetscHelpPrintf.html#PetscHelpPrintf">PetscHelpPrintf</a>)(comm,<font color="#666666">" -fp_trap: stop on floating point exceptions\n"</font>);
+<a name="line732">732: </a>    (*<a href="../../../docs/manualpages/Sys/PetscHelpPrintf.html#PetscHelpPrintf">PetscHelpPrintf</a>)(comm,<font color="#666666">"           note on IBM RS6000 this slows run greatly\n"</font>);
+<a name="line733">733: </a>    (*<a href="../../../docs/manualpages/Sys/PetscHelpPrintf.html#PetscHelpPrintf">PetscHelpPrintf</a>)(comm,<font color="#666666">" -malloc_dump &lt;optional filename&gt;: dump list of unfreed memory at conclusion\n"</font>);
+<a name="line734">734: </a>    (*<a href="../../../docs/manualpages/Sys/PetscHelpPrintf.html#PetscHelpPrintf">PetscHelpPrintf</a>)(comm,<font color="#666666">" -malloc: use PETSc error checking malloc (deprecated, use -malloc_debug)\n"</font>);
+<a name="line735">735: </a>    (*<a href="../../../docs/manualpages/Sys/PetscHelpPrintf.html#PetscHelpPrintf">PetscHelpPrintf</a>)(comm,<font color="#666666">" -malloc no: don't use PETSc error checking malloc (deprecated, use -malloc_debug no)\n"</font>);
+<a name="line736">736: </a>    (*<a href="../../../docs/manualpages/Sys/PetscHelpPrintf.html#PetscHelpPrintf">PetscHelpPrintf</a>)(comm,<font color="#666666">" -malloc_info: prints total memory usage\n"</font>);
+<a name="line737">737: </a>    (*<a href="../../../docs/manualpages/Sys/PetscHelpPrintf.html#PetscHelpPrintf">PetscHelpPrintf</a>)(comm,<font color="#666666">" -malloc_view &lt;optional filename&gt;: keeps log of all memory allocations, displays in <a href="../../../docs/manualpages/Sys/PetscFinalize.html#PetscFinalize">PetscFinalize</a>()\n"</font>);
+<a name="line738">738: </a>    (*<a href="../../../docs/manualpages/Sys/PetscHelpPrintf.html#PetscHelpPrintf">PetscHelpPrintf</a>)(comm,<font color="#666666">" -malloc_debug &lt;true or false&gt;: enables or disables extended checking for memory corruption\n"</font>);
+<a name="line739">739: </a>    (*<a href="../../../docs/manualpages/Sys/PetscHelpPrintf.html#PetscHelpPrintf">PetscHelpPrintf</a>)(comm,<font color="#666666">" -options_view: dump list of options inputted\n"</font>);
+<a name="line740">740: </a>    (*<a href="../../../docs/manualpages/Sys/PetscHelpPrintf.html#PetscHelpPrintf">PetscHelpPrintf</a>)(comm,<font color="#666666">" -options_left: dump list of unused options\n"</font>);
+<a name="line741">741: </a>    (*<a href="../../../docs/manualpages/Sys/PetscHelpPrintf.html#PetscHelpPrintf">PetscHelpPrintf</a>)(comm,<font color="#666666">" -options_left no: don't dump list of unused options\n"</font>);
+<a name="line742">742: </a>    (*<a href="../../../docs/manualpages/Sys/PetscHelpPrintf.html#PetscHelpPrintf">PetscHelpPrintf</a>)(comm,<font color="#666666">" -tmp tmpdir: alternative /tmp directory\n"</font>);
+<a name="line743">743: </a>    (*<a href="../../../docs/manualpages/Sys/PetscHelpPrintf.html#PetscHelpPrintf">PetscHelpPrintf</a>)(comm,<font color="#666666">" -shared_tmp: tmp directory is shared by all processors\n"</font>);
+<a name="line744">744: </a>    (*<a href="../../../docs/manualpages/Sys/PetscHelpPrintf.html#PetscHelpPrintf">PetscHelpPrintf</a>)(comm,<font color="#666666">" -not_shared_tmp: each processor has separate tmp directory\n"</font>);
+<a name="line745">745: </a>    (*<a href="../../../docs/manualpages/Sys/PetscHelpPrintf.html#PetscHelpPrintf">PetscHelpPrintf</a>)(comm,<font color="#666666">" -memory_view: print memory usage at end of run\n"</font>);
+<a name="line746">746: </a><font color="#A020F0">#if defined(PETSC_USE_LOG)</font>
+<a name="line747">747: </a>    (*<a href="../../../docs/manualpages/Sys/PetscHelpPrintf.html#PetscHelpPrintf">PetscHelpPrintf</a>)(comm,<font color="#666666">" -get_total_flops: total flops over all processors\n"</font>);
+<a name="line748">748: </a>    (*<a href="../../../docs/manualpages/Sys/PetscHelpPrintf.html#PetscHelpPrintf">PetscHelpPrintf</a>)(comm,<font color="#666666">" -log_view [:filename:[format]]: logging objects and events\n"</font>);
+<a name="line749">749: </a>    (*<a href="../../../docs/manualpages/Sys/PetscHelpPrintf.html#PetscHelpPrintf">PetscHelpPrintf</a>)(comm,<font color="#666666">" -log_trace [filename]: prints trace of all PETSc calls\n"</font>);
+<a name="line750">750: </a>    (*<a href="../../../docs/manualpages/Sys/PetscHelpPrintf.html#PetscHelpPrintf">PetscHelpPrintf</a>)(comm,<font color="#666666">" -log_exclude &lt;list,of,classnames&gt;: exclude given classes from logging\n"</font>);
+<a name="line751">751: </a><font color="#A020F0">#if defined(PETSC_HAVE_MPE)</font>
+<a name="line752">752: </a>    (*<a href="../../../docs/manualpages/Sys/PetscHelpPrintf.html#PetscHelpPrintf">PetscHelpPrintf</a>)(comm,<font color="#666666">" -log_mpe: Also create logfile viewable through Jumpshot\n"</font>);
+<a name="line753">753: </a><font color="#A020F0">#endif</font>
+<a name="line754">754: </a><font color="#A020F0">#endif</font>
+<a name="line755">755: </a><font color="#A020F0">#if defined(PETSC_USE_INFO)</font>
+<a name="line756">756: </a>    (*<a href="../../../docs/manualpages/Sys/PetscHelpPrintf.html#PetscHelpPrintf">PetscHelpPrintf</a>)(comm,<font color="#666666">" -info [filename][:[~]&lt;list,of,classnames&gt;[:[~]self]]: print verbose information\n"</font>);
+<a name="line757">757: </a><font color="#A020F0">#endif</font>
+<a name="line758">758: </a>    (*<a href="../../../docs/manualpages/Sys/PetscHelpPrintf.html#PetscHelpPrintf">PetscHelpPrintf</a>)(comm,<font color="#666666">" -options_file &lt;file&gt;: reads options from file\n"</font>);
+<a name="line759">759: </a>    (*<a href="../../../docs/manualpages/Sys/PetscHelpPrintf.html#PetscHelpPrintf">PetscHelpPrintf</a>)(comm,<font color="#666666">" -options_monitor: monitor options to standard output, including that set previously e.g. in option files\n"</font>);
+<a name="line760">760: </a>    (*<a href="../../../docs/manualpages/Sys/PetscHelpPrintf.html#PetscHelpPrintf">PetscHelpPrintf</a>)(comm,<font color="#666666">" -options_monitor_cancel: cancels all hardwired option monitors\n"</font>);
+<a name="line761">761: </a>    (*<a href="../../../docs/manualpages/Sys/PetscHelpPrintf.html#PetscHelpPrintf">PetscHelpPrintf</a>)(comm,<font color="#666666">" -petsc_sleep n: sleeps n seconds before running program\n"</font>);
+<a name="line762">762: </a>  }
+
+<a name="line764">764: </a><font color="#A020F0">#if defined(PETSC_HAVE_POPEN)</font>
+<a name="line765">765: </a>  {
+<a name="line766">766: </a>  char machine[128];
+<a name="line767">767: </a>  <a href="../../../docs/manualpages/Sys/PetscOptionsGetString.html#PetscOptionsGetString">PetscOptionsGetString</a>(NULL,NULL,<font color="#666666">"-popen_machine"</font>,machine,<font color="#4169E1">sizeof</font>(machine),&amp;flg1);
+<a name="line768">768: </a>  <font color="#4169E1">if</font> (flg1) {
+<a name="line769">769: </a>    <a href="../../../docs/manualpages/Sys/PetscPOpenSetMachine.html#PetscPOpenSetMachine">PetscPOpenSetMachine</a>(machine);
+<a name="line770">770: </a>  }
+<a name="line771">771: </a>  }
+<a name="line772">772: </a><font color="#A020F0">#endif</font>
+
+<a name="line774">774: </a>  <a href="../../../docs/manualpages/Sys/PetscOptionsGetReal.html#PetscOptionsGetReal">PetscOptionsGetReal</a>(NULL,NULL,<font color="#666666">"-petsc_sleep"</font>,&amp;si,&amp;flg1);
+<a name="line775">775: </a>  <font color="#4169E1">if</font> (flg1) {
+<a name="line776">776: </a>    <a href="../../../docs/manualpages/Sys/PetscSleep.html#PetscSleep">PetscSleep</a>(si);
+<a name="line777">777: </a>  }
+
+<a name="line779">779: </a><font color="#A020F0">#if defined(PETSC_HAVE_VIENNACL)</font>
+<a name="line780">780: </a>  <a href="../../../docs/manualpages/Sys/PetscOptionsHasName.html#PetscOptionsHasName">PetscOptionsHasName</a>(NULL,NULL,<font color="#666666">"-log_summary"</font>,&amp;flg3);
+<a name="line781">781: </a>  <font color="#4169E1">if</font> (!flg3) {
+<a name="line782">782: </a>    <a href="../../../docs/manualpages/Sys/PetscOptionsHasName.html#PetscOptionsHasName">PetscOptionsHasName</a>(NULL,NULL,<font color="#666666">"-log_view"</font>,&amp;flg3);
+<a name="line783">783: </a>  }
+<a name="line784">784: </a>  <a href="../../../docs/manualpages/Sys/PetscOptionsGetBool.html#PetscOptionsGetBool">PetscOptionsGetBool</a>(NULL,NULL,<font color="#666666">"-viennacl_synchronize"</font>,&amp;flg3,NULL);
+<a name="line785">785: </a>  PetscViennaCLSynchronize = flg3;
+<a name="line786">786: </a>  PetscViennaCLInit();
+<a name="line787">787: </a><font color="#A020F0">#endif</font>
+
+<a name="line789">789: </a>  <font color="#B22222">/*</font>
+<a name="line790">790: </a><font color="#B22222">     Creates the logging data structures; this is enabled even if logging is not turned on</font>
+<a name="line791">791: </a><font color="#B22222">     This is the last thing we do before returning to the user code to prevent having the</font>
+<a name="line792">792: </a><font color="#B22222">     logging numbers contaminated by any startup time associated with MPI and the GPUs</font>
+<a name="line793">793: </a><font color="#B22222">  */</font>
+<a name="line794">794: </a><font color="#A020F0">#if defined(PETSC_USE_LOG)</font>
+<a name="line795">795: </a>  PetscLogInitialize();
+<a name="line796">796: </a><font color="#A020F0">#endif</font>
+
+<a name="line798">798: </a>  <font color="#4169E1">return</font>(0);
+<a name="line799">799: </a>}
+</pre>
+</body>
+
+</html>

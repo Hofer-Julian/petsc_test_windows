@@ -1,0 +1,49 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DT/PetscDTAltVPullback.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>PetscDTAltVPullback</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/DT/PetscDTAltVPullback.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="PetscDTAltVPullback"><H1>PetscDTAltVPullback</H1></A>
+Compute the pullback of a k-form under a linear transformation of the coordinate space 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscdt.h" 
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../DT/PetscDTAltVPullback.html#PetscDTAltVPullback">PetscDTAltVPullback</A>(<A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> N, <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> M, const <A HREF="../Sys/PetscReal.html#PetscReal">PetscReal</A> *L, <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> k, const <A HREF="../Sys/PetscReal.html#PetscReal">PetscReal</A> *w, <A HREF="../Sys/PetscReal.html#PetscReal">PetscReal</A> *Lstarw)
+</PRE>
+<H3><FONT COLOR="#CC3333">Input Arguments</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>N </B></TD><TD>- the dimension of the origin vector space of the linear transformation, M &gt;= 0
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>M </B></TD><TD>- the dimension of the image vector space of the linear transformation, N &gt;= 0
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>L </B></TD><TD>- a linear transformation, an [M x N] matrix in row-major format
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>k </B></TD><TD>- the *signed* degree k of the |k|-form w, -(min(M,N)) &lt;= k &lt;= min(M,N).  A negative form degree indicates that the pullback should be conjugated by the Hodge star operator (see note).
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>w </B></TD><TD>- a |k|-form in the image space, size [M choose |k|]
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Output Arguments</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>Lstarw </B></TD><TD>- the pullback of w to a |k|-form in the origin space, size [N choose |k|]: (Lstarw)(v_1,...v_k) = w(L*v_1,...,L*v_k).
+</TD></TR></TABLE>
+<P>
+
+<P>
+Note: negative form degrees accomodate, e.g., H-div conforming vector fields.  An H-div conforming vector field stores its degrees of freedom as (dx, dy, dz), like a 1-form,
+but its normal trace is integrated on faces, like a 2-form.  The correct pullback then is to apply the Hodge star transformation from (M-2)-form to 2-form, pullback as a 2-form,
+then the inverse Hodge star transformation.
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../DT/PetscDTAltV.html#PetscDTAltV">PetscDTAltV</A>, <A HREF="../DT/PetscDTAltVPullbackMatrix.html#PetscDTAltVPullbackMatrix">PetscDTAltVPullbackMatrix</A>(), <A HREF="../DT/PetscDTAltVStar.html#PetscDTAltVStar">PetscDTAltVStar</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>intermediate<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/dm/dt/interface/dtaltv.c.html#PetscDTAltVPullback">src/dm/dt/interface/dtaltv.c</A>
+<BR><A HREF="./index.html">Index of all DT routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

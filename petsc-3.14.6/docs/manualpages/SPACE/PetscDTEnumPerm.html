@@ -1,0 +1,40 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/SPACE/PetscDTEnumPerm.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>PetscDTEnumPerm</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/SPACE/PetscDTEnumPerm.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="PetscDTEnumPerm"><H1>PetscDTEnumPerm</H1></A>
+Get a permutation of n integers from its encoding into the integers [0, n!) as a sequence of swaps. A permutation can be described by the operations that convert the lists [0, 1, ..., n-1] into the permutation,
+by a sequence of swaps, where the ith step swaps whatever number is in ith position with a number that is in
+some position j &gt;= i.  This swap is encoded as the difference (j - i).  The difference d_i at step i is less than
+(n - i).  This sequence of n-1 differences [d_0, ..., d_{n-2}] is encoded as the number
+(n-1)! * d_0 + (n-2)! * d_1 + ... + 1! * d_{n-2}.
+<P>
+<H3><FONT COLOR="#CC3333">Input Arguments</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>n </B></TD><TD>- a non-negative integer (see note about limits below)
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>k </B></TD><TD>- an integer in [0, n!)
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Output Arguments</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>perm </B></TD><TD>- the permuted list of the integers [0, ..., n-1]
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>isOdd </B></TD><TD>- if not NULL, returns wether the permutation used an even or odd number of swaps.
+</TD></TR></TABLE>
+<P>
+Note: this is limited to n such that n! can be represented by <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A>, which is 12 if <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> is a signed 32-bit integer and 20 if <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> is a signed 64-bit integer.
+<P>
+
+<P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>beginner<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/dm/dt/space/../../../../include/petscdt.h.html#PetscDTEnumPerm">src/dm/dt/space/../../../../include/petscdt.h</A>
+<BR><A HREF="./index.html">Index of all SPACE routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

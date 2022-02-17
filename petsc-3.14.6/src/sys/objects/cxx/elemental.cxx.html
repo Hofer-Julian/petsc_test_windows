@@ -1,0 +1,89 @@
+<center><a href="elemental.cxx">Actual source code: elemental.cxx</a></center><br>
+
+<html>
+<head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/src/sys/objects/cxx/elemental.cxx.html" />
+<title></title>
+<meta name="generator" content="c2html 0.9.4">
+<meta name="date" content="2021-03-30T16:49:28+00:00">
+</head>
+
+<body bgcolor="#FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 src/sys/objects/cxx/elemental.cxx.html "><small>Report Typos and Errors</small></a></div>
+<pre width="80">
+<a name="line1">  1: </a>#include <A href="../../../../include/petscsys.h.html">&lt;petscsys.h&gt;</A>
+<a name="line2">  2: </a>#include <A href="../../../../include/petscmatelemental.h.html">&lt;petscmatelemental.h&gt;</A>
+<a name="line3">  3: </a>#include <A href="../../../../include/petsc/private/petscimpl.h.html">&lt;petsc/private/petscimpl.h&gt;</A>
+
+<a name="line5">  5: </a><font color="#B22222">/*@</font>
+<a name="line6">  6: </a><font color="#B22222">   <a href="../../../../docs/manualpages/Sys/PetscElementalInitializePackage.html#PetscElementalInitializePackage">PetscElementalInitializePackage</a> - Initialize Elemental package</font>
+
+<a name="line8">  8: </a><font color="#B22222">   Collective on MPI_COMM_WORLD, not <a href="../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a></font>
+
+<a name="line10"> 10: </a><font color="#B22222">   Level: developer</font>
+
+<a name="line12"> 12: </a><font color="#B22222">   Note:</font>
+<a name="line13"> 13: </a><font color="#B22222">   Can be called outside of <a href="../../../../docs/manualpages/Sys/PetscInitialize.html#PetscInitialize">PetscInitialize</a>() and <a href="../../../../docs/manualpages/Sys/PetscFinalize.html#PetscFinalize">PetscFinalize</a>().</font>
+<a name="line14"> 14: </a><font color="#B22222">   If called outside of these functions, it is the user's responsability</font>
+<a name="line15"> 15: </a><font color="#B22222">   to make sure that <a href="../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a> is either unset (default value is MPI_COMM_NULL),</font>
+<a name="line16"> 16: </a><font color="#B22222">   or that it is not MPI_UNEQUAL to MPI_COMM_WORLD.</font>
+<a name="line17"> 17: </a><font color="#B22222">   Users who do not have a custom <a href="../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a> do not have to call this function.</font>
+
+<a name="line19"> 19: </a><font color="#B22222">.seealso: <a href="../../../../docs/manualpages/Mat/MATELEMENTAL.html#MATELEMENTAL">MATELEMENTAL</a>, <a href="../../../../docs/manualpages/Sys/PetscElementalFinalizePackage.html#PetscElementalFinalizePackage">PetscElementalFinalizePackage</a>()</font>
+<a name="line20"> 20: </a><font color="#B22222">@*/</font>
+<a name="line21"> 21: </a><strong><font color="#4169E1"><a name="PetscElementalInitializePackage"></a><a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../../docs/manualpages/Sys/PetscElementalInitializePackage.html#PetscElementalInitializePackage">PetscElementalInitializePackage</a>(void)</font></strong>
+<a name="line22"> 22: </a>{
+<a name="line23"> 23: </a>  <a href="../../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a>    result;
+
+<a name="line26"> 26: </a>  <font color="#4169E1">if</font> (El::Initialized()) <font color="#4169E1">return</font> 0;
+<a name="line27"> 27: </a>  <font color="#4169E1">if</font> (<a href="../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a> != MPI_COMM_NULL) { <font color="#B22222">/* MPI has been initialized and <a href="../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a> has been set */</font>
+<a name="line28"> 28: </a>    <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_compare.html#MPI_Comm_compare">MPI_Comm_compare</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,MPI_COMM_WORLD,&amp;result);<font color="#4169E1">if</font> (ierr) <font color="#4169E1">return</font> ierr;
+<a name="line29"> 29: </a>    <font color="#4169E1">if</font> (result == MPI_UNEQUAL) <font color="#4169E1">return</font> result; <font color="#B22222">/* cannot use Elemental with <a href="../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a> and MPI_COMM_WORLD comparing to MPI_UNEQUAL, call <a href="../../../../docs/manualpages/Sys/PetscElementalInitializePackage.html#PetscElementalInitializePackage">PetscElementalInitializePackage</a>()/<a href="../../../../docs/manualpages/Sys/PetscElementalFinalizePackage.html#PetscElementalFinalizePackage">PetscElementalFinalizePackage</a>() collectively */</font>
+<a name="line30"> 30: </a>  }
+<a name="line31"> 31: </a><strong><font color="#FF0000">  El:</font></strong>:Initialize(); <font color="#B22222">/* called by PetscInitialize_DynamicLibraries(void) or users */</font>
+<a name="line32"> 32: </a>  <font color="#4169E1">if</font> (PetscInitializeCalled) { <font color="#B22222">/* true if MPI is initialized by PETSc, false if MPI has been initialized outside and thus <a href="../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a> can't be set to something else than MPI_COMM_NULL, see src/sys/objects/pinit.c */</font>
+<a name="line33"> 33: </a>    <a href="../../../../docs/manualpages/Sys/PetscRegisterFinalize.html#PetscRegisterFinalize">PetscRegisterFinalize</a>(<a href="../../../../docs/manualpages/Sys/PetscElementalFinalizePackage.html#PetscElementalFinalizePackage">PetscElementalFinalizePackage</a>);<font color="#4169E1">if</font> (ierr) <font color="#4169E1">return</font> ierr;
+<a name="line34"> 34: </a>  }
+<a name="line35"> 35: </a>  <font color="#4169E1">return</font> 0;
+<a name="line36"> 36: </a>}
+
+<a name="line38"> 38: </a><font color="#B22222">/*@</font>
+<a name="line39"> 39: </a><font color="#B22222">   <a href="../../../../docs/manualpages/Sys/PetscElementalInitialized.html#PetscElementalInitialized">PetscElementalInitialized</a> - Determine whether Elemental is initialized</font>
+
+<a name="line41"> 41: </a><font color="#B22222">   Not Collective</font>
+
+<a name="line43"> 43: </a><font color="#B22222">   Level: developer</font>
+
+<a name="line45"> 45: </a><font color="#B22222">   Note:</font>
+<a name="line46"> 46: </a><font color="#B22222">   Can be called outside of <a href="../../../../docs/manualpages/Sys/PetscInitialize.html#PetscInitialize">PetscInitialize</a>() and <a href="../../../../docs/manualpages/Sys/PetscFinalize.html#PetscFinalize">PetscFinalize</a>().</font>
+
+<a name="line48"> 48: </a><font color="#B22222">.seealso: <a href="../../../../docs/manualpages/Mat/MATELEMENTAL.html#MATELEMENTAL">MATELEMENTAL</a>, <a href="../../../../docs/manualpages/Sys/PetscElementalInitializePackage.html#PetscElementalInitializePackage">PetscElementalInitializePackage</a>()</font>
+<a name="line49"> 49: </a><font color="#B22222">@*/</font>
+<a name="line50"> 50: </a><strong><font color="#4169E1"><a name="PetscElementalInitialized"></a><a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../../docs/manualpages/Sys/PetscElementalInitialized.html#PetscElementalInitialized">PetscElementalInitialized</a>(<a href="../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> *isInitialized)</font></strong>
+<a name="line51"> 51: </a>{
+<a name="line52"> 52: </a>  <font color="#4169E1">if</font> (isInitialized) *isInitialized = (<a href="../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>)El::Initialized();
+<a name="line53"> 53: </a>  <font color="#4169E1">return</font> 0;
+<a name="line54"> 54: </a>}
+
+<a name="line56"> 56: </a><font color="#B22222">/*@</font>
+<a name="line57"> 57: </a><font color="#B22222">   <a href="../../../../docs/manualpages/Sys/PetscElementalFinalizePackage.html#PetscElementalFinalizePackage">PetscElementalFinalizePackage</a> - Finalize Elemental package</font>
+
+<a name="line59"> 59: </a><font color="#B22222">   Collective on MPI_COMM_WORLD, not <a href="../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a></font>
+
+<a name="line61"> 61: </a><font color="#B22222">   Level: developer</font>
+
+<a name="line63"> 63: </a><font color="#B22222">   Note:</font>
+<a name="line64"> 64: </a><font color="#B22222">   Can be called outside of <a href="../../../../docs/manualpages/Sys/PetscInitialize.html#PetscInitialize">PetscInitialize</a>() and <a href="../../../../docs/manualpages/Sys/PetscFinalize.html#PetscFinalize">PetscFinalize</a>().</font>
+<a name="line65"> 65: </a><font color="#B22222">   Users who do not call <a href="../../../../docs/manualpages/Sys/PetscElementalInitializePackage.html#PetscElementalInitializePackage">PetscElementalInitializePackage</a>() do not have to call this function.</font>
+
+<a name="line67"> 67: </a><font color="#B22222">.seealso: <a href="../../../../docs/manualpages/Mat/MATELEMENTAL.html#MATELEMENTAL">MATELEMENTAL</a>, <a href="../../../../docs/manualpages/Sys/PetscElementalInitializePackage.html#PetscElementalInitializePackage">PetscElementalInitializePackage</a>()</font>
+<a name="line68"> 68: </a><font color="#B22222">@*/</font>
+<a name="line69"> 69: </a><strong><font color="#4169E1"><a name="PetscElementalFinalizePackage"></a><a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../../docs/manualpages/Sys/PetscElementalFinalizePackage.html#PetscElementalFinalizePackage">PetscElementalFinalizePackage</a>(void)</font></strong>
+<a name="line70"> 70: </a>{
+<a name="line71"> 71: </a>  <font color="#4169E1">if</font> (El::Initialized()) El::Finalize();
+<a name="line72"> 72: </a>  <font color="#4169E1">return</font> 0;
+<a name="line73"> 73: </a>}
+</pre>
+</body>
+
+</html>

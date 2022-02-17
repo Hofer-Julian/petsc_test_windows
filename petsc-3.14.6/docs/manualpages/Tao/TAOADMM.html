@@ -1,0 +1,57 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Tao/TAOADMM.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>TAOADMM</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/Tao/TAOADMM.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="TAOADMM"><H1>TAOADMM</H1></A>
+Alternating direction method of multipliers method fo solving linear problems with constraints. in a min_x f(x) + g(z)  s.t. Ax+Bz=c. This algorithm employs two sub <A HREF="../Tao/Tao.html#Tao">Tao</A> solvers, of which type can be specificed by the user. User need to provide ObjectiveAndGradient routine, and/or HessianRoutine for both subsolvers. Hessians can be given boolean flag determining whether they change with respect to a input vector. This can be set via TaoADMMSet{Misfit,Regularizer}HessianChangeStatus. Second subsolver does support <A HREF="../Tao/TAOSHELL.html#TAOSHELL">TAOSHELL</A>. It should be noted that L1-norm is used for objective value for <A HREF="../Tao/TAOSHELL.html#TAOSHELL">TAOSHELL</A> type. There is option to set regularizer option, and currently soft-threshold is implemented. For spectral penalty update, currently there are baisc option and adaptive option. Constraint is set at Ax+Bz=c, and A and B can be set with TaoADMMSet{Misfit,Regularizer}ConstraintJacobian. c can be set with <A HREF="../Tao/TaoADMMSetConstraintVectorRHS.html#TaoADMMSetConstraintVectorRHS">TaoADMMSetConstraintVectorRHS</A>. The user can also provide regularizer weight for second subsolver. 
+<H3><FONT COLOR="#CC3333">References</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>1. </B></TD><TD>- Xu, Zheng and Figueiredo, Mario A. T. and Yuan, Xiaoming and Studer, Christoph and Goldstein, Tom
+"Adaptive Relaxed ADMM: Convergence Theory and Practical Implementation"
+The IEEE Conference on Computer Vision and Pattern Recognition (CVPR), July, 2017.
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Options Database Keys</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>-tao_admm_regularizer_coefficient        </B></TD><TD>- regularizer constant (default 1.e-6)
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>-tao_admm_spectral_penalty               </B></TD><TD>- Constant for Augmented Lagrangian term (default 1.)
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>-tao_admm_relaxation_parameter           </B></TD><TD>- relaxation parameter for Z update (default 1.)
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>-tao_admm_tolerance_update_factor        </B></TD><TD>- ADMM dynamic tolerance update factor (default 1.e-12)
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>-tao_admm_spectral_penalty_update_factor </B></TD><TD>- ADMM spectral penalty update curvature safeguard value (default 0.2)
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>-tao_admm_minimum_spectral_penalty       </B></TD><TD>- Set ADMM minimum spectral penalty (default 0)
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>-tao_admm_dual_update                    </B></TD><TD>- Lagrangian dual update policy ("basic","adaptive","adaptive-relaxed") (default "basic")
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>-tao_admm_regularizer_type               </B></TD><TD>- ADMM regularizer update rule ("user","soft-threshold") (default "soft-threshold")
+</TD></TR></TABLE>
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../Tao/TaoADMMSetMisfitHessianChangeStatus.html#TaoADMMSetMisfitHessianChangeStatus">TaoADMMSetMisfitHessianChangeStatus</A>(), <A HREF="../Tao/TaoADMMSetRegHessianChangeStatus.html#TaoADMMSetRegHessianChangeStatus">TaoADMMSetRegHessianChangeStatus</A>(), <A HREF="../Tao/TaoADMMGetSpectralPenalty.html#TaoADMMGetSpectralPenalty">TaoADMMGetSpectralPenalty</A>(),
+<BR><A HREF="../Tao/TaoADMMGetMisfitSubsolver.html#TaoADMMGetMisfitSubsolver">TaoADMMGetMisfitSubsolver</A>(), <A HREF="../Tao/TaoADMMGetRegularizationSubsolver.html#TaoADMMGetRegularizationSubsolver">TaoADMMGetRegularizationSubsolver</A>(), <A HREF="../Tao/TaoADMMSetConstraintVectorRHS.html#TaoADMMSetConstraintVectorRHS">TaoADMMSetConstraintVectorRHS</A>(),
+<A HREF="../Tao/TaoADMMSetMinimumSpectralPenalty.html#TaoADMMSetMinimumSpectralPenalty">TaoADMMSetMinimumSpectralPenalty</A>(), <A HREF="../Tao/TaoADMMSetRegularizerCoefficient.html#TaoADMMSetRegularizerCoefficient">TaoADMMSetRegularizerCoefficient</A>(),
+<A HREF="../Tao/TaoADMMSetRegularizerConstraintJacobian.html#TaoADMMSetRegularizerConstraintJacobian">TaoADMMSetRegularizerConstraintJacobian</A>(), <A HREF="../Tao/TaoADMMSetMisfitConstraintJacobian.html#TaoADMMSetMisfitConstraintJacobian">TaoADMMSetMisfitConstraintJacobian</A>(),
+<A HREF="../Tao/TaoADMMSetMisfitObjectiveAndGradientRoutine.html#TaoADMMSetMisfitObjectiveAndGradientRoutine">TaoADMMSetMisfitObjectiveAndGradientRoutine</A>(), <A HREF="../Tao/TaoADMMSetMisfitHessianRoutine.html#TaoADMMSetMisfitHessianRoutine">TaoADMMSetMisfitHessianRoutine</A>(),
+<A HREF="../Tao/TaoADMMSetRegularizerObjectiveAndGradientRoutine.html#TaoADMMSetRegularizerObjectiveAndGradientRoutine">TaoADMMSetRegularizerObjectiveAndGradientRoutine</A>(), <A HREF="../Tao/TaoADMMSetRegularizerHessianRoutine.html#TaoADMMSetRegularizerHessianRoutine">TaoADMMSetRegularizerHessianRoutine</A>(),
+<A HREF="../Tao/TaoGetADMMParentTao.html#TaoGetADMMParentTao">TaoGetADMMParentTao</A>(), <A HREF="../Tao/TaoADMMGetDualVector.html#TaoADMMGetDualVector">TaoADMMGetDualVector</A>(), <A HREF="../Tao/TaoADMMSetRegularizerType.html#TaoADMMSetRegularizerType">TaoADMMSetRegularizerType</A>(),
+<A HREF="../Tao/TaoADMMGetRegularizerType.html#TaoADMMGetRegularizerType">TaoADMMGetRegularizerType</A>(), <A HREF="../Tao/TaoADMMSetUpdateType.html#TaoADMMSetUpdateType">TaoADMMSetUpdateType</A>(), <A HREF="../Tao/TaoADMMGetUpdateType.html#TaoADMMGetUpdateType">TaoADMMGetUpdateType</A>()
+<P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>beginner<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/tao/constrained/impls/admm/admm.c.html#TAOADMM">src/tao/constrained/impls/admm/admm.c</A>
+<P><H3><FONT COLOR="#CC3333">Examples</FONT></H3>
+<A HREF="../../../src/tao/constrained/tutorials/tomographyADMM.c.html">src/tao/constrained/tutorials/tomographyADMM.c.html</A><BR>
+<BR><A HREF="./index.html">Index of all Tao routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

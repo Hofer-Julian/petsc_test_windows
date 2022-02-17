@@ -1,0 +1,349 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/sphinx_docs/html/developers/documentation.html" />
+    <meta charset="utf-8" />
+    <title>Developing PETSc Documentation &#8212; PETSc 3.14.6 documentation</title>
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/katex-math.css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/contrib/auto-render.min.js"></script>
+    <script src="../_static/katex_autorenderer.js"></script>
+    <link rel="shortcut icon" href="../_static/PETSc_RGB-logo.png"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="The Design of PETSc" href="design.html" />
+    <link rel="prev" title="PETSc Testing System" href="testing.html" /> 
+  </head><body>
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/sphinx_docs/html/developers/documentation.html "><small>Report Typos and Errors</small></a></div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="design.html" title="The Design of PETSc"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="testing.html" title="PETSc Testing System"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">PETSc 3.14.6 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">PETSc Developer’s Documentation</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/PETSc-TAO_RGB.svg" alt="Logo"/>
+            </a></p>
+  <h3><a href="../index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Developing PETSc Documentation</a><ul>
+<li><a class="reference internal" href="#general-guidelines">General Guidelines</a></li>
+<li><a class="reference internal" href="#building-main-documentation">Building Main Documentation</a></li>
+<li><a class="reference internal" href="#sphinx-documentation">Sphinx Documentation</a><ul>
+<li><a class="reference internal" href="#making-changes-to-the-sphinx-docs-from-the-web">Making changes to the Sphinx Docs from the web</a></li>
+<li><a class="reference internal" href="#building-the-sphinx-docs-locally">Building the Sphinx docs locally</a></li>
+<li><a class="reference internal" href="#sphinx-documentation-guidelines">Sphinx Documentation Guidelines</a></li>
+<li><a class="reference internal" href="#porting-latex-to-sphinx">Porting LaTeX to Sphinx</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="testing.html"
+                        title="previous chapter">PETSc Testing System</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="design.html"
+                        title="next chapter">The Design of PETSc</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/developers/documentation.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="developing-petsc-documentation">
+<h1>Developing PETSc Documentation<a class="headerlink" href="#developing-petsc-documentation" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<div class="section" id="general-guidelines">
+<h2>General Guidelines<a class="headerlink" href="#general-guidelines" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>Good documentation should be like a bonsai tree: alive, on display, frequently tended, and as small as possible (adapted from <a class="reference external" href="https://github.com/google/styleguide/blob/gh-pages/docguide/best_practices.md">these best practices</a>).</p></li>
+<li><p>Wrong, irrelevant, or confusing documentation is worse than no documentation.</p></li>
+</ul>
+</div>
+<div class="section" id="building-main-documentation">
+<span id="docs-build"></span><h2>Building Main Documentation<a class="headerlink" href="#building-main-documentation" title="Permalink to this headline">¶</a></h2>
+<p>The documentation tools listed below (except for pdflatex) are
+automatically downloaded and installed by <code class="docutils literal notranslate"><span class="pre">./configure</span></code>.</p>
+<ul class="simple">
+<li><p><a class="reference external" href="http://ftp.mcs.anl.gov/pub/sowing/sowing.tar.gz">Sowing</a>: a text processing tool developed by Bill Gropp.  This produces the PETSc manual pages; see the <a class="reference external" href="http://wgropp.cs.illinois.edu/projects/software/sowing/doctext/doctext.htm">Sowing documentation</a> and <a class="reference internal" href="style.html#manual-page-format"><span class="std std-ref">Manual Page Format</span></a>.</p></li>
+<li><p><a class="reference external" href="http://ftp.mcs.anl.gov/pub/petsc/c2html.tar.gz">C2html</a>: A text processing package. This generates the HTML versions of all the source code.</p></li>
+<li><p>A version of pdflatex, for example in  <a class="reference external" href="http://www.tug.org/texlive/">Tex Live</a>.  This package might already be installed on most systems. It is required to generate the users manual (part of the PETSc documentation).</p></li>
+</ul>
+<p>Note: Sowing and c2html have additional dependencies like gcc, g++, and flex and do not
+use compilers specified to PETSc configure. [Windows users please install the corresponding
+cygwin packages]</p>
+<p>Once pdflatex is in your <code class="docutils literal notranslate"><span class="pre">PATH</span></code>, you can build the documentation with:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make alldoc <span class="nv">LOC</span><span class="o">=</span><span class="si">${</span><span class="nv">PETSC_DIR</span><span class="si">}</span>
+</pre></div>
+</div>
+<p>(Note that this does not include <a class="reference internal" href="#sphinx-documentation"><span class="std std-ref">Sphinx Documentation</span></a>).</p>
+<p>To get a quick preview of manual pages from a single source directory (mainly to debug the manual page syntax):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> <span class="nv">$PETSC_DIR</span>/src/snes/interface
+make <span class="nv">LOC</span><span class="o">=</span><span class="nv">$PETSC_DIR</span> manualpages_buildcite
+browse <span class="nv">$PETSC_DIR</span>/docs/manualpages/<a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/SNES/SNES.html#SNES">SNES</a>/<a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/SNES/SNESCreate.html#SNESCreate">SNESCreate</a>.html  <span class="c1"># or suitable command to open the HTML page in a browser</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="sphinx-documentation">
+<span id="id1"></span><h2>Sphinx Documentation<a class="headerlink" href="#sphinx-documentation" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference external" href="https://www.sphinx-doc.org/en/master/">Sphinx</a> is a well-documented and widely-used set of Python-based tools
+for building documentation. Most content is written using <a class="reference external" href="https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html">reStructuredText</a>, a simple markup language.</p>
+<p>The Sphinx documentation is currently not integrated into the main docs build as described
+in <a class="reference internal" href="#docs-build"><span class="std std-ref">Building Main Documentation</span></a>.</p>
+<p><a class="reference external" href="readthedocs.org">ReadTheDocs</a> generates the HTML documentation at
+<a class="reference external" href="https://docs.petsc.org">https://docs.petsc.org</a> from the <a class="reference external" href="https://gitlab.com/petsc/petsc">PETSc Git repository</a>.
+A version of the documentation can be built there, corresponding to any
+Git branch, which is useful if developing a large set of documentation changes.</p>
+<p>We also use Sphinx to generate a PDF version of the User Manual, via LaTeX.</p>
+<p><a class="reference external" href="https://gitlab.com/psanan/petsc-sphinx-slides">These slides</a> contain an overview of Sphinx and how it’s used in PETSc, as of October, 2020.</p>
+<div class="section" id="making-changes-to-the-sphinx-docs-from-the-web">
+<h3>Making changes to the Sphinx Docs from the web<a class="headerlink" href="#making-changes-to-the-sphinx-docs-from-the-web" title="Permalink to this headline">¶</a></h3>
+<p>You can make small changes this documentation entirely through web interfaces,
+using the usual guidelines in <a class="reference internal" href="integration.html"><span class="doc">PETSc Integration Workflows</span></a> (note the options for speedy review of docs-only changes).</p>
+<ol class="arabic simple">
+<li><p>Find the page of interest, confirming the version is what you expect (usually “latest”).</p></li>
+<li><p>In the small ReadTheDocs menu in the bottom right, click the link to edit on GitLab.</p></li>
+<li><p>Make your changes.</p></li>
+<li><p>Compose a commit message and name your branch.</p></li>
+<li><p>Click the button to commit changes and create a Merge Request.</p></li>
+</ol>
+</div>
+<div class="section" id="building-the-sphinx-docs-locally">
+<h3>Building the Sphinx docs locally<a class="headerlink" href="#building-the-sphinx-docs-locally" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Make sure that you have Python 3 and the required modules, as listed in the <a class="reference external" href="https://github.com/petsc/petsc/blob/master/.readthedocs.yml">ReadTheDocs configuration file</a> and <a class="reference external" href="https://github.com/petsc/petsc/blob/master/src/docs/sphinx_docs/requirements.txt">requirements file</a> [#f1]. e.g. with pip, <cite>pip install -r $PETSC_DIR/src/docs/sphinx_docs/requirements.txt</cite>.</p></li>
+<li><p>Navigate to the location of <code class="docutils literal notranslate"><span class="pre">conf.py</span></code> for the Sphinx docs (currently <code class="docutils literal notranslate"><span class="pre">$PETSC_DIR/src/docs/sphinx_docs</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">html</span></code></p></li>
+<li><p>Open <code class="docutils literal notranslate"><span class="pre">_build/html/index.html</span></code> with your browser.</p></li>
+</ul>
+</div>
+<div class="section" id="sphinx-documentation-guidelines">
+<span id="sphinx-guidelines"></span><h3>Sphinx Documentation Guidelines<a class="headerlink" href="#sphinx-documentation-guidelines" title="Permalink to this headline">¶</a></h3>
+<ul>
+<li><p>Use the <a class="reference external" href="https://www.sphinx-doc.org/en/master/usage/restructuredtext/directives.html#directive-literalinclude">literalinclude directive</a> to directly include pieces of source code, as in
+the following example. Note that an “absolute” path has been used, which means
+relative to the root for the Sphinx docs (where <code class="docutils literal notranslate"><span class="pre">conf.py</span></code> is found).</p>
+<div class="highlight-rst notranslate"><div class="highlight"><pre><span></span><span class="p">..</span> <span class="ow">literalinclude</span><span class="p">::</span> /../../../src/sys/error/err.c
+   <span class="nc">:start-at:</span> <a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscError.html#PetscError">PetscError</a>(
+   <span class="nc">:end-at:</span> <a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscFunctionReturn.html#PetscFunctionReturn">PetscFunctionReturn</a>(0)
+   <span class="nc">:append:</span> }
+</pre></div>
+</div>
+<p>For robustness to changes in the source files, Use <cite>:start-at:</cite> and related options when possible, noting that you can also use (positive) values of <cite>:lines:</cite> relative to this. For languages other than C, use the <cite>:language:</cite> option to appropriately highlight.</p>
+</li>
+<li><p>We use the <a class="reference external" href="https://sphinxcontrib-bibtex.readthedocs.io/en/latest/">sphinxcontrib-bibtex extension</a>
+to include citations from BibTeX files.
+You must include <code class="docutils literal notranslate"><span class="pre">..</span> <span class="pre">bibliography::</span></code> blocks at the bottom of a page including citations (<a class="reference external" href="https://gitlab.com/petsc/petsc/-/raw/master/src/docs/sphinx_docs/manual/ksp.rst">example</a>).
+To cite the same reference in more than one page, use <a class="reference external" href="https://sphinxcontrib-bibtex.readthedocs.io/en/latest/usage.html#key-prefixing">this workaround</a> on one of them (<a class="reference external" href="https://gitlab.com/petsc/petsc/-/raw/master/src/docs/sphinx_docs/developers/articles.rst">example</a>) <a class="footnote-reference brackets" href="#bibtex-footnote" id="id2">1</a>.</p></li>
+<li><p>When possible, please use SVG for images.  SVG is web-friendly and will be automatically converted to PDF using <code class="docutils literal notranslate"><span class="pre">rsvg-convert</span></code> (installable with your package manager, e.g., <code class="docutils literal notranslate"><span class="pre">librsvg2-bin</span></code> on Debian/Ubuntu systems).  If SVG originals are not available, it is useful to provide images in both web-friendly (such as PNG) and PDF formats.  This can be done with a wildcard extension, as in the following example, which uses <code class="docutils literal notranslate"><span class="pre">ghost.png</span></code> for the web but <code class="docutils literal notranslate"><span class="pre">ghost.pdf</span></code> when building a PDF with LaTeX.</p>
+<div class="highlight-rst notranslate"><div class="highlight"><pre><span></span><span class="p">..</span> <span class="ow">figure</span><span class="p">::</span> ghost.*
+   <span class="nc">:alt:</span> Ghost Points
+
+   Ghost Points
+</pre></div>
+</div>
+</li>
+<li><p>Prefer formatting styles that are easy to modify and maintain.  In particular, use of <a class="reference external" href="https://docutils.sourceforge.io/docs/ref/rst/directives.html#list-table">list-table</a> is recommended.</p>
+<div class="highlight-rst notranslate"><div class="highlight"><pre><span></span><span class="p">..</span> <span class="ow">list-table</span><span class="p">::</span>
+   <span class="nc">:header-rows:</span> 1
+
+   <span class="m">*</span> - Treat
+     <span class="m">-</span> Quantity
+     <span class="m">-</span> Description
+   <span class="m">*</span> - Albatross
+     <span class="m">-</span> 2.99
+     <span class="m">-</span> On a stick!
+   <span class="m">*</span> - Crunchy Frog
+     <span class="m">-</span> 1.49
+     <span class="m">-</span> If we took the bones out, it wouldn&#39;t be
+       crunchy, now would it?
+   <span class="m">*</span> - Gannet Ripple
+     <span class="m">-</span> 1.99
+     <span class="m">-</span> On a stick!
+</pre></div>
+</div>
+<p>which renders as</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Treat</p></th>
+<th class="head"><p>Quantity</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Albatross</p></td>
+<td><p>2.99</p></td>
+<td><p>On a stick!</p></td>
+</tr>
+<tr class="row-odd"><td><p>Crunchy Frog</p></td>
+<td><p>1.49</p></td>
+<td><p>If we took the bones out, it wouldn’t be
+crunchy, now would it?</p></td>
+</tr>
+<tr class="row-even"><td><p>Gannet Ripple</p></td>
+<td><p>1.99</p></td>
+<td><p>On a stick!</p></td>
+</tr>
+</tbody>
+</table>
+</li>
+<li><p>When using external links with inline URLs, prefer to use <a class="reference external" href="https://docutils.sourceforge.io/docs/ref/rst/restructuredtext.html#anonymous-hyperlinks">anonymous hyperlink references</a> with two trailing underscores, e.g.</p>
+<div class="highlight-rst notranslate"><div class="highlight"><pre><span></span><span class="s">`link text </span><span class="si">&lt;https://external.org&gt;</span><span class="s">`__</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</div>
+<div class="section" id="porting-latex-to-sphinx">
+<h3>Porting LaTeX to Sphinx<a class="headerlink" href="#porting-latex-to-sphinx" title="Permalink to this headline">¶</a></h3>
+<p>These are instructions relevant to porting the Users manual from its previous
+LaTeX incarnation, to Sphinx (as here). This section can be removed once the
+manual and TAO manual are ported.</p>
+<p>The first steps are to modify the LaTeX source to the point that it can
+be converted to RST by <a class="reference external" href="pandoc.org">Pandoc</a>.</p>
+<ul>
+<li><p>Copy the target file, say <code class="docutils literal notranslate"><span class="pre">cp</span> <span class="pre">manual.tex</span> <span class="pre">manual_consolidated.tex</span></code></p></li>
+<li><p>copy all files used with <code class="docutils literal notranslate"><span class="pre">\input</span></code> into place, using e.g. <code class="docutils literal notranslate"><span class="pre">part1.tex</span></code> instead of <code class="docutils literal notranslate"><span class="pre">part1tmp.tex</span></code> (as we don’t need the HTML links)</p></li>
+<li><p>Remove essentially all of the preamble, leaving only <code class="docutils literal notranslate"><span class="pre">\documentclass{book}</span></code> followed by <code class="docutils literal notranslate"><span class="pre">\begin{document}</span></code></p></li>
+<li><p>Save a copy of this file, say <code class="docutils literal notranslate"><span class="pre">manual_to_process.tex</span></code>.</p></li>
+<li><p>Perform some global cleanup operations, as with this script</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/env bash</span>
+
+<span class="nv">target</span><span class="o">=</span><span class="si">${</span><span class="nv">1</span><span class="k">:-</span><span class="nv">manual_to_process</span><span class="p">.tex</span><span class="si">}</span>
+<span class="nv">sed</span><span class="o">=</span>gsed  <span class="c1"># change this to sed on a GNU/Linux system</span>
+
+<span class="c1"># \trl{foo} --&gt; \verb|foo|</span>
+<span class="c1"># \lstinline{foo} --&gt; \lstinline|foo|</span>
+<span class="c1"># only works if there are no }&#39;s inside, so we take care of special cases beforehand,</span>
+<span class="c1"># of the form \trl{${PETSC_DIR}/${PETSC_ARCH}/bar/baz} and \trl{${FOO}/bar/baz}</span>
+
+<span class="si">${</span><span class="nv">sed</span><span class="si">}</span> -i <span class="s1">&#39;s/\\trl{${PETSC_DIR}\/${PETSC_ARCH}\([^}]*\)}/\\verb|${PETSC_DIR}\/${PETSC_ARCH}\1|/g&#39;</span> <span class="si">${</span><span class="nv">target</span><span class="si">}</span>
+<span class="si">${</span><span class="nv">sed</span><span class="si">}</span> -i <span class="s1">&#39;s/\\trl{${\([^}]*\)}\([^}]*\)}/\\verb|${\1}\2|/g&#39;</span> <span class="si">${</span><span class="nv">target</span><span class="si">}</span>
+
+<span class="si">${</span><span class="nv">sed</span><span class="si">}</span> -i       <span class="s1">&#39;s/\\trl{\([^}]*\)}/\\verb|\1|/g&#39;</span> <span class="si">${</span><span class="nv">target</span><span class="si">}</span>
+<span class="si">${</span><span class="nv">sed</span><span class="si">}</span> -i <span class="s1">&#39;s/\\lstinline{\([^}]*\)}/\\verb|\1|/g&#39;</span> <span class="si">${</span><span class="nv">target</span><span class="si">}</span>
+
+<span class="si">${</span><span class="nv">sed</span><span class="si">}</span> -i <span class="s1">&#39;s/\\lstinline|/\\verb|/g&#39;</span> <span class="si">${</span><span class="nv">target</span><span class="si">}</span>
+
+<span class="si">${</span><span class="nv">sed</span><span class="si">}</span> -i <span class="s1">&#39;s/tightitemize/itemize/g&#39;</span> <span class="si">${</span><span class="nv">target</span><span class="si">}</span>
+<span class="si">${</span><span class="nv">sed</span><span class="si">}</span> -i <span class="s1">&#39;s/tightenumerate/enumerate/g&#39;</span> <span class="si">${</span><span class="nv">target</span><span class="si">}</span>
+
+<span class="si">${</span><span class="nv">sed</span><span class="si">}</span> -i <span class="s1">&#39;s/lstlisting/verbatim/g&#39;</span> <span class="si">${</span><span class="nv">target</span><span class="si">}</span>
+<span class="si">${</span><span class="nv">sed</span><span class="si">}</span> -i <span class="s1">&#39;s/bashlisting/verbatim/g&#39;</span> <span class="si">${</span><span class="nv">target</span><span class="si">}</span>
+<span class="si">${</span><span class="nv">sed</span><span class="si">}</span> -i <span class="s1">&#39;s/makelisting/verbatim/g&#39;</span> <span class="si">${</span><span class="nv">target</span><span class="si">}</span>
+<span class="si">${</span><span class="nv">sed</span><span class="si">}</span> -i <span class="s1">&#39;s/outputlisting/verbatim/g&#39;</span> <span class="si">${</span><span class="nv">target</span><span class="si">}</span>
+<span class="si">${</span><span class="nv">sed</span><span class="si">}</span> -i <span class="s1">&#39;s/pythonlisting/verbatim/g&#39;</span> <span class="si">${</span><span class="nv">target</span><span class="si">}</span>
+</pre></div>
+</div>
+</li>
+<li><p>Fix any typos like this (wrong right brace) : <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Viewer/PetscViewerPushFormat.html#PetscViewerPushFormat">PetscViewerPushFormat</a>(viewer,<a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Viewer/PetscViewerFormat.html#PetscViewerFormat">PETSC_VIEWER_BINARY_MATLAB</a>}</span></code>
+These will produce very unhelpful Pandoc error messages at the end of the file like
+<code class="docutils literal notranslate"><span class="pre">Error</span> <span class="pre">at</span> <span class="pre">&quot;source&quot;</span> <span class="pre">(line</span> <span class="pre">4873,</span> <span class="pre">column</span> <span class="pre">10):</span> <span class="pre">unexpected</span> <span class="pre">end</span> <span class="pre">of</span> <span class="pre">input</span> <span class="pre">%%%</span> <span class="pre">End:</span></code></p></li>
+<li><p>Convert to <code class="docutils literal notranslate"><span class="pre">.rst</span></code> with pandoc (tested with v2.9.2), e.g. <code class="docutils literal notranslate"><span class="pre">pandoc</span> <span class="pre">-s</span> <span class="pre">-t</span> <span class="pre">rst</span> <span class="pre">-f</span> <span class="pre">latex</span> <span class="pre">manual_to_process.tex</span> <span class="pre">-o</span> <span class="pre">manual.rst</span></code>.</p></li>
+<li><p>Move to Sphinx docs tree (perhaps renaming or splitting up) and build.</p></li>
+</ul>
+<p>Next, one must examine the output, ideally comparing to the original rendered LaTeX, and make fixes on the <code class="docutils literal notranslate"><span class="pre">.rst</span></code> file, including but not limited to:</p>
+<ul class="simple">
+<li><p>Check links</p></li>
+<li><p>Add correct code block languages when not C, e.g. replace <code class="docutils literal notranslate"><span class="pre">::</span></code> with <code class="docutils literal notranslate"><span class="pre">..</span> <span class="pre">code-block::</span> <span class="pre">bash</span></code></p></li>
+<li><p>Re-add citations with <code class="docutils literal notranslate"><span class="pre">:cite:</span></code> and add per-chapter bibliography sections (see existing examples)</p></li>
+<li><p>Fix footnotes</p></li>
+<li><p>Fix section labels and links</p></li>
+<li><p>Fix links with literals in the link text</p></li>
+<li><p>Itemized lists</p></li>
+<li><p>Replace Tikz with graphviz (or images or something else)</p></li>
+<li><p>Replace/fix tables</p></li>
+<li><p>Replace included source code with “literalinclude” (see <a class="reference internal" href="#sphinx-guidelines"><span class="std std-ref">Sphinx Documentation Guidelines</span></a>)</p></li>
+<li><p>(please add more common fixes here as you find them) …</p></li>
+</ul>
+<p class="rubric">Footnotes</p>
+<dl class="footnote brackets">
+<dt class="label" id="bibtex-footnote"><span class="brackets"><a class="fn-backref" href="#id2">1</a></span></dt>
+<dd><p>The extensions’s <a class="reference external" href="https://github.com/mcmtroffaes/sphinxcontrib-bibtex">development branch</a> <a class="reference external" href="https://github.com/mcmtroffaes/sphinxcontrib-bibtex/pull/185">supports our use case better</a> (<cite>:footcite:</cite>), which can be investigated if a release is ever made.</p>
+</dd>
+<dt class="label" id="f1"><span class="brackets">2</span></dt>
+<dd><p>We use a precise version of Sphinx to avoid issues with our <a class="reference external" href="https://gitlab.com/petsc/petsc/-/blob/master/src/docs/sphinx_docs/ext/html5_petsc.py">custom extension to create inline links</a></p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="design.html" title="The Design of PETSc"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="testing.html" title="PETSc Testing System"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">PETSc 3.14.6 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >PETSc Developer’s Documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 1991-2021, UChicago Argonne, LLC and the PETSc Development Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.4.
+    </div>
+  </body>
+</html>

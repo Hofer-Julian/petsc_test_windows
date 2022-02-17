@@ -1,0 +1,28 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Profiling/PetscLogGpuTimeBegin.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>PetscLogGpuTimeBegin</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/Profiling/PetscLogGpuTimeBegin.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="PetscLogGpuTimeBegin"><H1>PetscLogGpuTimeBegin</H1></A>
+Start timer for device 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+PETSC_STATIC_INLINE <A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../Profiling/PetscLogGpuTimeBegin.html#PetscLogGpuTimeBegin">PetscLogGpuTimeBegin</A>()
+</PRE>
+
+<P>
+<H3><FONT COLOR="#CC3333">Notes</FONT></H3>
+The timer is run on the CPU, it is just logged separately as time devoted to GPU computations (including kernel launch times). It is used to compute the flop rate on the GPU.
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+  <A HREF="../Profiling/PetscLogView.html#PetscLogView">PetscLogView</A>(), <A HREF="../Profiling/PetscLogGpuFlops.html#PetscLogGpuFlops">PetscLogGpuFlops</A>(), <A HREF="../Profiling/PetscLogGpuTimeEnd.html#PetscLogGpuTimeEnd">PetscLogGpuTimeEnd</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>intermediate<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/sys/logging/../../../include/petsclog.h.html#PetscLogGpuTimeBegin">src/sys/logging/../../../include/petsclog.h</A>
+<BR><A HREF="./index.html">Index of all Profiling routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

@@ -1,0 +1,59 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscStrcpy.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>PetscStrcpy</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/Sys/PetscStrcpy.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="PetscStrcpy"><H1>PetscStrcpy</H1></A>
+Copies a string 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscsys.h"   
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A>  <A HREF="../Sys/PetscStrcpy.html#PetscStrcpy">PetscStrcpy</A>(char s[],const char t[])
+</PRE>
+Not Collective
+<P>
+<H3><FONT COLOR="#CC3333">Input Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>t </B></TD><TD>- pointer to string
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Output Parameter</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>s </B></TD><TD>- the copied string
+</TD></TR></TABLE>
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">Notes</FONT></H3>
+Null string returns a string starting with zero
+<P>
+Not for use in Fortran
+<P>
+It is recommended you use <A HREF="../Sys/PetscStrncpy.html#PetscStrncpy">PetscStrncpy</A>() instead of this routine
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../Sys/PetscStrncpy.html#PetscStrncpy">PetscStrncpy</A>(), <A HREF="../Sys/PetscStrcat.html#PetscStrcat">PetscStrcat</A>(), <A HREF="../Sys/PetscStrlcat.html#PetscStrlcat">PetscStrlcat</A>()
+<BR>
+<P>
+<P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>intermediate<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/sys/utils/str.c.html#PetscStrcpy">src/sys/utils/str.c</A>
+<P><H3><FONT COLOR="#CC3333">Examples</FONT></H3>
+<A HREF="../../../src/vec/is/sf/tutorials/ex1.c.html">src/vec/is/sf/tutorials/ex1.c.html</A><BR>
+<A HREF="../../../src/ksp/ksp/tutorials/ex10.c.html">src/ksp/ksp/tutorials/ex10.c.html</A><BR>
+<A HREF="../../../src/ksp/ksp/tutorials/ex72.c.html">src/ksp/ksp/tutorials/ex72.c.html</A><BR>
+<A HREF="../../../src/ksp/ksp/tutorials/ex75.c.html">src/ksp/ksp/tutorials/ex75.c.html</A><BR>
+<A HREF="../../../src/ksp/ksp/tutorials/ex76.c.html">src/ksp/ksp/tutorials/ex76.c.html</A><BR>
+<A HREF="../../../src/ts/tutorials/ex8.c.html">src/ts/tutorials/ex8.c.html</A><BR>
+<A HREF="../../../src/ts/tutorials/ex11.c.html">src/ts/tutorials/ex11.c.html</A><BR>
+<A HREF="../../../src/ts/tutorials/extchem.c.html">src/ts/tutorials/extchem.c.html</A><BR>
+<A HREF="../../../src/ts/tutorials/extchemfield.c.html">src/ts/tutorials/extchemfield.c.html</A><BR>
+<A HREF="../../../src/ts/utils/dmplexlandau/tutorials/ex2.c.html">src/ts/utils/dmplexlandau/tutorials/ex2.c.html</A><BR>
+<BR><A HREF="./index.html">Index of all Sys routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

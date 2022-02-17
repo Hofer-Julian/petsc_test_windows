@@ -1,0 +1,40 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DM/PetscPartitionerMatPartitioningGetMatPartitioning.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>PetscPartitionerMatPartitioningGetMatPartitioning</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/DM/PetscPartitionerMatPartitioningGetMatPartitioning.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="PetscPartitionerMatPartitioningGetMatPartitioning"><H1>PetscPartitionerMatPartitioningGetMatPartitioning</H1></A>
+Get a <A HREF="../Mat/MatPartitioning.html#MatPartitioning">MatPartitioning</A> instance wrapped by this <A HREF="../DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</A>. 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscpartitioner.h"   
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../DM/PetscPartitionerMatPartitioningGetMatPartitioning.html#PetscPartitionerMatPartitioningGetMatPartitioning">PetscPartitionerMatPartitioningGetMatPartitioning</A>(<A HREF="../DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</A> part, <A HREF="../Mat/MatPartitioning.html#MatPartitioning">MatPartitioning</A> *mp)
+</PRE>
+Not Collective
+<P>
+<H3><FONT COLOR="#CC3333">Input Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>part     </B></TD><TD>- The <A HREF="../DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</A>
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Output Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>mp       </B></TD><TD>- The <A HREF="../Mat/MatPartitioning.html#MatPartitioning">MatPartitioning</A>
+</TD></TR></TABLE>
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+<A HREF="../DMPLEX/DMPlexDistribute.html#DMPlexDistribute">DMPlexDistribute</A>(), <A HREF="../DM/PetscPartitionerCreate.html#PetscPartitionerCreate">PetscPartitionerCreate</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>developer<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/dm/partitioner/impls/matpart/partmatpart.c.html#PetscPartitionerMatPartitioningGetMatPartitioning">src/dm/partitioner/impls/matpart/partmatpart.c</A>
+<P><H3><FONT COLOR="CC3333">Implementations</FONT></H3><A HREF="../../../src/dm/partitioner/impls/matpart/partmatpart.c.html#PetscPartitionerMatPartitioningGetMatPartitioning_MatPartitioning">PetscPartitionerMatPartitioningGetMatPartitioning_MatPartitioning in src/dm/partitioner/impls/matpart/partmatpart.c</A><BR>
+<BR><A HREF="./index.html">Index of all DM routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

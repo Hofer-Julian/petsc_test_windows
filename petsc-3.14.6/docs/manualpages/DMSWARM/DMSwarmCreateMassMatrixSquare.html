@@ -1,0 +1,45 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DMSWARM/DMSwarmCreateMassMatrixSquare.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>DMSwarmCreateMassMatrixSquare</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/DMSWARM/DMSwarmCreateMassMatrixSquare.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="DMSwarmCreateMassMatrixSquare"><H1>DMSwarmCreateMassMatrixSquare</H1></A>
+Creates the block-diagonal of the square, M^T_p M_p, of the particle mass matrix M_p 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscdmswarm.h"   
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../DMSWARM/DMSwarmCreateMassMatrixSquare.html#DMSwarmCreateMassMatrixSquare">DMSwarmCreateMassMatrixSquare</A>(<A HREF="../DM/DM.html#DM">DM</A> dmCoarse, <A HREF="../DM/DM.html#DM">DM</A> dmFine, <A HREF="../Mat/Mat.html#Mat">Mat</A> *mass)
+</PRE>
+Collective on dmCoarse
+<P>
+<H3><FONT COLOR="#CC3333">Input parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>dmCoarse </B></TD><TD>- a DMSwarm
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>dmFine   </B></TD><TD>- a DMPlex
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Output parameter</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>mass     </B></TD><TD>- the square of the particle mass matrix
+</TD></TR></TABLE>
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">Notes</FONT></H3>
+We only compute the block diagonal since this provides a good preconditioner and is completely local. It would be possible in the
+future to compute the full normal equations.
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../DM/DMCreateMassMatrix.html#DMCreateMassMatrix">DMCreateMassMatrix</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>advanced<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/dm/impls/swarm/swarm.c.html#DMSwarmCreateMassMatrixSquare">src/dm/impls/swarm/swarm.c</A>
+<BR><A HREF="./index.html">Index of all DMSWARM routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

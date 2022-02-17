@@ -1,0 +1,45 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/SNES/SNESMultiblockSetIS.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>SNESMultiblockSetIS</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/SNES/SNESMultiblockSetIS.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="SNESMultiblockSetIS"><H1>SNESMultiblockSetIS</H1></A>
+Sets the global row indices for the block 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscsnes.h" 
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../SNES/SNESMultiblockSetIS.html#SNESMultiblockSetIS">SNESMultiblockSetIS</A>(<A HREF="../SNES/SNES.html#SNES">SNES</A> snes, const char name[], <A HREF="../IS/IS.html#IS">IS</A> is)
+</PRE>
+Logically Collective on <A HREF="../SNES/SNES.html#SNES">SNES</A>
+<P>
+<H3><FONT COLOR="#CC3333">Input Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>snes </B></TD><TD>- the solver context
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>name </B></TD><TD>- name of this block, if NULL the number of the block is used
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>is   </B></TD><TD>- the index set that defines the global row indices in this block
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Notes</FONT></H3>
+Use <A HREF="../SNES/SNESMultiblockSetFields.html#SNESMultiblockSetFields">SNESMultiblockSetFields</A>(), for blocks defined by strides.
+<P>
+This function is called once per block (it creates a new block each time). Solve options
+for this block will be available under the prefix -multiblock_BLOCKNAME_.
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../SNES/SNESMultiblockGetSubSNES.html#SNESMultiblockGetSubSNES">SNESMultiblockGetSubSNES</A>(), <A HREF="../SNES/SNESMULTIBLOCK.html#SNESMULTIBLOCK">SNESMULTIBLOCK</A>, <A HREF="../SNES/SNESMultiblockSetBlockSize.html#SNESMultiblockSetBlockSize">SNESMultiblockSetBlockSize</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>intermediate<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/snes/impls/multiblock/multiblock.c.html#SNESMultiblockSetIS">src/snes/impls/multiblock/multiblock.c</A>
+<P><H3><FONT COLOR="CC3333">Implementations</FONT></H3><A HREF="../../../src/snes/impls/multiblock/multiblock.c.html#SNESMultiblockSetIS_Default">SNESMultiblockSetIS_Default in src/snes/impls/multiblock/multiblock.c</A><BR>
+<BR><A HREF="./index.html">Index of all SNES routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

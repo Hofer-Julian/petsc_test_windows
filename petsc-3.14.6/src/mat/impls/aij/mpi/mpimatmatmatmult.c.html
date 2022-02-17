@@ -1,0 +1,161 @@
+<center><a href="mpimatmatmatmult.c">Actual source code: mpimatmatmatmult.c</a></center><br>
+
+<html>
+<head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/src/mat/impls/aij/mpi/mpimatmatmatmult.c.html" />
+<title></title>
+<meta name="generator" content="c2html 0.9.4">
+<meta name="date" content="2021-03-30T16:50:07+00:00">
+</head>
+
+<body bgcolor="#FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 src/mat/impls/aij/mpi/mpimatmatmatmult.c.html "><small>Report Typos and Errors</small></a></div>
+<pre width="80">
+<a name="line1">  1: </a><font color="#B22222">/*</font>
+<a name="line2">  2: </a><font color="#B22222">  Defines matrix-matrix-matrix product routines for MPIAIJ matrices</font>
+<a name="line3">  3: </a><font color="#B22222">          D = A * B * C</font>
+<a name="line4">  4: </a><font color="#B22222">*/</font>
+<a name="line5">  5: </a>#include <A href="mpiaij.h.html">&lt;../src/mat/impls/aij/mpi/mpiaij.h&gt;</A>
+
+<a name="line7">  7: </a><font color="#A020F0">#if defined(PETSC_HAVE_HYPRE)</font>
+<a name="line8">  8: </a><strong><font color="#4169E1">PETSC_INTERN <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatTransposeMatMatMultSymbolic_AIJ_AIJ_AIJ_wHYPRE(<a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a>,<a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a>,<a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a>,<a href="../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>,<a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a>)</font></strong>;
+<a name="line9">  9: </a><strong><font color="#4169E1">PETSC_INTERN <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatTransposeMatMatMultNumeric_AIJ_AIJ_AIJ_wHYPRE(<a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a>,<a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a>,<a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a>,<a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a>)</font></strong>;
+
+<a name="line11"> 11: </a><strong><font color="#4169E1"><a name="MatProductNumeric_ABC_Transpose_AIJ_AIJ"></a>PETSC_INTERN <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatProductNumeric_ABC_Transpose_AIJ_AIJ(<a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> RAP)</font></strong>
+<a name="line12"> 12: </a>{
+<a name="line14"> 14: </a>  Mat_Product    *product = RAP-&gt;product;
+<a name="line15"> 15: </a>  <a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a>            Rt,R=product-&gt;A,A=product-&gt;B,P=product-&gt;C;
+
+<a name="line18"> 18: </a>  <a href="../../../../../docs/manualpages/Mat/MatTransposeGetMat.html#MatTransposeGetMat">MatTransposeGetMat</a>(R,&amp;Rt);
+<a name="line19"> 19: </a>  MatTransposeMatMatMultNumeric_AIJ_AIJ_AIJ_wHYPRE(Rt,A,P,RAP);
+<a name="line20"> 20: </a>  <font color="#4169E1">return</font>(0);
+<a name="line21"> 21: </a>}
+
+<a name="line23"> 23: </a><strong><font color="#4169E1"><a name="MatProductSymbolic_ABC_Transpose_AIJ_AIJ"></a>PETSC_INTERN <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatProductSymbolic_ABC_Transpose_AIJ_AIJ(<a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> RAP)</font></strong>
+<a name="line24"> 24: </a>{
+<a name="line26"> 26: </a>  Mat_Product    *product = RAP-&gt;product;
+<a name="line27"> 27: </a>  <a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a>            Rt,R=product-&gt;A,A=product-&gt;B,P=product-&gt;C;
+<a name="line28"> 28: </a>  <a href="../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>      flg;
+
+<a name="line31"> 31: </a>  <font color="#B22222">/* local sizes of matrices will be checked by the calling subroutines */</font>
+<a name="line32"> 32: </a>  <a href="../../../../../docs/manualpages/Mat/MatTransposeGetMat.html#MatTransposeGetMat">MatTransposeGetMat</a>(R,&amp;Rt);
+<a name="line33"> 33: </a>  <a href="../../../../../docs/manualpages/Sys/PetscObjectTypeCompareAny.html#PetscObjectTypeCompareAny">PetscObjectTypeCompareAny</a>((<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)Rt,&amp;flg,<a href="../../../../../docs/manualpages/Mat/MATSEQAIJ.html#MATSEQAIJ">MATSEQAIJ</a>,MATSEQAIJMKL,<a href="../../../../../docs/manualpages/Mat/MATMPIAIJ.html#MATMPIAIJ">MATMPIAIJ</a>,NULL);
+<a name="line34"> 34: </a>  <font color="#4169E1">if</font> (!flg) <a href="../../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)Rt),PETSC_ERR_SUP,<font color="#666666">"Not for matrix type %s"</font>,((<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)Rt)-&gt;type_name);
+<a name="line35"> 35: </a>  MatTransposeMatMatMultSymbolic_AIJ_AIJ_AIJ_wHYPRE(Rt,A,P,product-&gt;fill,RAP);
+<a name="line36"> 36: </a>  RAP-&gt;ops-&gt;productnumeric = MatProductNumeric_ABC_Transpose_AIJ_AIJ;
+<a name="line37"> 37: </a>  <font color="#4169E1">return</font>(0);
+<a name="line38"> 38: </a>}
+
+<a name="line40"> 40: </a><strong><font color="#4169E1"><a name="MatProductSetFromOptions_Transpose_AIJ_AIJ"></a>PETSC_INTERN <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatProductSetFromOptions_Transpose_AIJ_AIJ(<a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> C)</font></strong>
+<a name="line41"> 41: </a>{
+<a name="line42"> 42: </a>  Mat_Product *product = C-&gt;product;
+
+<a name="line45"> 45: </a>  <font color="#4169E1">if</font> (product-&gt;type == <a href="../../../../../docs/manualpages/Mat/MatProductType.html#MatProductType">MATPRODUCT_ABC</a>) {
+<a name="line46"> 46: </a>    C-&gt;ops-&gt;productsymbolic = MatProductSymbolic_ABC_Transpose_AIJ_AIJ;
+<a name="line47"> 47: </a>  } <font color="#4169E1">else</font> <a href="../../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)C),PETSC_ERR_SUP,<font color="#666666">"MatProduct type %s is not supported for Transpose, AIJ and AIJ matrices"</font>,MatProductTypes[product-&gt;type]);
+<a name="line48"> 48: </a>  <font color="#4169E1">return</font>(0);
+<a name="line49"> 49: </a>}
+<a name="line50"> 50: </a><font color="#A020F0">#endif</font>
+
+<a name="line52"> 52: </a><strong><font color="#4169E1"><a name="MatMatMatMultSymbolic_MPIAIJ_MPIAIJ_MPIAIJ"></a><a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatMatMatMultSymbolic_MPIAIJ_MPIAIJ_MPIAIJ(<a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> A,<a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> B,<a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> C,<a href="../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> fill,<a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> D)</font></strong>
+<a name="line53"> 53: </a>{
+<a name="line55"> 55: </a>  <a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a>            BC;
+<a name="line56"> 56: </a>  <a href="../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>      scalable;
+<a name="line57"> 57: </a>  Mat_Product    *product;
+
+<a name="line60"> 60: </a>  MatCheckProduct(D,4);
+<a name="line61"> 61: </a>  <font color="#4169E1">if</font> (D-&gt;product-&gt;data) <a href="../../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)D),PETSC_ERR_PLIB,<font color="#666666">"Product data not empty"</font>);
+<a name="line62"> 62: </a>  product = D-&gt;product;
+<a name="line63"> 63: </a>  <a href="../../../../../docs/manualpages/Mat/MatProductCreate.html#MatProductCreate">MatProductCreate</a>(B,C,NULL,&amp;BC);
+<a name="line64"> 64: </a>  <a href="../../../../../docs/manualpages/Mat/MatProductSetType.html#MatProductSetType">MatProductSetType</a>(BC,<a href="../../../../../docs/manualpages/Mat/MatProductType.html#MatProductType">MATPRODUCT_AB</a>);
+<a name="line65"> 65: </a>  <a href="../../../../../docs/manualpages/Sys/PetscStrcmp.html#PetscStrcmp">PetscStrcmp</a>(product-&gt;alg,<font color="#666666">"scalable"</font>,&amp;scalable);
+<a name="line66"> 66: </a>  <font color="#4169E1">if</font> (scalable) {
+<a name="line67"> 67: </a>    MatMatMultSymbolic_MPIAIJ_MPIAIJ(B,C,fill,BC);
+<a name="line68"> 68: </a>    <a href="../../../../../docs/manualpages/Mat/MatZeroEntries.html#MatZeroEntries">MatZeroEntries</a>(BC); <font color="#B22222">/* initialize value entries of BC */</font>
+<a name="line69"> 69: </a>    MatMatMultSymbolic_MPIAIJ_MPIAIJ(A,BC,fill,D);
+<a name="line70"> 70: </a>  } <font color="#4169E1">else</font> {
+<a name="line71"> 71: </a>    MatMatMultSymbolic_MPIAIJ_MPIAIJ_nonscalable(B,C,fill,BC);
+<a name="line72"> 72: </a>    <a href="../../../../../docs/manualpages/Mat/MatZeroEntries.html#MatZeroEntries">MatZeroEntries</a>(BC); <font color="#B22222">/* initialize value entries of BC */</font>
+<a name="line73"> 73: </a>    MatMatMultSymbolic_MPIAIJ_MPIAIJ_nonscalable(A,BC,fill,D);
+<a name="line74"> 74: </a>  }
+<a name="line75"> 75: </a>  <a href="../../../../../docs/manualpages/Mat/MatDestroy.html#MatDestroy">MatDestroy</a>(&amp;product-&gt;Dwork);
+<a name="line76"> 76: </a>  product-&gt;Dwork = BC;
+
+<a name="line78"> 78: </a>  D-&gt;ops-&gt;matmatmultnumeric = MatMatMatMultNumeric_MPIAIJ_MPIAIJ_MPIAIJ;
+<a name="line79"> 79: </a>  <font color="#4169E1">return</font>(0);
+<a name="line80"> 80: </a>}
+
+<a name="line82"> 82: </a><strong><font color="#4169E1"><a name="MatMatMatMultNumeric_MPIAIJ_MPIAIJ_MPIAIJ"></a><a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatMatMatMultNumeric_MPIAIJ_MPIAIJ_MPIAIJ(<a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> A,<a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> B,<a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> C,<a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> D)</font></strong>
+<a name="line83"> 83: </a>{
+<a name="line85"> 85: </a>  Mat_Product    *product;
+<a name="line86"> 86: </a>  <a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a>            BC;
+
+<a name="line89"> 89: </a>  MatCheckProduct(D,4);
+<a name="line90"> 90: </a>  <font color="#4169E1">if</font> (!D-&gt;product-&gt;data) <a href="../../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)D),PETSC_ERR_PLIB,<font color="#666666">"Product data empty"</font>);
+<a name="line91"> 91: </a>  product = D-&gt;product;
+<a name="line92"> 92: </a>  BC = product-&gt;Dwork;
+<a name="line93"> 93: </a>  <font color="#4169E1">if</font> (!BC-&gt;ops-&gt;matmultnumeric) <a href="../../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)D),PETSC_ERR_PLIB,<font color="#666666">"Missing numeric operation"</font>);
+<a name="line94"> 94: </a>  (*BC-&gt;ops-&gt;matmultnumeric)(B,C,BC);
+<a name="line95"> 95: </a>  <font color="#4169E1">if</font> (!D-&gt;ops-&gt;matmultnumeric) <a href="../../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)D),PETSC_ERR_PLIB,<font color="#666666">"Missing numeric operation"</font>);
+<a name="line96"> 96: </a>  (*D-&gt;ops-&gt;matmultnumeric)(A,BC,D);
+<a name="line97"> 97: </a>  <font color="#4169E1">return</font>(0);
+<a name="line98"> 98: </a>}
+
+<a name="line100">100: </a><font color="#B22222">/* ----------------------------------------------------- */</font>
+<a name="line101">101: </a><strong><font color="#4169E1"><a name="MatDestroy_MPIAIJ_RARt"></a><a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatDestroy_MPIAIJ_RARt(void *data)</font></strong>
+<a name="line102">102: </a>{
+<a name="line104">104: </a>  Mat_RARt       *rart = (Mat_RARt*)data;
+
+<a name="line107">107: </a>  <a href="../../../../../docs/manualpages/Mat/MatDestroy.html#MatDestroy">MatDestroy</a>(&amp;rart-&gt;Rt);
+<a name="line108">108: </a>  <font color="#4169E1">if</font> (rart-&gt;destroy) {
+<a name="line109">109: </a>    (*rart-&gt;destroy)(rart-&gt;data);
+<a name="line110">110: </a>  }
+<a name="line111">111: </a>  <a href="../../../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(rart);
+<a name="line112">112: </a>  <font color="#4169E1">return</font>(0);
+<a name="line113">113: </a>}
+
+<a name="line115">115: </a><strong><font color="#4169E1"><a name="MatProductNumeric_RARt_MPIAIJ_MPIAIJ"></a><a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatProductNumeric_RARt_MPIAIJ_MPIAIJ(<a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> C)</font></strong>
+<a name="line116">116: </a>{
+<a name="line118">118: </a>  Mat_RARt       *rart;
+<a name="line119">119: </a>  <a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a>            A,R,Rt;
+
+<a name="line122">122: </a>  MatCheckProduct(C,1);
+<a name="line123">123: </a>  <font color="#4169E1">if</font> (!C-&gt;product-&gt;data) <a href="../../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)C),PETSC_ERR_PLIB,<font color="#666666">"Product data empty"</font>);
+<a name="line124">124: </a>  rart = (Mat_RARt*)C-&gt;product-&gt;data;
+<a name="line125">125: </a>  A    = C-&gt;product-&gt;A;
+<a name="line126">126: </a>  R    = C-&gt;product-&gt;B;
+<a name="line127">127: </a>  Rt   = rart-&gt;Rt;
+<a name="line128">128: </a>  <a href="../../../../../docs/manualpages/Mat/MatTranspose.html#MatTranspose">MatTranspose</a>(R,<a href="../../../../../docs/manualpages/Mat/MatReuse.html#MatReuse">MAT_REUSE_MATRIX</a>,&amp;Rt);
+<a name="line129">129: </a>  <font color="#4169E1">if</font> (rart-&gt;data) C-&gt;product-&gt;data = rart-&gt;data;
+<a name="line130">130: </a>  (*C-&gt;ops-&gt;matmatmultnumeric)(R,A,Rt,C);
+<a name="line131">131: </a>  C-&gt;product-&gt;data = rart;
+<a name="line132">132: </a>  <font color="#4169E1">return</font>(0);
+<a name="line133">133: </a>}
+
+<a name="line135">135: </a><strong><font color="#4169E1"><a name="MatProductSymbolic_RARt_MPIAIJ_MPIAIJ"></a><a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatProductSymbolic_RARt_MPIAIJ_MPIAIJ(<a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> C)</font></strong>
+<a name="line136">136: </a>{
+<a name="line138">138: </a>  <a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a>            A,R,Rt;
+<a name="line139">139: </a>  Mat_RARt       *rart;
+
+<a name="line142">142: </a>  MatCheckProduct(C,1);
+<a name="line143">143: </a>  <font color="#4169E1">if</font> (C-&gt;product-&gt;data) <a href="../../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)C),PETSC_ERR_PLIB,<font color="#666666">"Product data not empty"</font>);
+<a name="line144">144: </a>  A    = C-&gt;product-&gt;A;
+<a name="line145">145: </a>  R    = C-&gt;product-&gt;B;
+<a name="line146">146: </a>  <a href="../../../../../docs/manualpages/Mat/MatTranspose.html#MatTranspose">MatTranspose</a>(R,<a href="../../../../../docs/manualpages/Mat/MatReuse.html#MatReuse">MAT_INITIAL_MATRIX</a>,&amp;Rt);
+<a name="line147">147: </a>  <font color="#B22222">/* product-&gt;Dwork is used to store A*Rt in MatMatMatMultSymbolic_MPIAIJ_MPIAIJ_MPIAIJ() */</font>
+<a name="line148">148: </a>  MatMatMatMultSymbolic_MPIAIJ_MPIAIJ_MPIAIJ(R,A,Rt,C-&gt;product-&gt;fill,C);
+<a name="line149">149: </a>  C-&gt;ops-&gt;productnumeric = MatProductNumeric_RARt_MPIAIJ_MPIAIJ;
+
+<a name="line151">151: </a>  <font color="#B22222">/* create a supporting struct */</font>
+<a name="line152">152: </a>  <a href="../../../../../docs/manualpages/Sys/PetscNew.html#PetscNew">PetscNew</a>(&amp;rart);
+<a name="line153">153: </a>  rart-&gt;Rt      = Rt;
+<a name="line154">154: </a>  rart-&gt;data    = C-&gt;product-&gt;data;
+<a name="line155">155: </a>  rart-&gt;destroy = C-&gt;product-&gt;destroy;
+<a name="line156">156: </a>  C-&gt;product-&gt;data    = rart;
+<a name="line157">157: </a>  C-&gt;product-&gt;destroy = MatDestroy_MPIAIJ_RARt;
+<a name="line158">158: </a>  <font color="#4169E1">return</font>(0);
+<a name="line159">159: </a>}
+</pre>
+</body>
+
+</html>

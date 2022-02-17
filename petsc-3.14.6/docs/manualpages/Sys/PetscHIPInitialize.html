@@ -1,0 +1,37 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscHIPInitialize.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>PetscHIPInitialize</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/Sys/PetscHIPInitialize.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="PetscHIPInitialize"><H1>PetscHIPInitialize</H1></A>
+Initializes HIP (eagerly in <A HREF="../Sys/PetscInitialize.html#PetscInitialize">PetscInitialize</A>() or soon after <A HREF="../Sys/PetscInitialize.html#PetscInitialize">PetscInitialize</A>()) and hipBLAS/hipSPARSE libraries on the device 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+PETSC_EXTERN <A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../Sys/PetscHIPInitialize.html#PetscHIPInitialize">PetscHIPInitialize</A>(<A HREF="../Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</A> comm,<A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> device)
+</PRE>
+Logically collective
+<P>
+<H3><FONT COLOR="#CC3333">Input Parameter</FONT></H3>
+(see notes)
+<P>
+<H3><FONT COLOR="#CC3333">Options Database</FONT></H3>
+(see notes)
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">Notes</FONT></H3>
+The functionality, parameters and options database of this routine are similar to that of <A HREF="../Sys/PetscCUDAInitialize.html#PetscCUDAInitialize">PetscCUDAInitialize</A>(), except that the option names
+are -hip_device, -hip_view, -hip_synchronize instead. See manpage of <A HREF="../Sys/PetscCUDAInitialize.html#PetscCUDAInitialize">PetscCUDAInitialize</A>() for details.
+<P>
+.seealso: <A HREF="../Sys/PetscHIPInitializeCheck.html#PetscHIPInitializeCheck">PetscHIPInitializeCheck</A>(), <A HREF="../Sys/PetscCUDAInitialize.html#PetscCUDAInitialize">PetscCUDAInitialize</A>(), <A HREF="../Sys/PetscCUDAInitializeCheck.html#PetscCUDAInitializeCheck">PetscCUDAInitializeCheck</A>()
+<P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>beginner<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/sys/objects/cupminit.i.c.html#PetscHIPInitialize">src/sys/objects/cupminit.inc</A>
+<BR><A HREF="./index.html">Index of all Sys routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

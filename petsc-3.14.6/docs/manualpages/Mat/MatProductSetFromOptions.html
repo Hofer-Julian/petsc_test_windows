@@ -1,0 +1,106 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatProductSetFromOptions.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>MatProductSetFromOptions</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/Mat/MatProductSetFromOptions.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="MatProductSetFromOptions"><H1>MatProductSetFromOptions</H1></A>
+Creates a matrix product where the type, the algorithm etc are determined from the options database. 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscmat.h" 
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../Mat/MatProductSetFromOptions.html#MatProductSetFromOptions">MatProductSetFromOptions</A>(<A HREF="../Mat/Mat.html#Mat">Mat</A> mat)
+</PRE>
+Logically Collective on <A HREF="../Mat/Mat.html#Mat">Mat</A>
+<P>
+<H3><FONT COLOR="#CC3333">Input Parameter</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>mat </B></TD><TD>- the matrix
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Options Database Keys</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>-mat_product_clear </B></TD><TD>- Clear intermediate data structures after <A HREF="../Mat/MatProductNumeric.html#MatProductNumeric">MatProductNumeric</A>() has been called
+</TD></TR></TABLE>
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../Mat/MatSetFromOptions.html#MatSetFromOptions">MatSetFromOptions</A>(), <A HREF="../Mat/MatProductCreate.html#MatProductCreate">MatProductCreate</A>(), <A HREF="../Mat/MatProductCreateWithMat.html#MatProductCreateWithMat">MatProductCreateWithMat</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>intermediate<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/mat/interface/matproduct.c.html#MatProductSetFromOptions">src/mat/interface/matproduct.c</A>
+<P><H3><FONT COLOR="#CC3333">Examples</FONT></H3>
+<A HREF="../../../src/tao/pde_constrained/tutorials/parabolic.c.html">src/tao/pde_constrained/tutorials/parabolic.c.html</A><BR>
+<P><H3><FONT COLOR="CC3333">Implementations</FONT></H3><A HREF="../../../src/mat/impls/aij/mpi/mpiaij.c.html#MatProductSetFromOptions_MPIDense_MPIAIJ_AB">MatProductSetFromOptions_MPIDense_MPIAIJ_AB in src/mat/impls/aij/mpi/mpiaij.c</A><BR>
+<A HREF="../../../src/mat/impls/aij/mpi/mpiaij.c.html#MatProductSetFromOptions_MPIDense_MPIAIJ">MatProductSetFromOptions_MPIDense_MPIAIJ in src/mat/impls/aij/mpi/mpiaij.c</A><BR>
+<A HREF="../../../src/mat/impls/aij/mpi/mpimatmatmatmult.c.html#MatProductSetFromOptions_Transpose_AIJ_AIJ">MatProductSetFromOptions_Transpose_AIJ_AIJ in src/mat/impls/aij/mpi/mpimatmatmatmult.c</A><BR>
+<A HREF="../../../src/mat/impls/aij/mpi/mpimatmatmult.c.html#MatProductSetFromOptions_MPIAIJ_MPIDense_AB">MatProductSetFromOptions_MPIAIJ_MPIDense_AB in src/mat/impls/aij/mpi/mpimatmatmult.c</A><BR>
+<A HREF="../../../src/mat/impls/aij/mpi/mpimatmatmult.c.html#MatProductSetFromOptions_MPIAIJ_MPIDense_AtB">MatProductSetFromOptions_MPIAIJ_MPIDense_AtB in src/mat/impls/aij/mpi/mpimatmatmult.c</A><BR>
+<A HREF="../../../src/mat/impls/aij/mpi/mpimatmatmult.c.html#MatProductSetFromOptions_MPIAIJ_MPIDense">MatProductSetFromOptions_MPIAIJ_MPIDense in src/mat/impls/aij/mpi/mpimatmatmult.c</A><BR>
+<A HREF="../../../src/mat/impls/aij/mpi/mpimatmatmult.c.html#MatProductSetFromOptions_MPIAIJ_AB">MatProductSetFromOptions_MPIAIJ_AB in src/mat/impls/aij/mpi/mpimatmatmult.c</A><BR>
+<A HREF="../../../src/mat/impls/aij/mpi/mpimatmatmult.c.html#MatProductSetFromOptions_MPIAIJ_AtB">MatProductSetFromOptions_MPIAIJ_AtB in src/mat/impls/aij/mpi/mpimatmatmult.c</A><BR>
+<A HREF="../../../src/mat/impls/aij/mpi/mpimatmatmult.c.html#MatProductSetFromOptions_MPIAIJ_PtAP">MatProductSetFromOptions_MPIAIJ_PtAP in src/mat/impls/aij/mpi/mpimatmatmult.c</A><BR>
+<A HREF="../../../src/mat/impls/aij/mpi/mpimatmatmult.c.html#MatProductSetFromOptions_MPIAIJ_RARt">MatProductSetFromOptions_MPIAIJ_RARt in src/mat/impls/aij/mpi/mpimatmatmult.c</A><BR>
+<A HREF="../../../src/mat/impls/aij/mpi/mpimatmatmult.c.html#MatProductSetFromOptions_MPIAIJ_ABC">MatProductSetFromOptions_MPIAIJ_ABC in src/mat/impls/aij/mpi/mpimatmatmult.c</A><BR>
+<A HREF="../../../src/mat/impls/aij/mpi/mpimatmatmult.c.html#MatProductSetFromOptions_MPIAIJ">MatProductSetFromOptions_MPIAIJ in src/mat/impls/aij/mpi/mpimatmatmult.c</A><BR>
+<A HREF="../../../src/mat/impls/aij/seq/aijmkl/aijmkl.c.html#MatProductSetFromOptions_SeqAIJMKL_AB">MatProductSetFromOptions_SeqAIJMKL_AB in src/mat/impls/aij/seq/aijmkl/aijmkl.c</A><BR>
+<A HREF="../../../src/mat/impls/aij/seq/aijmkl/aijmkl.c.html#MatProductSetFromOptions_SeqAIJMKL_AtB">MatProductSetFromOptions_SeqAIJMKL_AtB in src/mat/impls/aij/seq/aijmkl/aijmkl.c</A><BR>
+<A HREF="../../../src/mat/impls/aij/seq/aijmkl/aijmkl.c.html#MatProductSetFromOptions_SeqAIJMKL_ABt">MatProductSetFromOptions_SeqAIJMKL_ABt in src/mat/impls/aij/seq/aijmkl/aijmkl.c</A><BR>
+<A HREF="../../../src/mat/impls/aij/seq/aijmkl/aijmkl.c.html#MatProductSetFromOptions_SeqAIJMKL_PtAP">MatProductSetFromOptions_SeqAIJMKL_PtAP in src/mat/impls/aij/seq/aijmkl/aijmkl.c</A><BR>
+<A HREF="../../../src/mat/impls/aij/seq/aijmkl/aijmkl.c.html#MatProductSetFromOptions_SeqAIJMKL_RARt">MatProductSetFromOptions_SeqAIJMKL_RARt in src/mat/impls/aij/seq/aijmkl/aijmkl.c</A><BR>
+<A HREF="../../../src/mat/impls/aij/seq/aijmkl/aijmkl.c.html#MatProductSetFromOptions_SeqAIJMKL_ABC">MatProductSetFromOptions_SeqAIJMKL_ABC in src/mat/impls/aij/seq/aijmkl/aijmkl.c</A><BR>
+<A HREF="../../../src/mat/impls/aij/seq/aijmkl/aijmkl.c.html#MatProductSetFromOptions_SeqAIJMKL">MatProductSetFromOptions_SeqAIJMKL in src/mat/impls/aij/seq/aijmkl/aijmkl.c</A><BR>
+<A HREF="../../../src/mat/impls/aij/seq/matmatmult.c.html#MatProductSetFromOptions_SeqAIJ_SeqDense_AB">MatProductSetFromOptions_SeqAIJ_SeqDense_AB in src/mat/impls/aij/seq/matmatmult.c</A><BR>
+<A HREF="../../../src/mat/impls/aij/seq/matmatmult.c.html#MatProductSetFromOptions_SeqAIJ_SeqDense_AtB">MatProductSetFromOptions_SeqAIJ_SeqDense_AtB in src/mat/impls/aij/seq/matmatmult.c</A><BR>
+<A HREF="../../../src/mat/impls/aij/seq/matmatmult.c.html#MatProductSetFromOptions_SeqAIJ_SeqDense_ABt">MatProductSetFromOptions_SeqAIJ_SeqDense_ABt in src/mat/impls/aij/seq/matmatmult.c</A><BR>
+<A HREF="../../../src/mat/impls/aij/seq/matmatmult.c.html#MatProductSetFromOptions_SeqAIJ_SeqDense">MatProductSetFromOptions_SeqAIJ_SeqDense in src/mat/impls/aij/seq/matmatmult.c</A><BR>
+<A HREF="../../../src/mat/impls/aij/seq/matmatmult.c.html#MatProductSetFromOptions_SeqXBAIJ_SeqDense_AB">MatProductSetFromOptions_SeqXBAIJ_SeqDense_AB in src/mat/impls/aij/seq/matmatmult.c</A><BR>
+<A HREF="../../../src/mat/impls/aij/seq/matmatmult.c.html#MatProductSetFromOptions_SeqXBAIJ_SeqDense">MatProductSetFromOptions_SeqXBAIJ_SeqDense in src/mat/impls/aij/seq/matmatmult.c</A><BR>
+<A HREF="../../../src/mat/impls/aij/seq/matmatmult.c.html#MatProductSetFromOptions_SeqDense_SeqAIJ_AB">MatProductSetFromOptions_SeqDense_SeqAIJ_AB in src/mat/impls/aij/seq/matmatmult.c</A><BR>
+<A HREF="../../../src/mat/impls/aij/seq/matmatmult.c.html#MatProductSetFromOptions_SeqDense_SeqAIJ">MatProductSetFromOptions_SeqDense_SeqAIJ in src/mat/impls/aij/seq/matmatmult.c</A><BR>
+<A HREF="../../../src/mat/impls/aij/seq/matmatmult.c.html#MatProductSetFromOptions_SeqAIJ_AB">MatProductSetFromOptions_SeqAIJ_AB in src/mat/impls/aij/seq/matmatmult.c</A><BR>
+<A HREF="../../../src/mat/impls/aij/seq/matmatmult.c.html#MatProductSetFromOptions_SeqAIJ_AtB">MatProductSetFromOptions_SeqAIJ_AtB in src/mat/impls/aij/seq/matmatmult.c</A><BR>
+<A HREF="../../../src/mat/impls/aij/seq/matmatmult.c.html#MatProductSetFromOptions_SeqAIJ_ABt">MatProductSetFromOptions_SeqAIJ_ABt in src/mat/impls/aij/seq/matmatmult.c</A><BR>
+<A HREF="../../../src/mat/impls/aij/seq/matmatmult.c.html#MatProductSetFromOptions_SeqAIJ_PtAP">MatProductSetFromOptions_SeqAIJ_PtAP in src/mat/impls/aij/seq/matmatmult.c</A><BR>
+<A HREF="../../../src/mat/impls/aij/seq/matmatmult.c.html#MatProductSetFromOptions_SeqAIJ_RARt">MatProductSetFromOptions_SeqAIJ_RARt in src/mat/impls/aij/seq/matmatmult.c</A><BR>
+<A HREF="../../../src/mat/impls/aij/seq/matmatmult.c.html#MatProductSetFromOptions_SeqAIJ_ABC">MatProductSetFromOptions_SeqAIJ_ABC in src/mat/impls/aij/seq/matmatmult.c</A><BR>
+<A HREF="../../../src/mat/impls/aij/seq/matmatmult.c.html#MatProductSetFromOptions_SeqAIJ">MatProductSetFromOptions_SeqAIJ in src/mat/impls/aij/seq/matmatmult.c</A><BR>
+<A HREF="../../../src/mat/impls/aij/seq/seqcusparse/aijcusparse.cu.html#MatProductSetFromOptions_SeqAIJCUSPARSE">MatProductSetFromOptions_SeqAIJCUSPARSE in src/mat/impls/aij/seq/seqcusparse/aijcusparse.cu</A><BR>
+<A HREF="../../../src/mat/impls/dense/mpi/mpidense.c.html#MatProductSetFromOptions_MPIDense_AB">MatProductSetFromOptions_MPIDense_AB in src/mat/impls/dense/mpi/mpidense.c</A><BR>
+<A HREF="../../../src/mat/impls/dense/mpi/mpidense.c.html#MatProductSetFromOptions_MPIDense_AtB">MatProductSetFromOptions_MPIDense_AtB in src/mat/impls/dense/mpi/mpidense.c</A><BR>
+<A HREF="../../../src/mat/impls/dense/mpi/mpidense.c.html#MatProductSetFromOptions_MPIDense_ABt">MatProductSetFromOptions_MPIDense_ABt in src/mat/impls/dense/mpi/mpidense.c</A><BR>
+<A HREF="../../../src/mat/impls/dense/mpi/mpidense.c.html#MatProductSetFromOptions_MPIDense">MatProductSetFromOptions_MPIDense in src/mat/impls/dense/mpi/mpidense.c</A><BR>
+<A HREF="../../../src/mat/impls/dense/seq/cuda/densecuda.cu.html#MatProductSetFromOptions_SeqDenseCUDA">MatProductSetFromOptions_SeqDenseCUDA in src/mat/impls/dense/seq/cuda/densecuda.cu</A><BR>
+<A HREF="../../../src/mat/impls/dense/seq/dense.c.html#MatProductSetFromOptions_SeqDense_AB">MatProductSetFromOptions_SeqDense_AB in src/mat/impls/dense/seq/dense.c</A><BR>
+<A HREF="../../../src/mat/impls/dense/seq/dense.c.html#MatProductSetFromOptions_SeqDense_AtB">MatProductSetFromOptions_SeqDense_AtB in src/mat/impls/dense/seq/dense.c</A><BR>
+<A HREF="../../../src/mat/impls/dense/seq/dense.c.html#MatProductSetFromOptions_SeqDense_ABt">MatProductSetFromOptions_SeqDense_ABt in src/mat/impls/dense/seq/dense.c</A><BR>
+<A HREF="../../../src/mat/impls/dense/seq/dense.c.html#MatProductSetFromOptions_SeqDense">MatProductSetFromOptions_SeqDense in src/mat/impls/dense/seq/dense.c</A><BR>
+<A HREF="../../../src/mat/impls/elemental/matelem.cxx.html#MatProductSetFromOptions_Elemental_AB">MatProductSetFromOptions_Elemental_AB in src/mat/impls/elemental/matelem.cxx</A><BR>
+<A HREF="../../../src/mat/impls/elemental/matelem.cxx.html#MatProductSetFromOptions_Elemental_ABt">MatProductSetFromOptions_Elemental_ABt in src/mat/impls/elemental/matelem.cxx</A><BR>
+<A HREF="../../../src/mat/impls/elemental/matelem.cxx.html#MatProductSetFromOptions_Elemental">MatProductSetFromOptions_Elemental in src/mat/impls/elemental/matelem.cxx</A><BR>
+<A HREF="../../../src/mat/impls/elemental/matelem.cxx.html#MatProductSetFromOptions_Elemental_MPIDense_AB">MatProductSetFromOptions_Elemental_MPIDense_AB in src/mat/impls/elemental/matelem.cxx</A><BR>
+<A HREF="../../../src/mat/impls/elemental/matelem.cxx.html#MatProductSetFromOptions_Elemental_MPIDense">MatProductSetFromOptions_Elemental_MPIDense in src/mat/impls/elemental/matelem.cxx</A><BR>
+<A HREF="../../../src/mat/impls/hara/mathara.cu.html#MatProductSetFromOptions_HARA">MatProductSetFromOptions_HARA in src/mat/impls/hara/mathara.cu</A><BR>
+<A HREF="../../../src/mat/impls/hypre/mhypre.c.html#MatProductSetFromOptions_HYPRE_AB">MatProductSetFromOptions_HYPRE_AB in src/mat/impls/hypre/mhypre.c</A><BR>
+<A HREF="../../../src/mat/impls/hypre/mhypre.c.html#MatProductSetFromOptions_HYPRE_PtAP">MatProductSetFromOptions_HYPRE_PtAP in src/mat/impls/hypre/mhypre.c</A><BR>
+<A HREF="../../../src/mat/impls/hypre/mhypre.c.html#MatProductSetFromOptions_HYPRE">MatProductSetFromOptions_HYPRE in src/mat/impls/hypre/mhypre.c</A><BR>
+<A HREF="../../../src/mat/impls/is/matis.c.html#MatProductSetFromOptions_IS_XAIJ_PtAP">MatProductSetFromOptions_IS_XAIJ_PtAP in src/mat/impls/is/matis.c</A><BR>
+<A HREF="../../../src/mat/impls/is/matis.c.html#MatProductSetFromOptions_IS_XAIJ">MatProductSetFromOptions_IS_XAIJ in src/mat/impls/is/matis.c</A><BR>
+<A HREF="../../../src/mat/impls/maij/maij.c.html#MatProductSetFromOptions_SeqAIJ_SeqMAIJ">MatProductSetFromOptions_SeqAIJ_SeqMAIJ in src/mat/impls/maij/maij.c</A><BR>
+<A HREF="../../../src/mat/impls/maij/maij.c.html#MatProductSetFromOptions_MPIAIJ_MPIMAIJ">MatProductSetFromOptions_MPIAIJ_MPIMAIJ in src/mat/impls/maij/maij.c</A><BR>
+<A HREF="../../../src/mat/impls/nest/matnest.c.html#MatProductSetFromOptions_Nest_Dense_AB">MatProductSetFromOptions_Nest_Dense_AB in src/mat/impls/nest/matnest.c</A><BR>
+<A HREF="../../../src/mat/impls/nest/matnest.c.html#MatProductSetFromOptions_Nest_Dense">MatProductSetFromOptions_Nest_Dense in src/mat/impls/nest/matnest.c</A><BR>
+<A HREF="../../../src/mat/impls/scalapack/matscalapack.c.html#MatProductSetFromOptions_ScaLAPACK_AB">MatProductSetFromOptions_ScaLAPACK_AB in src/mat/impls/scalapack/matscalapack.c</A><BR>
+<A HREF="../../../src/mat/impls/scalapack/matscalapack.c.html#MatProductSetFromOptions_ScaLAPACK_ABt">MatProductSetFromOptions_ScaLAPACK_ABt in src/mat/impls/scalapack/matscalapack.c</A><BR>
+<A HREF="../../../src/mat/impls/scalapack/matscalapack.c.html#MatProductSetFromOptions_ScaLAPACK">MatProductSetFromOptions_ScaLAPACK in src/mat/impls/scalapack/matscalapack.c</A><BR>
+<A HREF="../../../src/mat/impls/shell/shell.c.html#MatProductSetFromOptions_Shell_X">MatProductSetFromOptions_Shell_X in src/mat/impls/shell/shell.c</A><BR>
+<A HREF="../../../src/mat/impls/shell/shellcnv.c.html#MatProductSetFromOptions_CF">MatProductSetFromOptions_CF in src/mat/impls/shell/shellcnv.c</A><BR>
+<A HREF="../../../src/mat/impls/transpose/transm.c.html#MatProductSetFromOptions_Transpose">MatProductSetFromOptions_Transpose in src/mat/impls/transpose/transm.c</A><BR>
+<BR><A HREF="./index.html">Index of all Mat routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

@@ -1,0 +1,962 @@
+<center><a href="inherit.c">Actual source code: inherit.c</a></center><br>
+
+<html>
+<head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/src/sys/objects/inherit.c.html" />
+<title></title>
+<meta name="generator" content="c2html 0.9.4">
+<meta name="date" content="2021-03-30T16:49:27+00:00">
+</head>
+
+<body bgcolor="#FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 src/sys/objects/inherit.c.html "><small>Report Typos and Errors</small></a></div>
+<pre width="80">
+<a name="line1">  1: </a><font color="#B22222">/*</font>
+<a name="line2">  2: </a><font color="#B22222">     Provides utility routines for manipulating any type of PETSc object.</font>
+<a name="line3">  3: </a><font color="#B22222">*/</font>
+<a name="line4">  4: </a>#include <A href="../../../include/petsc/private/petscimpl.h.html">&lt;petsc/private/petscimpl.h&gt;</A>
+<a name="line5">  5: </a>#include <A href="../../../include/petscviewer.h.html">&lt;petscviewer.h&gt;</A>
+
+<a name="line7">  7: </a><font color="#A020F0">#if defined(PETSC_USE_LOG)</font>
+<a name="line8">  8: </a>PETSC_INTERN <a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a> *PetscObjects;
+<a name="line9">  9: </a>PETSC_INTERN <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>    PetscObjectsCounts;
+<a name="line10"> 10: </a>PETSC_INTERN <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>    PetscObjectsMaxCounts;
+<a name="line11"> 11: </a>PETSC_INTERN <a href="../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>   PetscObjectsLog;
+<a name="line12"> 12: </a><font color="#A020F0">#endif</font>
+
+<a name="line14"> 14: </a><font color="#A020F0">#if defined(PETSC_USE_LOG)</font>
+<a name="line15"> 15: </a><a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a> *PetscObjects      = NULL;
+<a name="line16"> 16: </a><a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>    PetscObjectsCounts = 0, PetscObjectsMaxCounts = 0;
+<a name="line17"> 17: </a><a href="../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>   PetscObjectsLog    = <a href="../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line18"> 18: </a><font color="#A020F0">#endif</font>
+
+<a name="line20"> 20: </a><strong><font color="#4169E1">PETSC_EXTERN <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscObjectGetComm_Petsc(<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>,<a href="../../../docs/manualpages/Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</a>*)</font></strong>;
+<a name="line21"> 21: </a><strong><font color="#4169E1">PETSC_EXTERN <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscObjectCompose_Petsc(<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>,const char[],<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)</font></strong>;
+<a name="line22"> 22: </a><strong><font color="#4169E1">PETSC_EXTERN <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscObjectQuery_Petsc(<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>,const char[],<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>*)</font></strong>;
+<a name="line23"> 23: </a><strong><font color="#4169E1"><a name="PetscObjectComposeFunction_Petsc"></a>PETSC_EXTERN <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscObjectComposeFunction_Petsc(<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>,const char[],void (*)(void)</font></strong>);
+<a name="line24"> 24: </a><strong><font color="#4169E1"><a name="PetscObjectQueryFunction_Petsc"></a>PETSC_EXTERN <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscObjectQueryFunction_Petsc(<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>,const char[],void (**)(void)</font></strong>);
+
+<a name="line26"> 26: </a><font color="#B22222">/*</font>
+<a name="line27"> 27: </a><font color="#B22222">   PetscHeaderCreate_Private - Creates a base PETSc object header and fills</font>
+<a name="line28"> 28: </a><font color="#B22222">   in the default values.  Called by the macro <a href="../../../docs/manualpages/Sys/PetscHeaderCreate.html#PetscHeaderCreate">PetscHeaderCreate</a>().</font>
+<a name="line29"> 29: </a><font color="#B22222">*/</font>
+<a name="line30"> 30: </a><strong><font color="#4169E1"><a name="PetscHeaderCreate_Private"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  PetscHeaderCreate_Private(<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a> h,<a href="../../../docs/manualpages/Sys/PetscClassId.html#PetscClassId">PetscClassId</a> classid,const char class_name[],const char descr[],const char mansec[],</font></strong>
+<a name="line31"> 31: </a><strong><font color="#4169E1">                                          <a href="../../../docs/manualpages/Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</a> comm,PetscObjectDestroyFunction destroy,PetscObjectViewFunction view)</font></strong>
+<a name="line32"> 32: </a>{
+<a name="line33"> 33: </a>  static <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> idcnt = 1;
+<a name="line34"> 34: </a>  <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  ierr;
+<a name="line35"> 35: </a><font color="#A020F0">#if defined(PETSC_USE_LOG)</font>
+<a name="line36"> 36: </a>  <a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>     *newPetscObjects;
+<a name="line37"> 37: </a>  <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>         newPetscObjectsMaxCounts,i;
+<a name="line38"> 38: </a><font color="#A020F0">#endif</font>
+
+<a name="line41"> 41: </a>  h-&gt;classid               = classid;
+<a name="line42"> 42: </a>  h-&gt;type                  = 0;
+<a name="line43"> 43: </a>  h-&gt;class_name            = (char*)class_name;
+<a name="line44"> 44: </a>  h-&gt;description           = (char*)descr;
+<a name="line45"> 45: </a>  h-&gt;mansec                = (char*)mansec;
+<a name="line46"> 46: </a>  h-&gt;prefix                = NULL;
+<a name="line47"> 47: </a>  h-&gt;refct                 = 1;
+<a name="line48"> 48: </a><font color="#A020F0">#if defined(PETSC_HAVE_SAWS)</font>
+<a name="line49"> 49: </a>  h-&gt;amsmem                = <a href="../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line50"> 50: </a><font color="#A020F0">#endif</font>
+<a name="line51"> 51: </a>  h-&gt;id                    = idcnt++;
+<a name="line52"> 52: </a>  h-&gt;parentid              = 0;
+<a name="line53"> 53: </a>  h-&gt;qlist                 = NULL;
+<a name="line54"> 54: </a>  h-&gt;olist                 = NULL;
+<a name="line55"> 55: </a>  h-&gt;bops-&gt;destroy         = destroy;
+<a name="line56"> 56: </a>  h-&gt;bops-&gt;view            = view;
+<a name="line57"> 57: </a>  h-&gt;bops-&gt;getcomm         = PetscObjectGetComm_Petsc;
+<a name="line58"> 58: </a>  h-&gt;bops-&gt;compose         = PetscObjectCompose_Petsc;
+<a name="line59"> 59: </a>  h-&gt;bops-&gt;query           = PetscObjectQuery_Petsc;
+<a name="line60"> 60: </a>  h-&gt;bops-&gt;composefunction = PetscObjectComposeFunction_Petsc;
+<a name="line61"> 61: </a>  h-&gt;bops-&gt;queryfunction   = PetscObjectQueryFunction_Petsc;
+
+<a name="line63"> 63: </a>  <a href="../../../docs/manualpages/Sys/PetscCommDuplicate.html#PetscCommDuplicate">PetscCommDuplicate</a>(comm,&amp;h-&gt;comm,&amp;h-&gt;tag);
+
+<a name="line65"> 65: </a><font color="#A020F0">#if defined(PETSC_USE_LOG)</font>
+<a name="line66"> 66: </a>  <font color="#B22222">/* Keep a record of object created */</font>
+<a name="line67"> 67: </a>  <font color="#4169E1">if</font> (PetscObjectsLog) {
+<a name="line68"> 68: </a>    PetscObjectsCounts++;
+<a name="line69"> 69: </a>    <font color="#4169E1">for</font> (i=0; i&lt;PetscObjectsMaxCounts; i++) {
+<a name="line70"> 70: </a>      <font color="#4169E1">if</font> (!PetscObjects[i]) {
+<a name="line71"> 71: </a>        PetscObjects[i] = h;
+<a name="line72"> 72: </a>        <font color="#4169E1">return</font>(0);
+<a name="line73"> 73: </a>      }
+<a name="line74"> 74: </a>    }
+<a name="line75"> 75: </a>    <font color="#B22222">/* Need to increase the space for storing PETSc objects */</font>
+<a name="line76"> 76: </a>    <font color="#4169E1">if</font> (!PetscObjectsMaxCounts) newPetscObjectsMaxCounts = 100;
+<a name="line77"> 77: </a>    <font color="#4169E1">else</font>                        newPetscObjectsMaxCounts = 2*PetscObjectsMaxCounts;
+<a name="line78"> 78: </a>    <a href="../../../docs/manualpages/Sys/PetscCalloc1.html#PetscCalloc1">PetscCalloc1</a>(newPetscObjectsMaxCounts,&amp;newPetscObjects);
+<a name="line79"> 79: </a>    <a href="../../../docs/manualpages/Sys/PetscArraycpy.html#PetscArraycpy">PetscArraycpy</a>(newPetscObjects,PetscObjects,PetscObjectsMaxCounts);
+<a name="line80"> 80: </a>    <a href="../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(PetscObjects);
+
+<a name="line82"> 82: </a>    PetscObjects                        = newPetscObjects;
+<a name="line83"> 83: </a>    PetscObjects[PetscObjectsMaxCounts] = h;
+<a name="line84"> 84: </a>    PetscObjectsMaxCounts               = newPetscObjectsMaxCounts;
+<a name="line85"> 85: </a>  }
+<a name="line86"> 86: </a><font color="#A020F0">#endif</font>
+<a name="line87"> 87: </a>  <font color="#4169E1">return</font>(0);
+<a name="line88"> 88: </a>}
+
+<a name="line90"> 90: </a>PETSC_INTERN <a href="../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>      PetscMemoryCollectMaximumUsage;
+<a name="line91"> 91: </a>PETSC_INTERN <a href="../../../docs/manualpages/Sys/PetscLogDouble.html#PetscLogDouble">PetscLogDouble</a> PetscMemoryMaximumUsage;
+
+<a name="line93"> 93: </a><font color="#B22222">/*</font>
+<a name="line94"> 94: </a><font color="#B22222">    PetscHeaderDestroy_Private - Destroys a base PETSc object header. Called by</font>
+<a name="line95"> 95: </a><font color="#B22222">    the macro <a href="../../../docs/manualpages/Sys/PetscHeaderDestroy.html#PetscHeaderDestroy">PetscHeaderDestroy</a>().</font>
+<a name="line96"> 96: </a><font color="#B22222">*/</font>
+<a name="line97"> 97: </a><strong><font color="#4169E1"><a name="PetscHeaderDestroy_Private"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  PetscHeaderDestroy_Private(<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a> h)</font></strong>
+<a name="line98"> 98: </a>{
+
+<a name="line103">103: </a>  PetscLogObjectDestroy(h);
+<a name="line104">104: </a>  PetscComposedQuantitiesDestroy(h);
+<a name="line105">105: </a>  <font color="#4169E1">if</font> (PetscMemoryCollectMaximumUsage) {
+<a name="line106">106: </a>    <a href="../../../docs/manualpages/Sys/PetscLogDouble.html#PetscLogDouble">PetscLogDouble</a> usage;
+<a name="line107">107: </a>    <a href="../../../docs/manualpages/Sys/PetscMemoryGetCurrentUsage.html#PetscMemoryGetCurrentUsage">PetscMemoryGetCurrentUsage</a>(&amp;usage);
+<a name="line108">108: </a>    <font color="#4169E1">if</font> (usage &gt; PetscMemoryMaximumUsage) PetscMemoryMaximumUsage = usage;
+<a name="line109">109: </a>  }
+<a name="line110">110: </a>  <font color="#B22222">/* first destroy things that could execute arbitrary code */</font>
+<a name="line111">111: </a>  <font color="#4169E1">if</font> (h-&gt;python_destroy) {
+<a name="line112">112: </a>    void           *python_context = h-&gt;python_context;
+<a name="line113">113: </a>    <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> (*python_destroy)(void*) = h-&gt;python_destroy;
+<a name="line114">114: </a>    h-&gt;python_context = NULL;
+<a name="line115">115: </a>    h-&gt;python_destroy = NULL;
+
+<a name="line117">117: </a>    (*python_destroy)(python_context);
+<a name="line118">118: </a>  }
+<a name="line119">119: </a>  <a href="../../../docs/manualpages/Sys/PetscObjectDestroyOptionsHandlers.html#PetscObjectDestroyOptionsHandlers">PetscObjectDestroyOptionsHandlers</a>(h);
+<a name="line120">120: </a>  <a href="../../../docs/manualpages/Sys/PetscObjectListDestroy.html#PetscObjectListDestroy">PetscObjectListDestroy</a>(&amp;h-&gt;olist);
+<a name="line121">121: </a>  <a href="../../../docs/manualpages/Sys/PetscCommDestroy.html#PetscCommDestroy">PetscCommDestroy</a>(&amp;h-&gt;comm);
+<a name="line122">122: </a>  <font color="#B22222">/* next destroy other things */</font>
+<a name="line123">123: </a>  h-&gt;classid = PETSCFREEDHEADER;
+
+<a name="line125">125: </a>  <a href="../../../docs/manualpages/Sys/PetscFunctionListDestroy.html#PetscFunctionListDestroy">PetscFunctionListDestroy</a>(&amp;h-&gt;qlist);
+<a name="line126">126: </a>  <a href="../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(h-&gt;type_name);
+<a name="line127">127: </a>  <a href="../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(h-&gt;name);
+<a name="line128">128: </a>  <a href="../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(h-&gt;prefix);
+<a name="line129">129: </a>  <a href="../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(h-&gt;fortran_func_pointers);
+<a name="line130">130: </a>  <a href="../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(h-&gt;fortrancallback[PETSC_FORTRAN_CALLBACK_CLASS]);
+<a name="line131">131: </a>  <a href="../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(h-&gt;fortrancallback[PETSC_FORTRAN_CALLBACK_SUBTYPE]);
+
+<a name="line133">133: </a><font color="#A020F0">#if defined(PETSC_USE_LOG)</font>
+<a name="line134">134: </a>  <font color="#4169E1">if</font> (PetscObjectsLog) {
+<a name="line135">135: </a>    <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> i;
+<a name="line136">136: </a>    <font color="#B22222">/* Record object removal from list of all objects */</font>
+<a name="line137">137: </a>    <font color="#4169E1">for</font> (i=0; i&lt;PetscObjectsMaxCounts; i++) {
+<a name="line138">138: </a>      <font color="#4169E1">if</font> (PetscObjects[i] == h) {
+<a name="line139">139: </a>        PetscObjects[i] = NULL;
+<a name="line140">140: </a>        PetscObjectsCounts--;
+<a name="line141">141: </a>        <font color="#4169E1">break</font>;
+<a name="line142">142: </a>      }
+<a name="line143">143: </a>    }
+<a name="line144">144: </a>    <font color="#4169E1">if</font> (!PetscObjectsCounts) {
+<a name="line145">145: </a>      <a href="../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(PetscObjects);
+<a name="line146">146: </a>      PetscObjectsMaxCounts = 0;
+<a name="line147">147: </a>    }
+<a name="line148">148: </a>  }
+<a name="line149">149: </a><font color="#A020F0">#endif</font>
+<a name="line150">150: </a>  <font color="#4169E1">return</font>(0);
+<a name="line151">151: </a>}
+
+<a name="line153">153: </a><font color="#B22222">/*@C</font>
+<a name="line154">154: </a><font color="#B22222">   <a href="../../../docs/manualpages/Sys/PetscObjectCopyFortranFunctionPointers.html#PetscObjectCopyFortranFunctionPointers">PetscObjectCopyFortranFunctionPointers</a> - Copy function pointers to another object</font>
+
+<a name="line156">156: </a><font color="#B22222">   Logically Collective on <a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a></font>
+
+<a name="line158">158: </a><font color="#B22222">   Input Parameter:</font>
+<a name="line159">159: </a><font color="#B22222">+  src - source object</font>
+<a name="line160">160: </a><font color="#B22222">-  dest - destination object</font>
+
+<a name="line162">162: </a><font color="#B22222">   Level: developer</font>
+
+<a name="line164">164: </a><font color="#B22222">   Note:</font>
+<a name="line165">165: </a><font color="#B22222">   Both objects must have the same class.</font>
+<a name="line166">166: </a><font color="#B22222">@*/</font>
+<a name="line167">167: </a><strong><font color="#4169E1"><a name="PetscObjectCopyFortranFunctionPointers"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../docs/manualpages/Sys/PetscObjectCopyFortranFunctionPointers.html#PetscObjectCopyFortranFunctionPointers">PetscObjectCopyFortranFunctionPointers</a>(<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a> src,<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a> dest)</font></strong>
+<a name="line168">168: </a>{
+<a name="line170">170: </a>  <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       cbtype,numcb[PETSC_FORTRAN_CALLBACK_MAXTYPE];
+
+<a name="line175">175: </a>  <font color="#4169E1">if</font> (src-&gt;classid != dest-&gt;classid) <a href="../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(src-&gt;comm,PETSC_ERR_ARG_INCOMP,<font color="#666666">"Objects must be of the same class"</font>);
+
+<a name="line177">177: </a>  <a href="../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(dest-&gt;fortran_func_pointers);
+<a name="line178">178: </a>  <a href="../../../docs/manualpages/Sys/PetscMalloc.html#PetscMalloc">PetscMalloc</a>(src-&gt;num_fortran_func_pointers*<font color="#4169E1">sizeof</font>(void(*)(void)),&amp;dest-&gt;fortran_func_pointers);
+<a name="line179">179: </a>  <a href="../../../docs/manualpages/Sys/PetscMemcpy.html#PetscMemcpy">PetscMemcpy</a>(dest-&gt;fortran_func_pointers,src-&gt;fortran_func_pointers,src-&gt;num_fortran_func_pointers*<font color="#4169E1">sizeof</font>(void(*)(void)));
+
+<a name="line181">181: </a>  dest-&gt;num_fortran_func_pointers = src-&gt;num_fortran_func_pointers;
+
+<a name="line183">183: </a>  <a href="../../../docs/manualpages/Sys/PetscFortranCallbackGetSizes.html#PetscFortranCallbackGetSizes">PetscFortranCallbackGetSizes</a>(src-&gt;classid,&amp;numcb[PETSC_FORTRAN_CALLBACK_CLASS],&amp;numcb[PETSC_FORTRAN_CALLBACK_SUBTYPE]);
+<a name="line184">184: </a>  <font color="#4169E1">for</font> (cbtype=PETSC_FORTRAN_CALLBACK_CLASS; cbtype&lt;PETSC_FORTRAN_CALLBACK_MAXTYPE; cbtype++) {
+<a name="line185">185: </a>    <a href="../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(dest-&gt;fortrancallback[cbtype]);
+<a name="line186">186: </a>    <a href="../../../docs/manualpages/Sys/PetscCalloc1.html#PetscCalloc1">PetscCalloc1</a>(numcb[cbtype],&amp;dest-&gt;fortrancallback[cbtype]);
+<a name="line187">187: </a>    <a href="../../../docs/manualpages/Sys/PetscMemcpy.html#PetscMemcpy">PetscMemcpy</a>(dest-&gt;fortrancallback[cbtype],src-&gt;fortrancallback[cbtype],src-&gt;num_fortrancallback[cbtype]*<font color="#4169E1">sizeof</font>(PetscFortranCallback));
+<a name="line188">188: </a>    dest-&gt;num_fortrancallback[cbtype] = src-&gt;num_fortrancallback[cbtype];
+<a name="line189">189: </a>  }
+<a name="line190">190: </a>  <font color="#4169E1">return</font>(0);
+<a name="line191">191: </a>}
+
+<a name="line193">193: </a><font color="#B22222">/*@C</font>
+<a name="line194">194: </a><font color="#B22222">   <a href="../../../docs/manualpages/Sys/PetscObjectSetFortranCallback.html#PetscObjectSetFortranCallback">PetscObjectSetFortranCallback</a> - set fortran callback function pointer and context</font>
+
+<a name="line196">196: </a><font color="#B22222">   Logically Collective</font>
+
+<a name="line198">198: </a><font color="#B22222">   Input Arguments:</font>
+<a name="line199">199: </a><font color="#B22222">+  obj - object on which to set callback</font>
+<a name="line200">200: </a><font color="#B22222">.  cbtype - callback type (class or subtype)</font>
+<a name="line201">201: </a><font color="#B22222">.  cid - address of callback Id, updated if not yet initialized (zero)</font>
+<a name="line202">202: </a><font color="#B22222">.  func - Fortran function</font>
+<a name="line203">203: </a><font color="#B22222">-  ctx - Fortran context</font>
+
+<a name="line205">205: </a><font color="#B22222">   Level: developer</font>
+
+<a name="line207">207: </a><font color="#B22222">.seealso: <a href="../../../docs/manualpages/Sys/PetscObjectGetFortranCallback.html#PetscObjectGetFortranCallback">PetscObjectGetFortranCallback</a>()</font>
+<a name="line208">208: </a><font color="#B22222">@*/</font>
+<a name="line209">209: </a><strong><font color="#4169E1"><a name="PetscObjectSetFortranCallback"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../docs/manualpages/Sys/PetscObjectSetFortranCallback.html#PetscObjectSetFortranCallback">PetscObjectSetFortranCallback</a>(<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a> obj,PetscFortranCallbackType cbtype,PetscFortranCallbackId *cid,void (*func)(void),void *ctx)</font></strong>
+<a name="line210">210: </a>{
+<a name="line212">212: </a>  const char     *subtype = NULL;
+
+<a name="line216">216: </a>  <font color="#4169E1">if</font> (cbtype == PETSC_FORTRAN_CALLBACK_SUBTYPE) subtype = obj-&gt;type_name;
+<a name="line217">217: </a>  <font color="#4169E1">if</font> (!*cid) {<a href="../../../docs/manualpages/Sys/PetscFortranCallbackRegister.html#PetscFortranCallbackRegister">PetscFortranCallbackRegister</a>(obj-&gt;classid,subtype,cid);}
+<a name="line218">218: </a>  <font color="#4169E1">if</font> (*cid &gt;= PETSC_SMALLEST_FORTRAN_CALLBACK+obj-&gt;num_fortrancallback[cbtype]) {
+<a name="line219">219: </a>    <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>             oldnum = obj-&gt;num_fortrancallback[cbtype],newnum = <a href="../../../docs/manualpages/Sys/PetscMax.html#PetscMax">PetscMax</a>(1,2*oldnum);
+<a name="line220">220: </a>    PetscFortranCallback *callback;
+<a name="line221">221: </a>    <a href="../../../docs/manualpages/Sys/PetscMalloc1.html#PetscMalloc1">PetscMalloc1</a>(newnum,&amp;callback);
+<a name="line222">222: </a>    <a href="../../../docs/manualpages/Sys/PetscMemcpy.html#PetscMemcpy">PetscMemcpy</a>(callback,obj-&gt;fortrancallback[cbtype],oldnum*<font color="#4169E1">sizeof</font>(*obj-&gt;fortrancallback[cbtype]));
+<a name="line223">223: </a>    <a href="../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(obj-&gt;fortrancallback[cbtype]);
+
+<a name="line225">225: </a>    obj-&gt;fortrancallback[cbtype] = callback;
+<a name="line226">226: </a>    obj-&gt;num_fortrancallback[cbtype] = newnum;
+<a name="line227">227: </a>  }
+<a name="line228">228: </a>  obj-&gt;fortrancallback[cbtype][*cid-PETSC_SMALLEST_FORTRAN_CALLBACK].func = func;
+<a name="line229">229: </a>  obj-&gt;fortrancallback[cbtype][*cid-PETSC_SMALLEST_FORTRAN_CALLBACK].ctx = ctx;
+<a name="line230">230: </a>  <font color="#4169E1">return</font>(0);
+<a name="line231">231: </a>}
+
+<a name="line233">233: </a><font color="#B22222">/*@C</font>
+<a name="line234">234: </a><font color="#B22222">   <a href="../../../docs/manualpages/Sys/PetscObjectGetFortranCallback.html#PetscObjectGetFortranCallback">PetscObjectGetFortranCallback</a> - get fortran callback function pointer and context</font>
+
+<a name="line236">236: </a><font color="#B22222">   Logically Collective</font>
+
+<a name="line238">238: </a><font color="#B22222">   Input Arguments:</font>
+<a name="line239">239: </a><font color="#B22222">+  obj - object on which to get callback</font>
+<a name="line240">240: </a><font color="#B22222">.  cbtype - callback type</font>
+<a name="line241">241: </a><font color="#B22222">-  cid - address of callback Id</font>
+
+<a name="line243">243: </a><font color="#B22222">   Output Arguments:</font>
+<a name="line244">244: </a><font color="#B22222">+  func - Fortran function (or NULL if not needed)</font>
+<a name="line245">245: </a><font color="#B22222">-  ctx - Fortran context (or NULL if not needed)</font>
+
+<a name="line247">247: </a><font color="#B22222">   Level: developer</font>
+
+<a name="line249">249: </a><font color="#B22222">.seealso: <a href="../../../docs/manualpages/Sys/PetscObjectSetFortranCallback.html#PetscObjectSetFortranCallback">PetscObjectSetFortranCallback</a>()</font>
+<a name="line250">250: </a><font color="#B22222">@*/</font>
+<a name="line251">251: </a><strong><font color="#4169E1"><a name="PetscObjectGetFortranCallback"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../docs/manualpages/Sys/PetscObjectGetFortranCallback.html#PetscObjectGetFortranCallback">PetscObjectGetFortranCallback</a>(<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a> obj,PetscFortranCallbackType cbtype,PetscFortranCallbackId cid,void (**func)(void),void **ctx)</font></strong>
+<a name="line252">252: </a>{
+<a name="line253">253: </a>  PetscFortranCallback *cb;
+
+<a name="line257">257: </a>  <font color="#4169E1">if</font> (<a href="../../../docs/manualpages/Sys/PetscUnlikely.html#PetscUnlikely">PetscUnlikely</a>(cid &lt; PETSC_SMALLEST_FORTRAN_CALLBACK)) <a href="../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(obj-&gt;comm,PETSC_ERR_ARG_CORRUPT,<font color="#666666">"Fortran callback Id invalid"</font>);
+<a name="line258">258: </a>  <font color="#4169E1">if</font> (<a href="../../../docs/manualpages/Sys/PetscUnlikely.html#PetscUnlikely">PetscUnlikely</a>(cid &gt;= PETSC_SMALLEST_FORTRAN_CALLBACK+obj-&gt;num_fortrancallback[cbtype])) <a href="../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(obj-&gt;comm,PETSC_ERR_ARG_CORRUPT,<font color="#666666">"Fortran callback not set on this object"</font>);
+<a name="line259">259: </a>  cb = &amp;obj-&gt;fortrancallback[cbtype][cid-PETSC_SMALLEST_FORTRAN_CALLBACK];
+<a name="line260">260: </a>  <font color="#4169E1">if</font> (func) *func = cb-&gt;func;
+<a name="line261">261: </a>  <font color="#4169E1">if</font> (ctx) *ctx = cb-&gt;ctx;
+<a name="line262">262: </a>  <font color="#4169E1">return</font>(0);
+<a name="line263">263: </a>}
+
+<a name="line265">265: </a><font color="#A020F0">#if defined(PETSC_USE_LOG)</font>
+<a name="line266">266: </a><font color="#B22222">/*@C</font>
+<a name="line267">267: </a><font color="#B22222">   <a href="../../../docs/manualpages/Sys/PetscObjectsDump.html#PetscObjectsDump">PetscObjectsDump</a> - Prints the currently existing objects.</font>
+
+<a name="line269">269: </a><font color="#B22222">   Logically Collective on <a href="../../../docs/manualpages/Viewer/PetscViewer.html#PetscViewer">PetscViewer</a></font>
+
+<a name="line271">271: </a><font color="#B22222">   Input Parameter:</font>
+<a name="line272">272: </a><font color="#B22222">+  fd - file pointer</font>
+<a name="line273">273: </a><font color="#B22222">-  all - by default only tries to display objects created explicitly by the user, if all is <a href="../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a> then lists all outstanding objects</font>
+
+<a name="line275">275: </a><font color="#B22222">   Options Database:</font>
+<a name="line276">276: </a><font color="#B22222">.  -objects_dump &lt;all&gt;</font>
+
+<a name="line278">278: </a><font color="#B22222">   Level: advanced</font>
+
+<a name="line280">280: </a><font color="#B22222">@*/</font>
+<a name="line281">281: </a><strong><font color="#4169E1"><a name="PetscObjectsDump"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  <a href="../../../docs/manualpages/Sys/PetscObjectsDump.html#PetscObjectsDump">PetscObjectsDump</a>(FILE *fd,<a href="../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> all)</font></strong>
+<a name="line282">282: </a>{
+<a name="line284">284: </a>  <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       i;
+<a name="line285">285: </a><font color="#A020F0">#if defined(PETSC_USE_DEBUG)</font>
+<a name="line286">286: </a>  <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       j,k=0;
+<a name="line287">287: </a><font color="#A020F0">#endif</font>
+<a name="line288">288: </a>  <a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>    h;
+
+<a name="line291">291: </a>  <font color="#4169E1">if</font> (PetscObjectsCounts) {
+<a name="line292">292: </a>    <a href="../../../docs/manualpages/Sys/PetscFPrintf.html#PetscFPrintf">PetscFPrintf</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,fd,<font color="#666666">"The following objects were never freed\n"</font>);
+<a name="line293">293: </a>    <a href="../../../docs/manualpages/Sys/PetscFPrintf.html#PetscFPrintf">PetscFPrintf</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,fd,<font color="#666666">"-----------------------------------------\n"</font>);
+<a name="line294">294: </a>    <font color="#4169E1">for</font> (i=0; i&lt;PetscObjectsMaxCounts; i++) {
+<a name="line295">295: </a>      <font color="#4169E1">if</font> ((h = PetscObjects[i])) {
+<a name="line296">296: </a>        <a href="../../../docs/manualpages/Sys/PetscObjectName.html#PetscObjectName">PetscObjectName</a>(h);
+<a name="line297">297: </a>        {
+<a name="line298">298: </a><font color="#A020F0">#if defined(PETSC_USE_DEBUG)</font>
+<a name="line299">299: </a>        PetscStack *stack = NULL;
+<a name="line300">300: </a>        char       *create,*rclass;
+
+<a name="line302">302: </a>        <font color="#B22222">/* if the PETSc function the user calls is not a create then this object was NOT directly created by them */</font>
+<a name="line303">303: </a>        <a href="../../../docs/manualpages/Sys/PetscMallocGetStack.html#PetscMallocGetStack">PetscMallocGetStack</a>(h,&amp;stack);
+<a name="line304">304: </a>        <font color="#4169E1">if</font> (stack) {
+<a name="line305">305: </a>          k = stack-&gt;currentsize-2;
+<a name="line306">306: </a>          <font color="#4169E1">if</font> (!all) {
+<a name="line307">307: </a>            k = 0;
+<a name="line308">308: </a>            <font color="#4169E1">while</font> (!stack-&gt;petscroutine[k]) k++;
+<a name="line309">309: </a>            <a href="../../../docs/manualpages/Sys/PetscStrstr.html#PetscStrstr">PetscStrstr</a>(stack-&gt;function[k],<font color="#666666">"Create"</font>,&amp;create);
+<a name="line310">310: </a>            <font color="#4169E1">if</font> (!create) {
+<a name="line311">311: </a>              <a href="../../../docs/manualpages/Sys/PetscStrstr.html#PetscStrstr">PetscStrstr</a>(stack-&gt;function[k],<font color="#666666">"Get"</font>,&amp;create);
+<a name="line312">312: </a>            }
+<a name="line313">313: </a>            <a href="../../../docs/manualpages/Sys/PetscStrstr.html#PetscStrstr">PetscStrstr</a>(stack-&gt;function[k],h-&gt;class_name,&amp;rclass);
+<a name="line314">314: </a>            <font color="#4169E1">if</font> (!create) <font color="#4169E1">continue</font>;
+<a name="line315">315: </a>            <font color="#4169E1">if</font> (!rclass) <font color="#4169E1">continue</font>;
+<a name="line316">316: </a>          }
+<a name="line317">317: </a>        }
+<a name="line318">318: </a><font color="#A020F0">#endif</font>
+
+<a name="line320">320: </a>        <a href="../../../docs/manualpages/Sys/PetscFPrintf.html#PetscFPrintf">PetscFPrintf</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,fd,<font color="#666666">"[%d] %s %s %s\n"</font>,PetscGlobalRank,h-&gt;class_name,h-&gt;type_name,h-&gt;name);
+
+<a name="line322">322: </a><font color="#A020F0">#if defined(PETSC_USE_DEBUG)</font>
+<a name="line323">323: </a>        <a href="../../../docs/manualpages/Sys/PetscMallocGetStack.html#PetscMallocGetStack">PetscMallocGetStack</a>(h,&amp;stack);
+<a name="line324">324: </a>        <font color="#4169E1">if</font> (stack) {
+<a name="line325">325: </a>          <font color="#4169E1">for</font> (j=k; j&gt;=0; j--) {
+<a name="line326">326: </a>            fprintf(fd,<font color="#666666">"      [%d]  %s() in %s\n"</font>,PetscGlobalRank,stack-&gt;function[j],stack-&gt;file[j]);
+<a name="line327">327: </a>          }
+<a name="line328">328: </a>        }
+<a name="line329">329: </a><font color="#A020F0">#endif</font>
+<a name="line330">330: </a>        }
+<a name="line331">331: </a>      }
+<a name="line332">332: </a>    }
+<a name="line333">333: </a>  }
+<a name="line334">334: </a>  <font color="#4169E1">return</font>(0);
+<a name="line335">335: </a>}
+<a name="line336">336: </a><font color="#A020F0">#endif</font>
+
+<a name="line338">338: </a><font color="#A020F0">#if defined(PETSC_USE_LOG)</font>
+
+<a name="line340">340: </a><font color="#B22222">/*@C</font>
+<a name="line341">341: </a><font color="#B22222">   <a href="../../../docs/manualpages/Sys/PetscObjectsView.html#PetscObjectsView">PetscObjectsView</a> - Prints the currently existing objects.</font>
+
+<a name="line343">343: </a><font color="#B22222">   Logically Collective on <a href="../../../docs/manualpages/Viewer/PetscViewer.html#PetscViewer">PetscViewer</a></font>
+
+<a name="line345">345: </a><font color="#B22222">   Input Parameter:</font>
+<a name="line346">346: </a><font color="#B22222">.  viewer - must be an <a href="../../../docs/manualpages/Viewer/PETSCVIEWERASCII.html#PETSCVIEWERASCII">PETSCVIEWERASCII</a> viewer</font>
+
+<a name="line348">348: </a><font color="#B22222">   Level: advanced</font>
+
+<a name="line350">350: </a><font color="#B22222">@*/</font>
+<a name="line351">351: </a><strong><font color="#4169E1"><a name="PetscObjectsView"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  <a href="../../../docs/manualpages/Sys/PetscObjectsView.html#PetscObjectsView">PetscObjectsView</a>(<a href="../../../docs/manualpages/Viewer/PetscViewer.html#PetscViewer">PetscViewer</a> viewer)</font></strong>
+<a name="line352">352: </a>{
+<a name="line354">354: </a>  <a href="../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>      isascii;
+<a name="line355">355: </a>  FILE           *fd;
+
+<a name="line358">358: </a>  <font color="#4169E1">if</font> (!viewer) viewer = <a href="../../../docs/manualpages/Viewer/PETSC_VIEWER_STDOUT_WORLD.html#PETSC_VIEWER_STDOUT_WORLD">PETSC_VIEWER_STDOUT_WORLD</a>;
+<a name="line359">359: </a>  <a href="../../../docs/manualpages/Sys/PetscObjectTypeCompare.html#PetscObjectTypeCompare">PetscObjectTypeCompare</a>((<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)viewer,<a href="../../../docs/manualpages/Viewer/PETSCVIEWERASCII.html#PETSCVIEWERASCII">PETSCVIEWERASCII</a>,&amp;isascii);
+<a name="line360">360: </a>  <font color="#4169E1">if</font> (!isascii) <a href="../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)viewer),PETSC_ERR_SUP,<font color="#666666">"Only supports ASCII viewer"</font>);
+<a name="line361">361: </a>  <a href="../../../docs/manualpages/Viewer/PetscViewerASCIIGetPointer.html#PetscViewerASCIIGetPointer">PetscViewerASCIIGetPointer</a>(viewer,&amp;fd);
+<a name="line362">362: </a>  <a href="../../../docs/manualpages/Sys/PetscObjectsDump.html#PetscObjectsDump">PetscObjectsDump</a>(fd,<a href="../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>);
+<a name="line363">363: </a>  <font color="#4169E1">return</font>(0);
+<a name="line364">364: </a>}
+
+<a name="line366">366: </a><font color="#B22222">/*@C</font>
+<a name="line367">367: </a><font color="#B22222">   <a href="../../../docs/manualpages/Sys/PetscObjectsGetObject.html#PetscObjectsGetObject">PetscObjectsGetObject</a> - Get a pointer to a named object</font>
+
+<a name="line369">369: </a><font color="#B22222">   Not collective</font>
+
+<a name="line371">371: </a><font color="#B22222">   Input Parameter:</font>
+<a name="line372">372: </a><font color="#B22222">.  name - the name of an object</font>
+
+<a name="line374">374: </a><font color="#B22222">   Output Parameter:</font>
+<a name="line375">375: </a><font color="#B22222">.   obj - the object or null if there is no object</font>
+
+<a name="line377">377: </a><font color="#B22222">   Level: advanced</font>
+
+<a name="line379">379: </a><font color="#B22222">@*/</font>
+<a name="line380">380: </a><strong><font color="#4169E1"><a name="PetscObjectsGetObject"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  <a href="../../../docs/manualpages/Sys/PetscObjectsGetObject.html#PetscObjectsGetObject">PetscObjectsGetObject</a>(const char *name,<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a> *obj,char **classname)</font></strong>
+<a name="line381">381: </a>{
+<a name="line383">383: </a>  <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       i;
+<a name="line384">384: </a>  <a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>    h;
+<a name="line385">385: </a>  <a href="../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>      flg;
+
+<a name="line388">388: </a>  *obj = NULL;
+<a name="line389">389: </a>  <font color="#4169E1">for</font> (i=0; i&lt;PetscObjectsMaxCounts; i++) {
+<a name="line390">390: </a>    <font color="#4169E1">if</font> ((h = PetscObjects[i])) {
+<a name="line391">391: </a>      <a href="../../../docs/manualpages/Sys/PetscObjectName.html#PetscObjectName">PetscObjectName</a>(h);
+<a name="line392">392: </a>      <a href="../../../docs/manualpages/Sys/PetscStrcmp.html#PetscStrcmp">PetscStrcmp</a>(h-&gt;name,name,&amp;flg);
+<a name="line393">393: </a>      <font color="#4169E1">if</font> (flg) {
+<a name="line394">394: </a>        *obj = h;
+<a name="line395">395: </a>        <font color="#4169E1">if</font> (classname) *classname = h-&gt;class_name;
+<a name="line396">396: </a>        <font color="#4169E1">return</font>(0);
+<a name="line397">397: </a>      }
+<a name="line398">398: </a>    }
+<a name="line399">399: </a>  }
+<a name="line400">400: </a>  <font color="#4169E1">return</font>(0);
+<a name="line401">401: </a>}
+<a name="line402">402: </a><font color="#A020F0">#endif</font>
+
+<a name="line404">404: </a><font color="#B22222">/*@</font>
+<a name="line405">405: </a><font color="#B22222">   <a href="../../../docs/manualpages/Sys/PetscObjectSetPrintedOptions.html#PetscObjectSetPrintedOptions">PetscObjectSetPrintedOptions</a> - indicate to an object that it should behave as if it has already printed the help for its options</font>
+
+<a name="line407">407: </a><font color="#B22222">   Input Parameters:</font>
+<a name="line408">408: </a><font color="#B22222">.  obj  - the <a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a></font>
+
+<a name="line410">410: </a><font color="#B22222">   Level: developer</font>
+
+<a name="line412">412: </a><font color="#B22222">   Developer Notes:</font>
+<a name="line413">413: </a><font color="#B22222">   This is used, for example to prevent sequential objects that are created from a parallel object; such as the <a href="../../../docs/manualpages/KSP/KSP.html#KSP">KSP</a> created by</font>
+<a name="line414">414: </a><font color="#B22222">   <a href="../../../docs/manualpages/PC/PCBJACOBI.html#PCBJACOBI">PCBJACOBI</a> from all printing the same help messages to the screen</font>
+
+<a name="line416">416: </a><font color="#B22222">.seealso: <a href="../../../docs/manualpages/Sys/PetscOptionsInsert.html#PetscOptionsInsert">PetscOptionsInsert</a>()</font>
+<a name="line417">417: </a><font color="#B22222">@*/</font>
+<a name="line418">418: </a><strong><font color="#4169E1"><a name="PetscObjectSetPrintedOptions"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../docs/manualpages/Sys/PetscObjectSetPrintedOptions.html#PetscObjectSetPrintedOptions">PetscObjectSetPrintedOptions</a>(<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a> obj)</font></strong>
+<a name="line419">419: </a>{
+<a name="line421">421: </a>  obj-&gt;optionsprinted = <a href="../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>;
+<a name="line422">422: </a>  <font color="#4169E1">return</font>(0);
+<a name="line423">423: </a>}
+
+<a name="line425">425: </a><font color="#B22222">/*@</font>
+<a name="line426">426: </a><font color="#B22222">   <a href="../../../docs/manualpages/Sys/PetscObjectInheritPrintedOptions.html#PetscObjectInheritPrintedOptions">PetscObjectInheritPrintedOptions</a> - If the child object is not on the rank 0 process of the parent object and the child is sequential then the child gets it set.</font>
+
+<a name="line428">428: </a><font color="#B22222">   Input Parameters:</font>
+<a name="line429">429: </a><font color="#B22222">+  pobj - the parent object</font>
+<a name="line430">430: </a><font color="#B22222">-  obj  - the <a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a></font>
+
+<a name="line432">432: </a><font color="#B22222">   Level: developer</font>
+
+<a name="line434">434: </a><font color="#B22222">   Developer Notes:</font>
+<a name="line435">435: </a><font color="#B22222">   This is used, for example to prevent sequential objects that are created from a parallel object; such as the <a href="../../../docs/manualpages/KSP/KSP.html#KSP">KSP</a> created by</font>
+<a name="line436">436: </a><font color="#B22222">   <a href="../../../docs/manualpages/PC/PCBJACOBI.html#PCBJACOBI">PCBJACOBI</a> from all printing the same help messages to the screen</font>
+
+<a name="line438">438: </a><font color="#B22222">   This will not handle more complicated situations like with GASM where children may live on any subset of the parent's processes and overlap</font>
+
+<a name="line440">440: </a><font color="#B22222">.seealso: <a href="../../../docs/manualpages/Sys/PetscOptionsInsert.html#PetscOptionsInsert">PetscOptionsInsert</a>(), <a href="../../../docs/manualpages/Sys/PetscObjectSetPrintedOptions.html#PetscObjectSetPrintedOptions">PetscObjectSetPrintedOptions</a>()</font>
+<a name="line441">441: </a><font color="#B22222">@*/</font>
+<a name="line442">442: </a><strong><font color="#4169E1"><a name="PetscObjectInheritPrintedOptions"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../docs/manualpages/Sys/PetscObjectInheritPrintedOptions.html#PetscObjectInheritPrintedOptions">PetscObjectInheritPrintedOptions</a>(<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a> pobj,<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a> obj)</font></strong>
+<a name="line443">443: </a>{
+<a name="line445">445: </a>  <a href="../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a>    prank,size;
+
+<a name="line448">448: </a>  <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_rank.html#MPI_Comm_rank">MPI_Comm_rank</a>(pobj-&gt;comm,&amp;prank);
+<a name="line449">449: </a>  <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_size.html#MPI_Comm_size">MPI_Comm_size</a>(obj-&gt;comm,&amp;size);
+<a name="line450">450: </a>  <font color="#4169E1">if</font> (size == 1 &amp;&amp; prank &gt; 0) obj-&gt;optionsprinted = <a href="../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>;
+<a name="line451">451: </a>  <font color="#4169E1">return</font>(0);
+<a name="line452">452: </a>}
+
+<a name="line454">454: </a><font color="#B22222">/*@C</font>
+<a name="line455">455: </a><font color="#B22222">    <a href="../../../docs/manualpages/Sys/PetscObjectAddOptionsHandler.html#PetscObjectAddOptionsHandler">PetscObjectAddOptionsHandler</a> - Adds an additional function to check for options when XXXSetFromOptions() is called.</font>
+
+<a name="line457">457: </a><font color="#B22222">    Not Collective</font>
+
+<a name="line459">459: </a><font color="#B22222">    Input Parameter:</font>
+<a name="line460">460: </a><font color="#B22222">+   obj - the PETSc object</font>
+<a name="line461">461: </a><font color="#B22222">.   handle - function that checks for options</font>
+<a name="line462">462: </a><font color="#B22222">.   destroy - function to destroy context if provided</font>
+<a name="line463">463: </a><font color="#B22222">-   ctx - optional context for check function</font>
+
+<a name="line465">465: </a><font color="#B22222">    Level: developer</font>
+
+
+<a name="line468">468: </a><font color="#B22222">.seealso: <a href="../../../docs/manualpages/KSP/KSPSetFromOptions.html#KSPSetFromOptions">KSPSetFromOptions</a>(), <a href="../../../docs/manualpages/PC/PCSetFromOptions.html#PCSetFromOptions">PCSetFromOptions</a>(), <a href="../../../docs/manualpages/SNES/SNESSetFromOptions.html#SNESSetFromOptions">SNESSetFromOptions</a>(), <a href="../../../docs/manualpages/Sys/PetscObjectProcessOptionsHandlers.html#PetscObjectProcessOptionsHandlers">PetscObjectProcessOptionsHandlers</a>(), <a href="../../../docs/manualpages/Sys/PetscObjectDestroyOptionsHandlers.html#PetscObjectDestroyOptionsHandlers">PetscObjectDestroyOptionsHandlers</a>()</font>
+
+<a name="line470">470: </a><font color="#B22222">@*/</font>
+<a name="line471">471: </a><strong><font color="#4169E1"><a name="PetscObjectAddOptionsHandler"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../docs/manualpages/Sys/PetscObjectAddOptionsHandler.html#PetscObjectAddOptionsHandler">PetscObjectAddOptionsHandler</a>(<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a> obj,<a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> (*handle)(PetscOptionItems*,<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>,void*),<a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> (*destroy)(<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>,void*),void *ctx)</font></strong>
+<a name="line472">472: </a>{
+<a name="line475">475: </a>  <font color="#4169E1">if</font> (obj-&gt;noptionhandler &gt;= PETSC_MAX_OPTIONS_HANDLER) <a href="../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(obj-&gt;comm,PETSC_ERR_ARG_OUTOFRANGE,<font color="#666666">"To many options handlers added"</font>);
+<a name="line476">476: </a>  obj-&gt;optionhandler[obj-&gt;noptionhandler] = handle;
+<a name="line477">477: </a>  obj-&gt;optiondestroy[obj-&gt;noptionhandler] = destroy;
+<a name="line478">478: </a>  obj-&gt;optionctx[obj-&gt;noptionhandler++]   = ctx;
+<a name="line479">479: </a>  <font color="#4169E1">return</font>(0);
+<a name="line480">480: </a>}
+
+<a name="line482">482: </a><font color="#B22222">/*@C</font>
+<a name="line483">483: </a><font color="#B22222">    <a href="../../../docs/manualpages/Sys/PetscObjectProcessOptionsHandlers.html#PetscObjectProcessOptionsHandlers">PetscObjectProcessOptionsHandlers</a> - Calls all the options handlers attached to an object</font>
+
+<a name="line485">485: </a><font color="#B22222">    Not Collective</font>
+
+<a name="line487">487: </a><font color="#B22222">    Input Parameter:</font>
+<a name="line488">488: </a><font color="#B22222">.   obj - the PETSc object</font>
+
+<a name="line490">490: </a><font color="#B22222">    Level: developer</font>
+
+
+<a name="line493">493: </a><font color="#B22222">.seealso: <a href="../../../docs/manualpages/KSP/KSPSetFromOptions.html#KSPSetFromOptions">KSPSetFromOptions</a>(), <a href="../../../docs/manualpages/PC/PCSetFromOptions.html#PCSetFromOptions">PCSetFromOptions</a>(), <a href="../../../docs/manualpages/SNES/SNESSetFromOptions.html#SNESSetFromOptions">SNESSetFromOptions</a>(), <a href="../../../docs/manualpages/Sys/PetscObjectAddOptionsHandler.html#PetscObjectAddOptionsHandler">PetscObjectAddOptionsHandler</a>(), <a href="../../../docs/manualpages/Sys/PetscObjectDestroyOptionsHandlers.html#PetscObjectDestroyOptionsHandlers">PetscObjectDestroyOptionsHandlers</a>()</font>
+
+<a name="line495">495: </a><font color="#B22222">@*/</font>
+<a name="line496">496: </a><strong><font color="#4169E1"><a name="PetscObjectProcessOptionsHandlers"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  <a href="../../../docs/manualpages/Sys/PetscObjectProcessOptionsHandlers.html#PetscObjectProcessOptionsHandlers">PetscObjectProcessOptionsHandlers</a>(PetscOptionItems *PetscOptionsObject,<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a> obj)</font></strong>
+<a name="line497">497: </a>{
+<a name="line498">498: </a>  <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       i;
+
+<a name="line503">503: </a>  <font color="#4169E1">for</font> (i=0; i&lt;obj-&gt;noptionhandler; i++) {
+<a name="line504">504: </a>    (*obj-&gt;optionhandler[i])(PetscOptionsObject,obj,obj-&gt;optionctx[i]);
+<a name="line505">505: </a>  }
+<a name="line506">506: </a>  <font color="#4169E1">return</font>(0);
+<a name="line507">507: </a>}
+
+<a name="line509">509: </a><font color="#B22222">/*@C</font>
+<a name="line510">510: </a><font color="#B22222">    <a href="../../../docs/manualpages/Sys/PetscObjectDestroyOptionsHandlers.html#PetscObjectDestroyOptionsHandlers">PetscObjectDestroyOptionsHandlers</a> - Destroys all the option handlers attached to an object</font>
+
+<a name="line512">512: </a><font color="#B22222">    Not Collective</font>
+
+<a name="line514">514: </a><font color="#B22222">    Input Parameter:</font>
+<a name="line515">515: </a><font color="#B22222">.   obj - the PETSc object</font>
+
+<a name="line517">517: </a><font color="#B22222">    Level: developer</font>
+
+
+<a name="line520">520: </a><font color="#B22222">.seealso: <a href="../../../docs/manualpages/KSP/KSPSetFromOptions.html#KSPSetFromOptions">KSPSetFromOptions</a>(), <a href="../../../docs/manualpages/PC/PCSetFromOptions.html#PCSetFromOptions">PCSetFromOptions</a>(), <a href="../../../docs/manualpages/SNES/SNESSetFromOptions.html#SNESSetFromOptions">SNESSetFromOptions</a>(), <a href="../../../docs/manualpages/Sys/PetscObjectAddOptionsHandler.html#PetscObjectAddOptionsHandler">PetscObjectAddOptionsHandler</a>(), <a href="../../../docs/manualpages/Sys/PetscObjectProcessOptionsHandlers.html#PetscObjectProcessOptionsHandlers">PetscObjectProcessOptionsHandlers</a>()</font>
+
+<a name="line522">522: </a><font color="#B22222">@*/</font>
+<a name="line523">523: </a><strong><font color="#4169E1"><a name="PetscObjectDestroyOptionsHandlers"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  <a href="../../../docs/manualpages/Sys/PetscObjectDestroyOptionsHandlers.html#PetscObjectDestroyOptionsHandlers">PetscObjectDestroyOptionsHandlers</a>(<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a> obj)</font></strong>
+<a name="line524">524: </a>{
+<a name="line525">525: </a>  <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       i;
+
+<a name="line530">530: </a>  <font color="#4169E1">for</font> (i=0; i&lt;obj-&gt;noptionhandler; i++) {
+<a name="line531">531: </a>    <font color="#4169E1">if</font> (obj-&gt;optiondestroy[i]) {
+<a name="line532">532: </a>      (*obj-&gt;optiondestroy[i])(obj,obj-&gt;optionctx[i]);
+<a name="line533">533: </a>    }
+<a name="line534">534: </a>  }
+<a name="line535">535: </a>  obj-&gt;noptionhandler = 0;
+<a name="line536">536: </a>  <font color="#4169E1">return</font>(0);
+<a name="line537">537: </a>}
+
+
+<a name="line540">540: </a><font color="#B22222">/*@C</font>
+<a name="line541">541: </a><font color="#B22222">   <a href="../../../docs/manualpages/Sys/PetscObjectReference.html#PetscObjectReference">PetscObjectReference</a> - Indicates to any <a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a> that it is being</font>
+<a name="line542">542: </a><font color="#B22222">   referenced by another <a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>. This increases the reference</font>
+<a name="line543">543: </a><font color="#B22222">   count for that object by one.</font>
+
+<a name="line545">545: </a><font color="#B22222">   Logically Collective on <a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a></font>
+
+<a name="line547">547: </a><font color="#B22222">   Input Parameter:</font>
+<a name="line548">548: </a><font color="#B22222">.  obj - the PETSc object. This must be cast with (<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>), for example,</font>
+<a name="line549">549: </a><font color="#B22222">         <a href="../../../docs/manualpages/Sys/PetscObjectReference.html#PetscObjectReference">PetscObjectReference</a>((<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)mat);</font>
+
+<a name="line551">551: </a><font color="#B22222">   Level: advanced</font>
+
+<a name="line553">553: </a><font color="#B22222">.seealso: <a href="../../../docs/manualpages/Sys/PetscObjectCompose.html#PetscObjectCompose">PetscObjectCompose</a>(), <a href="../../../docs/manualpages/Sys/PetscObjectDereference.html#PetscObjectDereference">PetscObjectDereference</a>()</font>
+<a name="line554">554: </a><font color="#B22222">@*/</font>
+<a name="line555">555: </a><strong><font color="#4169E1"><a name="PetscObjectReference"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  <a href="../../../docs/manualpages/Sys/PetscObjectReference.html#PetscObjectReference">PetscObjectReference</a>(<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a> obj)</font></strong>
+<a name="line556">556: </a>{
+<a name="line558">558: </a>  <font color="#4169E1">if</font> (!obj) <font color="#4169E1">return</font>(0);
+<a name="line560">560: </a>  obj-&gt;refct++;
+<a name="line561">561: </a>  <font color="#4169E1">return</font>(0);
+<a name="line562">562: </a>}
+
+<a name="line564">564: </a><font color="#B22222">/*@C</font>
+<a name="line565">565: </a><font color="#B22222">   <a href="../../../docs/manualpages/Sys/PetscObjectGetReference.html#PetscObjectGetReference">PetscObjectGetReference</a> - Gets the current reference count for</font>
+<a name="line566">566: </a><font color="#B22222">   any PETSc object.</font>
+
+<a name="line568">568: </a><font color="#B22222">   Not Collective</font>
+
+<a name="line570">570: </a><font color="#B22222">   Input Parameter:</font>
+<a name="line571">571: </a><font color="#B22222">.  obj - the PETSc object; this must be cast with (<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>), for example,</font>
+<a name="line572">572: </a><font color="#B22222">         <a href="../../../docs/manualpages/Sys/PetscObjectGetReference.html#PetscObjectGetReference">PetscObjectGetReference</a>((<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)mat,&amp;cnt);</font>
+
+<a name="line574">574: </a><font color="#B22222">   Output Parameter:</font>
+<a name="line575">575: </a><font color="#B22222">.  cnt - the reference count</font>
+
+<a name="line577">577: </a><font color="#B22222">   Level: advanced</font>
+
+<a name="line579">579: </a><font color="#B22222">.seealso: <a href="../../../docs/manualpages/Sys/PetscObjectCompose.html#PetscObjectCompose">PetscObjectCompose</a>(), <a href="../../../docs/manualpages/Sys/PetscObjectDereference.html#PetscObjectDereference">PetscObjectDereference</a>(), <a href="../../../docs/manualpages/Sys/PetscObjectReference.html#PetscObjectReference">PetscObjectReference</a>()</font>
+<a name="line580">580: </a><font color="#B22222">@*/</font>
+<a name="line581">581: </a><strong><font color="#4169E1"><a name="PetscObjectGetReference"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  <a href="../../../docs/manualpages/Sys/PetscObjectGetReference.html#PetscObjectGetReference">PetscObjectGetReference</a>(<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a> obj,<a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *cnt)</font></strong>
+<a name="line582">582: </a>{
+<a name="line586">586: </a>  *cnt = obj-&gt;refct;
+<a name="line587">587: </a>  <font color="#4169E1">return</font>(0);
+<a name="line588">588: </a>}
+
+<a name="line590">590: </a><font color="#B22222">/*@C</font>
+<a name="line591">591: </a><font color="#B22222">   <a href="../../../docs/manualpages/Sys/PetscObjectDereference.html#PetscObjectDereference">PetscObjectDereference</a> - Indicates to any <a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a> that it is being</font>
+<a name="line592">592: </a><font color="#B22222">   referenced by one less <a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>. This decreases the reference</font>
+<a name="line593">593: </a><font color="#B22222">   count for that object by one.</font>
+
+<a name="line595">595: </a><font color="#B22222">   Collective on <a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a> if reference reaches 0 otherwise Logically Collective</font>
+
+<a name="line597">597: </a><font color="#B22222">   Input Parameter:</font>
+<a name="line598">598: </a><font color="#B22222">.  obj - the PETSc object; this must be cast with (<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>), for example,</font>
+<a name="line599">599: </a><font color="#B22222">         <a href="../../../docs/manualpages/Sys/PetscObjectDereference.html#PetscObjectDereference">PetscObjectDereference</a>((<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)mat);</font>
+
+<a name="line601">601: </a><font color="#B22222">   Notes:</font>
+<a name="line602">602: </a><font color="#B22222">    <a href="../../../docs/manualpages/Sys/PetscObjectDestroy.html#PetscObjectDestroy">PetscObjectDestroy</a>(<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a> *obj)  sets the obj pointer to null after the call, this routine does not.</font>
+
+<a name="line604">604: </a><font color="#B22222">   Level: advanced</font>
+
+<a name="line606">606: </a><font color="#B22222">.seealso: <a href="../../../docs/manualpages/Sys/PetscObjectCompose.html#PetscObjectCompose">PetscObjectCompose</a>(), <a href="../../../docs/manualpages/Sys/PetscObjectReference.html#PetscObjectReference">PetscObjectReference</a>()</font>
+<a name="line607">607: </a><font color="#B22222">@*/</font>
+<a name="line608">608: </a><strong><font color="#4169E1"><a name="PetscObjectDereference"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  <a href="../../../docs/manualpages/Sys/PetscObjectDereference.html#PetscObjectDereference">PetscObjectDereference</a>(<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a> obj)</font></strong>
+<a name="line609">609: </a>{
+
+<a name="line613">613: </a>  <font color="#4169E1">if</font> (!obj) <font color="#4169E1">return</font>(0);
+<a name="line615">615: </a>  <font color="#4169E1">if</font> (obj-&gt;bops-&gt;destroy) {
+<a name="line616">616: </a>    (*obj-&gt;bops-&gt;destroy)(&amp;obj);
+<a name="line617">617: </a>  } <font color="#4169E1">else</font> <font color="#4169E1">if</font> (!--obj-&gt;refct) <a href="../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_SUP,<font color="#666666">"This PETSc object does not have a generic destroy routine"</font>);
+<a name="line618">618: </a>  <font color="#4169E1">return</font>(0);
+<a name="line619">619: </a>}
+
+<a name="line621">621: </a><font color="#B22222">/* ----------------------------------------------------------------------- */</font>
+<a name="line622">622: </a><font color="#B22222">/*</font>
+<a name="line623">623: </a><font color="#B22222">     The following routines are the versions private to the PETSc object</font>
+<a name="line624">624: </a><font color="#B22222">     data structures.</font>
+<a name="line625">625: </a><font color="#B22222">*/</font>
+<a name="line626">626: </a><strong><font color="#4169E1"><a name="PetscObjectGetComm_Petsc"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscObjectGetComm_Petsc(<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a> obj,<a href="../../../docs/manualpages/Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</a> *comm)</font></strong>
+<a name="line627">627: </a>{
+<a name="line630">630: </a>  *comm = obj-&gt;comm;
+<a name="line631">631: </a>  <font color="#4169E1">return</font>(0);
+<a name="line632">632: </a>}
+
+<a name="line634">634: </a><strong><font color="#4169E1"><a name="PetscObjectRemoveReference"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscObjectRemoveReference(<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a> obj,const char name[])</font></strong>
+<a name="line635">635: </a>{
+
+<a name="line640">640: </a>  <a href="../../../docs/manualpages/Sys/PetscObjectListRemoveReference.html#PetscObjectListRemoveReference">PetscObjectListRemoveReference</a>(&amp;obj-&gt;olist,name);
+<a name="line641">641: </a>  <font color="#4169E1">return</font>(0);
+<a name="line642">642: </a>}
+
+<a name="line644">644: </a><strong><font color="#4169E1"><a name="PetscObjectCompose_Petsc"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscObjectCompose_Petsc(<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a> obj,const char name[],<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a> ptr)</font></strong>
+<a name="line645">645: </a>{
+<a name="line647">647: </a>  char           *tname;
+<a name="line648">648: </a>  <a href="../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>      skipreference;
+
+<a name="line651">651: </a>  <font color="#4169E1">if</font> (ptr) {
+<a name="line652">652: </a>    <a href="../../../docs/manualpages/Sys/PetscObjectListReverseFind.html#PetscObjectListReverseFind">PetscObjectListReverseFind</a>(ptr-&gt;olist,obj,&amp;tname,&amp;skipreference);
+<a name="line653">653: </a>    <font color="#4169E1">if</font> (tname &amp;&amp; !skipreference) <a href="../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_ARG_INCOMP,<font color="#666666">"An object cannot be composed with an object that was composed with it"</font>);
+<a name="line654">654: </a>  }
+<a name="line655">655: </a>  <a href="../../../docs/manualpages/Sys/PetscObjectListAdd.html#PetscObjectListAdd">PetscObjectListAdd</a>(&amp;obj-&gt;olist,name,ptr);
+<a name="line656">656: </a>  <font color="#4169E1">return</font>(0);
+<a name="line657">657: </a>}
+
+<a name="line659">659: </a><strong><font color="#4169E1"><a name="PetscObjectQuery_Petsc"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscObjectQuery_Petsc(<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a> obj,const char name[],<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a> *ptr)</font></strong>
+<a name="line660">660: </a>{
+
+<a name="line665">665: </a>  <a href="../../../docs/manualpages/Sys/PetscObjectListFind.html#PetscObjectListFind">PetscObjectListFind</a>(obj-&gt;olist,name,ptr);
+<a name="line666">666: </a>  <font color="#4169E1">return</font>(0);
+<a name="line667">667: </a>}
+
+<a name="line669">669: </a><strong><font color="#4169E1"><a name="PetscObjectComposeFunction_Petsc"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscObjectComposeFunction_Petsc(<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a> obj,const char name[],void (*ptr)(void))</font></strong>
+<a name="line670">670: </a>{
+
+<a name="line675">675: </a>  <a href="../../../docs/manualpages/Sys/PetscFunctionListAdd.html#PetscFunctionListAdd">PetscFunctionListAdd</a>(&amp;obj-&gt;qlist,name,ptr);
+<a name="line676">676: </a>  <font color="#4169E1">return</font>(0);
+<a name="line677">677: </a>}
+
+<a name="line679">679: </a><strong><font color="#4169E1"><a name="PetscObjectQueryFunction_Petsc"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscObjectQueryFunction_Petsc(<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a> obj,const char name[],void (**ptr)(void))</font></strong>
+<a name="line680">680: </a>{
+
+<a name="line685">685: </a>  <a href="../../../docs/manualpages/Sys/PetscFunctionListFind.html#PetscFunctionListFind">PetscFunctionListFind</a>(obj-&gt;qlist,name,ptr);
+<a name="line686">686: </a>  <font color="#4169E1">return</font>(0);
+<a name="line687">687: </a>}
+
+<a name="line689">689: </a><font color="#B22222">/*@C</font>
+<a name="line690">690: </a><font color="#B22222">   <a href="../../../docs/manualpages/Sys/PetscObjectCompose.html#PetscObjectCompose">PetscObjectCompose</a> - Associates another PETSc object with a given PETSc object.</font>
+
+<a name="line692">692: </a><font color="#B22222">   Not Collective</font>
+
+<a name="line694">694: </a><font color="#B22222">   Input Parameters:</font>
+<a name="line695">695: </a><font color="#B22222">+  obj - the PETSc object; this must be cast with (<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>), for example,</font>
+<a name="line696">696: </a><font color="#B22222">         <a href="../../../docs/manualpages/Sys/PetscObjectCompose.html#PetscObjectCompose">PetscObjectCompose</a>((<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)mat,...);</font>
+<a name="line697">697: </a><font color="#B22222">.  name - name associated with the child object</font>
+<a name="line698">698: </a><font color="#B22222">-  ptr - the other PETSc object to associate with the PETSc object; this must also be</font>
+<a name="line699">699: </a><font color="#B22222">         cast with (<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)</font>
+
+<a name="line701">701: </a><font color="#B22222">   Level: advanced</font>
+
+<a name="line703">703: </a><font color="#B22222">   Notes:</font>
+<a name="line704">704: </a><font color="#B22222">   The second objects reference count is automatically increased by one when it is</font>
+<a name="line705">705: </a><font color="#B22222">   composed.</font>
+
+<a name="line707">707: </a><font color="#B22222">   Replaces any previous object that had the same name.</font>
+
+<a name="line709">709: </a><font color="#B22222">   If ptr is null and name has previously been composed using an object, then that</font>
+<a name="line710">710: </a><font color="#B22222">   entry is removed from the obj.</font>
+
+<a name="line712">712: </a><font color="#B22222">   <a href="../../../docs/manualpages/Sys/PetscObjectCompose.html#PetscObjectCompose">PetscObjectCompose</a>() can be used with any PETSc object (such as</font>
+<a name="line713">713: </a><font color="#B22222">   <a href="../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a>, <a href="../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a>, <a href="../../../docs/manualpages/KSP/KSP.html#KSP">KSP</a>, <a href="../../../docs/manualpages/SNES/SNES.html#SNES">SNES</a>, etc.) or any user-provided object.  See</font>
+<a name="line714">714: </a><font color="#B22222">   <a href="../../../docs/manualpages/Sys/PetscContainerCreate.html#PetscContainerCreate">PetscContainerCreate</a>() for info on how to create an object from a</font>
+<a name="line715">715: </a><font color="#B22222">   user-provided pointer that may then be composed with PETSc objects.</font>
+
+
+<a name="line718">718: </a><font color="#B22222">.seealso: <a href="../../../docs/manualpages/Sys/PetscObjectQuery.html#PetscObjectQuery">PetscObjectQuery</a>(), <a href="../../../docs/manualpages/Sys/PetscContainerCreate.html#PetscContainerCreate">PetscContainerCreate</a>(), <a href="../../../docs/manualpages/Sys/PetscObjectComposeFunction.html#PetscObjectComposeFunction">PetscObjectComposeFunction</a>(), <a href="../../../docs/manualpages/Sys/PetscObjectQueryFunction.html#PetscObjectQueryFunction">PetscObjectQueryFunction</a>()</font>
+<a name="line719">719: </a><font color="#B22222">@*/</font>
+<a name="line720">720: </a><strong><font color="#4169E1"><a name="PetscObjectCompose"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  <a href="../../../docs/manualpages/Sys/PetscObjectCompose.html#PetscObjectCompose">PetscObjectCompose</a>(<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a> obj,const char name[],<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a> ptr)</font></strong>
+<a name="line721">721: </a>{
+
+<a name="line728">728: </a>  <font color="#4169E1">if</font> (obj == ptr) <a href="../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)obj),PETSC_ERR_SUP,<font color="#666666">"Cannot compose object with itself"</font>);
+<a name="line729">729: </a>  (*obj-&gt;bops-&gt;compose)(obj,name,ptr);
+<a name="line730">730: </a>  <font color="#4169E1">return</font>(0);
+<a name="line731">731: </a>}
+
+<a name="line733">733: </a><font color="#B22222">/*@C</font>
+<a name="line734">734: </a><font color="#B22222">   <a href="../../../docs/manualpages/Sys/PetscObjectQuery.html#PetscObjectQuery">PetscObjectQuery</a>  - Gets a PETSc object associated with a given object.</font>
+
+<a name="line736">736: </a><font color="#B22222">   Not Collective</font>
+
+<a name="line738">738: </a><font color="#B22222">   Input Parameters:</font>
+<a name="line739">739: </a><font color="#B22222">+  obj - the PETSc object</font>
+<a name="line740">740: </a><font color="#B22222">         Thus must be cast with a (<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>), for example,</font>
+<a name="line741">741: </a><font color="#B22222">         <a href="../../../docs/manualpages/Sys/PetscObjectCompose.html#PetscObjectCompose">PetscObjectCompose</a>((<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)mat,...);</font>
+<a name="line742">742: </a><font color="#B22222">.  name - name associated with child object</font>
+<a name="line743">743: </a><font color="#B22222">-  ptr - the other PETSc object associated with the PETSc object, this must be</font>
+<a name="line744">744: </a><font color="#B22222">         cast with (<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>*)</font>
+
+<a name="line746">746: </a><font color="#B22222">   Level: advanced</font>
+
+<a name="line748">748: </a><font color="#B22222">   The reference count of neither object is increased in this call</font>
+
+
+<a name="line751">751: </a><font color="#B22222">.seealso: <a href="../../../docs/manualpages/Sys/PetscObjectCompose.html#PetscObjectCompose">PetscObjectCompose</a>(), <a href="../../../docs/manualpages/Sys/PetscObjectComposeFunction.html#PetscObjectComposeFunction">PetscObjectComposeFunction</a>(), <a href="../../../docs/manualpages/Sys/PetscObjectQueryFunction.html#PetscObjectQueryFunction">PetscObjectQueryFunction</a>()</font>
+<a name="line752">752: </a><font color="#B22222">@*/</font>
+<a name="line753">753: </a><strong><font color="#4169E1"><a name="PetscObjectQuery"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  <a href="../../../docs/manualpages/Sys/PetscObjectQuery.html#PetscObjectQuery">PetscObjectQuery</a>(<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a> obj,const char name[],<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a> *ptr)</font></strong>
+<a name="line754">754: </a>{
+
+<a name="line761">761: </a>  (*obj-&gt;bops-&gt;query)(obj,name,ptr);
+<a name="line762">762: </a>  <font color="#4169E1">return</font>(0);
+<a name="line763">763: </a>}
+
+<a name="line765">765: </a><font color="#B22222">/*MC</font>
+<a name="line766">766: </a><font color="#B22222">   <a href="../../../docs/manualpages/Sys/PetscObjectComposeFunction.html#PetscObjectComposeFunction">PetscObjectComposeFunction</a> - Associates a function with a given PETSc object.</font>
+
+<a name="line768">768: </a><font color="#B22222">    Synopsis:</font>
+<a name="line769">769: </a>#include <A href="../../../include/petscsys.h.html">&lt;petscsys.h&gt;</A>
+<a name="line770">770: </a><font color="#B22222">    <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../docs/manualpages/Sys/PetscObjectComposeFunction.html#PetscObjectComposeFunction">PetscObjectComposeFunction</a>(<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a> obj,const char name[],void (*fptr)(void))</font>
+
+<a name="line772">772: </a><font color="#B22222">   Logically Collective on <a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a></font>
+
+<a name="line774">774: </a><font color="#B22222">   Input Parameters:</font>
+<a name="line775">775: </a><font color="#B22222">+  obj - the PETSc object; this must be cast with a (<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>), for example,</font>
+<a name="line776">776: </a><font color="#B22222">         <a href="../../../docs/manualpages/Sys/PetscObjectCompose.html#PetscObjectCompose">PetscObjectCompose</a>((<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)mat,...);</font>
+<a name="line777">777: </a><font color="#B22222">.  name - name associated with the child function</font>
+<a name="line778">778: </a><font color="#B22222">.  fname - name of the function</font>
+<a name="line779">779: </a><font color="#B22222">-  fptr - function pointer</font>
+
+<a name="line781">781: </a><font color="#B22222">   Level: advanced</font>
+
+<a name="line783">783: </a><font color="#B22222">   Notes:</font>
+<a name="line784">784: </a><font color="#B22222">   To remove a registered routine, pass in NULL for fptr().</font>
+
+<a name="line786">786: </a><font color="#B22222">   <a href="../../../docs/manualpages/Sys/PetscObjectComposeFunction.html#PetscObjectComposeFunction">PetscObjectComposeFunction</a>() can be used with any PETSc object (such as</font>
+<a name="line787">787: </a><font color="#B22222">   <a href="../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a>, <a href="../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a>, <a href="../../../docs/manualpages/KSP/KSP.html#KSP">KSP</a>, <a href="../../../docs/manualpages/SNES/SNES.html#SNES">SNES</a>, etc.) or any user-provided object.</font>
+
+<a name="line789">789: </a><font color="#B22222">.seealso: <a href="../../../docs/manualpages/Sys/PetscObjectQueryFunction.html#PetscObjectQueryFunction">PetscObjectQueryFunction</a>(), <a href="../../../docs/manualpages/Sys/PetscContainerCreate.html#PetscContainerCreate">PetscContainerCreate</a>() <a href="../../../docs/manualpages/Sys/PetscObjectCompose.html#PetscObjectCompose">PetscObjectCompose</a>(), <a href="../../../docs/manualpages/Sys/PetscObjectQuery.html#PetscObjectQuery">PetscObjectQuery</a>()</font>
+<a name="line790">790: </a><font color="#B22222">M*/</font>
+
+<a name="line792">792: </a><strong><font color="#4169E1"><a name="PetscObjectComposeFunction_Private"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  PetscObjectComposeFunction_Private(<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a> obj,const char name[],void (*fptr)(void))</font></strong>
+<a name="line793">793: </a>{
+
+<a name="line799">799: </a>  (*obj-&gt;bops-&gt;composefunction)(obj,name,fptr);
+<a name="line800">800: </a>  <font color="#4169E1">return</font>(0);
+<a name="line801">801: </a>}
+
+<a name="line803">803: </a><font color="#B22222">/*MC</font>
+<a name="line804">804: </a><font color="#B22222">   <a href="../../../docs/manualpages/Sys/PetscObjectQueryFunction.html#PetscObjectQueryFunction">PetscObjectQueryFunction</a> - Gets a function associated with a given object.</font>
+
+<a name="line806">806: </a><font color="#B22222">    Synopsis:</font>
+<a name="line807">807: </a>#include <A href="../../../include/petscsys.h.html">&lt;petscsys.h&gt;</A>
+<a name="line808">808: </a><font color="#B22222">    <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../docs/manualpages/Sys/PetscObjectQueryFunction.html#PetscObjectQueryFunction">PetscObjectQueryFunction</a>(<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a> obj,const char name[],void (**fptr)(void))</font>
+
+<a name="line810">810: </a><font color="#B22222">   Logically Collective on <a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a></font>
+
+<a name="line812">812: </a><font color="#B22222">   Input Parameters:</font>
+<a name="line813">813: </a><font color="#B22222">+  obj - the PETSc object; this must be cast with (<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>), for example,</font>
+<a name="line814">814: </a><font color="#B22222">         <a href="../../../docs/manualpages/Sys/PetscObjectQueryFunction.html#PetscObjectQueryFunction">PetscObjectQueryFunction</a>((<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)ksp,...);</font>
+<a name="line815">815: </a><font color="#B22222">-  name - name associated with the child function</font>
+
+<a name="line817">817: </a><font color="#B22222">   Output Parameter:</font>
+<a name="line818">818: </a><font color="#B22222">.  fptr - function pointer</font>
+
+<a name="line820">820: </a><font color="#B22222">   Level: advanced</font>
+
+<a name="line822">822: </a><font color="#B22222">.seealso: <a href="../../../docs/manualpages/Sys/PetscObjectComposeFunction.html#PetscObjectComposeFunction">PetscObjectComposeFunction</a>(), <a href="../../../docs/manualpages/Sys/PetscFunctionListFind.html#PetscFunctionListFind">PetscFunctionListFind</a>(), <a href="../../../docs/manualpages/Sys/PetscObjectCompose.html#PetscObjectCompose">PetscObjectCompose</a>(), <a href="../../../docs/manualpages/Sys/PetscObjectQuery.html#PetscObjectQuery">PetscObjectQuery</a>()</font>
+<a name="line823">823: </a><font color="#B22222">M*/</font>
+<a name="line824">824: </a><strong><font color="#4169E1"><a name="PetscObjectQueryFunction_Private"></a>PETSC_EXTERN <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscObjectQueryFunction_Private(<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a> obj,const char name[],void (**ptr)(void))</font></strong>
+<a name="line825">825: </a>{
+
+<a name="line831">831: </a>  (*obj-&gt;bops-&gt;queryfunction)(obj,name,ptr);
+<a name="line832">832: </a>  <font color="#4169E1">return</font>(0);
+<a name="line833">833: </a>}
+
+<a name="line835">835: </a><font color="#4169E1"><a name="_p_PetscContainer"></a>struct _p_PetscContainer </font>{
+<a name="line836">836: </a>  PETSCHEADER(int);
+<a name="line837">837: </a>  void           *ptr;
+<a name="line838">838: </a>  <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> (*userdestroy)(void*);
+<a name="line839">839: </a>};
+
+<a name="line841">841: </a><font color="#B22222">/*@C</font>
+<a name="line842">842: </a><font color="#B22222">   <a href="../../../docs/manualpages/Sys/PetscContainerUserDestroyDefault.html#PetscContainerUserDestroyDefault">PetscContainerUserDestroyDefault</a> - Default destroy routine for user-provided data that simply calls <a href="../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>().</font>
+
+<a name="line844">844: </a><font color="#B22222">   Logically Collective on <a href="../../../docs/manualpages/Sys/PetscContainer.html#PetscContainer">PetscContainer</a></font>
+
+<a name="line846">846: </a><font color="#B22222">   Input Parameter:</font>
+<a name="line847">847: </a><font color="#B22222">.  ctx - pointer to user-provided data</font>
+
+<a name="line849">849: </a><font color="#B22222">   Level: advanced</font>
+
+<a name="line851">851: </a><font color="#B22222">.seealso: <a href="../../../docs/manualpages/Sys/PetscContainerDestroy.html#PetscContainerDestroy">PetscContainerDestroy</a>(), PetscContainterSetUserDestroy()</font>
+<a name="line852">852: </a><font color="#B22222">@*/</font>
+<a name="line853">853: </a><strong><font color="#4169E1"><a name="PetscContainerUserDestroyDefault"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../docs/manualpages/Sys/PetscContainerUserDestroyDefault.html#PetscContainerUserDestroyDefault">PetscContainerUserDestroyDefault</a>(void* ctx)</font></strong>
+<a name="line854">854: </a>{
+
+<a name="line858">858: </a>  <a href="../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(ctx);
+<a name="line859">859: </a>  <font color="#4169E1">return</font>(0);
+<a name="line860">860: </a>}
+
+<a name="line862">862: </a><font color="#B22222">/*@C</font>
+<a name="line863">863: </a><font color="#B22222">   <a href="../../../docs/manualpages/Sys/PetscContainerGetPointer.html#PetscContainerGetPointer">PetscContainerGetPointer</a> - Gets the pointer value contained in the container.</font>
+
+<a name="line865">865: </a><font color="#B22222">   Not Collective</font>
+
+<a name="line867">867: </a><font color="#B22222">   Input Parameter:</font>
+<a name="line868">868: </a><font color="#B22222">.  obj - the object created with <a href="../../../docs/manualpages/Sys/PetscContainerCreate.html#PetscContainerCreate">PetscContainerCreate</a>()</font>
+
+<a name="line870">870: </a><font color="#B22222">   Output Parameter:</font>
+<a name="line871">871: </a><font color="#B22222">.  ptr - the pointer value</font>
+
+<a name="line873">873: </a><font color="#B22222">   Level: advanced</font>
+
+<a name="line875">875: </a><font color="#B22222">.seealso: <a href="../../../docs/manualpages/Sys/PetscContainerCreate.html#PetscContainerCreate">PetscContainerCreate</a>(), <a href="../../../docs/manualpages/Sys/PetscContainerDestroy.html#PetscContainerDestroy">PetscContainerDestroy</a>(),</font>
+<a name="line876">876: </a><font color="#B22222">          <a href="../../../docs/manualpages/Sys/PetscContainerSetPointer.html#PetscContainerSetPointer">PetscContainerSetPointer</a>()</font>
+<a name="line877">877: </a><font color="#B22222">@*/</font>
+<a name="line878">878: </a><strong><font color="#4169E1"><a name="PetscContainerGetPointer"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  <a href="../../../docs/manualpages/Sys/PetscContainerGetPointer.html#PetscContainerGetPointer">PetscContainerGetPointer</a>(<a href="../../../docs/manualpages/Sys/PetscContainer.html#PetscContainer">PetscContainer</a> obj,void **ptr)</font></strong>
+<a name="line879">879: </a>{
+<a name="line883">883: </a>  *ptr = obj-&gt;ptr;
+<a name="line884">884: </a>  <font color="#4169E1">return</font>(0);
+<a name="line885">885: </a>}
+
+
+<a name="line888">888: </a><font color="#B22222">/*@C</font>
+<a name="line889">889: </a><font color="#B22222">   <a href="../../../docs/manualpages/Sys/PetscContainerSetPointer.html#PetscContainerSetPointer">PetscContainerSetPointer</a> - Sets the pointer value contained in the container.</font>
+
+<a name="line891">891: </a><font color="#B22222">   Logically Collective on <a href="../../../docs/manualpages/Sys/PetscContainer.html#PetscContainer">PetscContainer</a></font>
+
+<a name="line893">893: </a><font color="#B22222">   Input Parameters:</font>
+<a name="line894">894: </a><font color="#B22222">+  obj - the object created with <a href="../../../docs/manualpages/Sys/PetscContainerCreate.html#PetscContainerCreate">PetscContainerCreate</a>()</font>
+<a name="line895">895: </a><font color="#B22222">-  ptr - the pointer value</font>
+
+<a name="line897">897: </a><font color="#B22222">   Level: advanced</font>
+
+<a name="line899">899: </a><font color="#B22222">.seealso: <a href="../../../docs/manualpages/Sys/PetscContainerCreate.html#PetscContainerCreate">PetscContainerCreate</a>(), <a href="../../../docs/manualpages/Sys/PetscContainerDestroy.html#PetscContainerDestroy">PetscContainerDestroy</a>(),</font>
+<a name="line900">900: </a><font color="#B22222">          <a href="../../../docs/manualpages/Sys/PetscContainerGetPointer.html#PetscContainerGetPointer">PetscContainerGetPointer</a>()</font>
+<a name="line901">901: </a><font color="#B22222">@*/</font>
+<a name="line902">902: </a><strong><font color="#4169E1"><a name="PetscContainerSetPointer"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  <a href="../../../docs/manualpages/Sys/PetscContainerSetPointer.html#PetscContainerSetPointer">PetscContainerSetPointer</a>(<a href="../../../docs/manualpages/Sys/PetscContainer.html#PetscContainer">PetscContainer</a> obj,void *ptr)</font></strong>
+<a name="line903">903: </a>{
+<a name="line907">907: </a>  obj-&gt;ptr = ptr;
+<a name="line908">908: </a>  <font color="#4169E1">return</font>(0);
+<a name="line909">909: </a>}
+
+<a name="line911">911: </a><font color="#B22222">/*@C</font>
+<a name="line912">912: </a><font color="#B22222">   <a href="../../../docs/manualpages/Sys/PetscContainerDestroy.html#PetscContainerDestroy">PetscContainerDestroy</a> - Destroys a PETSc container object.</font>
+
+<a name="line914">914: </a><font color="#B22222">   Collective on <a href="../../../docs/manualpages/Sys/PetscContainer.html#PetscContainer">PetscContainer</a></font>
+
+<a name="line916">916: </a><font color="#B22222">   Input Parameter:</font>
+<a name="line917">917: </a><font color="#B22222">.  obj - an object that was created with <a href="../../../docs/manualpages/Sys/PetscContainerCreate.html#PetscContainerCreate">PetscContainerCreate</a>()</font>
+
+<a name="line919">919: </a><font color="#B22222">   Level: advanced</font>
+
+<a name="line921">921: </a><font color="#B22222">.seealso: <a href="../../../docs/manualpages/Sys/PetscContainerCreate.html#PetscContainerCreate">PetscContainerCreate</a>(), <a href="../../../docs/manualpages/Sys/PetscContainerSetUserDestroy.html#PetscContainerSetUserDestroy">PetscContainerSetUserDestroy</a>()</font>
+<a name="line922">922: </a><font color="#B22222">@*/</font>
+<a name="line923">923: </a><strong><font color="#4169E1"><a name="PetscContainerDestroy"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  <a href="../../../docs/manualpages/Sys/PetscContainerDestroy.html#PetscContainerDestroy">PetscContainerDestroy</a>(<a href="../../../docs/manualpages/Sys/PetscContainer.html#PetscContainer">PetscContainer</a> *obj)</font></strong>
+<a name="line924">924: </a>{
+
+<a name="line928">928: </a>  <font color="#4169E1">if</font> (!*obj) <font color="#4169E1">return</font>(0);
+<a name="line930">930: </a>  <font color="#4169E1">if</font> (--((<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)(*obj))-&gt;refct &gt; 0) {*obj = NULL; <font color="#4169E1">return</font>(0);}
+<a name="line931">931: </a>  <font color="#4169E1">if</font> ((*obj)-&gt;userdestroy) { (*(*obj)-&gt;userdestroy)((*obj)-&gt;ptr); }
+<a name="line932">932: </a>  <a href="../../../docs/manualpages/Sys/PetscHeaderDestroy.html#PetscHeaderDestroy">PetscHeaderDestroy</a>(obj);
+<a name="line933">933: </a>  <font color="#4169E1">return</font>(0);
+<a name="line934">934: </a>}
+
+<a name="line936">936: </a><font color="#B22222">/*@C</font>
+<a name="line937">937: </a><font color="#B22222">   <a href="../../../docs/manualpages/Sys/PetscContainerSetUserDestroy.html#PetscContainerSetUserDestroy">PetscContainerSetUserDestroy</a> - Sets name of the user destroy function.</font>
+
+<a name="line939">939: </a><font color="#B22222">   Logically Collective on <a href="../../../docs/manualpages/Sys/PetscContainer.html#PetscContainer">PetscContainer</a></font>
+
+<a name="line941">941: </a><font color="#B22222">   Input Parameter:</font>
+<a name="line942">942: </a><font color="#B22222">+  obj - an object that was created with <a href="../../../docs/manualpages/Sys/PetscContainerCreate.html#PetscContainerCreate">PetscContainerCreate</a>()</font>
+<a name="line943">943: </a><font color="#B22222">-  des - name of the user destroy function</font>
+
+<a name="line945">945: </a><font color="#B22222">   Notes:</font>
+<a name="line946">946: </a><font color="#B22222">   Use <a href="../../../docs/manualpages/Sys/PetscContainerUserDestroyDefault.html#PetscContainerUserDestroyDefault">PetscContainerUserDestroyDefault</a>() if the memory was obtained by calling <a href="../../../docs/manualpages/Sys/PetscMalloc.html#PetscMalloc">PetscMalloc</a> or one of its variants for single memory allocation.</font>
+
+<a name="line948">948: </a><font color="#B22222">   Level: advanced</font>
+
+<a name="line950">950: </a><font color="#B22222">.seealso: <a href="../../../docs/manualpages/Sys/PetscContainerDestroy.html#PetscContainerDestroy">PetscContainerDestroy</a>(), <a href="../../../docs/manualpages/Sys/PetscContainerUserDestroyDefault.html#PetscContainerUserDestroyDefault">PetscContainerUserDestroyDefault</a>(), <a href="../../../docs/manualpages/Sys/PetscMalloc.html#PetscMalloc">PetscMalloc</a>(), <a href="../../../docs/manualpages/Sys/PetscMalloc1.html#PetscMalloc1">PetscMalloc1</a>(), PetscCalloc(), <a href="../../../docs/manualpages/Sys/PetscCalloc1.html#PetscCalloc1">PetscCalloc1</a>()</font>
+<a name="line951">951: </a><font color="#B22222">@*/</font>
+<a name="line952">952: </a><strong><font color="#4169E1"><a name="PetscContainerSetUserDestroy"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  <a href="../../../docs/manualpages/Sys/PetscContainerSetUserDestroy.html#PetscContainerSetUserDestroy">PetscContainerSetUserDestroy</a>(<a href="../../../docs/manualpages/Sys/PetscContainer.html#PetscContainer">PetscContainer</a> obj, <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> (*des)(void*))</font></strong>
+<a name="line953">953: </a>{
+<a name="line956">956: </a>  obj-&gt;userdestroy = des;
+<a name="line957">957: </a>  <font color="#4169E1">return</font>(0);
+<a name="line958">958: </a>}
+
+<a name="line960">960: </a><a href="../../../docs/manualpages/Sys/PetscClassId.html#PetscClassId">PetscClassId</a> PETSC_CONTAINER_CLASSID;
+
+<a name="line962">962: </a><font color="#B22222">/*@C</font>
+<a name="line963">963: </a><font color="#B22222">   <a href="../../../docs/manualpages/Sys/PetscContainerCreate.html#PetscContainerCreate">PetscContainerCreate</a> - Creates a PETSc object that has room to hold</font>
+<a name="line964">964: </a><font color="#B22222">   a single pointer. This allows one to attach any type of data (accessible</font>
+<a name="line965">965: </a><font color="#B22222">   through a pointer) with the <a href="../../../docs/manualpages/Sys/PetscObjectCompose.html#PetscObjectCompose">PetscObjectCompose</a>() function to a <a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>.</font>
+<a name="line966">966: </a><font color="#B22222">   The data item itself is attached by a call to <a href="../../../docs/manualpages/Sys/PetscContainerSetPointer.html#PetscContainerSetPointer">PetscContainerSetPointer</a>().</font>
+
+<a name="line968">968: </a><font color="#B22222">   Collective</font>
+
+<a name="line970">970: </a><font color="#B22222">   Input Parameters:</font>
+<a name="line971">971: </a><font color="#B22222">.  comm - MPI communicator that shares the object</font>
+
+<a name="line973">973: </a><font color="#B22222">   Output Parameters:</font>
+<a name="line974">974: </a><font color="#B22222">.  container - the container created</font>
+
+<a name="line976">976: </a><font color="#B22222">   Level: advanced</font>
+
+<a name="line978">978: </a><font color="#B22222">.seealso: <a href="../../../docs/manualpages/Sys/PetscContainerDestroy.html#PetscContainerDestroy">PetscContainerDestroy</a>(), <a href="../../../docs/manualpages/Sys/PetscContainerSetPointer.html#PetscContainerSetPointer">PetscContainerSetPointer</a>(), <a href="../../../docs/manualpages/Sys/PetscContainerGetPointer.html#PetscContainerGetPointer">PetscContainerGetPointer</a>(), <a href="../../../docs/manualpages/Sys/PetscObjectCompose.html#PetscObjectCompose">PetscObjectCompose</a>(), <a href="../../../docs/manualpages/Sys/PetscObjectQuery.html#PetscObjectQuery">PetscObjectQuery</a>()</font>
+<a name="line979">979: </a><font color="#B22222">@*/</font>
+<a name="line980">980: </a><strong><font color="#4169E1"><a name="PetscContainerCreate"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  <a href="../../../docs/manualpages/Sys/PetscContainerCreate.html#PetscContainerCreate">PetscContainerCreate</a>(<a href="../../../docs/manualpages/Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</a> comm,<a href="../../../docs/manualpages/Sys/PetscContainer.html#PetscContainer">PetscContainer</a> *container)</font></strong>
+<a name="line981">981: </a>{
+<a name="line983">983: </a>  <a href="../../../docs/manualpages/Sys/PetscContainer.html#PetscContainer">PetscContainer</a> contain;
+
+<a name="line987">987: </a>  <a href="../../../docs/manualpages/Viewer/PetscSysInitializePackage.html#PetscSysInitializePackage">PetscSysInitializePackage</a>();
+<a name="line988">988: </a>  <a href="../../../docs/manualpages/Sys/PetscHeaderCreate.html#PetscHeaderCreate">PetscHeaderCreate</a>(contain,PETSC_CONTAINER_CLASSID,<font color="#666666">"<a href="../../../docs/manualpages/Sys/PetscContainer.html#PetscContainer">PetscContainer</a>"</font>,<font color="#666666">"Container"</font>,<font color="#666666">"Sys"</font>,comm,<a href="../../../docs/manualpages/Sys/PetscContainerDestroy.html#PetscContainerDestroy">PetscContainerDestroy</a>,NULL);
+<a name="line989">989: </a>  *container = contain;
+<a name="line990">990: </a>  <font color="#4169E1">return</font>(0);
+<a name="line991">991: </a>}
+
+<a name="line993">993: </a><font color="#B22222">/*@</font>
+<a name="line994">994: </a><font color="#B22222">   <a href="../../../docs/manualpages/Sys/PetscObjectSetFromOptions.html#PetscObjectSetFromOptions">PetscObjectSetFromOptions</a> - Sets generic parameters from user options.</font>
+
+<a name="line996">996: </a><font color="#B22222">   Collective on obj</font>
+
+<a name="line998">998: </a><font color="#B22222">   Input Parameter:</font>
+<a name="line999">999: </a><font color="#B22222">.  obj - the PetscObjcet</font>
+
+<a name="line1001">1001: </a><font color="#B22222">   Options Database Keys:</font>
+
+<a name="line1003">1003: </a><font color="#B22222">   Notes:</font>
+<a name="line1004">1004: </a><font color="#B22222">   We have no generic options at present, so this does nothing</font>
+
+<a name="line1006">1006: </a><font color="#B22222">   Level: beginner</font>
+
+<a name="line1008">1008: </a><font color="#B22222">.seealso: <a href="../../../docs/manualpages/Sys/PetscObjectSetOptionsPrefix.html#PetscObjectSetOptionsPrefix">PetscObjectSetOptionsPrefix</a>(), <a href="../../../docs/manualpages/Sys/PetscObjectGetOptionsPrefix.html#PetscObjectGetOptionsPrefix">PetscObjectGetOptionsPrefix</a>()</font>
+<a name="line1009">1009: </a><font color="#B22222">@*/</font>
+<a name="line1010">1010: </a><strong><font color="#4169E1"><a name="PetscObjectSetFromOptions"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  <a href="../../../docs/manualpages/Sys/PetscObjectSetFromOptions.html#PetscObjectSetFromOptions">PetscObjectSetFromOptions</a>(<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a> obj)</font></strong>
+<a name="line1011">1011: </a>{
+<a name="line1014">1014: </a>  <font color="#4169E1">return</font>(0);
+<a name="line1015">1015: </a>}
+
+<a name="line1017">1017: </a><font color="#B22222">/*@</font>
+<a name="line1018">1018: </a><font color="#B22222">   <a href="../../../docs/manualpages/Sys/PetscObjectSetUp.html#PetscObjectSetUp">PetscObjectSetUp</a> - Sets up the internal data structures for the later use.</font>
+
+<a name="line1020">1020: </a><font color="#B22222">   Collective on <a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a></font>
+
+<a name="line1022">1022: </a><font color="#B22222">   Input Parameters:</font>
+<a name="line1023">1023: </a><font color="#B22222">.  obj - the <a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a></font>
+
+<a name="line1025">1025: </a><font color="#B22222">   Notes:</font>
+<a name="line1026">1026: </a><font color="#B22222">   This does nothing at present.</font>
+
+<a name="line1028">1028: </a><font color="#B22222">   Level: advanced</font>
+
+<a name="line1030">1030: </a><font color="#B22222">.seealso: <a href="../../../docs/manualpages/Sys/PetscObjectDestroy.html#PetscObjectDestroy">PetscObjectDestroy</a>()</font>
+<a name="line1031">1031: </a><font color="#B22222">@*/</font>
+<a name="line1032">1032: </a><strong><font color="#4169E1"><a name="PetscObjectSetUp"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  <a href="../../../docs/manualpages/Sys/PetscObjectSetUp.html#PetscObjectSetUp">PetscObjectSetUp</a>(<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a> obj)</font></strong>
+<a name="line1033">1033: </a>{
+<a name="line1036">1036: </a>  <font color="#4169E1">return</font>(0);
+<a name="line1037">1037: </a>}
+</pre>
+</body>
+
+</html>

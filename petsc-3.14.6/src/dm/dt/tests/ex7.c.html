@@ -1,0 +1,542 @@
+<center><a href="ex7.c">Actual source code: ex7.c</a></center><br>
+
+<html>
+<head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/src/dm/dt/tests/ex7.c.html" />
+<title></title>
+<meta name="generator" content="c2html 0.9.4">
+<meta name="date" content="2021-03-30T16:51:01+00:00">
+</head>
+
+<body bgcolor="#FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 src/dm/dt/tests/ex7.c.html "><small>Report Typos and Errors</small></a></div>
+<pre width="80">
+<a name="line1">  1: </a>static char help[] = <font color="#666666">"Test the <a href="../../../../docs/manualpages/DT/PetscDTAltV.html#PetscDTAltV">PetscDTAltV</a> interface for k-forms (alternating k-linear maps).\n\n"</font>;
+
+<a name="line3">  3: </a>#include <A href="../../../../include/petscviewer.h.html">&lt;petscviewer.h&gt;</A>
+<a name="line4">  4: </a>#include <A href="../../../../include/petscdt.h.html">&lt;petscdt.h&gt;</A>
+
+<a name="line6">  6: </a><strong><font color="#4169E1"><a name="CheckPullback"></a>static <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> CheckPullback(<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> N, <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> M, const <a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> *L, <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> k,</font></strong>
+<a name="line7">  7: </a><strong><font color="#4169E1">                                    const <a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> *w, <a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> *x, <a href="../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> verbose, <a href="../../../../docs/manualpages/Viewer/PetscViewer.html#PetscViewer">PetscViewer</a> viewer)</font></strong>
+<a name="line8">  8: </a>{
+<a name="line9">  9: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>        Nk, Mk, i, j, l;
+<a name="line10"> 10: </a>  <a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>       *Lstarw, *Lx, *Lstar, *Lstarwcheck, wLx, Lstarwx;
+<a name="line11"> 11: </a>  <a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>       diff, diffMat, normMat;
+<a name="line12"> 12: </a>  <a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>       *walloc = NULL;
+<a name="line13"> 13: </a>  const <a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> *ww = NULL;
+<a name="line14"> 14: </a>  <a href="../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>       negative = (<a href="../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>) (k &lt; 0);
+<a name="line15"> 15: </a>  <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  ierr;
+
+<a name="line18"> 18: </a>  k = <a href="../../../../docs/manualpages/Sys/PetscAbsInt.html#PetscAbsInt">PetscAbsInt</a>(k);
+<a name="line19"> 19: </a>  <a href="../../../../docs/manualpages/FE/PetscDTBinomialInt.html#PetscDTBinomialInt">PetscDTBinomialInt</a>(N, k, &amp;Nk);
+<a name="line20"> 20: </a>  <a href="../../../../docs/manualpages/FE/PetscDTBinomialInt.html#PetscDTBinomialInt">PetscDTBinomialInt</a>(M, k, &amp;Mk);
+<a name="line21"> 21: </a>  <font color="#4169E1">if</font> (negative) {
+<a name="line22"> 22: </a>    <a href="../../../../docs/manualpages/Sys/PetscMalloc1.html#PetscMalloc1">PetscMalloc1</a>(Mk, &amp;walloc);
+<a name="line23"> 23: </a>    <a href="../../../../docs/manualpages/DT/PetscDTAltVStar.html#PetscDTAltVStar">PetscDTAltVStar</a>(M, M - k, 1, w, walloc);
+<a name="line24"> 24: </a>    ww = walloc;
+<a name="line25"> 25: </a>  } <font color="#4169E1">else</font> {
+<a name="line26"> 26: </a>    ww = w;
+<a name="line27"> 27: </a>  }
+<a name="line28"> 28: </a>  <a href="../../../../docs/manualpages/Sys/PetscMalloc2.html#PetscMalloc2">PetscMalloc2</a>(Nk, &amp;Lstarw, (M*k), &amp;Lx);
+<a name="line29"> 29: </a>  <a href="../../../../docs/manualpages/Sys/PetscMalloc2.html#PetscMalloc2">PetscMalloc2</a>(Nk * Mk, &amp;Lstar, Nk, &amp;Lstarwcheck);
+<a name="line30"> 30: </a>  <a href="../../../../docs/manualpages/DT/PetscDTAltVPullback.html#PetscDTAltVPullback">PetscDTAltVPullback</a>(N, M, L, negative ? -k : k, w, Lstarw);
+<a name="line31"> 31: </a>  <a href="../../../../docs/manualpages/DT/PetscDTAltVPullbackMatrix.html#PetscDTAltVPullbackMatrix">PetscDTAltVPullbackMatrix</a>(N, M, L, negative ? -k : k, Lstar);
+<a name="line32"> 32: </a>  <font color="#4169E1">if</font> (negative) {
+<a name="line33"> 33: </a>    <a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> *sLsw;
+
+<a name="line35"> 35: </a>    <a href="../../../../docs/manualpages/Sys/PetscMalloc1.html#PetscMalloc1">PetscMalloc1</a>(Nk, &amp;sLsw);
+<a name="line36"> 36: </a>    <a href="../../../../docs/manualpages/DT/PetscDTAltVStar.html#PetscDTAltVStar">PetscDTAltVStar</a>(N, N - k, 1, Lstarw, sLsw);
+<a name="line37"> 37: </a>    <a href="../../../../docs/manualpages/DT/PetscDTAltVApply.html#PetscDTAltVApply">PetscDTAltVApply</a>(N, k, sLsw, x, &amp;Lstarwx);
+<a name="line38"> 38: </a>    <a href="../../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(sLsw);
+<a name="line39"> 39: </a>  } <font color="#4169E1">else</font> {
+<a name="line40"> 40: </a>    <a href="../../../../docs/manualpages/DT/PetscDTAltVApply.html#PetscDTAltVApply">PetscDTAltVApply</a>(N, k, Lstarw, x, &amp;Lstarwx);
+<a name="line41"> 41: </a>  }
+<a name="line42"> 42: </a>  <font color="#4169E1">for</font> (l = 0; l &lt; k; l++) {
+<a name="line43"> 43: </a>    <font color="#4169E1">for</font> (i = 0; i &lt; M; i++) {
+<a name="line44"> 44: </a>      <a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> sum = 0.;
+
+<a name="line46"> 46: </a>      <font color="#4169E1">for</font> (j = 0; j &lt; N; j++) sum += L[i * N + j] * x[l * N + j];
+<a name="line47"> 47: </a>      Lx[l * M + i] = sum;
+<a name="line48"> 48: </a>    }
+<a name="line49"> 49: </a>  }
+<a name="line50"> 50: </a>  diffMat = 0.;
+<a name="line51"> 51: </a>  normMat = 0.;
+<a name="line52"> 52: </a>  <font color="#4169E1">for</font> (i = 0; i &lt; Nk; i++) {
+<a name="line53"> 53: </a>    <a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> sum = 0.;
+<a name="line54"> 54: </a>    <font color="#4169E1">for</font> (j = 0; j &lt; Mk; j++) {
+<a name="line55"> 55: </a>      sum += Lstar[i * Mk + j] * w[j];
+<a name="line56"> 56: </a>    }
+<a name="line57"> 57: </a>    Lstarwcheck[i] = sum;
+<a name="line58"> 58: </a>    diffMat += <a href="../../../../docs/manualpages/Sys/PetscSqr.html#PetscSqr">PetscSqr</a>(<a href="../../../../docs/manualpages/Sys/PetscAbsReal.html#PetscAbsReal">PetscAbsReal</a>(Lstarwcheck[i] - Lstarw[i]));
+<a name="line59"> 59: </a>    normMat += <a href="../../../../docs/manualpages/Sys/PetscSqr.html#PetscSqr">PetscSqr</a>(Lstarwcheck[i]) +  <a href="../../../../docs/manualpages/Sys/PetscSqr.html#PetscSqr">PetscSqr</a>(Lstarw[i]);
+<a name="line60"> 60: </a>  }
+<a name="line61"> 61: </a>  diffMat = PetscSqrtReal(diffMat);
+<a name="line62"> 62: </a>  normMat = PetscSqrtReal(normMat);
+<a name="line63"> 63: </a>  <font color="#4169E1">if</font> (verbose) {
+<a name="line64"> 64: </a>    <a href="../../../../docs/manualpages/Viewer/PetscViewerASCIIPrintf.html#PetscViewerASCIIPrintf">PetscViewerASCIIPrintf</a>(viewer, <font color="#666666">"L:\n"</font>);
+<a name="line65"> 65: </a>    <a href="../../../../docs/manualpages/Viewer/PetscViewerASCIIPushTab.html#PetscViewerASCIIPushTab">PetscViewerASCIIPushTab</a>(viewer);
+<a name="line66"> 66: </a>    <font color="#4169E1">if</font> (M*N &gt; 0) {<a href="../../../../docs/manualpages/Sys/PetscRealView.html#PetscRealView">PetscRealView</a>(M*N, L, viewer);}
+<a name="line67"> 67: </a>    <a href="../../../../docs/manualpages/Viewer/PetscViewerASCIIPopTab.html#PetscViewerASCIIPopTab">PetscViewerASCIIPopTab</a>(viewer);
+
+<a name="line69"> 69: </a>    <a href="../../../../docs/manualpages/Viewer/PetscViewerASCIIPrintf.html#PetscViewerASCIIPrintf">PetscViewerASCIIPrintf</a>(viewer, <font color="#666666">"L*:\n"</font>);
+<a name="line70"> 70: </a>    <a href="../../../../docs/manualpages/Viewer/PetscViewerASCIIPushTab.html#PetscViewerASCIIPushTab">PetscViewerASCIIPushTab</a>(viewer);
+<a name="line71"> 71: </a>    <font color="#4169E1">if</font> (Nk * Mk &gt; 0) {<a href="../../../../docs/manualpages/Sys/PetscRealView.html#PetscRealView">PetscRealView</a>(Nk * Mk, Lstar, viewer);}
+<a name="line72"> 72: </a>    <a href="../../../../docs/manualpages/Viewer/PetscViewerASCIIPopTab.html#PetscViewerASCIIPopTab">PetscViewerASCIIPopTab</a>(viewer);
+
+<a name="line74"> 74: </a>    <a href="../../../../docs/manualpages/Viewer/PetscViewerASCIIPrintf.html#PetscViewerASCIIPrintf">PetscViewerASCIIPrintf</a>(viewer, <font color="#666666">"L*w:\n"</font>);
+<a name="line75"> 75: </a>    <a href="../../../../docs/manualpages/Viewer/PetscViewerASCIIPushTab.html#PetscViewerASCIIPushTab">PetscViewerASCIIPushTab</a>(viewer);
+<a name="line76"> 76: </a>    <font color="#4169E1">if</font> (Nk &gt; 0) {<a href="../../../../docs/manualpages/Sys/PetscRealView.html#PetscRealView">PetscRealView</a>(Nk, Lstarw, viewer);}
+<a name="line77"> 77: </a>    <a href="../../../../docs/manualpages/Viewer/PetscViewerASCIIPopTab.html#PetscViewerASCIIPopTab">PetscViewerASCIIPopTab</a>(viewer);
+<a name="line78"> 78: </a>  }
+<a name="line79"> 79: </a>  <a href="../../../../docs/manualpages/DT/PetscDTAltVApply.html#PetscDTAltVApply">PetscDTAltVApply</a>(M, k, ww, Lx, &amp;wLx);
+<a name="line80"> 80: </a>  diff = <a href="../../../../docs/manualpages/Sys/PetscAbsReal.html#PetscAbsReal">PetscAbsReal</a>(wLx - Lstarwx);
+<a name="line81"> 81: </a>  <font color="#4169E1">if</font> (diff &gt; 10. * PETSC_SMALL * (<a href="../../../../docs/manualpages/Sys/PetscAbsReal.html#PetscAbsReal">PetscAbsReal</a>(wLx) + <a href="../../../../docs/manualpages/Sys/PetscAbsReal.html#PetscAbsReal">PetscAbsReal</a>(Lstarwx))) <a href="../../../../docs/manualpages/Sys/SETERRQ2.html#SETERRQ2">SETERRQ2</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>, PETSC_ERR_PLIB, <font color="#666666">"pullback check: pullback does not commute with application: w(Lx)(%g) != (L* w)(x)(%g)"</font>, wLx, Lstarwx);
+<a name="line82"> 82: </a>  <font color="#4169E1">if</font> (diffMat &gt; PETSC_SMALL * normMat) <a href="../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>, PETSC_ERR_PLIB, <font color="#666666">"pullback check: pullback matrix does match matrix free result"</font>);
+<a name="line83"> 83: </a>  <a href="../../../../docs/manualpages/Sys/PetscFree2.html#PetscFree2">PetscFree2</a>(Lstar, Lstarwcheck);
+<a name="line84"> 84: </a>  <a href="../../../../docs/manualpages/Sys/PetscFree2.html#PetscFree2">PetscFree2</a>(Lstarw, Lx);
+<a name="line85"> 85: </a>  <a href="../../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(walloc);
+<a name="line86"> 86: </a>  <font color="#4169E1">return</font>(0);
+<a name="line87"> 87: </a>}
+
+<a name="line89"> 89: </a><strong><font color="#4169E1"><a name="main"></a>int main(int argc, char **argv)</font></strong>
+<a name="line90"> 90: </a>{
+<a name="line91"> 91: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       i, numTests = 5, n[5] = {0, 1, 2, 3, 4};
+<a name="line92"> 92: </a>  <a href="../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>      verbose = <a href="../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line93"> 93: </a>  <a href="../../../../docs/manualpages/Sys/PetscRandom.html#PetscRandom">PetscRandom</a>    rand;
+<a name="line94"> 94: </a>  <a href="../../../../docs/manualpages/Viewer/PetscViewer.html#PetscViewer">PetscViewer</a>    viewer;
+
+<a name="line97"> 97: </a>  <a href="../../../../docs/manualpages/Sys/PetscInitialize.html#PetscInitialize">PetscInitialize</a>(&amp;argc,&amp;argv,NULL,help);<font color="#4169E1">if</font> (ierr) <font color="#4169E1">return</font> ierr;
+<a name="line98"> 98: </a>  <a href="../../../../docs/manualpages/Sys/PetscOptionsBegin.html#PetscOptionsBegin">PetscOptionsBegin</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,<font color="#666666">""</font>,<font color="#666666">"Options for exterior algebra tests"</font>,<font color="#666666">"none"</font>);
+<a name="line99"> 99: </a>  <a href="../../../../docs/manualpages/Sys/PetscOptionsIntArray.html#PetscOptionsIntArray">PetscOptionsIntArray</a>(<font color="#666666">"-N"</font>, <font color="#666666">"Up to 5 vector space dimensions to test"</font>,<font color="#666666">"ex7.c"</font>,n,&amp;numTests,NULL);
+<a name="line100">100: </a>  <a href="../../../../docs/manualpages/Sys/PetscOptionsBool.html#PetscOptionsBool">PetscOptionsBool</a>(<font color="#666666">"-verbose"</font>, <font color="#666666">"Verbose test output"</font>,<font color="#666666">"ex7.c"</font>,verbose,&amp;verbose,NULL);
+<a name="line101">101: </a>  <a href="../../../../docs/manualpages/Sys/PetscOptionsEnd.html#PetscOptionsEnd">PetscOptionsEnd</a>();
+<a name="line102">102: </a>  <a href="../../../../docs/manualpages/Sys/PetscRandomCreate.html#PetscRandomCreate">PetscRandomCreate</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, &amp;rand);
+<a name="line103">103: </a>  <a href="../../../../docs/manualpages/Sys/PetscRandomSetInterval.html#PetscRandomSetInterval">PetscRandomSetInterval</a>(rand, -1., 1.);
+<a name="line104">104: </a>  <a href="../../../../docs/manualpages/Sys/PetscRandomSetFromOptions.html#PetscRandomSetFromOptions">PetscRandomSetFromOptions</a>(rand);
+<a name="line105">105: </a>  <font color="#4169E1">if</font> (!numTests) numTests = 5;
+<a name="line106">106: </a>  viewer = <a href="../../../../docs/manualpages/Viewer/PETSC_VIEWER_STDOUT_.html#PETSC_VIEWER_STDOUT_">PETSC_VIEWER_STDOUT_</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>);
+<a name="line107">107: </a>  <font color="#4169E1">for</font> (i = 0; i &lt; numTests; i++) {
+<a name="line108">108: </a>    <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       k, N = n[i];
+
+<a name="line110">110: </a>    <font color="#4169E1">if</font> (verbose) {<a href="../../../../docs/manualpages/Viewer/PetscViewerASCIIPrintf.html#PetscViewerASCIIPrintf">PetscViewerASCIIPrintf</a>(viewer, <font color="#666666">"N = %D:\n"</font>, N);}
+<a name="line111">111: </a>    <a href="../../../../docs/manualpages/Viewer/PetscViewerASCIIPushTab.html#PetscViewerASCIIPushTab">PetscViewerASCIIPushTab</a>(viewer);
+
+<a name="line113">113: </a>    <font color="#4169E1">if</font> (verbose) {
+<a name="line114">114: </a>      <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *perm;
+<a name="line115">115: </a>      <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> fac = 1;
+
+<a name="line117">117: </a>      <a href="../../../../docs/manualpages/Sys/PetscMalloc1.html#PetscMalloc1">PetscMalloc1</a>(N, &amp;perm);
+
+<a name="line119">119: </a>      <font color="#4169E1">for</font> (k = 1; k &lt;= N; k++) fac *= k;
+<a name="line120">120: </a>      <a href="../../../../docs/manualpages/Viewer/PetscViewerASCIIPrintf.html#PetscViewerASCIIPrintf">PetscViewerASCIIPrintf</a>(viewer, <font color="#666666">"Permutations of %D:\n"</font>, N);
+<a name="line121">121: </a>      <a href="../../../../docs/manualpages/Viewer/PetscViewerASCIIPushTab.html#PetscViewerASCIIPushTab">PetscViewerASCIIPushTab</a>(viewer);
+<a name="line122">122: </a>      <font color="#4169E1">for</font> (k = 0; k &lt; fac; k++) {
+<a name="line123">123: </a>        <a href="../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> isOdd, isOddCheck;
+<a name="line124">124: </a>        <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>  j, kCheck;
+
+<a name="line126">126: </a>        <a href="../../../../docs/manualpages/FE/PetscDTEnumPerm.html#PetscDTEnumPerm">PetscDTEnumPerm</a>(N, k, perm, &amp;isOdd);
+<a name="line127">127: </a>        <a href="../../../../docs/manualpages/Viewer/PetscViewerASCIIPrintf.html#PetscViewerASCIIPrintf">PetscViewerASCIIPrintf</a>(viewer, <font color="#666666">"%D:"</font>, k);
+<a name="line128">128: </a>        <font color="#4169E1">for</font> (j = 0; j &lt; N; j++) {
+<a name="line129">129: </a>          <a href="../../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>, <font color="#666666">" %D"</font>, perm[j]);
+<a name="line130">130: </a>        }
+<a name="line131">131: </a>        <a href="../../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>, <font color="#666666">", %s\n"</font>, isOdd ? <font color="#666666">"odd"</font> : <font color="#666666">"even"</font>);
+<a name="line132">132: </a>        <a href="../../../../docs/manualpages/FE/PetscDTPermIndex.html#PetscDTPermIndex">PetscDTPermIndex</a>(N, perm, &amp;kCheck, &amp;isOddCheck);
+<a name="line133">133: </a>        <font color="#4169E1">if</font> (kCheck != k || isOddCheck != isOdd) <a href="../../../../docs/manualpages/Sys/SETERRQ2.html#SETERRQ2">SETERRQ2</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, PETSC_ERR_PLIB, <font color="#666666">"<a href="../../../../docs/manualpages/FE/PetscDTEnumPerm.html#PetscDTEnumPerm">PetscDTEnumPerm</a> / <a href="../../../../docs/manualpages/FE/PetscDTPermIndex.html#PetscDTPermIndex">PetscDTPermIndex</a> mismatch for (%D, %D)\n"</font>, N, k);
+<a name="line134">134: </a>      }
+<a name="line135">135: </a>      <a href="../../../../docs/manualpages/Viewer/PetscViewerASCIIPopTab.html#PetscViewerASCIIPopTab">PetscViewerASCIIPopTab</a>(viewer);
+<a name="line136">136: </a>      <a href="../../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(perm);
+<a name="line137">137: </a>    }
+<a name="line138">138: </a>    <font color="#4169E1">for</font> (k = 0; k &lt;= N; k++) {
+<a name="line139">139: </a>      <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>   j, Nk, M;
+<a name="line140">140: </a>      <a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> *w, *v, wv;
+<a name="line141">141: </a>      <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>  *subset;
+
+<a name="line143">143: </a>      <a href="../../../../docs/manualpages/FE/PetscDTBinomialInt.html#PetscDTBinomialInt">PetscDTBinomialInt</a>(N, k, &amp;Nk);
+<a name="line144">144: </a>      <font color="#4169E1">if</font> (verbose) {<a href="../../../../docs/manualpages/Viewer/PetscViewerASCIIPrintf.html#PetscViewerASCIIPrintf">PetscViewerASCIIPrintf</a>(viewer, <font color="#666666">"k = %D:\n"</font>, k);}
+<a name="line145">145: </a>      <a href="../../../../docs/manualpages/Viewer/PetscViewerASCIIPushTab.html#PetscViewerASCIIPushTab">PetscViewerASCIIPushTab</a>(viewer);
+<a name="line146">146: </a>      <font color="#4169E1">if</font> (verbose) {<a href="../../../../docs/manualpages/Viewer/PetscViewerASCIIPrintf.html#PetscViewerASCIIPrintf">PetscViewerASCIIPrintf</a>(viewer, <font color="#666666">"(%D choose %D): %D\n"</font>, N, k, Nk);}
+
+<a name="line148">148: </a>      <font color="#B22222">/* Test subset and complement enumeration */</font>
+<a name="line149">149: </a>      <a href="../../../../docs/manualpages/Sys/PetscMalloc1.html#PetscMalloc1">PetscMalloc1</a>(N, &amp;subset);
+<a name="line150">150: </a>      <a href="../../../../docs/manualpages/Viewer/PetscViewerASCIIPushTab.html#PetscViewerASCIIPushTab">PetscViewerASCIIPushTab</a>(viewer);
+<a name="line151">151: </a>      <font color="#4169E1">for</font> (j = 0; j &lt; Nk; j++) {
+<a name="line152">152: </a>        <a href="../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> isOdd, isOddCheck;
+<a name="line153">153: </a>        <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>  jCheck, kCheck;
+
+<a name="line155">155: </a>        PetscDTEnumSplit(N, k, j, subset, &amp;isOdd);
+<a name="line156">156: </a>        <a href="../../../../docs/manualpages/FE/PetscDTPermIndex.html#PetscDTPermIndex">PetscDTPermIndex</a>(N, subset, &amp;kCheck, &amp;isOddCheck);
+<a name="line157">157: </a>        <font color="#4169E1">if</font> (isOddCheck != isOdd) <a href="../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, PETSC_ERR_PLIB, <font color="#666666">"PetscDTEnumSplit sign does not mmatch <a href="../../../../docs/manualpages/FE/PetscDTPermIndex.html#PetscDTPermIndex">PetscDTPermIndex</a> sign"</font>);
+<a name="line158">158: </a>        <font color="#4169E1">if</font> (verbose) {
+<a name="line159">159: </a>          <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> l;
+
+<a name="line161">161: </a>          <a href="../../../../docs/manualpages/Viewer/PetscViewerASCIIPrintf.html#PetscViewerASCIIPrintf">PetscViewerASCIIPrintf</a>(viewer, <font color="#666666">"subset %D:"</font>, j);
+<a name="line162">162: </a>          <font color="#4169E1">for</font> (l = 0; l &lt; k; l++) {
+<a name="line163">163: </a>            <a href="../../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>, <font color="#666666">" %D"</font>, subset[l]);
+<a name="line164">164: </a>          }
+<a name="line165">165: </a>          <a href="../../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>, <font color="#666666">" |"</font>);
+<a name="line166">166: </a>          <font color="#4169E1">for</font> (l = k; l &lt; N; l++) {
+<a name="line167">167: </a>            <a href="../../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>, <font color="#666666">" %D"</font>, subset[l]);
+<a name="line168">168: </a>          }
+<a name="line169">169: </a>          <a href="../../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>, <font color="#666666">", %s\n"</font>, isOdd ? <font color="#666666">"odd"</font> : <font color="#666666">"even"</font>);
+<a name="line170">170: </a>        }
+<a name="line171">171: </a>        <a href="../../../../docs/manualpages/FE/PetscDTSubsetIndex.html#PetscDTSubsetIndex">PetscDTSubsetIndex</a>(N, k, subset, &amp;jCheck);
+<a name="line172">172: </a>        <font color="#4169E1">if</font> (jCheck != j) <a href="../../../../docs/manualpages/Sys/SETERRQ2.html#SETERRQ2">SETERRQ2</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>, PETSC_ERR_PLIB, <font color="#666666">"jCheck (%D) != j (%D)"</font>, jCheck, j);
+<a name="line173">173: </a>      }
+<a name="line174">174: </a>      <a href="../../../../docs/manualpages/Viewer/PetscViewerASCIIPopTab.html#PetscViewerASCIIPopTab">PetscViewerASCIIPopTab</a>(viewer);
+<a name="line175">175: </a>      <a href="../../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(subset);
+
+<a name="line177">177: </a>      <font color="#B22222">/* Make a random k form */</font>
+<a name="line178">178: </a>      <a href="../../../../docs/manualpages/Sys/PetscMalloc1.html#PetscMalloc1">PetscMalloc1</a>(Nk, &amp;w);
+<a name="line179">179: </a>      <font color="#4169E1">for</font> (j = 0; j &lt; Nk; j++) {<a href="../../../../docs/manualpages/Sys/PetscRandomGetValueReal.html#PetscRandomGetValueReal">PetscRandomGetValueReal</a>(rand, &amp;w[j]);}
+<a name="line180">180: </a>      <font color="#B22222">/* Make a set of random vectors */</font>
+<a name="line181">181: </a>      <a href="../../../../docs/manualpages/Sys/PetscMalloc1.html#PetscMalloc1">PetscMalloc1</a>(N*k, &amp;v);
+<a name="line182">182: </a>      <font color="#4169E1">for</font> (j = 0; j &lt; N*k; j++) {<a href="../../../../docs/manualpages/Sys/PetscRandomGetValueReal.html#PetscRandomGetValueReal">PetscRandomGetValueReal</a>(rand, &amp;v[j]);}
+
+<a name="line184">184: </a>      <a href="../../../../docs/manualpages/DT/PetscDTAltVApply.html#PetscDTAltVApply">PetscDTAltVApply</a>(N, k, w, v, &amp;wv);
+
+<a name="line186">186: </a>      <font color="#4169E1">if</font> (verbose) {
+<a name="line187">187: </a>        <a href="../../../../docs/manualpages/Viewer/PetscViewerASCIIPrintf.html#PetscViewerASCIIPrintf">PetscViewerASCIIPrintf</a>(viewer, <font color="#666666">"w:\n"</font>);
+<a name="line188">188: </a>        <a href="../../../../docs/manualpages/Viewer/PetscViewerASCIIPushTab.html#PetscViewerASCIIPushTab">PetscViewerASCIIPushTab</a>(viewer);
+<a name="line189">189: </a>        <font color="#4169E1">if</font> (Nk) {<a href="../../../../docs/manualpages/Sys/PetscRealView.html#PetscRealView">PetscRealView</a>(Nk, w, viewer);}
+<a name="line190">190: </a>        <a href="../../../../docs/manualpages/Viewer/PetscViewerASCIIPopTab.html#PetscViewerASCIIPopTab">PetscViewerASCIIPopTab</a>(viewer);
+<a name="line191">191: </a>        <a href="../../../../docs/manualpages/Viewer/PetscViewerASCIIPrintf.html#PetscViewerASCIIPrintf">PetscViewerASCIIPrintf</a>(viewer, <font color="#666666">"v:\n"</font>);
+<a name="line192">192: </a>        <a href="../../../../docs/manualpages/Viewer/PetscViewerASCIIPushTab.html#PetscViewerASCIIPushTab">PetscViewerASCIIPushTab</a>(viewer);
+<a name="line193">193: </a>        <font color="#4169E1">if</font> (N*k &gt; 0) {<a href="../../../../docs/manualpages/Sys/PetscRealView.html#PetscRealView">PetscRealView</a>(N*k, v, viewer);}
+<a name="line194">194: </a>        <a href="../../../../docs/manualpages/Viewer/PetscViewerASCIIPopTab.html#PetscViewerASCIIPopTab">PetscViewerASCIIPopTab</a>(viewer);
+<a name="line195">195: </a>        <a href="../../../../docs/manualpages/Viewer/PetscViewerASCIIPrintf.html#PetscViewerASCIIPrintf">PetscViewerASCIIPrintf</a>(viewer, <font color="#666666">"w(v): %g\n"</font>, (double) wv);
+<a name="line196">196: </a>      }
+
+<a name="line198">198: </a>      <font color="#B22222">/* sanity checks */</font>
+<a name="line199">199: </a>      <font color="#4169E1">if</font> (k == 1) { <font color="#B22222">/* 1-forms are functionals (dot products) */</font>
+<a name="line200">200: </a>        <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>  l;
+<a name="line201">201: </a>        <a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> wvcheck = 0.;
+<a name="line202">202: </a>        <a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> diff;
+
+<a name="line204">204: </a>        <font color="#4169E1">for</font> (l = 0; l &lt; N; l++) wvcheck += w[l] * v[l];
+<a name="line205">205: </a>        diff = PetscSqrtReal(<a href="../../../../docs/manualpages/Sys/PetscSqr.html#PetscSqr">PetscSqr</a>(wvcheck - wv));
+<a name="line206">206: </a>        <font color="#4169E1">if</font> (diff &gt;= PETSC_SMALL * (<a href="../../../../docs/manualpages/Sys/PetscAbsReal.html#PetscAbsReal">PetscAbsReal</a>(wv) + <a href="../../../../docs/manualpages/Sys/PetscAbsReal.html#PetscAbsReal">PetscAbsReal</a>(wvcheck))) <a href="../../../../docs/manualpages/Sys/SETERRQ2.html#SETERRQ2">SETERRQ2</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>, PETSC_ERR_PLIB, <font color="#666666">"1-form / dot product equivalence: wvcheck (%g) != wv (%g)"</font>, (double) wvcheck, (double) wv);
+<a name="line207">207: </a>      }
+<a name="line208">208: </a>      <font color="#4169E1">if</font> (k == N &amp;&amp; N &lt; 5) { <font color="#B22222">/* n-forms are scaled determinants */</font>
+<a name="line209">209: </a>        <a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> det, wvcheck, diff;
+
+<a name="line211">211: </a>        <font color="#4169E1">switch</font> (k) {
+<a name="line212">212: </a>        <font color="#4169E1">case</font> 0:
+<a name="line213">213: </a>          det = 1.;
+<a name="line214">214: </a>          <font color="#4169E1">break</font>;
+<a name="line215">215: </a>        <font color="#4169E1">case</font> 1:
+<a name="line216">216: </a>          det = v[0];
+<a name="line217">217: </a>          <font color="#4169E1">break</font>;
+<a name="line218">218: </a>        <font color="#4169E1">case</font> 2:
+<a name="line219">219: </a>          det = v[0] * v[3] - v[1] * v[2];
+<a name="line220">220: </a>          <font color="#4169E1">break</font>;
+<a name="line221">221: </a>        <font color="#4169E1">case</font> 3:
+<a name="line222">222: </a>          det = v[0] * (v[4] * v[8] - v[5] * v[7]) +
+<a name="line223">223: </a>                v[1] * (v[5] * v[6] - v[3] * v[8]) +
+<a name="line224">224: </a>                v[2] * (v[3] * v[7] - v[4] * v[6]);
+<a name="line225">225: </a>          <font color="#4169E1">break</font>;
+<a name="line226">226: </a>        <font color="#4169E1">case</font> 4:
+<a name="line227">227: </a>          det = v[0] * (v[5] * (v[10] * v[15] - v[11] * v[14]) +
+<a name="line228">228: </a>                        v[6] * (v[11] * v[13] - v[ 9] * v[15]) +
+<a name="line229">229: </a>                        v[7] * (v[ 9] * v[14] - v[10] * v[13])) -
+<a name="line230">230: </a>                v[1] * (v[4] * (v[10] * v[15] - v[11] * v[14]) +
+<a name="line231">231: </a>                        v[6] * (v[11] * v[12] - v[ 8] * v[15]) +
+<a name="line232">232: </a>                        v[7] * (v[ 8] * v[14] - v[10] * v[12])) +
+<a name="line233">233: </a>                v[2] * (v[4] * (v[ 9] * v[15] - v[11] * v[13]) +
+<a name="line234">234: </a>                        v[5] * (v[11] * v[12] - v[ 8] * v[15]) +
+<a name="line235">235: </a>                        v[7] * (v[ 8] * v[13] - v[ 9] * v[12])) -
+<a name="line236">236: </a>                v[3] * (v[4] * (v[ 9] * v[14] - v[10] * v[13]) +
+<a name="line237">237: </a>                        v[5] * (v[10] * v[12] - v[ 8] * v[14]) +
+<a name="line238">238: </a>                        v[6] * (v[ 8] * v[13] - v[ 9] * v[12]));
+<a name="line239">239: </a>          <font color="#4169E1">break</font>;
+<a name="line240">240: </a><strong><font color="#FF0000">        default:</font></strong>
+<a name="line241">241: </a>          <a href="../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>, PETSC_ERR_PLIB, <font color="#666666">"invalid k"</font>);
+<a name="line242">242: </a>        }
+<a name="line243">243: </a>        wvcheck = det * w[0];
+<a name="line244">244: </a>        diff = PetscSqrtReal(<a href="../../../../docs/manualpages/Sys/PetscSqr.html#PetscSqr">PetscSqr</a>(wvcheck - wv));
+<a name="line245">245: </a>        <font color="#4169E1">if</font> (diff &gt;= PETSC_SMALL * (<a href="../../../../docs/manualpages/Sys/PetscAbsReal.html#PetscAbsReal">PetscAbsReal</a>(wv) + <a href="../../../../docs/manualpages/Sys/PetscAbsReal.html#PetscAbsReal">PetscAbsReal</a>(wvcheck))) <a href="../../../../docs/manualpages/Sys/SETERRQ3.html#SETERRQ3">SETERRQ3</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>, PETSC_ERR_PLIB, <font color="#666666">"n-form / determinant equivalence: wvcheck (%g) != wv (%g) %g"</font>, (double) wvcheck, (double) wv, (double) diff);
+<a name="line246">246: </a>      }
+<a name="line247">247: </a>      <font color="#4169E1">if</font> (k &gt; 0) { <font color="#B22222">/* k-forms are linear in each component */</font>
+<a name="line248">248: </a>        <a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> alpha;
+<a name="line249">249: </a>        <a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> *x, *axv, wx, waxv, waxvcheck;
+<a name="line250">250: </a>        <a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> diff;
+<a name="line251">251: </a>        <a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> rj;
+<a name="line252">252: </a>        <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>  l;
+
+<a name="line254">254: </a>        <a href="../../../../docs/manualpages/Sys/PetscMalloc2.html#PetscMalloc2">PetscMalloc2</a>(N * k, &amp;x, N * k, &amp;axv);
+<a name="line255">255: </a>        <a href="../../../../docs/manualpages/Sys/PetscRandomGetValueReal.html#PetscRandomGetValueReal">PetscRandomGetValueReal</a>(rand, &amp;alpha);
+<a name="line256">256: </a>        <a href="../../../../docs/manualpages/Sys/PetscRandomSetInterval.html#PetscRandomSetInterval">PetscRandomSetInterval</a>(rand, 0, k);
+<a name="line257">257: </a>        <a href="../../../../docs/manualpages/Sys/PetscRandomGetValueReal.html#PetscRandomGetValueReal">PetscRandomGetValueReal</a>(rand, &amp;rj);
+<a name="line258">258: </a>        j = (<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>) rj;
+<a name="line259">259: </a>        <a href="../../../../docs/manualpages/Sys/PetscRandomSetInterval.html#PetscRandomSetInterval">PetscRandomSetInterval</a>(rand, -1., 1.);
+<a name="line260">260: </a>        <font color="#4169E1">for</font> (l = 0; l &lt; N*k; l++) x[l] = v[l];
+<a name="line261">261: </a>        <font color="#4169E1">for</font> (l = 0; l &lt; N*k; l++) axv[l] = v[l];
+<a name="line262">262: </a>        <font color="#4169E1">for</font> (l = 0; l &lt; N; l++) {
+<a name="line263">263: </a>          <a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> val;
+
+<a name="line265">265: </a>          <a href="../../../../docs/manualpages/Sys/PetscRandomGetValueReal.html#PetscRandomGetValueReal">PetscRandomGetValueReal</a>(rand, &amp;val);
+<a name="line266">266: </a>          x[j * N + l] = val;
+<a name="line267">267: </a>          axv[j * N + l] += alpha * val;
+<a name="line268">268: </a>        }
+<a name="line269">269: </a>        <a href="../../../../docs/manualpages/DT/PetscDTAltVApply.html#PetscDTAltVApply">PetscDTAltVApply</a>(N, k, w, x, &amp;wx);
+<a name="line270">270: </a>        <a href="../../../../docs/manualpages/DT/PetscDTAltVApply.html#PetscDTAltVApply">PetscDTAltVApply</a>(N, k, w, axv, &amp;waxv);
+<a name="line271">271: </a>        waxvcheck = alpha * wx + wv;
+<a name="line272">272: </a>        diff = waxv - waxvcheck;
+<a name="line273">273: </a>        <font color="#4169E1">if</font> (<a href="../../../../docs/manualpages/Sys/PetscAbsReal.html#PetscAbsReal">PetscAbsReal</a>(diff) &gt; 10. * PETSC_SMALL * (<a href="../../../../docs/manualpages/Sys/PetscAbsReal.html#PetscAbsReal">PetscAbsReal</a>(waxv) + <a href="../../../../docs/manualpages/Sys/PetscAbsReal.html#PetscAbsReal">PetscAbsReal</a>(waxvcheck))) <a href="../../../../docs/manualpages/Sys/SETERRQ3.html#SETERRQ3">SETERRQ3</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>, PETSC_ERR_PLIB, <font color="#666666">"linearity check: component %D, waxvcheck (%g) != waxv (%g)"</font>, j, (double) waxvcheck, (double) waxv);
+<a name="line274">274: </a>        <a href="../../../../docs/manualpages/Sys/PetscFree2.html#PetscFree2">PetscFree2</a>(x,axv);
+<a name="line275">275: </a>      }
+<a name="line276">276: </a>      <font color="#4169E1">if</font> (k &gt; 1) { <font color="#B22222">/* k-forms are antisymmetric */</font>
+<a name="line277">277: </a>        <a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> rj, rl, *swapv, wswapv, diff;
+<a name="line278">278: </a>        <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>  l, m;
+
+<a name="line280">280: </a>        <a href="../../../../docs/manualpages/Sys/PetscRandomSetInterval.html#PetscRandomSetInterval">PetscRandomSetInterval</a>(rand, 0, k);
+<a name="line281">281: </a>        <a href="../../../../docs/manualpages/Sys/PetscRandomGetValueReal.html#PetscRandomGetValueReal">PetscRandomGetValueReal</a>(rand, &amp;rj);
+<a name="line282">282: </a>        j = (<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>) rj;
+<a name="line283">283: </a>        l = j;
+<a name="line284">284: </a>        <font color="#4169E1">while</font> (l == j) {
+<a name="line285">285: </a>          <a href="../../../../docs/manualpages/Sys/PetscRandomGetValueReal.html#PetscRandomGetValueReal">PetscRandomGetValueReal</a>(rand, &amp;rl);
+<a name="line286">286: </a>          l = (<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>) rl;
+<a name="line287">287: </a>        }
+<a name="line288">288: </a>        <a href="../../../../docs/manualpages/Sys/PetscRandomSetInterval.html#PetscRandomSetInterval">PetscRandomSetInterval</a>(rand, -1., 1.);
+<a name="line289">289: </a>        <a href="../../../../docs/manualpages/Sys/PetscMalloc1.html#PetscMalloc1">PetscMalloc1</a>(N * k, &amp;swapv);
+<a name="line290">290: </a>        <font color="#4169E1">for</font> (m = 0; m &lt; N * k; m++) swapv[m] = v[m];
+<a name="line291">291: </a>        <font color="#4169E1">for</font> (m = 0; m &lt; N; m++) {
+<a name="line292">292: </a>          swapv[j * N + m] = v[l * N + m];
+<a name="line293">293: </a>          swapv[l * N + m] = v[j * N + m];
+<a name="line294">294: </a>        }
+<a name="line295">295: </a>        <a href="../../../../docs/manualpages/DT/PetscDTAltVApply.html#PetscDTAltVApply">PetscDTAltVApply</a>(N, k, w, swapv, &amp;wswapv);
+<a name="line296">296: </a>        diff = <a href="../../../../docs/manualpages/Sys/PetscAbsReal.html#PetscAbsReal">PetscAbsReal</a>(wswapv + wv);
+<a name="line297">297: </a>        <font color="#4169E1">if</font> (diff &gt; PETSC_SMALL * (<a href="../../../../docs/manualpages/Sys/PetscAbsReal.html#PetscAbsReal">PetscAbsReal</a>(wswapv) + <a href="../../../../docs/manualpages/Sys/PetscAbsReal.html#PetscAbsReal">PetscAbsReal</a>(wv))) <a href="../../../../docs/manualpages/Sys/SETERRQ4.html#SETERRQ4">SETERRQ4</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>, PETSC_ERR_PLIB, <font color="#666666">"antisymmetry check: components %D &amp; %D, wswapv (%g) != -wv (%g)"</font>, j, l, (double) wswapv, (double) wv);
+<a name="line298">298: </a>        <a href="../../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(swapv);
+<a name="line299">299: </a>      }
+<a name="line300">300: </a>      <font color="#4169E1">for</font> (j = 0; j &lt;= k &amp;&amp; j + k &lt;= N; j++) { <font color="#B22222">/* wedge product */</font>
+<a name="line301">301: </a>        <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>   Nj, Njk, l, JKj;
+<a name="line302">302: </a>        <a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> *u, *uWw, *uWwcheck, *uWwmat, *x, *xsplit, uWwx, uWwxcheck, diff, norm;
+<a name="line303">303: </a>        <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>  *split;
+
+<a name="line305">305: </a>        <font color="#4169E1">if</font> (verbose) {<a href="../../../../docs/manualpages/Viewer/PetscViewerASCIIPrintf.html#PetscViewerASCIIPrintf">PetscViewerASCIIPrintf</a>(viewer, <font color="#666666">"wedge j = %D:\n"</font>, j);}
+<a name="line306">306: </a>        <a href="../../../../docs/manualpages/Viewer/PetscViewerASCIIPushTab.html#PetscViewerASCIIPushTab">PetscViewerASCIIPushTab</a>(viewer);
+<a name="line307">307: </a>        <a href="../../../../docs/manualpages/FE/PetscDTBinomialInt.html#PetscDTBinomialInt">PetscDTBinomialInt</a>(N, j,   &amp;Nj);
+<a name="line308">308: </a>        <a href="../../../../docs/manualpages/FE/PetscDTBinomialInt.html#PetscDTBinomialInt">PetscDTBinomialInt</a>(N, j+k, &amp;Njk);
+<a name="line309">309: </a>        <a href="../../../../docs/manualpages/Sys/PetscMalloc4.html#PetscMalloc4">PetscMalloc4</a>(Nj, &amp;u, Njk, &amp;uWw, N*(j+k), &amp;x, N*(j+k), &amp;xsplit);
+<a name="line310">310: </a>        <a href="../../../../docs/manualpages/Sys/PetscMalloc1.html#PetscMalloc1">PetscMalloc1</a>(j+k,&amp;split);
+<a name="line311">311: </a>        <font color="#4169E1">for</font> (l = 0; l &lt; Nj; l++) {<a href="../../../../docs/manualpages/Sys/PetscRandomGetValueReal.html#PetscRandomGetValueReal">PetscRandomGetValueReal</a>(rand, &amp;u[l]);}
+<a name="line312">312: </a>        <font color="#4169E1">for</font> (l = 0; l &lt; N*(j+k); l++) {<a href="../../../../docs/manualpages/Sys/PetscRandomGetValueReal.html#PetscRandomGetValueReal">PetscRandomGetValueReal</a>(rand, &amp;x[l]);}
+<a name="line313">313: </a>        <a href="../../../../docs/manualpages/DT/PetscDTAltVWedge.html#PetscDTAltVWedge">PetscDTAltVWedge</a>(N, j, k, u, w, uWw);
+<a name="line314">314: </a>        <a href="../../../../docs/manualpages/DT/PetscDTAltVApply.html#PetscDTAltVApply">PetscDTAltVApply</a>(N, j+k, uWw, x, &amp;uWwx);
+<a name="line315">315: </a>        <font color="#4169E1">if</font> (verbose) {
+<a name="line316">316: </a>          <a href="../../../../docs/manualpages/Viewer/PetscViewerASCIIPrintf.html#PetscViewerASCIIPrintf">PetscViewerASCIIPrintf</a>(viewer, <font color="#666666">"u:\n"</font>);
+<a name="line317">317: </a>          <a href="../../../../docs/manualpages/Viewer/PetscViewerASCIIPushTab.html#PetscViewerASCIIPushTab">PetscViewerASCIIPushTab</a>(viewer);
+<a name="line318">318: </a>          <font color="#4169E1">if</font> (Nj) {<a href="../../../../docs/manualpages/Sys/PetscRealView.html#PetscRealView">PetscRealView</a>(Nj, u, viewer);}
+<a name="line319">319: </a>          <a href="../../../../docs/manualpages/Viewer/PetscViewerASCIIPopTab.html#PetscViewerASCIIPopTab">PetscViewerASCIIPopTab</a>(viewer);
+<a name="line320">320: </a>          <a href="../../../../docs/manualpages/Viewer/PetscViewerASCIIPrintf.html#PetscViewerASCIIPrintf">PetscViewerASCIIPrintf</a>(viewer, <font color="#666666">"u wedge w:\n"</font>);
+<a name="line321">321: </a>          <a href="../../../../docs/manualpages/Viewer/PetscViewerASCIIPushTab.html#PetscViewerASCIIPushTab">PetscViewerASCIIPushTab</a>(viewer);
+<a name="line322">322: </a>          <font color="#4169E1">if</font> (Njk) {<a href="../../../../docs/manualpages/Sys/PetscRealView.html#PetscRealView">PetscRealView</a>(Njk, uWw, viewer);}
+<a name="line323">323: </a>          <a href="../../../../docs/manualpages/Viewer/PetscViewerASCIIPopTab.html#PetscViewerASCIIPopTab">PetscViewerASCIIPopTab</a>(viewer);
+<a name="line324">324: </a>          <a href="../../../../docs/manualpages/Viewer/PetscViewerASCIIPrintf.html#PetscViewerASCIIPrintf">PetscViewerASCIIPrintf</a>(viewer, <font color="#666666">"x:\n"</font>);
+<a name="line325">325: </a>          <a href="../../../../docs/manualpages/Viewer/PetscViewerASCIIPushTab.html#PetscViewerASCIIPushTab">PetscViewerASCIIPushTab</a>(viewer);
+<a name="line326">326: </a>          <font color="#4169E1">if</font> (N*(j+k) &gt; 0) {<a href="../../../../docs/manualpages/Sys/PetscRealView.html#PetscRealView">PetscRealView</a>(N*(j+k), x, viewer);}
+<a name="line327">327: </a>          <a href="../../../../docs/manualpages/Viewer/PetscViewerASCIIPopTab.html#PetscViewerASCIIPopTab">PetscViewerASCIIPopTab</a>(viewer);
+<a name="line328">328: </a>          <a href="../../../../docs/manualpages/Viewer/PetscViewerASCIIPrintf.html#PetscViewerASCIIPrintf">PetscViewerASCIIPrintf</a>(viewer, <font color="#666666">"u wedge w(x): %g\n"</font>, (double) uWwx);
+<a name="line329">329: </a>        }
+<a name="line330">330: </a>        <font color="#B22222">/* verify wedge formula */</font>
+<a name="line331">331: </a>        uWwxcheck = 0.;
+<a name="line332">332: </a>        <a href="../../../../docs/manualpages/FE/PetscDTBinomialInt.html#PetscDTBinomialInt">PetscDTBinomialInt</a>(j+k, j, &amp;JKj);
+<a name="line333">333: </a>        <font color="#4169E1">for</font> (l = 0; l &lt; JKj; l++) {
+<a name="line334">334: </a>          <a href="../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> isOdd;
+<a name="line335">335: </a>          <a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> ux, wx;
+<a name="line336">336: </a>          <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>  m, p;
+
+<a name="line338">338: </a>          PetscDTEnumSplit(j+k, j, l, split, &amp;isOdd);
+<a name="line339">339: </a>          <font color="#4169E1">for</font> (m = 0; m &lt; j+k; m++) {<font color="#4169E1">for</font> (p = 0; p &lt; N; p++) {xsplit[m * N + p] = x[split[m] * N + p];}}
+<a name="line340">340: </a>          <a href="../../../../docs/manualpages/DT/PetscDTAltVApply.html#PetscDTAltVApply">PetscDTAltVApply</a>(N, j, u, xsplit, &amp;ux);
+<a name="line341">341: </a>          <a href="../../../../docs/manualpages/DT/PetscDTAltVApply.html#PetscDTAltVApply">PetscDTAltVApply</a>(N, k, w, &amp;xsplit[j*N], &amp;wx);
+<a name="line342">342: </a>          uWwxcheck += isOdd ? -(ux * wx) : (ux * wx);
+<a name="line343">343: </a>        }
+<a name="line344">344: </a>        diff = <a href="../../../../docs/manualpages/Sys/PetscAbsReal.html#PetscAbsReal">PetscAbsReal</a>(uWwx - uWwxcheck);
+<a name="line345">345: </a>        <font color="#4169E1">if</font> (diff &gt; 10. * PETSC_SMALL * (<a href="../../../../docs/manualpages/Sys/PetscAbsReal.html#PetscAbsReal">PetscAbsReal</a>(uWwx) + <a href="../../../../docs/manualpages/Sys/PetscAbsReal.html#PetscAbsReal">PetscAbsReal</a>(uWwxcheck))) <a href="../../../../docs/manualpages/Sys/SETERRQ4.html#SETERRQ4">SETERRQ4</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>, PETSC_ERR_PLIB, <font color="#666666">"wedge check: forms %D &amp; %D, uWwxcheck (%g) != uWwx (%g)"</font>, j, k, (double) uWwxcheck, (double) uWwx);
+<a name="line346">346: </a>        <a href="../../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(split);
+<a name="line347">347: </a>        <a href="../../../../docs/manualpages/Sys/PetscMalloc2.html#PetscMalloc2">PetscMalloc2</a>(Nk * Njk, &amp;uWwmat, Njk, &amp;uWwcheck);
+<a name="line348">348: </a>        <a href="../../../../docs/manualpages/DT/PetscDTAltVWedgeMatrix.html#PetscDTAltVWedgeMatrix">PetscDTAltVWedgeMatrix</a>(N, j, k, u, uWwmat);
+<a name="line349">349: </a>        <font color="#4169E1">if</font> (verbose) {
+<a name="line350">350: </a>          <a href="../../../../docs/manualpages/Viewer/PetscViewerASCIIPrintf.html#PetscViewerASCIIPrintf">PetscViewerASCIIPrintf</a>(viewer, <font color="#666666">"(u wedge):\n"</font>);
+<a name="line351">351: </a>          <a href="../../../../docs/manualpages/Viewer/PetscViewerASCIIPushTab.html#PetscViewerASCIIPushTab">PetscViewerASCIIPushTab</a>(viewer);
+<a name="line352">352: </a>          <font color="#4169E1">if</font> ((Nk * Njk) &gt; 0) {<a href="../../../../docs/manualpages/Sys/PetscRealView.html#PetscRealView">PetscRealView</a>(Nk * Njk, uWwmat, viewer);}
+<a name="line353">353: </a>          <a href="../../../../docs/manualpages/Viewer/PetscViewerASCIIPopTab.html#PetscViewerASCIIPopTab">PetscViewerASCIIPopTab</a>(viewer);
+<a name="line354">354: </a>        }
+<a name="line355">355: </a>        diff = 0.;
+<a name="line356">356: </a>        norm = 0.;
+<a name="line357">357: </a>        <font color="#4169E1">for</font> (l = 0; l &lt; Njk; l++) {
+<a name="line358">358: </a>          <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>  m;
+<a name="line359">359: </a>          <a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> sum = 0.;
+
+<a name="line361">361: </a>          <font color="#4169E1">for</font> (m = 0; m &lt; Nk; m++) sum += uWwmat[l * Nk + m] * w[m];
+<a name="line362">362: </a>          uWwcheck[l] = sum;
+<a name="line363">363: </a>          diff += <a href="../../../../docs/manualpages/Sys/PetscSqr.html#PetscSqr">PetscSqr</a>(uWwcheck[l] - uWw[l]);
+<a name="line364">364: </a>          norm += <a href="../../../../docs/manualpages/Sys/PetscSqr.html#PetscSqr">PetscSqr</a>(uWwcheck[l]) + <a href="../../../../docs/manualpages/Sys/PetscSqr.html#PetscSqr">PetscSqr</a>(uWw[l]);
+<a name="line365">365: </a>        }
+<a name="line366">366: </a>        diff = PetscSqrtReal(diff);
+<a name="line367">367: </a>        norm = PetscSqrtReal(norm);
+<a name="line368">368: </a>        <font color="#4169E1">if</font> (diff &gt; PETSC_SMALL * norm) <a href="../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>, PETSC_ERR_PLIB, <font color="#666666">"wedge matrix check: wedge matrix application does not match wedge direct application"</font>);
+<a name="line369">369: </a>        <a href="../../../../docs/manualpages/Sys/PetscFree2.html#PetscFree2">PetscFree2</a>(uWwmat, uWwcheck);
+<a name="line370">370: </a>        <a href="../../../../docs/manualpages/Sys/PetscFree4.html#PetscFree4">PetscFree4</a>(u, uWw, x, xsplit);
+<a name="line371">371: </a>        <a href="../../../../docs/manualpages/Viewer/PetscViewerASCIIPopTab.html#PetscViewerASCIIPopTab">PetscViewerASCIIPopTab</a>(viewer);
+<a name="line372">372: </a>      }
+<a name="line373">373: </a>      <font color="#4169E1">for</font> (M = <a href="../../../../docs/manualpages/Sys/PetscMax.html#PetscMax">PetscMax</a>(1,k); M &lt;= N; M++) { <font color="#B22222">/* pullback */</font>
+<a name="line374">374: </a>        <a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>   *L, *u, *x;
+<a name="line375">375: </a>        <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>     Mk, l;
+
+<a name="line377">377: </a>        <a href="../../../../docs/manualpages/FE/PetscDTBinomialInt.html#PetscDTBinomialInt">PetscDTBinomialInt</a>(M, k, &amp;Mk);
+<a name="line378">378: </a>        <a href="../../../../docs/manualpages/Sys/PetscMalloc3.html#PetscMalloc3">PetscMalloc3</a>(M*N, &amp;L, Mk, &amp;u, M*k, &amp;x);
+<a name="line379">379: </a>        <font color="#4169E1">for</font> (l = 0; l &lt; M*N; l++) {<a href="../../../../docs/manualpages/Sys/PetscRandomGetValueReal.html#PetscRandomGetValueReal">PetscRandomGetValueReal</a>(rand, &amp;L[l]);}
+<a name="line380">380: </a>        <font color="#4169E1">for</font> (l = 0; l &lt; Mk; l++) {<a href="../../../../docs/manualpages/Sys/PetscRandomGetValueReal.html#PetscRandomGetValueReal">PetscRandomGetValueReal</a>(rand, &amp;u[l]);}
+<a name="line381">381: </a>        <font color="#4169E1">for</font> (l = 0; l &lt; M*k; l++) {<a href="../../../../docs/manualpages/Sys/PetscRandomGetValueReal.html#PetscRandomGetValueReal">PetscRandomGetValueReal</a>(rand, &amp;x[l]);}
+<a name="line382">382: </a>        <font color="#4169E1">if</font> (verbose) {<a href="../../../../docs/manualpages/Viewer/PetscViewerASCIIPrintf.html#PetscViewerASCIIPrintf">PetscViewerASCIIPrintf</a>(viewer, <font color="#666666">"pullback M = %D:\n"</font>, M);}
+<a name="line383">383: </a>        <a href="../../../../docs/manualpages/Viewer/PetscViewerASCIIPushTab.html#PetscViewerASCIIPushTab">PetscViewerASCIIPushTab</a>(viewer);
+<a name="line384">384: </a>        CheckPullback(M, N, L, k, w, x, verbose, viewer);
+<a name="line385">385: </a>        <font color="#4169E1">if</font> (M != N) {CheckPullback(N, M, L, k, u, v, <a href="../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>, viewer);}
+<a name="line386">386: </a>        <a href="../../../../docs/manualpages/Viewer/PetscViewerASCIIPopTab.html#PetscViewerASCIIPopTab">PetscViewerASCIIPopTab</a>(viewer);
+<a name="line387">387: </a>        <font color="#4169E1">if</font> ((k % N) &amp;&amp; (N &gt; 1)) {
+<a name="line388">388: </a>          <font color="#4169E1">if</font> (verbose) {<a href="../../../../docs/manualpages/Viewer/PetscViewerASCIIPrintf.html#PetscViewerASCIIPrintf">PetscViewerASCIIPrintf</a>(viewer, <font color="#666666">"negative pullback M = %D:\n"</font>, M);}
+<a name="line389">389: </a>          <a href="../../../../docs/manualpages/Viewer/PetscViewerASCIIPushTab.html#PetscViewerASCIIPushTab">PetscViewerASCIIPushTab</a>(viewer);
+<a name="line390">390: </a>          CheckPullback(M, N, L, -k, w, x, verbose, viewer);
+<a name="line391">391: </a>          <font color="#4169E1">if</font> (M != N) {CheckPullback(N, M, L, -k, u, v, <a href="../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>, viewer);}
+<a name="line392">392: </a>          <a href="../../../../docs/manualpages/Viewer/PetscViewerASCIIPopTab.html#PetscViewerASCIIPopTab">PetscViewerASCIIPopTab</a>(viewer);
+<a name="line393">393: </a>        }
+<a name="line394">394: </a>        <a href="../../../../docs/manualpages/Sys/PetscFree3.html#PetscFree3">PetscFree3</a>(L, u, x);
+<a name="line395">395: </a>      }
+<a name="line396">396: </a>      <font color="#4169E1">if</font> (k &gt; 0) { <font color="#B22222">/* Interior */</font>
+<a name="line397">397: </a>        <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>    Nkm, l, m;
+<a name="line398">398: </a>        <a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>  *wIntv0, *wIntv0check, wvcheck, diff, diffMat, normMat;
+<a name="line399">399: </a>        <a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>  *intv0mat, *matcheck;
+<a name="line400">400: </a>        <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>  (*indices)[3];
+
+<a name="line402">402: </a>        <a href="../../../../docs/manualpages/FE/PetscDTBinomialInt.html#PetscDTBinomialInt">PetscDTBinomialInt</a>(N, k-1, &amp;Nkm);
+<a name="line403">403: </a>        <a href="../../../../docs/manualpages/Sys/PetscMalloc5.html#PetscMalloc5">PetscMalloc5</a>(Nkm, &amp;wIntv0, Nkm, &amp;wIntv0check, Nk * Nkm, &amp;intv0mat, Nk * Nkm, &amp;matcheck, Nk * k, &amp;indices);
+<a name="line404">404: </a>        <a href="../../../../docs/manualpages/DT/PetscDTAltVInterior.html#PetscDTAltVInterior">PetscDTAltVInterior</a>(N, k, w, v, wIntv0);
+<a name="line405">405: </a>        <a href="../../../../docs/manualpages/DT/PetscDTAltVInteriorMatrix.html#PetscDTAltVInteriorMatrix">PetscDTAltVInteriorMatrix</a>(N, k, v, intv0mat);
+<a name="line406">406: </a>        <a href="../../../../docs/manualpages/DT/PetscDTAltVInteriorPattern.html#PetscDTAltVInteriorPattern">PetscDTAltVInteriorPattern</a>(N, k, indices);
+<a name="line407">407: </a>        <font color="#4169E1">if</font> (verbose) {
+<a name="line408">408: </a>          <a href="../../../../docs/manualpages/Viewer/PetscViewerASCIIPrintf.html#PetscViewerASCIIPrintf">PetscViewerASCIIPrintf</a>(viewer, <font color="#666666">"interior product matrix pattern:\n"</font>);
+<a name="line409">409: </a>          <a href="../../../../docs/manualpages/Viewer/PetscViewerASCIIPushTab.html#PetscViewerASCIIPushTab">PetscViewerASCIIPushTab</a>(viewer);
+<a name="line410">410: </a>          <font color="#4169E1">for</font> (l = 0; l &lt; Nk * k; l++) {
+<a name="line411">411: </a>            <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> row = indices[l][0];
+<a name="line412">412: </a>            <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> col = indices[l][1];
+<a name="line413">413: </a>            <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> x   = indices[l][2];
+
+<a name="line415">415: </a>            <a href="../../../../docs/manualpages/Viewer/PetscViewerASCIIPrintf.html#PetscViewerASCIIPrintf">PetscViewerASCIIPrintf</a>(viewer,<font color="#666666">"intV[%D,%D] = %sV[%D]\n"</font>, row, col, x &lt; 0 ? <font color="#666666">"-"</font> : <font color="#666666">" "</font>, x &lt; 0 ? -(x + 1) : x);
+<a name="line416">416: </a>          }
+<a name="line417">417: </a>          <a href="../../../../docs/manualpages/Viewer/PetscViewerASCIIPopTab.html#PetscViewerASCIIPopTab">PetscViewerASCIIPopTab</a>(viewer);
+<a name="line418">418: </a>        }
+<a name="line419">419: </a>        <font color="#4169E1">for</font> (l = 0; l &lt; Nkm * Nk; l++) matcheck[l] = 0.;
+<a name="line420">420: </a>        <font color="#4169E1">for</font> (l = 0; l &lt; Nk * k; l++) {
+<a name="line421">421: </a>          <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> row = indices[l][0];
+<a name="line422">422: </a>          <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> col = indices[l][1];
+<a name="line423">423: </a>          <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> x   = indices[l][2];
+
+<a name="line425">425: </a>          <font color="#4169E1">if</font> (x &lt; 0) {
+<a name="line426">426: </a>            matcheck[row * Nk + col] = -v[-(x+1)];
+<a name="line427">427: </a>          } <font color="#4169E1">else</font> {
+<a name="line428">428: </a>            matcheck[row * Nk + col] = v[x];
+<a name="line429">429: </a>          }
+<a name="line430">430: </a>        }
+<a name="line431">431: </a>        diffMat = 0.;
+<a name="line432">432: </a>        normMat = 0.;
+<a name="line433">433: </a>        <font color="#4169E1">for</font> (l = 0; l &lt; Nkm * Nk; l++) {
+<a name="line434">434: </a>          diffMat += <a href="../../../../docs/manualpages/Sys/PetscSqr.html#PetscSqr">PetscSqr</a>(<a href="../../../../docs/manualpages/Sys/PetscAbsReal.html#PetscAbsReal">PetscAbsReal</a>(matcheck[l] - intv0mat[l]));
+<a name="line435">435: </a>          normMat += <a href="../../../../docs/manualpages/Sys/PetscSqr.html#PetscSqr">PetscSqr</a>(matcheck[l]) + <a href="../../../../docs/manualpages/Sys/PetscSqr.html#PetscSqr">PetscSqr</a>(intv0mat[l]);
+<a name="line436">436: </a>        }
+<a name="line437">437: </a>        diffMat = PetscSqrtReal(diffMat);
+<a name="line438">438: </a>        normMat = PetscSqrtReal(normMat);
+<a name="line439">439: </a>        <font color="#4169E1">if</font> (diffMat &gt; PETSC_SMALL * normMat) <a href="../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>, PETSC_ERR_PLIB, <font color="#666666">"Interior product check: matrix pattern does not match matrix"</font>);
+<a name="line440">440: </a>        diffMat = 0.;
+<a name="line441">441: </a>        normMat = 0.;
+<a name="line442">442: </a>        <font color="#4169E1">for</font> (l = 0; l &lt; Nkm; l++) {
+<a name="line443">443: </a>          <a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> sum = 0.;
+
+<a name="line445">445: </a>          <font color="#4169E1">for</font> (m = 0; m &lt; Nk; m++) sum += intv0mat[l * Nk + m] * w[m];
+<a name="line446">446: </a>          wIntv0check[l] = sum;
+
+<a name="line448">448: </a>          diffMat += <a href="../../../../docs/manualpages/Sys/PetscSqr.html#PetscSqr">PetscSqr</a>(<a href="../../../../docs/manualpages/Sys/PetscAbsReal.html#PetscAbsReal">PetscAbsReal</a>(wIntv0check[l] - wIntv0[l]));
+<a name="line449">449: </a>          normMat += <a href="../../../../docs/manualpages/Sys/PetscSqr.html#PetscSqr">PetscSqr</a>(wIntv0check[l]) + <a href="../../../../docs/manualpages/Sys/PetscSqr.html#PetscSqr">PetscSqr</a>(wIntv0[l]);
+<a name="line450">450: </a>        }
+<a name="line451">451: </a>        diffMat = PetscSqrtReal(diffMat);
+<a name="line452">452: </a>        normMat = PetscSqrtReal(normMat);
+<a name="line453">453: </a>        <font color="#4169E1">if</font> (diffMat &gt; PETSC_SMALL * normMat) <a href="../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>, PETSC_ERR_PLIB, <font color="#666666">"Interior product check: application does not match matrix"</font>);
+<a name="line454">454: </a>        <font color="#4169E1">if</font> (verbose) {
+<a name="line455">455: </a>          <a href="../../../../docs/manualpages/Viewer/PetscViewerASCIIPrintf.html#PetscViewerASCIIPrintf">PetscViewerASCIIPrintf</a>(viewer, <font color="#666666">"(w int v_0):\n"</font>);
+<a name="line456">456: </a>          <a href="../../../../docs/manualpages/Viewer/PetscViewerASCIIPushTab.html#PetscViewerASCIIPushTab">PetscViewerASCIIPushTab</a>(viewer);
+<a name="line457">457: </a>          <font color="#4169E1">if</font> (Nkm) {<a href="../../../../docs/manualpages/Sys/PetscRealView.html#PetscRealView">PetscRealView</a>(Nkm, wIntv0, viewer);}
+<a name="line458">458: </a>          <a href="../../../../docs/manualpages/Viewer/PetscViewerASCIIPopTab.html#PetscViewerASCIIPopTab">PetscViewerASCIIPopTab</a>(viewer);
+
+<a name="line460">460: </a>          <a href="../../../../docs/manualpages/Viewer/PetscViewerASCIIPrintf.html#PetscViewerASCIIPrintf">PetscViewerASCIIPrintf</a>(viewer, <font color="#666666">"(int v_0):\n"</font>);
+<a name="line461">461: </a>          <a href="../../../../docs/manualpages/Viewer/PetscViewerASCIIPushTab.html#PetscViewerASCIIPushTab">PetscViewerASCIIPushTab</a>(viewer);
+<a name="line462">462: </a>          <font color="#4169E1">if</font> (Nk * Nkm &gt; 0) {<a href="../../../../docs/manualpages/Sys/PetscRealView.html#PetscRealView">PetscRealView</a>(Nk * Nkm, intv0mat, viewer);}
+<a name="line463">463: </a>          <a href="../../../../docs/manualpages/Viewer/PetscViewerASCIIPopTab.html#PetscViewerASCIIPopTab">PetscViewerASCIIPopTab</a>(viewer);
+<a name="line464">464: </a>        }
+<a name="line465">465: </a>        <a href="../../../../docs/manualpages/DT/PetscDTAltVApply.html#PetscDTAltVApply">PetscDTAltVApply</a>(N, k - 1, wIntv0, &amp;v[N], &amp;wvcheck);
+<a name="line466">466: </a>        diff = PetscSqrtReal(<a href="../../../../docs/manualpages/Sys/PetscSqr.html#PetscSqr">PetscSqr</a>(wvcheck - wv));
+<a name="line467">467: </a>        <font color="#4169E1">if</font> (diff &gt;= PETSC_SMALL * (<a href="../../../../docs/manualpages/Sys/PetscAbsReal.html#PetscAbsReal">PetscAbsReal</a>(wv) + <a href="../../../../docs/manualpages/Sys/PetscAbsReal.html#PetscAbsReal">PetscAbsReal</a>(wvcheck))) <a href="../../../../docs/manualpages/Sys/SETERRQ2.html#SETERRQ2">SETERRQ2</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>, PETSC_ERR_PLIB, <font color="#666666">"Interior product check: (w Int v0)(v_rem) (%g) != w(v) (%g)"</font>, (double) wvcheck, (double) wv);
+<a name="line468">468: </a>        <a href="../../../../docs/manualpages/Sys/PetscFree5.html#PetscFree5">PetscFree5</a>(wIntv0,wIntv0check,intv0mat,matcheck,indices);
+<a name="line469">469: </a>      }
+<a name="line470">470: </a>      <font color="#4169E1">if</font> (k &gt;= N - k) { <font color="#B22222">/* Hodge star */</font>
+<a name="line471">471: </a>        <a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> *u, *starw, *starstarw, wu, starwdotu;
+<a name="line472">472: </a>        <a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> diff, norm;
+<a name="line473">473: </a>        <a href="../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> isOdd;
+<a name="line474">474: </a>        <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> l;
+
+<a name="line476">476: </a>        isOdd = (<a href="../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>) ((k * (N - k)) &amp; 1);
+<a name="line477">477: </a>        <a href="../../../../docs/manualpages/Sys/PetscMalloc3.html#PetscMalloc3">PetscMalloc3</a>(Nk, &amp;u, Nk, &amp;starw, Nk, &amp;starstarw);
+<a name="line478">478: </a>        <a href="../../../../docs/manualpages/DT/PetscDTAltVStar.html#PetscDTAltVStar">PetscDTAltVStar</a>(N, k, 1, w, starw);
+<a name="line479">479: </a>        <a href="../../../../docs/manualpages/DT/PetscDTAltVStar.html#PetscDTAltVStar">PetscDTAltVStar</a>(N, N-k, 1, starw, starstarw);
+<a name="line480">480: </a>        <font color="#4169E1">if</font> (verbose) {
+<a name="line481">481: </a>          <a href="../../../../docs/manualpages/Viewer/PetscViewerASCIIPrintf.html#PetscViewerASCIIPrintf">PetscViewerASCIIPrintf</a>(viewer, <font color="#666666">"star w:\n"</font>);
+<a name="line482">482: </a>          <a href="../../../../docs/manualpages/Viewer/PetscViewerASCIIPushTab.html#PetscViewerASCIIPushTab">PetscViewerASCIIPushTab</a>(viewer);
+<a name="line483">483: </a>          <font color="#4169E1">if</font> (Nk) {<a href="../../../../docs/manualpages/Sys/PetscRealView.html#PetscRealView">PetscRealView</a>(Nk, starw, viewer);}
+<a name="line484">484: </a>          <a href="../../../../docs/manualpages/Viewer/PetscViewerASCIIPopTab.html#PetscViewerASCIIPopTab">PetscViewerASCIIPopTab</a>(viewer);
+
+<a name="line486">486: </a>          <a href="../../../../docs/manualpages/Viewer/PetscViewerASCIIPrintf.html#PetscViewerASCIIPrintf">PetscViewerASCIIPrintf</a>(viewer, <font color="#666666">"star star w:\n"</font>);
+<a name="line487">487: </a>          <a href="../../../../docs/manualpages/Viewer/PetscViewerASCIIPushTab.html#PetscViewerASCIIPushTab">PetscViewerASCIIPushTab</a>(viewer);
+<a name="line488">488: </a>          <font color="#4169E1">if</font> (Nk) {<a href="../../../../docs/manualpages/Sys/PetscRealView.html#PetscRealView">PetscRealView</a>(Nk, starstarw, viewer);}
+<a name="line489">489: </a>          <a href="../../../../docs/manualpages/Viewer/PetscViewerASCIIPopTab.html#PetscViewerASCIIPopTab">PetscViewerASCIIPopTab</a>(viewer);
+<a name="line490">490: </a>        }
+<a name="line491">491: </a>        <font color="#4169E1">for</font> (l = 0; l &lt; Nk; l++) {<a href="../../../../docs/manualpages/Sys/PetscRandomGetValueReal.html#PetscRandomGetValueReal">PetscRandomGetValueReal</a>(rand,&amp;u[l]);}
+<a name="line492">492: </a>        <a href="../../../../docs/manualpages/DT/PetscDTAltVWedge.html#PetscDTAltVWedge">PetscDTAltVWedge</a>(N, k, N - k, w, u, &amp;wu);
+<a name="line493">493: </a>        starwdotu = 0.;
+<a name="line494">494: </a>        <font color="#4169E1">for</font> (l = 0; l &lt; Nk; l++) starwdotu += starw[l] * u[l];
+<a name="line495">495: </a>        diff = <a href="../../../../docs/manualpages/Sys/PetscAbsReal.html#PetscAbsReal">PetscAbsReal</a>(wu - starwdotu);
+<a name="line496">496: </a>        <font color="#4169E1">if</font> (diff &gt; PETSC_SMALL * (<a href="../../../../docs/manualpages/Sys/PetscAbsReal.html#PetscAbsReal">PetscAbsReal</a>(wu) + <a href="../../../../docs/manualpages/Sys/PetscAbsReal.html#PetscAbsReal">PetscAbsReal</a>(starwdotu))) <a href="../../../../docs/manualpages/Sys/SETERRQ2.html#SETERRQ2">SETERRQ2</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>, PETSC_ERR_PLIB, <font color="#666666">"Hodge star check: (star w, u) (%g) != (w wedge u) (%g)"</font>, (double) starwdotu, (double) wu);
+
+<a name="line498">498: </a>        diff = 0.;
+<a name="line499">499: </a>        norm = 0.;
+<a name="line500">500: </a>        <font color="#4169E1">for</font> (l = 0; l &lt; Nk; l++) {
+<a name="line501">501: </a>          diff += <a href="../../../../docs/manualpages/Sys/PetscSqr.html#PetscSqr">PetscSqr</a>(w[l] - (isOdd ? -starstarw[l] : starstarw[l]));
+<a name="line502">502: </a>          norm += <a href="../../../../docs/manualpages/Sys/PetscSqr.html#PetscSqr">PetscSqr</a>(w[l]) + <a href="../../../../docs/manualpages/Sys/PetscSqr.html#PetscSqr">PetscSqr</a>(starstarw[l]);
+<a name="line503">503: </a>        }
+<a name="line504">504: </a>        diff = PetscSqrtReal(diff);
+<a name="line505">505: </a>        norm = PetscSqrtReal(norm);
+<a name="line506">506: </a>        <font color="#4169E1">if</font> (diff &gt; PETSC_SMALL * norm) <a href="../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>, PETSC_ERR_PLIB, <font color="#666666">"Hodge star check: star(star(w)) != (-1)^(N*(N-k)) w"</font>);
+<a name="line507">507: </a>        <a href="../../../../docs/manualpages/Sys/PetscFree3.html#PetscFree3">PetscFree3</a>(u, starw, starstarw);
+<a name="line508">508: </a>      }
+<a name="line509">509: </a>      <a href="../../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(v);
+<a name="line510">510: </a>      <a href="../../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(w);
+<a name="line511">511: </a>      <a href="../../../../docs/manualpages/Viewer/PetscViewerASCIIPopTab.html#PetscViewerASCIIPopTab">PetscViewerASCIIPopTab</a>(viewer);
+<a name="line512">512: </a>    }
+<a name="line513">513: </a>    <a href="../../../../docs/manualpages/Viewer/PetscViewerASCIIPopTab.html#PetscViewerASCIIPopTab">PetscViewerASCIIPopTab</a>(viewer);
+<a name="line514">514: </a>  }
+<a name="line515">515: </a>  <a href="../../../../docs/manualpages/Sys/PetscRandomDestroy.html#PetscRandomDestroy">PetscRandomDestroy</a>(&amp;rand);
+<a name="line516">516: </a>  <a href="../../../../docs/manualpages/Sys/PetscFinalize.html#PetscFinalize">PetscFinalize</a>();
+<a name="line517">517: </a>  <font color="#4169E1">return</font> ierr;
+<a name="line518">518: </a>}
+
+<a name="line520">520: </a><font color="#B22222">/*TEST</font>
+<a name="line521">521: </a><font color="#B22222">  test:</font>
+<a name="line522">522: </a><font color="#B22222">    suffix: 1234</font>
+<a name="line523">523: </a><font color="#B22222">    args: -verbose</font>
+<a name="line524">524: </a><font color="#B22222">  test:</font>
+<a name="line525">525: </a><font color="#B22222">    suffix: 56</font>
+<a name="line526">526: </a><font color="#B22222">    args: -N 5,6</font>
+<a name="line527">527: </a><font color="#B22222">TEST*/</font>
+</pre>
+</body>
+
+</html>

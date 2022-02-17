@@ -1,0 +1,56 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/PC/PCShellSetMatApply.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>PCShellSetMatApply</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/PC/PCShellSetMatApply.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="PCShellSetMatApply"><H1>PCShellSetMatApply</H1></A>
+Sets routine to use as preconditioner on a block of vectors. 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscpc.h" 
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A>  <A HREF="../PC/PCShellSetMatApply.html#PCShellSetMatApply">PCShellSetMatApply</A>(<A HREF="../PC/PC.html#PC">PC</A> pc,<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> (*matapply)(<A HREF="../PC/PC.html#PC">PC</A>,<A HREF="../Mat/Mat.html#Mat">Mat</A>,<A HREF="../Mat/Mat.html#Mat">Mat</A>))
+</PRE>
+Logically Collective on <A HREF="../PC/PC.html#PC">PC</A>
+<P>
+<H3><FONT COLOR="#CC3333">Input Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>pc </B></TD><TD>- the preconditioner context
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>apply </B></TD><TD>- the application-provided preconditioning routine
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Calling sequence of apply</FONT></H3>
+<PRE>
+   <A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> apply (<A HREF="../PC/PC.html#PC">PC</A> pc,<A HREF="../Mat/Mat.html#Mat">Mat</A> Xin,<A HREF="../Mat/Mat.html#Mat">Mat</A> Xout)
+</PRE>
+
+<P>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>pc </B></TD><TD>- the preconditioner, get the application context with <A HREF="../PC/PCShellGetContext.html#PCShellGetContext">PCShellGetContext</A>()
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>Xin </B></TD><TD>- input block of vectors
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>Xout </B></TD><TD>- output block of vectors
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Notes</FONT></H3>
+the function MUST return an error code of 0 on success and nonzero on failure.
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../PC/PCShellSetApply.html#PCShellSetApply">PCShellSetApply</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>developer<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/ksp/pc/impls/shell/shellpc.c.html#PCShellSetMatApply">src/ksp/pc/impls/shell/shellpc.c</A>
+<P><H3><FONT COLOR="#CC3333">Examples</FONT></H3>
+<A HREF="../../../src/ksp/ksp/tutorials/ex79.c.html">src/ksp/ksp/tutorials/ex79.c.html</A><BR>
+<P><H3><FONT COLOR="CC3333">Implementations</FONT></H3><A HREF="../../../src/ksp/pc/impls/shell/shellpc.c.html#PCShellSetMatApply_Shell(PC pc,PetscErrorCode (*matapply)">PCShellSetMatApply_Shell(PC pc,PetscErrorCode (*matapply) in src/ksp/pc/impls/shell/shellpc.c</A><BR>
+<BR><A HREF="./index.html">Index of all PC routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

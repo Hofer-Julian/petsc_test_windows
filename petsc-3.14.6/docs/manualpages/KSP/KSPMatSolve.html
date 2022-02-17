@@ -1,0 +1,51 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSPMatSolve.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>KSPMatSolve</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/KSP/KSPMatSolve.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="KSPMatSolve"><H1>KSPMatSolve</H1></A>
+Solves a linear system with multiple right-hand sides stored as a <A HREF="../Mat/MATDENSE.html#MATDENSE">MATDENSE</A>. Unlike <A HREF="../KSP/KSPSolve.html#KSPSolve">KSPSolve</A>(), B and X must be different matrices. 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscksp.h" 
+#include "petscmat.h" 
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../KSP/KSPMatSolve.html#KSPMatSolve">KSPMatSolve</A>(<A HREF="../KSP/KSP.html#KSP">KSP</A> ksp, <A HREF="../Mat/Mat.html#Mat">Mat</A> B, <A HREF="../Mat/Mat.html#Mat">Mat</A> X)
+</PRE>
+<H3><FONT COLOR="#CC3333">Input Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>ksp </B></TD><TD>- iterative context
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>B </B></TD><TD>- block of right-hand sides
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Output Parameter</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>X </B></TD><TD>- block of solutions
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Notes</FONT></H3>
+This is a stripped-down version of <A HREF="../KSP/KSPSolve.html#KSPSolve">KSPSolve</A>(), which only handles -ksp_view, -ksp_converged_reason, and -ksp_view_final_residual.
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+  <A HREF="../KSP/KSPSolve.html#KSPSolve">KSPSolve</A>(), <A HREF="../Mat/MatMatSolve.html#MatMatSolve">MatMatSolve</A>(), <A HREF="../Mat/MATDENSE.html#MATDENSE">MATDENSE</A>, <A HREF="../KSP/KSPHPDDM.html#KSPHPDDM">KSPHPDDM</A>, <A HREF="../PC/PCBJACOBI.html#PCBJACOBI">PCBJACOBI</A>, <A HREF="../PC/PCASM.html#PCASM">PCASM</A>
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>intermediate<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/ksp/ksp/interface/itfunc.c.html#KSPMatSolve">src/ksp/ksp/interface/itfunc.c</A>
+<P><H3><FONT COLOR="#CC3333">Examples</FONT></H3>
+<A HREF="../../../src/ksp/ksp/tutorials/ex76.c.html">src/ksp/ksp/tutorials/ex76.c.html</A><BR>
+<A HREF="../../../src/ksp/ksp/tutorials/ex77.c.html">src/ksp/ksp/tutorials/ex77.c.html</A><BR>
+<A HREF="../../../src/ksp/ksp/tutorials/ex79.c.html">src/ksp/ksp/tutorials/ex79.c.html</A><BR>
+<A HREF="../../../src/ksp/ksp/tutorials/ex76f.F90.html">src/ksp/ksp/tutorials/ex76f.F90.html</A><BR>
+<A HREF="../../../src/ksp/ksp/tutorials/ex77f.F90.html">src/ksp/ksp/tutorials/ex77f.F90.html</A><BR>
+<P><H3><FONT COLOR="CC3333">Implementations</FONT></H3><A HREF="../../../src/ksp/ksp/impls/hpddm/hpddm.cxx.html#KSPMatSolve_HPDDM">KSPMatSolve_HPDDM in src/ksp/ksp/impls/hpddm/hpddm.cxx</A><BR>
+<A HREF="../../../src/ksp/ksp/impls/preonly/preonly.c.html#KSPMatSolve_PREONLY">KSPMatSolve_PREONLY in src/ksp/ksp/impls/preonly/preonly.c</A><BR>
+<BR><A HREF="./index.html">Index of all KSP routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

@@ -1,0 +1,41 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DT/PetscDTAltVInteriorMatrix.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>PetscDTAltVInteriorMatrix</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/DT/PetscDTAltVInteriorMatrix.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="PetscDTAltVInteriorMatrix"><H1>PetscDTAltVInteriorMatrix</H1></A>
+Compute the matrix of the linear transformation induced on a k-form by the interior product with a vector 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscdt.h" 
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../DT/PetscDTAltVInteriorMatrix.html#PetscDTAltVInteriorMatrix">PetscDTAltVInteriorMatrix</A>(<A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> N, <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> k, const <A HREF="../Sys/PetscReal.html#PetscReal">PetscReal</A> *v, <A HREF="../Sys/PetscReal.html#PetscReal">PetscReal</A> *intvMat)
+</PRE>
+<H3><FONT COLOR="#CC3333">Input Arguments</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>N </B></TD><TD>- the dimension of the vector space, N &gt;= 0
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>k </B></TD><TD>- the degree k of the k-forms on which intvMat acts, 0 &lt;= k &lt;= N
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>v </B></TD><TD>- an N dimensional vector
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Output Arguments</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>intvMat </B></TD><TD>- an [(N choose (k-1)) x (N choose k)] matrix, row-major: (intvMat) * w = (w int v)
+</TD></TR></TABLE>
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../DT/PetscDTAltV.html#PetscDTAltV">PetscDTAltV</A>, <A HREF="../DT/PetscDTAltVInterior.html#PetscDTAltVInterior">PetscDTAltVInterior</A>(), <A HREF="../DT/PetscDTAltVInteriorPattern.html#PetscDTAltVInteriorPattern">PetscDTAltVInteriorPattern</A>(), <A HREF="../DT/PetscDTAltVPullback.html#PetscDTAltVPullback">PetscDTAltVPullback</A>(), <A HREF="../DT/PetscDTAltVPullbackMatrix.html#PetscDTAltVPullbackMatrix">PetscDTAltVPullbackMatrix</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>intermediate<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/dm/dt/interface/dtaltv.c.html#PetscDTAltVInteriorMatrix">src/dm/dt/interface/dtaltv.c</A>
+<BR><A HREF="./index.html">Index of all DT routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

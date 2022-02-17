@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+# This script was created by gmakegentest.py
+
+
+
+# PATH for DLLs on windows
+PATH="$PATH":"/cygdrive/c/checkouts/modflow/petsc-3.14.6/arch-mswin-c-opt/lib"
+
+exec='../ex19'
+testname='runex19_composite_fieldsplit'
+label='snes_tutorials-ex19_composite_fieldsplit'
+runfiles=''
+wPETSC_DIR='C:/checkouts/modflow/petsc-3.14.6'
+petsc_dir='/cygdrive/c/checkouts/modflow/petsc-3.14.6'
+petsc_arch='arch-mswin-c-opt'
+# Must be consistent with gmakefile.test
+testlogtapfile=/cygdrive/c/checkouts/modflow/petsc-3.14.6/arch-mswin-c-opt/tests/test_${petsc_arch}_tap.log
+testlogerrfile=/cygdrive/c/checkouts/modflow/petsc-3.14.6/arch-mswin-c-opt/tests/test_${petsc_arch}_err.log
+config_dir='/cygdrive/c/checkouts/modflow/petsc-3.14.6/config'
+filter=''
+filter_output=''
+petsc_bindir='/cygdrive/c/checkouts/modflow/petsc-3.14.6/lib/petsc/bin'
+DATAFILESPATH=${DATAFILESPATH:-""}
+args='-ksp_type fgmres -pc_type composite -pc_composite_type MULTIPLICATIVE -pc_composite_pcs fieldsplit,none -sub_0_pc_fieldsplit_block_size 4 -sub_0_pc_fieldsplit_type additive -sub_0_pc_fieldsplit_0_fields 0,1,2 -sub_0_pc_fieldsplit_1_fields 3 -snes_monitor_short -ksp_monitor_short'
+diff_args=''
+timeoutfactor=1
+
+mpiexec=${PETSCMPIEXEC:-"/cygdrive/c/Progra~2/Intel/oneAPI/mpi/latest/bin/mpiexec"}
+diffexec=${PETSCDIFF:-"${petsc_bindir}/petscdiff"}
+
+. "${config_dir}/petsc_harness.sh"
+
+# The diff flags come from script arguments
+diff_exe="${diffexec} ${diff_flags} ${diff_args}"
+mpiexec="${mpiexec} ${mpiexec_flags}"
+
+
+
+
+
+nsize_in=${nsize:-1}
+
+
+for insize in ${nsize_in}; do
+
+   petsc_testrun "${mpiexec} -n ${insize} ${exec} ${args} " ex19_composite_fieldsplit.tmp ${testname}.err "${label}" 
+   res=$?
+
+   if test $res = 0; then
+      petsc_testrun "${diff_exe} /cygdrive/c/checkouts/modflow/petsc-3.14.6/src/snes/tutorials/output/ex19_composite_fieldsplit.out ex19_composite_fieldsplit.tmp" diff-${testname}.out diff-${testname}.out diff-${label} ""
+   else
+      petsc_report_tapoutput "" ${label} "SKIP Command failed so no diff"
+   fi
+
+done
+
+petsc_testend "/cygdrive/c/checkouts/modflow/petsc-3.14.6/arch-mswin-c-opt/tests" 

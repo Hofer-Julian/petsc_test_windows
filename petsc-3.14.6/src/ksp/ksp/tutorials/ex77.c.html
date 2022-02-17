@@ -1,0 +1,251 @@
+<center><a href="ex77.c">Actual source code: ex77.c</a></center><br>
+
+<html>
+<head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/src/ksp/ksp/tutorials/ex77.c.html" />
+<title></title>
+<meta name="generator" content="c2html 0.9.4">
+<meta name="date" content="2021-03-30T16:51:31+00:00">
+</head>
+
+<body bgcolor="#FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 src/ksp/ksp/tutorials/ex77.c.html "><small>Report Typos and Errors</small></a></div>
+<pre width="80">
+<a name="line1">  1: </a>#include <A href="../../../../include/petsc.h.html">&lt;petsc.h&gt;</A>
+
+<a name="line3">  3: </a>static char help[] = <font color="#666666">"Solves a linear system with a block of right-hand sides using <a href="../../../../docs/manualpages/KSP/KSPHPDDM.html#KSPHPDDM">KSPHPDDM</a>.\n\n"</font>;
+
+<a name="line5">  5: </a><strong><font color="#4169E1"><a name="main"></a>int main(int argc,char **args)</font></strong>
+<a name="line6">  6: </a>{
+<a name="line7">  7: </a>  <a href="../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a>                X,B;         <font color="#B22222">/* computed solutions and RHS */</font>
+<a name="line8">  8: </a>  <a href="../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a>                cx,cb;       <font color="#B22222">/* columns of X and B */</font>
+<a name="line9">  9: </a>  <a href="../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a>                A,KA = NULL; <font color="#B22222">/* linear system matrix */</font>
+<a name="line10"> 10: </a>  <a href="../../../../docs/manualpages/KSP/KSP.html#KSP">KSP</a>                ksp;         <font color="#B22222">/* linear solver context */</font>
+<a name="line11"> 11: </a>  <a href="../../../../docs/manualpages/PC/PC.html#PC">PC</a>                 pc;          <font color="#B22222">/* preconditioner context */</font>
+<a name="line12"> 12: </a>  <a href="../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a>                F;           <font color="#B22222">/* factored matrix from the preconditioner context */</font>
+<a name="line13"> 13: </a>  <a href="../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>        *x,*S = NULL,*T = NULL;
+<a name="line14"> 14: </a>  <a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>          norm,deflation = -1.0;
+<a name="line15"> 15: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>           m,M,N = 5,i;
+<a name="line16"> 16: </a>  <a href="../../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a>        rank,size;
+<a name="line17"> 17: </a>  const char         *deft = <a href="../../../../docs/manualpages/Mat/MATAIJ.html#MATAIJ">MATAIJ</a>;
+<a name="line18"> 18: </a>  <a href="../../../../docs/manualpages/Viewer/PetscViewer.html#PetscViewer">PetscViewer</a>        viewer;
+<a name="line19"> 19: </a>  char               name[PETSC_MAX_PATH_LEN],type[256];
+<a name="line20"> 20: </a>  <a href="../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>          breakdown = <a href="../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>,flg;
+<a name="line21"> 21: </a>  <a href="../../../../docs/manualpages/KSP/KSPConvergedReason.html#KSPConvergedReason">KSPConvergedReason</a> reason;
+<a name="line22"> 22: </a>  <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>     ierr;
+
+<a name="line24"> 24: </a>  <a href="../../../../docs/manualpages/Sys/PetscInitialize.html#PetscInitialize">PetscInitialize</a>(&amp;argc,&amp;args,NULL,help);<font color="#4169E1">if</font> (ierr) <font color="#4169E1">return</font> ierr;
+<a name="line25"> 25: </a>  <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_rank.html#MPI_Comm_rank">MPI_Comm_rank</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,&amp;rank);
+<a name="line26"> 26: </a>  <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_size.html#MPI_Comm_size">MPI_Comm_size</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,&amp;size);
+<a name="line27"> 27: </a>  <a href="../../../../docs/manualpages/Sys/PetscOptionsGetString.html#PetscOptionsGetString">PetscOptionsGetString</a>(NULL,NULL,<font color="#666666">"-f"</font>,name,<font color="#4169E1">sizeof</font>(name),&amp;flg);
+<a name="line28"> 28: </a>  <font color="#4169E1">if</font> (!flg) <a href="../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,PETSC_ERR_SUP,<font color="#666666">"Must provide a binary file for the matrix"</font>);
+<a name="line29"> 29: </a>  <a href="../../../../docs/manualpages/Sys/PetscOptionsGetInt.html#PetscOptionsGetInt">PetscOptionsGetInt</a>(NULL,NULL,<font color="#666666">"-N"</font>,&amp;N,NULL);
+<a name="line30"> 30: </a>  <a href="../../../../docs/manualpages/Sys/PetscOptionsGetBool.html#PetscOptionsGetBool">PetscOptionsGetBool</a>(NULL,NULL,<font color="#666666">"-breakdown"</font>,&amp;breakdown,NULL);
+<a name="line31"> 31: </a>  <a href="../../../../docs/manualpages/Sys/PetscOptionsGetReal.html#PetscOptionsGetReal">PetscOptionsGetReal</a>(NULL,NULL,<font color="#666666">"-ksp_hpddm_deflation_tol"</font>,&amp;deflation,NULL);
+<a name="line32"> 32: </a>  <a href="../../../../docs/manualpages/Mat/MatCreate.html#MatCreate">MatCreate</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,&amp;A);
+<a name="line33"> 33: </a>  <a href="../../../../docs/manualpages/KSP/KSPCreate.html#KSPCreate">KSPCreate</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,&amp;ksp);
+<a name="line34"> 34: </a>  <a href="../../../../docs/manualpages/KSP/KSPSetOperators.html#KSPSetOperators">KSPSetOperators</a>(ksp,A,A);
+<a name="line35"> 35: </a>  <a href="../../../../docs/manualpages/Viewer/PetscViewerBinaryOpen.html#PetscViewerBinaryOpen">PetscViewerBinaryOpen</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,name,<a href="../../../../docs/manualpages/Sys/PetscFileMode.html#PetscFileMode">FILE_MODE_READ</a>,&amp;viewer);
+<a name="line36"> 36: </a>  <a href="../../../../docs/manualpages/Mat/MatLoad.html#MatLoad">MatLoad</a>(A,viewer);
+<a name="line37"> 37: </a>  <a href="../../../../docs/manualpages/Viewer/PetscViewerDestroy.html#PetscViewerDestroy">PetscViewerDestroy</a>(&amp;viewer);
+<a name="line38"> 38: </a>  <a href="../../../../docs/manualpages/Sys/PetscOptionsBegin.html#PetscOptionsBegin">PetscOptionsBegin</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,<font color="#666666">""</font>,<font color="#666666">""</font>,<font color="#666666">""</font>);
+<a name="line39"> 39: </a>  <a href="../../../../docs/manualpages/Sys/PetscOptionsFList.html#PetscOptionsFList">PetscOptionsFList</a>(<font color="#666666">"-mat_type"</font>,<font color="#666666">"Matrix type"</font>,<font color="#666666">"<a href="../../../../docs/manualpages/Mat/MatSetType.html#MatSetType">MatSetType</a>"</font>,MatList,deft,type,256,&amp;flg);
+<a name="line40"> 40: </a>  <a href="../../../../docs/manualpages/Sys/PetscOptionsEnd.html#PetscOptionsEnd">PetscOptionsEnd</a>();
+<a name="line41"> 41: </a>  <font color="#4169E1">if</font> (flg) {
+<a name="line42"> 42: </a>    <a href="../../../../docs/manualpages/Sys/PetscStrcmp.html#PetscStrcmp">PetscStrcmp</a>(type,<a href="../../../../docs/manualpages/Mat/MATKAIJ.html#MATKAIJ">MATKAIJ</a>,&amp;flg);
+<a name="line43"> 43: </a>    <font color="#4169E1">if</font> (!flg) {
+<a name="line44"> 44: </a>      <a href="../../../../docs/manualpages/Mat/MatSetOption.html#MatSetOption">MatSetOption</a>(A,<a href="../../../../docs/manualpages/Mat/MatOption.html#MatOption">MAT_SYMMETRIC</a>,<a href="../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>);
+<a name="line45"> 45: </a>      <a href="../../../../docs/manualpages/Mat/MatConvert.html#MatConvert">MatConvert</a>(A,type,<a href="../../../../docs/manualpages/Mat/MatReuse.html#MatReuse">MAT_INPLACE_MATRIX</a>,&amp;A);
+<a name="line46"> 46: </a>    } <font color="#4169E1">else</font> {
+<a name="line47"> 47: </a>      <font color="#4169E1">if</font> (size &gt; 2) {
+<a name="line48"> 48: </a>        <a href="../../../../docs/manualpages/Mat/MatGetSize.html#MatGetSize">MatGetSize</a>(A,&amp;M,NULL);
+<a name="line49"> 49: </a>        <a href="../../../../docs/manualpages/Mat/MatCreate.html#MatCreate">MatCreate</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,&amp;B);
+<a name="line50"> 50: </a>        <font color="#4169E1">if</font> (rank &gt; 1) {
+<a name="line51"> 51: </a>          <a href="../../../../docs/manualpages/Mat/MatSetSizes.html#MatSetSizes">MatSetSizes</a>(B,0,0,M,M);
+<a name="line52"> 52: </a>        } <font color="#4169E1">else</font> {
+<a name="line53"> 53: </a>          <a href="../../../../docs/manualpages/Mat/MatSetSizes.html#MatSetSizes">MatSetSizes</a>(B,rank?M-M/2:M/2,rank?M-M/2:M/2,M,M);
+<a name="line54"> 54: </a>        }
+<a name="line55"> 55: </a>        <a href="../../../../docs/manualpages/Viewer/PetscViewerBinaryOpen.html#PetscViewerBinaryOpen">PetscViewerBinaryOpen</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,name,<a href="../../../../docs/manualpages/Sys/PetscFileMode.html#PetscFileMode">FILE_MODE_READ</a>,&amp;viewer);
+<a name="line56"> 56: </a>        <a href="../../../../docs/manualpages/Mat/MatLoad.html#MatLoad">MatLoad</a>(B,viewer);
+<a name="line57"> 57: </a>        <a href="../../../../docs/manualpages/Viewer/PetscViewerDestroy.html#PetscViewerDestroy">PetscViewerDestroy</a>(&amp;viewer);
+<a name="line58"> 58: </a>        MatHeaderReplace(A,&amp;B);
+<a name="line59"> 59: </a>      }
+<a name="line60"> 60: </a>      <a href="../../../../docs/manualpages/Sys/PetscCalloc2.html#PetscCalloc2">PetscCalloc2</a>(N*N,&amp;S,N*N,&amp;T);
+<a name="line61"> 61: </a>      <font color="#4169E1">for</font> (i=0; i&lt;N; i++) { <font color="#B22222">/* really easy problem used for testing */</font>
+<a name="line62"> 62: </a>        S[i*(N+1)] = 1e+6;
+<a name="line63"> 63: </a>        T[i*(N+1)] = 1e-2;
+<a name="line64"> 64: </a>      }
+<a name="line65"> 65: </a>      <a href="../../../../docs/manualpages/Mat/MatCreateKAIJ.html#MatCreateKAIJ">MatCreateKAIJ</a>(A,N,N,S,T,&amp;KA);
+<a name="line66"> 66: </a>    }
+<a name="line67"> 67: </a>  }
+<a name="line68"> 68: </a>  <font color="#4169E1">if</font> (!flg) {
+<a name="line69"> 69: </a>    <font color="#4169E1">if</font> (size &gt; 4) {
+<a name="line70"> 70: </a>      <a href="../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> B;
+<a name="line71"> 71: </a>      <a href="../../../../docs/manualpages/Mat/MatGetSize.html#MatGetSize">MatGetSize</a>(A,&amp;M,NULL);
+<a name="line72"> 72: </a>      <a href="../../../../docs/manualpages/Mat/MatCreate.html#MatCreate">MatCreate</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,&amp;B);
+<a name="line73"> 73: </a>      <font color="#4169E1">if</font> (rank &gt; 3) {
+<a name="line74"> 74: </a>        <a href="../../../../docs/manualpages/Mat/MatSetSizes.html#MatSetSizes">MatSetSizes</a>(B,0,0,M,M);
+<a name="line75"> 75: </a>      } <font color="#4169E1">else</font> {
+<a name="line76"> 76: </a>        <a href="../../../../docs/manualpages/Mat/MatSetSizes.html#MatSetSizes">MatSetSizes</a>(B,!rank?M-3*(M/4):M/4,!rank?M-3*(M/4):M/4,M,M);
+<a name="line77"> 77: </a>      }
+<a name="line78"> 78: </a>      <a href="../../../../docs/manualpages/Viewer/PetscViewerBinaryOpen.html#PetscViewerBinaryOpen">PetscViewerBinaryOpen</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,name,<a href="../../../../docs/manualpages/Sys/PetscFileMode.html#PetscFileMode">FILE_MODE_READ</a>,&amp;viewer);
+<a name="line79"> 79: </a>      <a href="../../../../docs/manualpages/Mat/MatLoad.html#MatLoad">MatLoad</a>(B,viewer);
+<a name="line80"> 80: </a>      <a href="../../../../docs/manualpages/Viewer/PetscViewerDestroy.html#PetscViewerDestroy">PetscViewerDestroy</a>(&amp;viewer);
+<a name="line81"> 81: </a>      MatHeaderReplace(A,&amp;B);
+<a name="line82"> 82: </a>    }
+<a name="line83"> 83: </a>  }
+<a name="line84"> 84: </a>  <a href="../../../../docs/manualpages/Mat/MatGetLocalSize.html#MatGetLocalSize">MatGetLocalSize</a>(A,&amp;m,NULL);
+<a name="line85"> 85: </a>  <a href="../../../../docs/manualpages/Mat/MatCreateDense.html#MatCreateDense">MatCreateDense</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,m,<a href="../../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a>,<a href="../../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a>,N,NULL,&amp;B);
+<a name="line86"> 86: </a>  <a href="../../../../docs/manualpages/Mat/MatCreateDense.html#MatCreateDense">MatCreateDense</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,m,<a href="../../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a>,<a href="../../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a>,N,NULL,&amp;X);
+<a name="line87"> 87: </a>  <font color="#4169E1">if</font> (!breakdown) {
+<a name="line88"> 88: </a>    <a href="../../../../docs/manualpages/Mat/MatSetRandom.html#MatSetRandom">MatSetRandom</a>(B,NULL);
+<a name="line89"> 89: </a>  }
+<a name="line90"> 90: </a>  <a href="../../../../docs/manualpages/KSP/KSPSetFromOptions.html#KSPSetFromOptions">KSPSetFromOptions</a>(ksp);
+<a name="line91"> 91: </a>  <font color="#4169E1">if</font> (!flg) {
+<a name="line92"> 92: </a>    <font color="#4169E1">if</font> (!breakdown) {
+<a name="line93"> 93: </a>      <a href="../../../../docs/manualpages/KSP/KSPMatSolve.html#KSPMatSolve">KSPMatSolve</a>(ksp,B,X);
+<a name="line94"> 94: </a>      <a href="../../../../docs/manualpages/KSP/KSPGetMatSolveBlockSize.html#KSPGetMatSolveBlockSize">KSPGetMatSolveBlockSize</a>(ksp,&amp;M);
+<a name="line95"> 95: </a>      <font color="#4169E1">if</font> (M != <a href="../../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a>) {
+<a name="line96"> 96: </a>        <a href="../../../../docs/manualpages/KSP/KSPSetMatSolveBlockSize.html#KSPSetMatSolveBlockSize">KSPSetMatSolveBlockSize</a>(ksp,<a href="../../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a>);
+<a name="line97"> 97: </a>        <a href="../../../../docs/manualpages/Mat/MatZeroEntries.html#MatZeroEntries">MatZeroEntries</a>(X);
+<a name="line98"> 98: </a>        <a href="../../../../docs/manualpages/KSP/KSPMatSolve.html#KSPMatSolve">KSPMatSolve</a>(ksp,B,X);
+<a name="line99"> 99: </a>      }
+<a name="line100">100: </a>      <a href="../../../../docs/manualpages/KSP/KSPGetPC.html#KSPGetPC">KSPGetPC</a>(ksp,&amp;pc);
+<a name="line101">101: </a>      <a href="../../../../docs/manualpages/Sys/PetscObjectTypeCompare.html#PetscObjectTypeCompare">PetscObjectTypeCompare</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)pc,<a href="../../../../docs/manualpages/PC/PCLU.html#PCLU">PCLU</a>,&amp;flg);
+<a name="line102">102: </a>      <font color="#4169E1">if</font> (flg) {
+<a name="line103">103: </a>        <a href="../../../../docs/manualpages/PC/PCFactorGetMatrix.html#PCFactorGetMatrix">PCFactorGetMatrix</a>(pc,&amp;F);
+<a name="line104">104: </a>        <a href="../../../../docs/manualpages/Mat/MatMatSolve.html#MatMatSolve">MatMatSolve</a>(F,B,B);
+<a name="line105">105: </a>        <a href="../../../../docs/manualpages/Mat/MatAYPX.html#MatAYPX">MatAYPX</a>(B,-1.0,X,<a href="../../../../docs/manualpages/Mat/MatStructure.html#MatStructure">SAME_NONZERO_PATTERN</a>);
+<a name="line106">106: </a>        <a href="../../../../docs/manualpages/Mat/MatNorm.html#MatNorm">MatNorm</a>(B,<a href="../../../../docs/manualpages/Vec/NORM_INFINITY.html#NORM_INFINITY">NORM_INFINITY</a>,&amp;norm);
+<a name="line107">107: </a>        <font color="#4169E1">if</font> (norm &gt; 100*PETSC_MACHINE_EPSILON) <a href="../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)ksp),PETSC_ERR_PLIB,<font color="#666666">"<a href="../../../../docs/manualpages/KSP/KSPMatSolve.html#KSPMatSolve">KSPMatSolve</a>() and <a href="../../../../docs/manualpages/Mat/MatMatSolve.html#MatMatSolve">MatMatSolve</a>() difference has nonzero norm %g"</font>,(double)norm);
+<a name="line108">108: </a>      }
+<a name="line109">109: </a>    } <font color="#4169E1">else</font> {
+<a name="line110">110: </a>      <a href="../../../../docs/manualpages/Mat/MatZeroEntries.html#MatZeroEntries">MatZeroEntries</a>(B);
+<a name="line111">111: </a>      <a href="../../../../docs/manualpages/KSP/KSPMatSolve.html#KSPMatSolve">KSPMatSolve</a>(ksp,B,X);
+<a name="line112">112: </a>      <a href="../../../../docs/manualpages/KSP/KSPGetConvergedReason.html#KSPGetConvergedReason">KSPGetConvergedReason</a>(ksp,&amp;reason);
+<a name="line113">113: </a>      <font color="#4169E1">if</font> (reason != <a href="../../../../docs/manualpages/KSP/KSPConvergedReason.html#KSPConvergedReason">KSP_CONVERGED_HAPPY_BREAKDOWN</a>) <a href="../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)ksp),PETSC_ERR_PLIB,<font color="#666666">"<a href="../../../../docs/manualpages/KSP/KSPConvergedReason.html#KSPConvergedReason">KSPConvergedReason</a>() %s != <a href="../../../../docs/manualpages/KSP/KSPConvergedReason.html#KSPConvergedReason">KSP_CONVERGED_HAPPY_BREAKDOWN</a>"</font>,KSPConvergedReasons[reason]);
+<a name="line114">114: </a>      <a href="../../../../docs/manualpages/Mat/MatDenseGetArrayWrite.html#MatDenseGetArrayWrite">MatDenseGetArrayWrite</a>(B,&amp;x);
+<a name="line115">115: </a>      <font color="#4169E1">for</font> (i=0; i&lt;m*N; ++i) x[i] = 1.0;
+<a name="line116">116: </a>      <a href="../../../../docs/manualpages/Mat/MatDenseRestoreArrayWrite.html#MatDenseRestoreArrayWrite">MatDenseRestoreArrayWrite</a>(B,&amp;x);
+<a name="line117">117: </a>      <a href="../../../../docs/manualpages/KSP/KSPMatSolve.html#KSPMatSolve">KSPMatSolve</a>(ksp,B,X);
+<a name="line118">118: </a>      <a href="../../../../docs/manualpages/KSP/KSPGetConvergedReason.html#KSPGetConvergedReason">KSPGetConvergedReason</a>(ksp,&amp;reason);
+<a name="line119">119: </a>      <font color="#4169E1">if</font> (reason != <a href="../../../../docs/manualpages/KSP/KSP_DIVERGED_BREAKDOWN.html#KSP_DIVERGED_BREAKDOWN">KSP_DIVERGED_BREAKDOWN</a> &amp;&amp; deflation &lt; 0.0) <a href="../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)ksp),PETSC_ERR_PLIB,<font color="#666666">"<a href="../../../../docs/manualpages/KSP/KSPConvergedReason.html#KSPConvergedReason">KSPConvergedReason</a>() %s != <a href="../../../../docs/manualpages/KSP/KSP_DIVERGED_BREAKDOWN.html#KSP_DIVERGED_BREAKDOWN">KSP_DIVERGED_BREAKDOWN</a>"</font>,KSPConvergedReasons[reason]);
+<a name="line120">120: </a>    }
+<a name="line121">121: </a>  } <font color="#4169E1">else</font> {
+<a name="line122">122: </a>    <a href="../../../../docs/manualpages/KSP/KSPSetOperators.html#KSPSetOperators">KSPSetOperators</a>(ksp,KA,KA);
+<a name="line123">123: </a>    <a href="../../../../docs/manualpages/Mat/MatGetSize.html#MatGetSize">MatGetSize</a>(KA,&amp;M,NULL);
+<a name="line124">124: </a>    <a href="../../../../docs/manualpages/Vec/VecCreateMPI.html#VecCreateMPI">VecCreateMPI</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,m*N,M,&amp;cb);
+<a name="line125">125: </a>    <a href="../../../../docs/manualpages/Vec/VecCreateMPI.html#VecCreateMPI">VecCreateMPI</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,m*N,M,&amp;cx);
+<a name="line126">126: </a>    <a href="../../../../docs/manualpages/Vec/VecSetRandom.html#VecSetRandom">VecSetRandom</a>(cb,NULL);
+<a name="line127">127: </a>    <font color="#B22222">/* solving with MatKAIJ is equivalent to block solving with row-major RHS and solutions */</font>
+<a name="line128">128: </a>    <font color="#B22222">/* only applies if <a href="../../../../docs/manualpages/Mat/MatKAIJGetScaledIdentity.html#MatKAIJGetScaledIdentity">MatKAIJGetScaledIdentity</a>() returns true                              */</font>
+<a name="line129">129: </a>    <a href="../../../../docs/manualpages/KSP/KSPSolve.html#KSPSolve">KSPSolve</a>(ksp,cb,cx);
+<a name="line130">130: </a>    <a href="../../../../docs/manualpages/Vec/VecDestroy.html#VecDestroy">VecDestroy</a>(&amp;cx);
+<a name="line131">131: </a>    <a href="../../../../docs/manualpages/Vec/VecDestroy.html#VecDestroy">VecDestroy</a>(&amp;cb);
+<a name="line132">132: </a>  }
+<a name="line133">133: </a>  <a href="../../../../docs/manualpages/Mat/MatDestroy.html#MatDestroy">MatDestroy</a>(&amp;X);
+<a name="line134">134: </a>  <a href="../../../../docs/manualpages/Mat/MatDestroy.html#MatDestroy">MatDestroy</a>(&amp;B);
+<a name="line135">135: </a>  <a href="../../../../docs/manualpages/Sys/PetscFree2.html#PetscFree2">PetscFree2</a>(S,T);
+<a name="line136">136: </a>  <a href="../../../../docs/manualpages/Mat/MatDestroy.html#MatDestroy">MatDestroy</a>(&amp;KA);
+<a name="line137">137: </a>  <a href="../../../../docs/manualpages/Mat/MatDestroy.html#MatDestroy">MatDestroy</a>(&amp;A);
+<a name="line138">138: </a>  <a href="../../../../docs/manualpages/KSP/KSPDestroy.html#KSPDestroy">KSPDestroy</a>(&amp;ksp);
+<a name="line139">139: </a>  <a href="../../../../docs/manualpages/Sys/PetscFinalize.html#PetscFinalize">PetscFinalize</a>();
+<a name="line140">140: </a>  <font color="#4169E1">return</font> ierr;
+<a name="line141">141: </a>}
+
+<a name="line143">143: </a><font color="#B22222">/*TEST</font>
+
+<a name="line145">145: </a><font color="#B22222">   testset:</font>
+<a name="line146">146: </a><font color="#B22222">      nsize: 2</font>
+<a name="line147">147: </a><font color="#B22222">      requires: datafilespath double !complex !define(PETSC_USE_64BIT_INDICES)</font>
+<a name="line148">148: </a><font color="#B22222">      args: -ksp_converged_reason -ksp_max_it 500 -f ${DATAFILESPATH}/matrices/hpddm/GCRODR/A_400.dat -mat_type {{aij sbaij}shared output}</font>
+<a name="line149">149: </a><font color="#B22222">      test:</font>
+<a name="line150">150: </a><font color="#B22222">         suffix: 1</font>
+<a name="line151">151: </a><font color="#B22222">         args:</font>
+<a name="line152">152: </a><font color="#B22222">      test:</font>
+<a name="line153">153: </a><font color="#B22222">         suffix: 2</font>
+<a name="line154">154: </a><font color="#B22222">         requires: hpddm</font>
+<a name="line155">155: </a><font color="#B22222">         args: -ksp_type hpddm -pc_type asm -ksp_hpddm_type {{gmres bgmres}separate output}</font>
+<a name="line156">156: </a><font color="#B22222">      test:</font>
+<a name="line157">157: </a><font color="#B22222">         suffix: 3</font>
+<a name="line158">158: </a><font color="#B22222">         requires: hpddm</font>
+<a name="line159">159: </a><font color="#B22222">         args: -ksp_type hpddm -ksp_hpddm_recycle 5 -ksp_hpddm_type {{gcrodr bgcrodr}separate output}</font>
+<a name="line160">160: </a><font color="#B22222">      test:</font>
+<a name="line161">161: </a><font color="#B22222">         nsize: 4</font>
+<a name="line162">162: </a><font color="#B22222">         suffix: 4</font>
+<a name="line163">163: </a><font color="#B22222">         requires: hpddm</font>
+<a name="line164">164: </a><font color="#B22222">         args: -ksp_rtol 1e-4 -ksp_type hpddm -ksp_hpddm_recycle 5 -ksp_hpddm_type bgcrodr -ksp_view_final_residual -N 12 -ksp_matsolve_block_size 5</font>
+
+<a name="line166">166: </a><font color="#B22222">   test:</font>
+<a name="line167">167: </a><font color="#B22222">      nsize: 1</font>
+<a name="line168">168: </a><font color="#B22222">      requires: hpddm datafilespath double !complex !define(PETSC_USE_64BIT_INDICES)</font>
+<a name="line169">169: </a><font color="#B22222">      suffix: preonly</font>
+<a name="line170">170: </a><font color="#B22222">      args: -N 6 -f ${DATAFILESPATH}/matrices/hpddm/GCRODR/A_400.dat -pc_type lu -ksp_type hpddm -ksp_hpddm_type preonly</font>
+
+<a name="line172">172: </a><font color="#B22222">   testset:</font>
+<a name="line173">173: </a><font color="#B22222">      nsize: 1</font>
+<a name="line174">174: </a><font color="#B22222">      requires: hpddm datafilespath double !complex !define(PETSC_USE_64BIT_INDICES)</font>
+<a name="line175">175: </a><font color="#B22222">      args: -N 3 -f ${DATAFILESPATH}/matrices/hpddm/GCRODR/A_400.dat -ksp_type hpddm -breakdown</font>
+<a name="line176">176: </a><font color="#B22222">      test:</font>
+<a name="line177">177: </a><font color="#B22222">         suffix: breakdown_wo_deflation</font>
+<a name="line178">178: </a><font color="#B22222">         output_file: output/ex77_preonly.out</font>
+<a name="line179">179: </a><font color="#B22222">         args: -pc_type none -ksp_hpddm_type {{bcg bgmres bgcrodr bfbcg}shared output}</font>
+<a name="line180">180: </a><font color="#B22222">      test:</font>
+<a name="line181">181: </a><font color="#B22222">         suffix: breakdown_w_deflation</font>
+<a name="line182">182: </a><font color="#B22222">         output_file: output/ex77_deflation.out</font>
+<a name="line183">183: </a><font color="#B22222">         filter: sed "s/BGCRODR/BGMRES/g"</font>
+<a name="line184">184: </a><font color="#B22222">         args: -pc_type lu -ksp_hpddm_type {{bgmres bgcrodr}shared output} -ksp_hpddm_deflation_tol 1e-1 -info :ksp</font>
+
+<a name="line186">186: </a><font color="#B22222">   test:</font>
+<a name="line187">187: </a><font color="#B22222">      nsize: 2</font>
+<a name="line188">188: </a><font color="#B22222">      requires: hpddm datafilespath double !complex !define(PETSC_USE_64BIT_INDICES)</font>
+<a name="line189">189: </a><font color="#B22222">      args: -N 12 -ksp_converged_reason -ksp_max_it 500 -f ${DATAFILESPATH}/matrices/hpddm/GCRODR/A_400.dat -mat_type kaij -pc_type pbjacobi -ksp_type hpddm -ksp_hpddm_type {{gmres bgmres}separate output}</font>
+
+<a name="line191">191: </a><font color="#B22222">   test:</font>
+<a name="line192">192: </a><font color="#B22222">      nsize: 3</font>
+<a name="line193">193: </a><font color="#B22222">      requires: hpddm datafilespath double !complex !define(PETSC_USE_64BIT_INDICES)</font>
+<a name="line194">194: </a><font color="#B22222">      suffix: kaij_zero</font>
+<a name="line195">195: </a><font color="#B22222">      output_file: output/ex77_ksp_hpddm_type-bgmres.out</font>
+<a name="line196">196: </a><font color="#B22222">      args: -N 12 -ksp_converged_reason -ksp_max_it 500 -f ${DATAFILESPATH}/matrices/hpddm/GCRODR/A_400.dat -mat_type kaij -pc_type pbjacobi -ksp_type hpddm -ksp_hpddm_type bgmres</font>
+
+<a name="line198">198: </a><font color="#B22222">   test:</font>
+<a name="line199">199: </a><font color="#B22222">      nsize: 4</font>
+<a name="line200">200: </a><font color="#B22222">      requires: hpddm datafilespath double !complex !define(PETSC_USE_64BIT_INDICES) slepc</font>
+<a name="line201">201: </a><font color="#B22222">      suffix: 4_slepc</font>
+<a name="line202">202: </a><font color="#B22222">      output_file: output/ex77_4.out</font>
+<a name="line203">203: </a><font color="#B22222">      filter: sed "/^ksp_hpddm_recycle_ Linear eigensolve converged/d"</font>
+<a name="line204">204: </a><font color="#B22222">      args: -ksp_converged_reason -ksp_max_it 500 -f ${DATAFILESPATH}/matrices/hpddm/GCRODR/A_400.dat -ksp_rtol 1e-4 -ksp_type hpddm -ksp_hpddm_recycle 5 -ksp_hpddm_type bgcrodr -ksp_view_final_residual -N 12 -ksp_matsolve_block_size 5 -ksp_hpddm_recycle_redistribute 2 -ksp_hpddm_recycle_mat_type {{aij dense}shared output} -ksp_hpddm_recycle_eps_converged_reason -ksp_hpddm_recycle_st_pc_type redundant</font>
+
+<a name="line206">206: </a><font color="#B22222">   testset:</font>
+<a name="line207">207: </a><font color="#B22222">      nsize: 4</font>
+<a name="line208">208: </a><font color="#B22222">      requires: hpddm datafilespath double !complex !define(PETSC_USE_64BIT_INDICES) slepc</font>
+<a name="line209">209: </a><font color="#B22222">      filter: sed "/^ksp_hpddm_recycle_ Linear eigensolve converged/d"</font>
+<a name="line210">210: </a><font color="#B22222">      args: -ksp_converged_reason -ksp_max_it 500 -f ${DATAFILESPATH}/matrices/hpddm/GCRODR/A_400.dat -ksp_rtol 1e-4 -ksp_type hpddm -ksp_hpddm_recycle 5 -ksp_hpddm_type bgcrodr -ksp_view_final_residual -N 12 -ksp_matsolve_block_size 5 -ksp_hpddm_recycle_redistribute 2 -ksp_hpddm_recycle_eps_converged_reason</font>
+<a name="line211">211: </a><font color="#B22222">      test:</font>
+<a name="line212">212: </a><font color="#B22222">         requires: elemental</font>
+<a name="line213">213: </a><font color="#B22222">         suffix: 4_elemental</font>
+<a name="line214">214: </a><font color="#B22222">         output_file: output/ex77_4.out</font>
+<a name="line215">215: </a><font color="#B22222">         args: -ksp_hpddm_recycle_mat_type elemental</font>
+<a name="line216">216: </a><font color="#B22222">      test:</font>
+<a name="line217">217: </a><font color="#B22222">         requires: elemental</font>
+<a name="line218">218: </a><font color="#B22222">         suffix: 4_elemental_matmat</font>
+<a name="line219">219: </a><font color="#B22222">         output_file: output/ex77_4.out</font>
+<a name="line220">220: </a><font color="#B22222">         args: -ksp_hpddm_recycle_mat_type elemental -ksp_hpddm_recycle_eps_type subspace -ksp_hpddm_recycle_eps_target 0 -ksp_hpddm_recycle_eps_target_magnitude -ksp_hpddm_recycle_st_type sinvert -ksp_hpddm_recycle_bv_type mat -ksp_hpddm_recycle_bv_orthog_block svqb</font>
+<a name="line221">221: </a><font color="#B22222">      test:</font>
+<a name="line222">222: </a><font color="#B22222">         requires: scalapack</font>
+<a name="line223">223: </a><font color="#B22222">         suffix: 4_scalapack</font>
+<a name="line224">224: </a><font color="#B22222">         output_file: output/ex77_4.out</font>
+<a name="line225">225: </a><font color="#B22222">         args: -ksp_hpddm_recycle_mat_type scalapack</font>
+
+<a name="line227">227: </a><font color="#B22222">   test:</font>
+<a name="line228">228: </a><font color="#B22222">      nsize: 5</font>
+<a name="line229">229: </a><font color="#B22222">      requires: hpddm datafilespath double !complex !define(PETSC_USE_64BIT_INDICES)</font>
+<a name="line230">230: </a><font color="#B22222">      suffix: 4_zero</font>
+<a name="line231">231: </a><font color="#B22222">      output_file: output/ex77_4.out</font>
+<a name="line232">232: </a><font color="#B22222">      args: -ksp_converged_reason -ksp_max_it 500 -f ${DATAFILESPATH}/matrices/hpddm/GCRODR/A_400.dat -ksp_rtol 1e-4 -ksp_type hpddm -ksp_hpddm_recycle 5 -ksp_hpddm_type bgcrodr -ksp_view_final_residual -N 12 -ksp_matsolve_block_size 5</font>
+
+<a name="line234">234: </a><font color="#B22222">TEST*/</font>
+</pre>
+</body>
+
+</html>

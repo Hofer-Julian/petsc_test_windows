@@ -1,0 +1,2 @@
+not ok ksp_ksp_tutorials-ex2f_1 # Error code: 127
+ ok ksp_ksp_tutorials-ex2f_1 # SKIP Command failed so no diff

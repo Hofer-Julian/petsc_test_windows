@@ -1,0 +1,488 @@
+<center><a href="petscdt.h">Actual source code: petscdt.h</a></center><br>
+
+<html>
+<head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/include/petscdt.h.html" />
+<title></title>
+<meta name="generator" content="c2html 0.9.4">
+<meta name="date" content="2021-03-30T16:51:03+00:00">
+</head>
+
+<body bgcolor="#FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 include/petscdt.h.html "><small>Report Typos and Errors</small></a></div>
+<pre width="80">
+<a name="line1">  1: </a><font color="#B22222">/*</font>
+<a name="line2">  2: </a><font color="#B22222">  Common tools for constructing discretizations</font>
+<a name="line3">  3: </a><font color="#B22222">*/</font>
+<a name="line4">  4: </a><font color="#A020F0">#if !defined(PETSCDT_H)</font>
+<a name="line5">  5: </a><strong><font color="#228B22">#define PETSCDT_H</font></strong>
+
+<a name="line7">  7: </a>#include <A href="../include/petscsys.h.html">&lt;petscsys.h&gt;</A>
+
+<a name="line9">  9: </a>PETSC_EXTERN <a href="../docs/manualpages/Sys/PetscClassId.html#PetscClassId">PetscClassId</a> PETSCQUADRATURE_CLASSID;
+
+<a name="line11"> 11: </a><font color="#B22222">/*S</font>
+<a name="line12"> 12: </a><font color="#B22222">  <a href="../docs/manualpages/FE/PetscQuadrature.html#PetscQuadrature">PetscQuadrature</a> - Quadrature rule for integration.</font>
+
+<a name="line14"> 14: </a><font color="#B22222">  Level: beginner</font>
+
+<a name="line16"> 16: </a><font color="#B22222">.seealso:  <a href="../docs/manualpages/DT/PetscQuadratureCreate.html#PetscQuadratureCreate">PetscQuadratureCreate</a>(), <a href="../docs/manualpages/DT/PetscQuadratureDestroy.html#PetscQuadratureDestroy">PetscQuadratureDestroy</a>()</font>
+<a name="line17"> 17: </a><font color="#B22222">S*/</font>
+<a name="line18"> 18: </a><font color="#4169E1">typedef struct _p_PetscQuadrature *<a href="../docs/manualpages/FE/PetscQuadrature.html#PetscQuadrature">PetscQuadrature</a>;</font>
+
+<a name="line20"> 20: </a><font color="#B22222">/*E</font>
+<a name="line21"> 21: </a><font color="#B22222">  <a href="../docs/manualpages/FE/PetscGaussLobattoLegendreCreateType.html#PetscGaussLobattoLegendreCreateType">PetscGaussLobattoLegendreCreateType</a> - algorithm used to compute the Gauss-Lobatto-Legendre nodes and weights</font>
+
+<a name="line23"> 23: </a><font color="#B22222">  Level: intermediate</font>
+
+<a name="line25"> 25: </a><font color="#B22222">$  <a href="../docs/manualpages/FE/PetscGaussLobattoLegendreCreateType.html#PetscGaussLobattoLegendreCreateType">PETSCGAUSSLOBATTOLEGENDRE_VIA_LINEAR_ALGEBRA</a> - compute the nodes via linear algebra</font>
+<a name="line26"> 26: </a><font color="#B22222">$  <a href="../docs/manualpages/FE/PetscGaussLobattoLegendreCreateType.html#PetscGaussLobattoLegendreCreateType">PETSCGAUSSLOBATTOLEGENDRE_VIA_NEWTON</a> - compute the nodes by solving a nonlinear equation with Newton's method</font>
+
+<a name="line28"> 28: </a><font color="#B22222">E*/</font>
+<a name="line29"> 29: </a><font color="#4169E1">typedef</font> <font color="#4169E1">enum</font> {<a href="../docs/manualpages/FE/PetscGaussLobattoLegendreCreateType.html#PetscGaussLobattoLegendreCreateType">PETSCGAUSSLOBATTOLEGENDRE_VIA_LINEAR_ALGEBRA</a>,<a href="../docs/manualpages/FE/PetscGaussLobattoLegendreCreateType.html#PetscGaussLobattoLegendreCreateType">PETSCGAUSSLOBATTOLEGENDRE_VIA_NEWTON</a>} <a href="../docs/manualpages/FE/PetscGaussLobattoLegendreCreateType.html#PetscGaussLobattoLegendreCreateType">PetscGaussLobattoLegendreCreateType</a>;
+
+<a name="line31"> 31: </a><font color="#B22222">/*E</font>
+<a name="line32"> 32: </a><font color="#B22222">  <a href="../docs/manualpages/FE/PetscDTNodeType.html#PetscDTNodeType">PetscDTNodeType</a> - A description of strategies for generating nodes (both</font>
+<a name="line33"> 33: </a><font color="#B22222">  quadrature nodes and nodes for Lagrange polynomials)</font>
+
+<a name="line35"> 35: </a><font color="#B22222">  Level: intermediate</font>
+
+<a name="line37"> 37: </a><font color="#B22222">$  <a href="../docs/manualpages/FE/PetscDTNodeType.html#PetscDTNodeType">PETSCDTNODES_DEFAULT</a> - Nodes chosen by PETSc</font>
+<a name="line38"> 38: </a><font color="#B22222">$  <a href="../docs/manualpages/FE/PetscDTNodeType.html#PetscDTNodeType">PETSCDTNODES_GAUSSJACOBI</a> - Nodes at either Gauss-Jacobi or Gauss-Lobatto-Jacobi quadrature points</font>
+<a name="line39"> 39: </a><font color="#B22222">$  <a href="../docs/manualpages/FE/PetscDTNodeType.html#PetscDTNodeType">PETSCDTNODES_EQUISPACED</a> - Nodes equispaced either including the endpoints or excluding them</font>
+<a name="line40"> 40: </a><font color="#B22222">$  <a href="../docs/manualpages/FE/PetscDTNodeType.html#PetscDTNodeType">PETSCDTNODES_TANHSINH</a> - Nodes at Tanh-Sinh quadrature points</font>
+
+<a name="line42"> 42: </a><font color="#B22222">  Note: a <a href="../docs/manualpages/FE/PetscDTNodeType.html#PetscDTNodeType">PetscDTNodeType</a> can be paired with a <a href="../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> to indicate whether</font>
+<a name="line43"> 43: </a><font color="#B22222">  the nodes include endpoints or not, and in the case of PETSCDT_GAUSSJACOBI</font>
+<a name="line44"> 44: </a><font color="#B22222">  with exponents for the weight function.</font>
+
+<a name="line46"> 46: </a><font color="#B22222">E*/</font>
+<a name="line47"> 47: </a><font color="#4169E1">typedef</font> <font color="#4169E1">enum</font> {<a href="../docs/manualpages/FE/PetscDTNodeType.html#PetscDTNodeType">PETSCDTNODES_DEFAULT</a>=-1, <a href="../docs/manualpages/FE/PetscDTNodeType.html#PetscDTNodeType">PETSCDTNODES_GAUSSJACOBI</a>, <a href="../docs/manualpages/FE/PetscDTNodeType.html#PetscDTNodeType">PETSCDTNODES_EQUISPACED</a>, <a href="../docs/manualpages/FE/PetscDTNodeType.html#PetscDTNodeType">PETSCDTNODES_TANHSINH</a>} <a href="../docs/manualpages/FE/PetscDTNodeType.html#PetscDTNodeType">PetscDTNodeType</a>;
+
+<a name="line49"> 49: </a>PETSC_EXTERN const char *const PetscDTNodeTypes[];
+
+<a name="line51"> 51: </a><strong><font color="#4169E1">PETSC_EXTERN <a href="../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../docs/manualpages/DT/PetscQuadratureCreate.html#PetscQuadratureCreate">PetscQuadratureCreate</a>(<a href="../docs/manualpages/Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</a>, <a href="../docs/manualpages/FE/PetscQuadrature.html#PetscQuadrature">PetscQuadrature</a> *)</font></strong>;
+<a name="line52"> 52: </a><strong><font color="#4169E1">PETSC_EXTERN <a href="../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../docs/manualpages/DT/PetscQuadratureDuplicate.html#PetscQuadratureDuplicate">PetscQuadratureDuplicate</a>(<a href="../docs/manualpages/FE/PetscQuadrature.html#PetscQuadrature">PetscQuadrature</a>, <a href="../docs/manualpages/FE/PetscQuadrature.html#PetscQuadrature">PetscQuadrature</a> *)</font></strong>;
+<a name="line53"> 53: </a><strong><font color="#4169E1">PETSC_EXTERN <a href="../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../docs/manualpages/DT/PetscQuadratureGetOrder.html#PetscQuadratureGetOrder">PetscQuadratureGetOrder</a>(<a href="../docs/manualpages/FE/PetscQuadrature.html#PetscQuadrature">PetscQuadrature</a>, <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>*)</font></strong>;
+<a name="line54"> 54: </a><strong><font color="#4169E1">PETSC_EXTERN <a href="../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../docs/manualpages/DT/PetscQuadratureSetOrder.html#PetscQuadratureSetOrder">PetscQuadratureSetOrder</a>(<a href="../docs/manualpages/FE/PetscQuadrature.html#PetscQuadrature">PetscQuadrature</a>, <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>)</font></strong>;
+<a name="line55"> 55: </a><strong><font color="#4169E1">PETSC_EXTERN <a href="../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../docs/manualpages/DT/PetscQuadratureGetNumComponents.html#PetscQuadratureGetNumComponents">PetscQuadratureGetNumComponents</a>(<a href="../docs/manualpages/FE/PetscQuadrature.html#PetscQuadrature">PetscQuadrature</a>, <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>*)</font></strong>;
+<a name="line56"> 56: </a><strong><font color="#4169E1">PETSC_EXTERN <a href="../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../docs/manualpages/DT/PetscQuadratureSetNumComponents.html#PetscQuadratureSetNumComponents">PetscQuadratureSetNumComponents</a>(<a href="../docs/manualpages/FE/PetscQuadrature.html#PetscQuadrature">PetscQuadrature</a>, <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>)</font></strong>;
+<a name="line57"> 57: </a><strong><font color="#4169E1">PETSC_EXTERN <a href="../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../docs/manualpages/DT/PetscQuadratureGetData.html#PetscQuadratureGetData">PetscQuadratureGetData</a>(<a href="../docs/manualpages/FE/PetscQuadrature.html#PetscQuadrature">PetscQuadrature</a>, <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>*, <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>*, <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>*, const <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> *[], const <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> *[])</font></strong>;
+<a name="line58"> 58: </a><strong><font color="#4169E1">PETSC_EXTERN <a href="../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../docs/manualpages/DT/PetscQuadratureSetData.html#PetscQuadratureSetData">PetscQuadratureSetData</a>(<a href="../docs/manualpages/FE/PetscQuadrature.html#PetscQuadrature">PetscQuadrature</a>, <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>, <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>, <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>, const <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> [], const <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> [])</font></strong>;
+<a name="line59"> 59: </a><strong><font color="#4169E1">PETSC_EXTERN <a href="../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../docs/manualpages/DT/PetscQuadratureView.html#PetscQuadratureView">PetscQuadratureView</a>(<a href="../docs/manualpages/FE/PetscQuadrature.html#PetscQuadrature">PetscQuadrature</a>, <a href="../docs/manualpages/Viewer/PetscViewer.html#PetscViewer">PetscViewer</a>)</font></strong>;
+<a name="line60"> 60: </a><strong><font color="#4169E1">PETSC_EXTERN <a href="../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../docs/manualpages/DT/PetscQuadratureDestroy.html#PetscQuadratureDestroy">PetscQuadratureDestroy</a>(<a href="../docs/manualpages/FE/PetscQuadrature.html#PetscQuadrature">PetscQuadrature</a> *)</font></strong>;
+
+<a name="line62"> 62: </a><strong><font color="#4169E1">PETSC_EXTERN <a href="../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../docs/manualpages/DT/PetscQuadratureExpandComposite.html#PetscQuadratureExpandComposite">PetscQuadratureExpandComposite</a>(<a href="../docs/manualpages/FE/PetscQuadrature.html#PetscQuadrature">PetscQuadrature</a>, <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>, const <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>[], const <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>[], <a href="../docs/manualpages/FE/PetscQuadrature.html#PetscQuadrature">PetscQuadrature</a> *)</font></strong>;
+
+<a name="line64"> 64: </a><strong><font color="#4169E1">PETSC_EXTERN <a href="../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../docs/manualpages/DT/PetscQuadraturePushForward.html#PetscQuadraturePushForward">PetscQuadraturePushForward</a>(<a href="../docs/manualpages/FE/PetscQuadrature.html#PetscQuadrature">PetscQuadrature</a>, <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>, const <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>[], const <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>[], const <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>[], <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>, <a href="../docs/manualpages/FE/PetscQuadrature.html#PetscQuadrature">PetscQuadrature</a> *)</font></strong>;
+
+<a name="line66"> 66: </a><strong><font color="#4169E1">PETSC_EXTERN <a href="../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../docs/manualpages/DT/PetscDTLegendreEval.html#PetscDTLegendreEval">PetscDTLegendreEval</a>(<a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>,const <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>*,<a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>,const <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>*,<a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>*,<a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>*,<a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>*)</font></strong>;
+<a name="line67"> 67: </a><strong><font color="#4169E1">PETSC_EXTERN <a href="../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../docs/manualpages/DT/PetscDTJacobiNorm.html#PetscDTJacobiNorm">PetscDTJacobiNorm</a>(<a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>,<a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>,<a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>,<a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> *)</font></strong>;
+<a name="line68"> 68: </a><strong><font color="#4169E1">PETSC_EXTERN <a href="../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../docs/manualpages/DT/PetscDTJacobiEval.html#PetscDTJacobiEval">PetscDTJacobiEval</a>(<a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>,<a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>,<a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>,const <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>*,<a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>,const <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>*,<a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>*,<a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>*,<a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>*)</font></strong>;
+<a name="line69"> 69: </a><strong><font color="#4169E1">PETSC_EXTERN <a href="../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../docs/manualpages/DT/PetscDTJacobiEvalJet.html#PetscDTJacobiEvalJet">PetscDTJacobiEvalJet</a>(<a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>,<a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>,<a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>,const <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>[],<a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>,<a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>,<a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>[])</font></strong>;
+<a name="line70"> 70: </a><strong><font color="#4169E1">PETSC_EXTERN <a href="../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../docs/manualpages/DT/PetscDTPKDEvalJet.html#PetscDTPKDEvalJet">PetscDTPKDEvalJet</a>(<a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>,<a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>,const <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>[],<a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>,<a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>,<a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>[])</font></strong>;
+<a name="line71"> 71: </a><strong><font color="#4169E1">PETSC_EXTERN <a href="../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../docs/manualpages/DT/PetscDTGaussQuadrature.html#PetscDTGaussQuadrature">PetscDTGaussQuadrature</a>(<a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>,<a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>,<a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>,<a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>*,<a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>*)</font></strong>;
+<a name="line72"> 72: </a><strong><font color="#4169E1">PETSC_EXTERN <a href="../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../docs/manualpages/DT/PetscDTGaussJacobiQuadrature.html#PetscDTGaussJacobiQuadrature">PetscDTGaussJacobiQuadrature</a>(<a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>,<a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>,<a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>,<a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>,<a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>,<a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>*,<a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>*)</font></strong>;
+<a name="line73"> 73: </a><strong><font color="#4169E1">PETSC_EXTERN <a href="../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../docs/manualpages/DT/PetscDTGaussLobattoJacobiQuadrature.html#PetscDTGaussLobattoJacobiQuadrature">PetscDTGaussLobattoJacobiQuadrature</a>(<a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>,<a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>,<a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>,<a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>,<a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>,<a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>*,<a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>*)</font></strong>;
+<a name="line74"> 74: </a><strong><font color="#4169E1">PETSC_EXTERN <a href="../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../docs/manualpages/DT/PetscDTGaussLobattoLegendreQuadrature.html#PetscDTGaussLobattoLegendreQuadrature">PetscDTGaussLobattoLegendreQuadrature</a>(<a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>,<a href="../docs/manualpages/FE/PetscGaussLobattoLegendreCreateType.html#PetscGaussLobattoLegendreCreateType">PetscGaussLobattoLegendreCreateType</a>,<a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>*,<a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>*)</font></strong>;
+<a name="line75"> 75: </a><strong><font color="#4169E1">PETSC_EXTERN <a href="../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../docs/manualpages/DT/PetscDTReconstructPoly.html#PetscDTReconstructPoly">PetscDTReconstructPoly</a>(<a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>,<a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>,const <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>*,<a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>,const <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>*,<a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>*)</font></strong>;
+<a name="line76"> 76: </a><strong><font color="#4169E1">PETSC_EXTERN <a href="../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../docs/manualpages/DT/PetscDTGaussTensorQuadrature.html#PetscDTGaussTensorQuadrature">PetscDTGaussTensorQuadrature</a>(<a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>,<a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>,<a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>,<a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>,<a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>,<a href="../docs/manualpages/FE/PetscQuadrature.html#PetscQuadrature">PetscQuadrature</a>*)</font></strong>;
+<a name="line77"> 77: </a><strong><font color="#4169E1">PETSC_EXTERN <a href="../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../docs/manualpages/DT/PetscDTStroudConicalQuadrature.html#PetscDTStroudConicalQuadrature">PetscDTStroudConicalQuadrature</a>(<a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>,<a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>,<a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>,<a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>,<a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>,<a href="../docs/manualpages/FE/PetscQuadrature.html#PetscQuadrature">PetscQuadrature</a>*)</font></strong>;
+
+<a name="line79"> 79: </a><strong><font color="#4169E1">PETSC_EXTERN <a href="../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../docs/manualpages/DT/PetscDTTanhSinhTensorQuadrature.html#PetscDTTanhSinhTensorQuadrature">PetscDTTanhSinhTensorQuadrature</a>(<a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>, <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>, <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>, <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>, <a href="../docs/manualpages/FE/PetscQuadrature.html#PetscQuadrature">PetscQuadrature</a> *)</font></strong>;
+<a name="line80"> 80: </a><strong><font color="#4169E1">PETSC_EXTERN <a href="../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscDTTanhSinhIntegrate(void (*)(<a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>, <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> *), <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>, <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>, <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>, <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> *)</font></strong>;
+<a name="line81"> 81: </a><strong><font color="#4169E1">PETSC_EXTERN <a href="../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscDTTanhSinhIntegrateMPFR(void (*)(<a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>, <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> *), <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>, <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>, <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>, <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> *)</font></strong>;
+
+<a name="line83"> 83: </a><strong><font color="#4169E1">PETSC_EXTERN <a href="../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../docs/manualpages/DT/PetscGaussLobattoLegendreIntegrate.html#PetscGaussLobattoLegendreIntegrate">PetscGaussLobattoLegendreIntegrate</a>(<a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>, <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> *, <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> *, const <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> *, <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> *)</font></strong>;
+<a name="line84"> 84: </a><strong><font color="#4169E1">PETSC_EXTERN <a href="../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../docs/manualpages/DT/PetscGaussLobattoLegendreElementLaplacianCreate.html#PetscGaussLobattoLegendreElementLaplacianCreate">PetscGaussLobattoLegendreElementLaplacianCreate</a>(<a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>, <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> *, <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> *, <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> ***)</font></strong>;
+<a name="line85"> 85: </a><strong><font color="#4169E1">PETSC_EXTERN <a href="../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../docs/manualpages/DT/PetscGaussLobattoLegendreElementLaplacianDestroy.html#PetscGaussLobattoLegendreElementLaplacianDestroy">PetscGaussLobattoLegendreElementLaplacianDestroy</a>(<a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>, <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> *, <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> *, <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> ***)</font></strong>;
+<a name="line86"> 86: </a><strong><font color="#4169E1">PETSC_EXTERN <a href="../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../docs/manualpages/DT/PetscGaussLobattoLegendreElementGradientCreate.html#PetscGaussLobattoLegendreElementGradientCreate">PetscGaussLobattoLegendreElementGradientCreate</a>(<a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>, <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> *, <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> *, <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> ***, <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> ***)</font></strong>;
+<a name="line87"> 87: </a><strong><font color="#4169E1">PETSC_EXTERN <a href="../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../docs/manualpages/DT/PetscGaussLobattoLegendreElementGradientDestroy.html#PetscGaussLobattoLegendreElementGradientDestroy">PetscGaussLobattoLegendreElementGradientDestroy</a>(<a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>, <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> *, <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> *, <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> ***, <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> ***)</font></strong>;
+<a name="line88"> 88: </a><strong><font color="#4169E1">PETSC_EXTERN <a href="../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../docs/manualpages/DT/PetscGaussLobattoLegendreElementAdvectionCreate.html#PetscGaussLobattoLegendreElementAdvectionCreate">PetscGaussLobattoLegendreElementAdvectionCreate</a>(<a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>, <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> *, <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> *, <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> ***)</font></strong>;
+<a name="line89"> 89: </a><strong><font color="#4169E1">PETSC_EXTERN <a href="../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../docs/manualpages/DT/PetscGaussLobattoLegendreElementAdvectionDestroy.html#PetscGaussLobattoLegendreElementAdvectionDestroy">PetscGaussLobattoLegendreElementAdvectionDestroy</a>(<a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>, <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> *, <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> *, <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> ***)</font></strong>;
+<a name="line90"> 90: </a><strong><font color="#4169E1">PETSC_EXTERN <a href="../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscGaussLobattoLegendreElementMassCreate(<a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>, <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> *, <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> *, <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> ***)</font></strong>;
+<a name="line91"> 91: </a><strong><font color="#4169E1">PETSC_EXTERN <a href="../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscGaussLobattoLegendreElementMassDestroy(<a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>, <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> *, <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> *, <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> ***)</font></strong>;
+
+<a name="line93"> 93: </a><strong><font color="#4169E1">PETSC_EXTERN <a href="../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../docs/manualpages/DT/PetscDTAltVApply.html#PetscDTAltVApply">PetscDTAltVApply</a>(<a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>, <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>, const <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> *, const <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> *, <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> *)</font></strong>;
+<a name="line94"> 94: </a><strong><font color="#4169E1">PETSC_EXTERN <a href="../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../docs/manualpages/DT/PetscDTAltVWedge.html#PetscDTAltVWedge">PetscDTAltVWedge</a>(<a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>, <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>, <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>, const <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> *, const <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> *, <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> *)</font></strong>;
+<a name="line95"> 95: </a><strong><font color="#4169E1">PETSC_EXTERN <a href="../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../docs/manualpages/DT/PetscDTAltVWedgeMatrix.html#PetscDTAltVWedgeMatrix">PetscDTAltVWedgeMatrix</a>(<a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>, <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>, <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>, const <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> *, <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> *)</font></strong>;
+<a name="line96"> 96: </a><strong><font color="#4169E1">PETSC_EXTERN <a href="../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../docs/manualpages/DT/PetscDTAltVPullback.html#PetscDTAltVPullback">PetscDTAltVPullback</a>(<a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>, <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>, const <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> *, <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>, const <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> *, <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> *)</font></strong>;
+<a name="line97"> 97: </a><strong><font color="#4169E1">PETSC_EXTERN <a href="../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../docs/manualpages/DT/PetscDTAltVPullbackMatrix.html#PetscDTAltVPullbackMatrix">PetscDTAltVPullbackMatrix</a>(<a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>, <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>, const <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> *, <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>, <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> *)</font></strong>;
+<a name="line98"> 98: </a><strong><font color="#4169E1">PETSC_EXTERN <a href="../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../docs/manualpages/DT/PetscDTAltVInterior.html#PetscDTAltVInterior">PetscDTAltVInterior</a>(<a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>, <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>, const <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> *, const <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> *, <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> *)</font></strong>;
+<a name="line99"> 99: </a><strong><font color="#4169E1">PETSC_EXTERN <a href="../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../docs/manualpages/DT/PetscDTAltVInteriorMatrix.html#PetscDTAltVInteriorMatrix">PetscDTAltVInteriorMatrix</a>(<a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>, <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>, const <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> *, <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> *)</font></strong>;
+<a name="line100">100: </a><strong><font color="#4169E1"><a name="PetscDTAltVInteriorPattern"></a>PETSC_EXTERN <a href="../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../docs/manualpages/DT/PetscDTAltVInteriorPattern.html#PetscDTAltVInteriorPattern">PetscDTAltVInteriorPattern</a>(<a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>, <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>, <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> (*)</font></strong>[3]);
+<a name="line101">101: </a><strong><font color="#4169E1">PETSC_EXTERN <a href="../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../docs/manualpages/DT/PetscDTAltVStar.html#PetscDTAltVStar">PetscDTAltVStar</a>(<a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>, <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>, <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>, const <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> *, <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> *)</font></strong>;
+
+<a name="line103">103: </a><strong><font color="#4169E1">PETSC_EXTERN <a href="../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../docs/manualpages/DT/PetscDTBaryToIndex.html#PetscDTBaryToIndex">PetscDTBaryToIndex</a>(<a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>,<a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>,const <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>[],<a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>*)</font></strong>;
+<a name="line104">104: </a><strong><font color="#4169E1">PETSC_EXTERN <a href="../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../docs/manualpages/DT/PetscDTIndexToBary.html#PetscDTIndexToBary">PetscDTIndexToBary</a>(<a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>,<a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>,<a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>,<a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>[])</font></strong>;
+<a name="line105">105: </a><strong><font color="#4169E1">PETSC_EXTERN <a href="../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../docs/manualpages/DT/PetscDTGradedOrderToIndex.html#PetscDTGradedOrderToIndex">PetscDTGradedOrderToIndex</a>(<a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>,const <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>[],<a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>*)</font></strong>;
+<a name="line106">106: </a><strong><font color="#4169E1">PETSC_EXTERN <a href="../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../docs/manualpages/DT/PetscDTIndexToGradedOrder.html#PetscDTIndexToGradedOrder">PetscDTIndexToGradedOrder</a>(<a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>,<a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>,<a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>[])</font></strong>;
+
+<a name="line108">108: </a><font color="#A020F0">#if defined(PETSC_USE_64BIT_INDICES)</font>
+<a name="line109">109: </a><strong><font color="#228B22">#define PETSC_FACTORIAL_MAX 20</font></strong>
+<a name="line110">110: </a><strong><font color="#228B22">#define PETSC_BINOMIAL_MAX  61</font></strong>
+<a name="line111">111: </a><font color="#A020F0">#else</font>
+<a name="line112">112: </a><strong><font color="#228B22">#define PETSC_FACTORIAL_MAX 12</font></strong>
+<a name="line113">113: </a><strong><font color="#228B22">#define PETSC_BINOMIAL_MAX  29</font></strong>
+<a name="line114">114: </a><font color="#A020F0">#endif</font>
+
+<a name="line116">116: </a><font color="#B22222">/*MC</font>
+<a name="line117">117: </a><font color="#B22222">   <a href="../docs/manualpages/FE/PetscDTFactorial.html#PetscDTFactorial">PetscDTFactorial</a> - Approximate n! as a real number</font>
+
+<a name="line119">119: </a><font color="#B22222">   Input Arguments:</font>
+<a name="line120">120: </a><font color="#B22222">.  n - a non-negative integer</font>
+
+<a name="line122">122: </a><font color="#B22222">   Output Arguments:</font>
+<a name="line123">123: </a><font color="#B22222">.  factorial - n!</font>
+
+<a name="line125">125: </a><font color="#B22222">   Level: beginner</font>
+<a name="line126">126: </a><font color="#B22222">M*/</font>
+<a name="line127">127: </a><strong><font color="#4169E1"><a name="PetscDTFactorial"></a>PETSC_STATIC_INLINE <a href="../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../docs/manualpages/FE/PetscDTFactorial.html#PetscDTFactorial">PetscDTFactorial</a>(<a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> n, <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> *factorial)</font></strong>
+<a name="line128">128: </a>{
+<a name="line129">129: </a>  <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> f = 1.0;
+<a name="line130">130: </a>  <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>  i;
+
+<a name="line133">133: </a>  *factorial = -1.0;
+<a name="line134">134: </a>  <font color="#4169E1">if</font> (n &lt; 0) <a href="../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, PETSC_ERR_ARG_OUTOFRANGE, <font color="#666666">"Factorial called with negative number %D\n"</font>, n);
+<a name="line135">135: </a>  <font color="#4169E1">for</font> (i = 1; i &lt; n+1; ++i) f *= (<a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>)i;
+<a name="line136">136: </a>  *factorial = f;
+<a name="line137">137: </a>  <font color="#4169E1">return</font>(0);
+<a name="line138">138: </a>}
+
+<a name="line140">140: </a><font color="#B22222">/*MC</font>
+<a name="line141">141: </a><font color="#B22222">   <a href="../docs/manualpages/FE/PetscDTFactorialInt.html#PetscDTFactorialInt">PetscDTFactorialInt</a> - Compute n! as an integer</font>
+
+<a name="line143">143: </a><font color="#B22222">   Input Arguments:</font>
+<a name="line144">144: </a><font color="#B22222">.  n - a non-negative integer</font>
+
+<a name="line146">146: </a><font color="#B22222">   Output Arguments:</font>
+<a name="line147">147: </a><font color="#B22222">.  factorial - n!</font>
+
+<a name="line149">149: </a><font color="#B22222">   Level: beginner</font>
+
+<a name="line151">151: </a><font color="#B22222">   Note: this is limited to n such that n! can be represented by <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>, which is 12 if <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> is a signed 32-bit integer and 20 if <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> is a signed 64-bit integer.</font>
+<a name="line152">152: </a><font color="#B22222">M*/</font>
+<a name="line153">153: </a><strong><font color="#4169E1"><a name="PetscDTFactorialInt"></a>PETSC_STATIC_INLINE <a href="../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../docs/manualpages/FE/PetscDTFactorialInt.html#PetscDTFactorialInt">PetscDTFactorialInt</a>(<a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> n, <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *factorial)</font></strong>
+<a name="line154">154: </a>{
+<a name="line155">155: </a>  <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> facLookup[13] = {1, 1, 2, 6, 24, 120, 720, 5040, 40320, 362880, 3628800, 39916800, 479001600};
+
+<a name="line158">158: </a>  *factorial = -1;
+<a name="line159">159: </a>  <font color="#4169E1">if</font> (n &lt; 0 || n &gt; PETSC_FACTORIAL_MAX) <a href="../docs/manualpages/Sys/SETERRQ2.html#SETERRQ2">SETERRQ2</a>(<a href="../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_ARG_OUTOFRANGE,<font color="#666666">"Number of elements %D is not in supported range [0,%D]\n"</font>,n,PETSC_FACTORIAL_MAX);
+<a name="line160">160: </a>  <font color="#4169E1">if</font> (n &lt;= 12) {
+<a name="line161">161: </a>    *factorial = facLookup[n];
+<a name="line162">162: </a>  } <font color="#4169E1">else</font> {
+<a name="line163">163: </a>    <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> f = facLookup[12];
+<a name="line164">164: </a>    <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> i;
+
+<a name="line166">166: </a>    <font color="#4169E1">for</font> (i = 13; i &lt; n+1; ++i) f *= i;
+<a name="line167">167: </a>    *factorial = f;
+<a name="line168">168: </a>  }
+<a name="line169">169: </a>  <font color="#4169E1">return</font>(0);
+<a name="line170">170: </a>}
+
+<a name="line172">172: </a><font color="#B22222">/*MC</font>
+<a name="line173">173: </a><font color="#B22222">   <a href="../docs/manualpages/FE/PetscDTBinomial.html#PetscDTBinomial">PetscDTBinomial</a> - Approximate the binomial coefficient "n choose k"</font>
+
+<a name="line175">175: </a><font color="#B22222">   Input Arguments:</font>
+<a name="line176">176: </a><font color="#B22222">+  n - a non-negative integer</font>
+<a name="line177">177: </a><font color="#B22222">-  k - an integer between 0 and n, inclusive</font>
+
+<a name="line179">179: </a><font color="#B22222">   Output Arguments:</font>
+<a name="line180">180: </a><font color="#B22222">.  binomial - approximation of the binomial coefficient n choose k</font>
+
+<a name="line182">182: </a><font color="#B22222">   Level: beginner</font>
+<a name="line183">183: </a><font color="#B22222">M*/</font>
+<a name="line184">184: </a><strong><font color="#4169E1"><a name="PetscDTBinomial"></a>PETSC_STATIC_INLINE <a href="../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../docs/manualpages/FE/PetscDTBinomial.html#PetscDTBinomial">PetscDTBinomial</a>(<a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> n, <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> k, <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> *binomial)</font></strong>
+<a name="line185">185: </a>{
+<a name="line187">187: </a>  *binomial = -1.0;
+<a name="line188">188: </a>  <font color="#4169E1">if</font> (n &lt; 0 || k &lt; 0 || k &gt; n) <a href="../docs/manualpages/Sys/SETERRQ2.html#SETERRQ2">SETERRQ2</a>(<a href="../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, PETSC_ERR_ARG_OUTOFRANGE, <font color="#666666">"Binomial arguments (%D %D) must be non-negative, k &lt;= n\n"</font>, n, k);
+<a name="line189">189: </a>  <font color="#4169E1">if</font> (n &lt;= 3) {
+<a name="line190">190: </a>    <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> binomLookup[4][4] = {{1, 0, 0, 0}, {1, 1, 0, 0}, {1, 2, 1, 0}, {1, 3, 3, 1}};
+
+<a name="line192">192: </a>    *binomial = (<a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>)binomLookup[n][k];
+<a name="line193">193: </a>  } <font color="#4169E1">else</font> {
+<a name="line194">194: </a>    <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> binom = 1.0;
+<a name="line195">195: </a>    <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>  i;
+
+<a name="line197">197: </a>    k = <a href="../docs/manualpages/Sys/PetscMin.html#PetscMin">PetscMin</a>(k, n - k);
+<a name="line198">198: </a>    <font color="#4169E1">for</font> (i = 0; i &lt; k; i++) binom = (binom * (<a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>)(n - i)) / (<a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>)(i + 1);
+<a name="line199">199: </a>    *binomial = binom;
+<a name="line200">200: </a>  }
+<a name="line201">201: </a>  <font color="#4169E1">return</font>(0);
+<a name="line202">202: </a>}
+
+<a name="line204">204: </a><font color="#B22222">/*MC</font>
+<a name="line205">205: </a><font color="#B22222">   <a href="../docs/manualpages/FE/PetscDTBinomialInt.html#PetscDTBinomialInt">PetscDTBinomialInt</a> - Compute the binomial coefficient "n choose k"</font>
+
+<a name="line207">207: </a><font color="#B22222">   Input Arguments:</font>
+<a name="line208">208: </a><font color="#B22222">+  n - a non-negative integer</font>
+<a name="line209">209: </a><font color="#B22222">-  k - an integer between 0 and n, inclusive</font>
+
+<a name="line211">211: </a><font color="#B22222">   Output Arguments:</font>
+<a name="line212">212: </a><font color="#B22222">.  binomial - the binomial coefficient n choose k</font>
+
+<a name="line214">214: </a><font color="#B22222">   Note: this is limited by integers that can be represented by <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></font>
+
+<a name="line216">216: </a><font color="#B22222">   Level: beginner</font>
+<a name="line217">217: </a><font color="#B22222">M*/</font>
+<a name="line218">218: </a><strong><font color="#4169E1"><a name="PetscDTBinomialInt"></a>PETSC_STATIC_INLINE <a href="../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../docs/manualpages/FE/PetscDTBinomialInt.html#PetscDTBinomialInt">PetscDTBinomialInt</a>(<a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> n, <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> k, <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *binomial)</font></strong>
+<a name="line219">219: </a>{
+<a name="line220">220: </a>  <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> bin;
+
+<a name="line223">223: </a>  *binomial = -1;
+<a name="line224">224: </a>  <font color="#4169E1">if</font> (n &lt; 0 || k &lt; 0 || k &gt; n) <a href="../docs/manualpages/Sys/SETERRQ2.html#SETERRQ2">SETERRQ2</a>(<a href="../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, PETSC_ERR_ARG_OUTOFRANGE, <font color="#666666">"Binomial arguments (%D %D) must be non-negative, k &lt;= n\n"</font>, n, k);
+<a name="line225">225: </a>  <font color="#4169E1">if</font> (n &gt; PETSC_BINOMIAL_MAX) <a href="../docs/manualpages/Sys/SETERRQ2.html#SETERRQ2">SETERRQ2</a>(<a href="../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, PETSC_ERR_ARG_OUTOFRANGE, <font color="#666666">"Binomial elements %D is larger than max for <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>, %D\n"</font>, n, PETSC_BINOMIAL_MAX);
+<a name="line226">226: </a>  <font color="#4169E1">if</font> (n &lt;= 3) {
+<a name="line227">227: </a>    <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> binomLookup[4][4] = {{1, 0, 0, 0}, {1, 1, 0, 0}, {1, 2, 1, 0}, {1, 3, 3, 1}};
+
+<a name="line229">229: </a>    bin = binomLookup[n][k];
+<a name="line230">230: </a>  } <font color="#4169E1">else</font> {
+<a name="line231">231: </a>    <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>  binom = 1;
+<a name="line232">232: </a>    <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>  i;
+
+<a name="line234">234: </a>    k = <a href="../docs/manualpages/Sys/PetscMin.html#PetscMin">PetscMin</a>(k, n - k);
+<a name="line235">235: </a>    <font color="#4169E1">for</font> (i = 0; i &lt; k; i++) binom = (binom * (n - i)) / (i + 1);
+<a name="line236">236: </a>    bin = binom;
+<a name="line237">237: </a>  }
+<a name="line238">238: </a>  *binomial = bin;
+<a name="line239">239: </a>  <font color="#4169E1">return</font>(0);
+<a name="line240">240: </a>}
+
+<a name="line242">242: </a><font color="#B22222">/*MC</font>
+<a name="line243">243: </a><font color="#B22222">   <a href="../docs/manualpages/FE/PetscDTEnumPerm.html#PetscDTEnumPerm">PetscDTEnumPerm</a> - Get a permutation of n integers from its encoding into the integers [0, n!) as a sequence of swaps.</font>
+
+<a name="line245">245: </a><font color="#B22222">   A permutation can be described by the operations that convert the lists [0, 1, ..., n-1] into the permutation,</font>
+<a name="line246">246: </a><font color="#B22222">   by a sequence of swaps, where the ith step swaps whatever number is in ith position with a number that is in</font>
+<a name="line247">247: </a><font color="#B22222">   some position j &gt;= i.  This swap is encoded as the difference (j - i).  The difference d_i at step i is less than</font>
+<a name="line248">248: </a><font color="#B22222">   (n - i).  This sequence of n-1 differences [d_0, ..., d_{n-2}] is encoded as the number</font>
+<a name="line249">249: </a><font color="#B22222">   (n-1)! * d_0 + (n-2)! * d_1 + ... + 1! * d_{n-2}.</font>
+
+<a name="line251">251: </a><font color="#B22222">   Input Arguments:</font>
+<a name="line252">252: </a><font color="#B22222">+  n - a non-negative integer (see note about limits below)</font>
+<a name="line253">253: </a><font color="#B22222">-  k - an integer in [0, n!)</font>
+
+<a name="line255">255: </a><font color="#B22222">   Output Arguments:</font>
+<a name="line256">256: </a><font color="#B22222">+  perm - the permuted list of the integers [0, ..., n-1]</font>
+<a name="line257">257: </a><font color="#B22222">-  isOdd - if not NULL, returns wether the permutation used an even or odd number of swaps.</font>
+
+<a name="line259">259: </a><font color="#B22222">   Note: this is limited to n such that n! can be represented by <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>, which is 12 if <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> is a signed 32-bit integer and 20 if <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> is a signed 64-bit integer.</font>
+
+<a name="line261">261: </a><font color="#B22222">   Level: beginner</font>
+<a name="line262">262: </a><font color="#B22222">M*/</font>
+<a name="line263">263: </a><strong><font color="#4169E1"><a name="PetscDTEnumPerm"></a>PETSC_STATIC_INLINE <a href="../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../docs/manualpages/FE/PetscDTEnumPerm.html#PetscDTEnumPerm">PetscDTEnumPerm</a>(<a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> n, <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> k, <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *perm, <a href="../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> *isOdd)</font></strong>
+<a name="line264">264: </a>{
+<a name="line265">265: </a>  <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>  odd = 0;
+<a name="line266">266: </a>  <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>  i;
+<a name="line267">267: </a>  <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>  work[PETSC_FACTORIAL_MAX];
+<a name="line268">268: </a>  <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *w;
+
+<a name="line271">271: </a>  <font color="#4169E1">if</font> (isOdd) *isOdd = <a href="../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line272">272: </a>  <font color="#4169E1">if</font> (n &lt; 0 || n &gt; PETSC_FACTORIAL_MAX) <a href="../docs/manualpages/Sys/SETERRQ2.html#SETERRQ2">SETERRQ2</a>(<a href="../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_ARG_OUTOFRANGE,<font color="#666666">"Number of elements %D is not in supported range [0,%D]\n"</font>,n,PETSC_FACTORIAL_MAX);
+<a name="line273">273: </a>  w = &amp;work[n - 2];
+<a name="line274">274: </a>  <font color="#4169E1">for</font> (i = 2; i &lt;= n; i++) {
+<a name="line275">275: </a>    *(w--) = k % i;
+<a name="line276">276: </a>    k /= i;
+<a name="line277">277: </a>  }
+<a name="line278">278: </a>  <font color="#4169E1">for</font> (i = 0; i &lt; n; i++) perm[i] = i;
+<a name="line279">279: </a>  <font color="#4169E1">for</font> (i = 0; i &lt; n - 1; i++) {
+<a name="line280">280: </a>    <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> s = work[i];
+<a name="line281">281: </a>    <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> swap = perm[i];
+
+<a name="line283">283: </a>    perm[i] = perm[i + s];
+<a name="line284">284: </a>    perm[i + s] = swap;
+<a name="line285">285: </a>    odd ^= (!!s);
+<a name="line286">286: </a>  }
+<a name="line287">287: </a>  <font color="#4169E1">if</font> (isOdd) *isOdd = odd ? <a href="../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a> : <a href="../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line288">288: </a>  <font color="#4169E1">return</font>(0);
+<a name="line289">289: </a>}
+
+<a name="line291">291: </a><font color="#B22222">/*MC</font>
+<a name="line292">292: </a><font color="#B22222">   <a href="../docs/manualpages/FE/PetscDTPermIndex.html#PetscDTPermIndex">PetscDTPermIndex</a> - Encode a permutation of n into an integer in [0, n!).  This inverts <a href="../docs/manualpages/FE/PetscDTEnumPerm.html#PetscDTEnumPerm">PetscDTEnumPerm</a>.</font>
+
+<a name="line294">294: </a><font color="#B22222">   Input Arguments:</font>
+<a name="line295">295: </a><font color="#B22222">+  n - a non-negative integer (see note about limits below)</font>
+<a name="line296">296: </a><font color="#B22222">-  perm - the permuted list of the integers [0, ..., n-1]</font>
+
+<a name="line298">298: </a><font color="#B22222">   Output Arguments:</font>
+<a name="line299">299: </a><font color="#B22222">+  k - an integer in [0, n!)</font>
+<a name="line300">300: </a><font color="#B22222">-  isOdd - if not NULL, returns wether the permutation used an even or odd number of swaps.</font>
+
+<a name="line302">302: </a><font color="#B22222">   Note: this is limited to n such that n! can be represented by <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>, which is 12 if <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> is a signed 32-bit integer and 20 if <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> is a signed 64-bit integer.</font>
+
+<a name="line304">304: </a><font color="#B22222">   Level: beginner</font>
+<a name="line305">305: </a><font color="#B22222">M*/</font>
+<a name="line306">306: </a><strong><font color="#4169E1"><a name="PetscDTPermIndex"></a>PETSC_STATIC_INLINE <a href="../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../docs/manualpages/FE/PetscDTPermIndex.html#PetscDTPermIndex">PetscDTPermIndex</a>(<a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> n, const <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *perm, <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *k, <a href="../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> *isOdd)</font></strong>
+<a name="line307">307: </a>{
+<a name="line308">308: </a>  <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>  odd = 0;
+<a name="line309">309: </a>  <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>  i, idx;
+<a name="line310">310: </a>  <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>  work[PETSC_FACTORIAL_MAX];
+<a name="line311">311: </a>  <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>  iwork[PETSC_FACTORIAL_MAX];
+
+<a name="line314">314: </a>  *k = -1;
+<a name="line315">315: </a>  <font color="#4169E1">if</font> (isOdd) *isOdd = <a href="../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line316">316: </a>  <font color="#4169E1">if</font> (n &lt; 0 || n &gt; PETSC_FACTORIAL_MAX) <a href="../docs/manualpages/Sys/SETERRQ2.html#SETERRQ2">SETERRQ2</a>(<a href="../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_ARG_OUTOFRANGE,<font color="#666666">"Number of elements %D is not in supported range [0,%D]\n"</font>,n,PETSC_FACTORIAL_MAX);
+<a name="line317">317: </a>  <font color="#4169E1">for</font> (i = 0; i &lt; n; i++) work[i] = i;  <font color="#B22222">/* partial permutation */</font>
+<a name="line318">318: </a>  <font color="#4169E1">for</font> (i = 0; i &lt; n; i++) iwork[i] = i; <font color="#B22222">/* partial permutation inverse */</font>
+<a name="line319">319: </a>  <font color="#4169E1">for</font> (idx = 0, i = 0; i &lt; n - 1; i++) {
+<a name="line320">320: </a>    <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> j = perm[i];
+<a name="line321">321: </a>    <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> icur = work[i];
+<a name="line322">322: </a>    <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> jloc = iwork[j];
+<a name="line323">323: </a>    <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> diff = jloc - i;
+
+<a name="line325">325: </a>    idx = idx * (n - i) + diff;
+<a name="line326">326: </a>    <font color="#B22222">/* swap (i, jloc) */</font>
+<a name="line327">327: </a>    work[i] = j;
+<a name="line328">328: </a>    work[jloc] = icur;
+<a name="line329">329: </a>    iwork[j] = i;
+<a name="line330">330: </a>    iwork[icur] = jloc;
+<a name="line331">331: </a>    odd ^= (!!diff);
+<a name="line332">332: </a>  }
+<a name="line333">333: </a>  *k = idx;
+<a name="line334">334: </a>  <font color="#4169E1">if</font> (isOdd) *isOdd = odd ? <a href="../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a> : <a href="../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line335">335: </a>  <font color="#4169E1">return</font>(0);
+<a name="line336">336: </a>}
+
+<a name="line338">338: </a><font color="#B22222">/*MC</font>
+<a name="line339">339: </a><font color="#B22222">   <a href="../docs/manualpages/FE/PetscDTEnumSubset.html#PetscDTEnumSubset">PetscDTEnumSubset</a> - Get an ordered subset of the integers [0, ..., n - 1] from its encoding as an integers in [0, n choose k).</font>
+<a name="line340">340: </a><font color="#B22222">   The encoding is in lexicographic order.</font>
+
+<a name="line342">342: </a><font color="#B22222">   Input Arguments:</font>
+<a name="line343">343: </a><font color="#B22222">+  n - a non-negative integer (see note about limits below)</font>
+<a name="line344">344: </a><font color="#B22222">.  k - an integer in [0, n]</font>
+<a name="line345">345: </a><font color="#B22222">-  j - an index in [0, n choose k)</font>
+
+<a name="line347">347: </a><font color="#B22222">   Output Arguments:</font>
+<a name="line348">348: </a><font color="#B22222">.  subset - the jth subset of size k of the integers [0, ..., n - 1]</font>
+
+<a name="line350">350: </a><font color="#B22222">   Note: this is limited by arguments such that n choose k can be represented by <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></font>
+
+<a name="line352">352: </a><font color="#B22222">   Level: beginner</font>
+
+<a name="line354">354: </a><font color="#B22222">.seealso: <a href="../docs/manualpages/FE/PetscDTSubsetIndex.html#PetscDTSubsetIndex">PetscDTSubsetIndex</a>()</font>
+<a name="line355">355: </a><font color="#B22222">M*/</font>
+<a name="line356">356: </a><strong><font color="#4169E1"><a name="PetscDTEnumSubset"></a>PETSC_STATIC_INLINE <a href="../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../docs/manualpages/FE/PetscDTEnumSubset.html#PetscDTEnumSubset">PetscDTEnumSubset</a>(<a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> n, <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> k, <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> j, <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *subset)</font></strong>
+<a name="line357">357: </a>{
+<a name="line358">358: </a>  <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       Nk, i, l;
+
+<a name="line362">362: </a>  <a href="../docs/manualpages/FE/PetscDTBinomialInt.html#PetscDTBinomialInt">PetscDTBinomialInt</a>(n, k, &amp;Nk);
+<a name="line363">363: </a>  <font color="#4169E1">for</font> (i = 0, l = 0; i &lt; n &amp;&amp; l &lt; k; i++) {
+<a name="line364">364: </a>    <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> Nminuskminus = (Nk * (k - l)) / (n - i);
+<a name="line365">365: </a>    <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> Nminusk = Nk - Nminuskminus;
+
+<a name="line367">367: </a>    <font color="#4169E1">if</font> (j &lt; Nminuskminus) {
+<a name="line368">368: </a>      subset[l++] = i;
+<a name="line369">369: </a>      Nk = Nminuskminus;
+<a name="line370">370: </a>    } <font color="#4169E1">else</font> {
+<a name="line371">371: </a>      j -= Nminuskminus;
+<a name="line372">372: </a>      Nk = Nminusk;
+<a name="line373">373: </a>    }
+<a name="line374">374: </a>  }
+<a name="line375">375: </a>  <font color="#4169E1">return</font>(0);
+<a name="line376">376: </a>}
+
+<a name="line378">378: </a><font color="#B22222">/*MC</font>
+<a name="line379">379: </a><font color="#B22222">   <a href="../docs/manualpages/FE/PetscDTSubsetIndex.html#PetscDTSubsetIndex">PetscDTSubsetIndex</a> - Convert an ordered subset of k integers from the set [0, ..., n - 1] to its encoding as an integers in [0, n choose k) in lexicographic order.  This is the inverse of <a href="../docs/manualpages/FE/PetscDTEnumSubset.html#PetscDTEnumSubset">PetscDTEnumSubset</a>.</font>
+
+<a name="line381">381: </a><font color="#B22222">   Input Arguments:</font>
+<a name="line382">382: </a><font color="#B22222">+  n - a non-negative integer (see note about limits below)</font>
+<a name="line383">383: </a><font color="#B22222">.  k - an integer in [0, n]</font>
+<a name="line384">384: </a><font color="#B22222">-  subset - an ordered subset of the integers [0, ..., n - 1]</font>
+
+<a name="line386">386: </a><font color="#B22222">   Output Arguments:</font>
+<a name="line387">387: </a><font color="#B22222">.  index - the rank of the subset in lexicographic order</font>
+
+<a name="line389">389: </a><font color="#B22222">   Note: this is limited by arguments such that n choose k can be represented by <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></font>
+
+<a name="line391">391: </a><font color="#B22222">   Level: beginner</font>
+
+<a name="line393">393: </a><font color="#B22222">.seealso: <a href="../docs/manualpages/FE/PetscDTEnumSubset.html#PetscDTEnumSubset">PetscDTEnumSubset</a>()</font>
+<a name="line394">394: </a><font color="#B22222">M*/</font>
+<a name="line395">395: </a><strong><font color="#4169E1"><a name="PetscDTSubsetIndex"></a>PETSC_STATIC_INLINE <a href="../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../docs/manualpages/FE/PetscDTSubsetIndex.html#PetscDTSubsetIndex">PetscDTSubsetIndex</a>(<a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> n, <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> k, const <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *subset, <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *index)</font></strong>
+<a name="line396">396: </a>{
+<a name="line397">397: </a>  <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       i, j = 0, l, Nk;
+
+<a name="line401">401: </a>  *index = -1;
+<a name="line402">402: </a>  <a href="../docs/manualpages/FE/PetscDTBinomialInt.html#PetscDTBinomialInt">PetscDTBinomialInt</a>(n, k, &amp;Nk);
+<a name="line403">403: </a>  <font color="#4169E1">for</font> (i = 0, l = 0; i &lt; n &amp;&amp; l &lt; k; i++) {
+<a name="line404">404: </a>    <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> Nminuskminus = (Nk * (k - l)) / (n - i);
+<a name="line405">405: </a>    <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> Nminusk = Nk - Nminuskminus;
+
+<a name="line407">407: </a>    <font color="#4169E1">if</font> (subset[l] == i) {
+<a name="line408">408: </a>      l++;
+<a name="line409">409: </a>      Nk = Nminuskminus;
+<a name="line410">410: </a>    } <font color="#4169E1">else</font> {
+<a name="line411">411: </a>      j += Nminuskminus;
+<a name="line412">412: </a>      Nk = Nminusk;
+<a name="line413">413: </a>    }
+<a name="line414">414: </a>  }
+<a name="line415">415: </a>  *index = j;
+<a name="line416">416: </a>  <font color="#4169E1">return</font>(0);
+<a name="line417">417: </a>}
+
+<a name="line419">419: </a><font color="#B22222">/*MC</font>
+<a name="line420">420: </a><font color="#B22222">   <a href="../docs/manualpages/FE/PetscDTEnumSubset.html#PetscDTEnumSubset">PetscDTEnumSubset</a> - Split the integers [0, ..., n - 1] into two complementary ordered subsets, the first subset of size k and being the jth subset of that size in lexicographic order.</font>
+
+<a name="line422">422: </a><font color="#B22222">   Input Arguments:</font>
+<a name="line423">423: </a><font color="#B22222">+  n - a non-negative integer (see note about limits below)</font>
+<a name="line424">424: </a><font color="#B22222">.  k - an integer in [0, n]</font>
+<a name="line425">425: </a><font color="#B22222">-  j - an index in [0, n choose k)</font>
+
+<a name="line427">427: </a><font color="#B22222">   Output Arguments:</font>
+<a name="line428">428: </a><font color="#B22222">+  perm - the jth subset of size k of the integers [0, ..., n - 1], followed by its complementary set.</font>
+<a name="line429">429: </a><font color="#B22222">-  isOdd - if not NULL, return whether perm is an even or odd permutation.</font>
+
+<a name="line431">431: </a><font color="#B22222">   Note: this is limited by arguments such that n choose k can be represented by <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></font>
+
+<a name="line433">433: </a><font color="#B22222">   Level: beginner</font>
+
+<a name="line435">435: </a><font color="#B22222">.seealso: <a href="../docs/manualpages/FE/PetscDTEnumSubset.html#PetscDTEnumSubset">PetscDTEnumSubset</a>(), <a href="../docs/manualpages/FE/PetscDTSubsetIndex.html#PetscDTSubsetIndex">PetscDTSubsetIndex</a>()</font>
+<a name="line436">436: </a><font color="#B22222">M*/</font>
+<a name="line437">437: </a><strong><font color="#4169E1"><a name="PetscDTEnumSplit"></a>PETSC_STATIC_INLINE <a href="../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscDTEnumSplit(<a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> n, <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> k, <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> j, <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *perm, <a href="../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> *isOdd)</font></strong>
+<a name="line438">438: </a>{
+<a name="line439">439: </a>  <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       i, l, m, *subcomp, Nk;
+<a name="line440">440: </a>  <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       odd;
+
+<a name="line444">444: </a>  <font color="#4169E1">if</font> (isOdd) *isOdd = <a href="../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line445">445: </a>  <a href="../docs/manualpages/FE/PetscDTBinomialInt.html#PetscDTBinomialInt">PetscDTBinomialInt</a>(n, k, &amp;Nk);
+<a name="line446">446: </a>  odd = 0;
+<a name="line447">447: </a>  subcomp = &amp;perm[k];
+<a name="line448">448: </a>  <font color="#4169E1">for</font> (i = 0, l = 0, m = 0; i &lt; n &amp;&amp; l &lt; k; i++) {
+<a name="line449">449: </a>    <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> Nminuskminus = (Nk * (k - l)) / (n - i);
+<a name="line450">450: </a>    <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> Nminusk = Nk - Nminuskminus;
+
+<a name="line452">452: </a>    <font color="#4169E1">if</font> (j &lt; Nminuskminus) {
+<a name="line453">453: </a>      perm[l++] = i;
+<a name="line454">454: </a>      Nk = Nminuskminus;
+<a name="line455">455: </a>    } <font color="#4169E1">else</font> {
+<a name="line456">456: </a>      subcomp[m++] = i;
+<a name="line457">457: </a>      j -= Nminuskminus;
+<a name="line458">458: </a>      odd ^= ((k - l) &amp; 1);
+<a name="line459">459: </a>      Nk = Nminusk;
+<a name="line460">460: </a>    }
+<a name="line461">461: </a>  }
+<a name="line462">462: </a>  <font color="#4169E1">for</font> (; i &lt; n; i++) {
+<a name="line463">463: </a>    subcomp[m++] = i;
+<a name="line464">464: </a>  }
+<a name="line465">465: </a>  <font color="#4169E1">if</font> (isOdd) *isOdd = odd ? <a href="../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a> : <a href="../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line466">466: </a>  <font color="#4169E1">return</font>(0);
+<a name="line467">467: </a>}
+
+<a name="line469">469: </a><font color="#4169E1"><a name="_p_PetscTabulation"></a>struct _p_PetscTabulation </font>{
+<a name="line470">470: </a>  <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>    K;    <font color="#B22222">/* Indicates a k-jet, namely tabulated derviatives up to order k */</font>
+<a name="line471">471: </a>  <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>    Nr;   <font color="#B22222">/* The number of tabulation replicas (often 1) */</font>
+<a name="line472">472: </a>  <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>    Np;   <font color="#B22222">/* The number of tabulation points in a replica */</font>
+<a name="line473">473: </a>  <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>    Nb;   <font color="#B22222">/* The number of functions tabulated */</font>
+<a name="line474">474: </a>  <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>    Nc;   <font color="#B22222">/* The number of function components */</font>
+<a name="line475">475: </a>  <a href="../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>    cdim; <font color="#B22222">/* The coordinate dimension */</font>
+<a name="line476">476: </a>  <a href="../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> **T;    <font color="#B22222">/* The tabulation T[K] of functions and their derivatives</font>
+<a name="line477">477: </a><font color="#B22222">                       T[0] = B[Nr*Np][Nb][Nc]:             The basis function values at quadrature points</font>
+<a name="line478">478: </a><font color="#B22222">                       T[1] = D[Nr*Np][Nb][Nc][cdim]:       The basis function derivatives at quadrature points</font>
+<a name="line479">479: </a><font color="#B22222">                       T[2] = H[Nr*Np][Nb][Nc][cdim][cdim]: The basis function second derivatives at quadrature points */</font>
+<a name="line480">480: </a>};
+<a name="line481">481: </a><font color="#4169E1">typedef struct _p_PetscTabulation *PetscTabulation;</font>
+
+<a name="line483">483: </a><font color="#A020F0">#endif</font>
+</pre>
+</body>
+
+</html>

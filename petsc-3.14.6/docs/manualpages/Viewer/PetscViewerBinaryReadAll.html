@@ -1,0 +1,44 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Viewer/PetscViewerBinaryReadAll.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>PetscViewerBinaryReadAll</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/Viewer/PetscViewerBinaryReadAll.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="PetscViewerBinaryReadAll"><H1>PetscViewerBinaryReadAll</H1></A>
+reads from a binary file from all processes 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscviewer.h"   
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../Viewer/PetscViewerBinaryReadAll.html#PetscViewerBinaryReadAll">PetscViewerBinaryReadAll</A>(<A HREF="../Viewer/PetscViewer.html#PetscViewer">PetscViewer</A> viewer,void *data,<A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> count,<A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> start,<A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> total,<A HREF="../Sys/PetscDataType.html#PetscDataType">PetscDataType</A> dtype)
+</PRE>
+Collective
+<P>
+<H3><FONT COLOR="#CC3333">Input Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>viewer </B></TD><TD>- the binary viewer
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>data </B></TD><TD>- location of data
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>count </B></TD><TD>- local number of items of data to read
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>start </B></TD><TD>- local start, can be <A HREF="../Sys/PETSC_DETERMINE.html#PETSC_DETERMINE">PETSC_DETERMINE</A>
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>total </B></TD><TD>- global number of items of data to read, can be <A HREF="../Sys/PETSC_DETERMINE.html#PETSC_DETERMINE">PETSC_DETERMINE</A>
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>dtype </B></TD><TD>- type of data to read
+</TD></TR></TABLE>
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../Viewer/PetscViewerBinaryOpen.html#PetscViewerBinaryOpen">PetscViewerBinaryOpen</A>(), <A HREF="../Viewer/PetscViewerBinarySetUseMPIIO.html#PetscViewerBinarySetUseMPIIO">PetscViewerBinarySetUseMPIIO</A>(), <A HREF="../Viewer/PetscViewerBinaryRead.html#PetscViewerBinaryRead">PetscViewerBinaryRead</A>(), <A HREF="../Viewer/PetscViewerBinaryWriteAll.html#PetscViewerBinaryWriteAll">PetscViewerBinaryWriteAll</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>advanced<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/sys/classes/viewer/impls/binary/binv.c.html#PetscViewerBinaryReadAll">src/sys/classes/viewer/impls/binary/binv.c</A>
+<BR><A HREF="./index.html">Index of all Viewer routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

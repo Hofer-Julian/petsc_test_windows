@@ -1,0 +1,46 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DMPLEX/DMPlexCellRefinerGetAffineTransforms.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>DMPlexCellRefinerGetAffineTransforms</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/DMPLEX/DMPlexCellRefinerGetAffineTransforms.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="DMPlexCellRefinerGetAffineTransforms"><H1>DMPlexCellRefinerGetAffineTransforms</H1></A>
+Gets the affine map from the reference cell to each subcell 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscdmplex.h"   
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../DMPLEX/DMPlexCellRefinerGetAffineTransforms.html#DMPlexCellRefinerGetAffineTransforms">DMPlexCellRefinerGetAffineTransforms</A>(DMPlexCellRefiner cr, <A HREF="../DM/DMPolytopeType.html#DMPolytopeType">DMPolytopeType</A> ct, <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> *Nc, <A HREF="../Sys/PetscReal.html#PetscReal">PetscReal</A> *v0[], <A HREF="../Sys/PetscReal.html#PetscReal">PetscReal</A> *J[], <A HREF="../Sys/PetscReal.html#PetscReal">PetscReal</A> *invJ[])
+</PRE>
+<H3><FONT COLOR="#CC3333">Input Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>cr </B></TD><TD>- The DMPlexCellRefiner object
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>ct </B></TD><TD>- The cell type
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Output Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>Nc   </B></TD><TD>- The number of subcells produced from this cell type
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>v0   </B></TD><TD>- The translation of the first vertex for each subcell
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>J    </B></TD><TD>- The Jacobian for each subcell (map from reference cell to subcell)
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>invJ </B></TD><TD>- The inverse Jacobian for each subcell
+</TD></TR></TABLE>
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../DMPLEX/DMPlexCellRefinerGetAffineFaceTransforms.html#DMPlexCellRefinerGetAffineFaceTransforms">DMPlexCellRefinerGetAffineFaceTransforms</A>(), Create()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>developer<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/dm/impls/plex/plexrefine.c.html#DMPlexCellRefinerGetAffineTransforms">src/dm/impls/plex/plexrefine.c</A>
+<P><H3><FONT COLOR="CC3333">Implementations</FONT></H3><A HREF="../../../src/dm/impls/plex/plexrefine.c.html#DMPlexCellRefinerGetAffineTransforms_Regular">DMPlexCellRefinerGetAffineTransforms_Regular in src/dm/impls/plex/plexrefine.c</A><BR>
+<BR><A HREF="./index.html">Index of all DMPLEX routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

@@ -1,0 +1,52 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DMPLEX/DMPlexMatSetClosure.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>DMPlexMatSetClosure</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/DMPLEX/DMPlexMatSetClosure.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="DMPlexMatSetClosure"><H1>DMPlexMatSetClosure</H1></A>
+Set an array of the values on the closure of 'point' using a different row and column section 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscdmplex.h"   
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> DMPlexMatSetClosureGeneral(<A HREF="../DM/DM.html#DM">DM</A> dmRow, <A HREF="../PetscSection/PetscSection.html#PetscSection">PetscSection</A> sectionRow, <A HREF="../PetscSection/PetscSection.html#PetscSection">PetscSection</A> globalSectionRow, <A HREF="../DM/DM.html#DM">DM</A> dmCol, <A HREF="../PetscSection/PetscSection.html#PetscSection">PetscSection</A> sectionCol, <A HREF="../PetscSection/PetscSection.html#PetscSection">PetscSection</A> globalSectionCol, <A HREF="../Mat/Mat.html#Mat">Mat</A> A, <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> point, const <A HREF="../Sys/PetscScalar.html#PetscScalar">PetscScalar</A> values[], <A HREF="../Sys/InsertMode.html#InsertMode">InsertMode</A> mode)
+</PRE>
+Not collective
+<P>
+<H3><FONT COLOR="#CC3333">Input Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>dmRow </B></TD><TD>- The <A HREF="../DM/DM.html#DM">DM</A> for the row fields
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>sectionRow </B></TD><TD>- The section describing the layout, or NULL to use the default section in dmRow
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>globalSectionRow </B></TD><TD>- The section describing the layout, or NULL to use the default global section in dmRow
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>dmCol </B></TD><TD>- The <A HREF="../DM/DM.html#DM">DM</A> for the column fields
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>sectionCol </B></TD><TD>- The section describing the layout, or NULL to use the default section in dmCol
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>globalSectionCol </B></TD><TD>- The section describing the layout, or NULL to use the default global section in dmCol
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>A </B></TD><TD>- The matrix
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>point </B></TD><TD>- The point in the DMs
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>values </B></TD><TD>- The array of values
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>mode </B></TD><TD>- The insert mode, where <A HREF="../Sys/InsertMode.html#InsertMode">INSERT_ALL_VALUES</A> and <A HREF="../Sys/InsertMode.html#InsertMode">ADD_ALL_VALUES</A> also overwrite boundary conditions
+</TD></TR></TABLE>
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+<A HREF="../DMPLEX/DMPlexMatSetClosure.html#DMPlexMatSetClosure">DMPlexMatSetClosure</A>(), <A HREF="../DMPLEX/DMPlexVecGetClosure.html#DMPlexVecGetClosure">DMPlexVecGetClosure</A>(), <A HREF="../DMPLEX/DMPlexVecSetClosure.html#DMPlexVecSetClosure">DMPlexVecSetClosure</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>intermediate<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/dm/impls/plex/plex.c.html#DMPlexMatSetClosure">src/dm/impls/plex/plex.c</A>
+<BR><A HREF="./index.html">Index of all DMPLEX routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

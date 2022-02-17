@@ -1,0 +1,38 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DUALSPACE/PetscDualSpaceRefinedSetCellSpaces.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>PetscDualSpaceRefinedSetCellSpaces</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/DUALSPACE/PetscDualSpaceRefinedSetCellSpaces.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="PetscDualSpaceRefinedSetCellSpaces"><H1>PetscDualSpaceRefinedSetCellSpaces</H1></A>
+Set the dual spaces for the closures of each of the cells in the multicell <A HREF="../DM/DM.html#DM">DM</A> of a <A HREF="../FE/PetscDualSpace.html#PetscDualSpace">PetscDualSpace</A> 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscfe.h" 
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../DUALSPACE/PetscDualSpaceRefinedSetCellSpaces.html#PetscDualSpaceRefinedSetCellSpaces">PetscDualSpaceRefinedSetCellSpaces</A>(<A HREF="../FE/PetscDualSpace.html#PetscDualSpace">PetscDualSpace</A> sp, const <A HREF="../FE/PetscDualSpace.html#PetscDualSpace">PetscDualSpace</A> cellSpaces[])
+</PRE>
+Collective on <A HREF="../FE/PetscDualSpace.html#PetscDualSpace">PetscDualSpace</A>
+<P>
+<H3><FONT COLOR="#CC3333">Input Arguments</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>sp </B></TD><TD>- a <A HREF="../FE/PetscDualSpace.html#PetscDualSpace">PetscDualSpace</A>
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>cellSpaces </B></TD><TD>- one <A HREF="../FE/PetscDualSpace.html#PetscDualSpace">PetscDualSpace</A> for each of the cells.  The reference count of each cell space will be incremented,
+so the user is still responsible for these spaces afterwards
+</TD></TR></TABLE>
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../FE/PetscFERefine.html#PetscFERefine">PetscFERefine</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>intermediate<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/dm/dt/dualspace/impls/refined/dualspacerefined.c.html#PetscDualSpaceRefinedSetCellSpaces">src/dm/dt/dualspace/impls/refined/dualspacerefined.c</A>
+<P><H3><FONT COLOR="CC3333">Implementations</FONT></H3><A HREF="../../../src/dm/dt/dualspace/impls/refined/dualspacerefined.c.html#PetscDualSpaceRefinedSetCellSpaces_Refined">PetscDualSpaceRefinedSetCellSpaces_Refined in src/dm/dt/dualspace/impls/refined/dualspacerefined.c</A><BR>
+<BR><A HREF="./index.html">Index of all DUALSPACE routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

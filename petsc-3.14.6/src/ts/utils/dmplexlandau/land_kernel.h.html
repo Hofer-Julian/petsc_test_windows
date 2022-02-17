@@ -1,0 +1,171 @@
+<center><a href="land_kernel.h">Actual source code: land_kernel.h</a></center><br>
+
+<html>
+<head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/src/ts/utils/dmplexlandau/land_kernel.h.html" />
+<title></title>
+<meta name="generator" content="c2html 0.9.4">
+<meta name="date" content="2021-03-30T16:52:01+00:00">
+</head>
+
+<body bgcolor="#FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 src/ts/utils/dmplexlandau/land_kernel.h.html "><small>Report Typos and Errors</small></a></div>
+<pre width="80">
+<a name="line1">  1: </a><font color="#A020F0">#include </font><font color="#666666">"./land_tensors.h"</font><font color="#A020F0"></font>
+
+<a name="line3">  3: </a><font color="#B22222">/* landau_inner_integral() */</font>
+<a name="line4">  4: </a><font color="#B22222">/* Compute g2 and g3 for element, assemble into eleme matrix */</font>
+<a name="line5">  5: </a>PETSC_DEVICE_FUNC_DECL void
+<a name="line6">  6: </a>landau_inner_integral(const <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> myQi, const <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> qi_inc, const <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> mySubBlk, const <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> nSubBlks, const <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> ip_start, const <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> ip_end, const <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> ip_stride, <font color="#B22222">/* decomposition args, not discretization */</font>
+<a name="line7">  7: </a>                       const <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> jpidx, const <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> Nf, const <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> dim, const <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> * const IPDataGlobal, const <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> wiGlobal[], const <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> invJj[],
+<a name="line8">  8: </a>                       const <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> nu_alpha[], const <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> nu_beta[], const <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> invMass[], const <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> Eq_m[], <a href="../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> quarter3DDomain,
+<a name="line9">  9: </a>                       const <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> Nq, const <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> Nb, const <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> qj_start, const <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> qj_end, const <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> * const BB, const <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> * const DD, <a href="../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> *elemMat, <font color="#B22222">/* discretization args; local output */</font>
+<a name="line10"> 10: </a>                       <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> g2[<font color="#B22222">/* LANDAU_MAX_NQ */</font>][LANDAU_MAX_SUB_THREAD_BLOCKS][LANDAU_MAX_SPECIES][LANDAU_DIM], <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> g3[<font color="#B22222">/* LANDAU_MAX_NQ */</font>][LANDAU_MAX_SUB_THREAD_BLOCKS][LANDAU_MAX_SPECIES][LANDAU_DIM][LANDAU_DIM] <font color="#B22222">/* shared memory buffers */</font>
+<a name="line11"> 11: </a>                       , <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> myelem)
+<a name="line12"> 12: </a>{
+<a name="line13"> 13: </a>  <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>                   gg2[LANDAU_MAX_SPECIES][LANDAU_DIM],gg3[LANDAU_MAX_SPECIES][LANDAU_DIM][LANDAU_DIM];
+<a name="line14"> 14: </a>  const <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>              ipdata_sz = (dim + Nf*(1+dim));
+<a name="line15"> 15: </a>  <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>                    d,f,d2,dp,d3,fieldB,ipidx,fieldA;
+<a name="line16"> 16: </a>  const LandauPointData * const fplpt_j = (LandauPointData*)(IPDataGlobal + jpidx*ipdata_sz);
+<a name="line17"> 17: </a>  const <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> * const     vj = fplpt_j-&gt;crd, wj = wiGlobal[jpidx];
+<a name="line18"> 18: </a>  // create g2 &amp; g3
+<a name="line19"> 19: </a>  <font color="#4169E1">for</font> (d=0;d&lt;dim;d++) { // clear accumulation data D &amp; K
+<a name="line20"> 20: </a>    <font color="#4169E1">for</font> (f=0;f&lt;Nf;f++) {
+<a name="line21"> 21: </a>      gg2[f][d] = 0;
+<a name="line22"> 22: </a>      <font color="#4169E1">for</font> (d2=0;d2&lt;dim;d2++) gg3[f][d][d2] = 0;
+<a name="line23"> 23: </a>    }
+<a name="line24"> 24: </a>  }
+<a name="line25"> 25: </a>  <font color="#4169E1">for</font> (ipidx = ip_start; ipidx &lt; ip_end; ipidx += ip_stride) {
+<a name="line26"> 26: </a>    const LandauPointData * const fplpt = (LandauPointData*)(IPDataGlobal + ipidx*ipdata_sz);
+<a name="line27"> 27: </a>    const LandauFDF * const       fdf = &amp;fplpt-&gt;fdf[0];
+<a name="line28"> 28: </a>    const <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>             wi = wiGlobal[ipidx];
+<a name="line29"> 29: </a><font color="#A020F0">#if LANDAU_DIM==2</font>
+<a name="line30"> 30: </a>    <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>       Ud[2][2], Uk[2][2];
+<a name="line31"> 31: </a>    LandauTensor2D(vj, fplpt-&gt;crd[0], fplpt-&gt;crd[1], Ud, Uk, (ipidx==jpidx) ? 0. : 1.);
+<a name="line32"> 32: </a>    <font color="#4169E1">for</font> (fieldA = 0; fieldA &lt; Nf; ++fieldA) {
+<a name="line33"> 33: </a>      <font color="#4169E1">for</font> (fieldB = 0; fieldB &lt; Nf; ++fieldB) {
+<a name="line34"> 34: </a>        <font color="#4169E1">for</font> (d2 = 0; d2 &lt; 2; ++d2) {
+<a name="line35"> 35: </a>          <font color="#4169E1">for</font> (d3 = 0; d3 &lt; 2; ++d3) {
+<a name="line36"> 36: </a>            <font color="#B22222">/* K = U * grad(f): g2=e: i,A */</font>
+<a name="line37"> 37: </a>            gg2[fieldA][d2] += nu_alpha[fieldA]*nu_beta[fieldB] * invMass[fieldB] * Uk[d2][d3] * fdf[fieldB].df[d3] * wi;
+<a name="line38"> 38: </a>            <font color="#B22222">/* D = -U * (I \kron (fx)): g3=f: i,j,A */</font>
+<a name="line39"> 39: </a>            gg3[fieldA][d2][d3] -= nu_alpha[fieldA]*nu_beta[fieldB] * invMass[fieldA] * Ud[d2][d3] * fdf[fieldB].f * wi;
+<a name="line40"> 40: </a>          }
+<a name="line41"> 41: </a>        }
+<a name="line42"> 42: </a>      }
+<a name="line43"> 43: </a>    }
+<a name="line44"> 44: </a><font color="#A020F0">#else</font>
+<a name="line45"> 45: </a>    <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> U[3][3];
+<a name="line46"> 46: </a>    <font color="#4169E1">if</font> (!quarter3DDomain) {
+<a name="line47"> 47: </a>      LandauTensor3D(vj, fplpt-&gt;crd[0], fplpt-&gt;crd[1], fplpt-&gt;crd[2], U, (ipidx==jpidx) ? 0. : 1.);
+<a name="line48"> 48: </a>      <font color="#4169E1">for</font> (fieldA = 0; fieldA &lt; Nf; ++fieldA) {
+<a name="line49"> 49: </a>        <font color="#4169E1">for</font> (fieldB = 0; fieldB &lt; Nf; ++fieldB) {
+<a name="line50"> 50: </a>          <font color="#4169E1">for</font> (d2 = 0; d2 &lt; 3; ++d2) {
+<a name="line51"> 51: </a>            <font color="#4169E1">for</font> (d3 = 0; d3 &lt; 3; ++d3) {
+<a name="line52"> 52: </a>              <font color="#B22222">/* K = U * grad(f): g2 = e: i,A */</font>
+<a name="line53"> 53: </a>              gg2[fieldA][d2] += nu_alpha[fieldA]*nu_beta[fieldB] * invMass[fieldB] * U[d2][d3] * fplpt-&gt;fdf[fieldB].df[d3] * wi;
+<a name="line54"> 54: </a>              <font color="#B22222">/* D = -U * (I \kron (fx)): g3 = f: i,j,A */</font>
+<a name="line55"> 55: </a>              gg3[fieldA][d2][d3] -= nu_alpha[fieldA]*nu_beta[fieldB] * invMass[fieldA] * U[d2][d3] * fplpt-&gt;fdf[fieldB].f * wi;
+<a name="line56"> 56: </a>            }
+<a name="line57"> 57: </a>          }
+<a name="line58"> 58: </a>        }
+<a name="line59"> 59: </a>      }
+<a name="line60"> 60: </a>    } <font color="#4169E1">else</font> {
+<a name="line61"> 61: </a>      <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> lxx[] = {fplpt-&gt;crd[0], fplpt-&gt;crd[1]}, R[2][2] = {{-1,1},{1,-1}};
+<a name="line62"> 62: </a>      <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> ldf[3*LANDAU_MAX_SPECIES];
+<a name="line63"> 63: </a>      <font color="#4169E1">for</font> (fieldB = 0; fieldB &lt; Nf; ++fieldB) <font color="#4169E1">for</font> (d3 = 0; d3 &lt; 3; ++d3) ldf[d3 + fieldB*3] = fplpt-&gt;fdf[fieldB].df[d3] * wi * invMass[fieldB];
+<a name="line64"> 64: </a>      <font color="#4169E1">for</font> (dp=0;dp&lt;4;dp++) {
+<a name="line65"> 65: </a>        LandauTensor3D(vj, lxx[0], lxx[1], fplpt-&gt;z, U, (ipidx==jpidx) ? 0. : 1.);
+<a name="line66"> 66: </a>        <font color="#4169E1">for</font> (fieldA = 0; fieldA &lt; Nf; ++fieldA) {
+<a name="line67"> 67: </a>          <font color="#4169E1">for</font> (fieldB = 0; fieldB &lt; Nf; ++fieldB) {
+<a name="line68"> 68: </a>            <font color="#4169E1">for</font> (d2 = 0; d2 &lt; 3; ++d2) {
+<a name="line69"> 69: </a>              <font color="#4169E1">for</font> (d3 = 0; d3 &lt; 3; ++d3) {
+<a name="line70"> 70: </a>                <font color="#B22222">/* K = U * grad(f): g2 = e: i,A */</font>
+<a name="line71"> 71: </a>                gg2[fieldA][d2] += nu_alpha[fieldA]*nu_beta[fieldB] * U[d2][d3] * ldf[d3 + fieldB*3];
+<a name="line72"> 72: </a>                <font color="#B22222">/* D = -U * (I \kron (fx)): g3 = f: i,j,A */</font>
+<a name="line73"> 73: </a>                gg3[fieldA][d2][d3] -= nu_alpha[fieldA]*nu_beta[fieldB] * invMass[fieldA] * U[d2][d3] * f[fieldB] * wi;
+<a name="line74"> 74: </a>              }
+<a name="line75"> 75: </a>            }
+<a name="line76"> 76: </a>          }
+<a name="line77"> 77: </a>        }
+<a name="line78"> 78: </a>        <font color="#4169E1">for</font> (d3 = 0; d3 &lt; 2; ++d3) {
+<a name="line79"> 79: </a>          lxx[d3] *= R[d3][dp%2];
+<a name="line80"> 80: </a>          <font color="#4169E1">for</font> (fieldB = 0; fieldB &lt; Nf; ++fieldB) {
+<a name="line81"> 81: </a>            ldf[d3 + fieldB*3] *= R[d3][dp%2];
+<a name="line82"> 82: </a>          }
+<a name="line83"> 83: </a>        }
+<a name="line84"> 84: </a>      }
+<a name="line85"> 85: </a>    }
+<a name="line86"> 86: </a><font color="#A020F0">#endif</font>
+<a name="line87"> 87: </a>  } <font color="#B22222">/* IPs */</font>
+<a name="line88"> 88: </a>  <font color="#B22222">/* add electric field term once per IP */</font>
+<a name="line89"> 89: </a>  <font color="#4169E1">if</font> (mySubBlk==0) {
+<a name="line90"> 90: </a>    <font color="#4169E1">for</font> (fieldA = 0; fieldA &lt; Nf; ++fieldA) {
+<a name="line91"> 91: </a>      gg2[fieldA][dim-1] += Eq_m[fieldA];
+<a name="line92"> 92: </a>    }
+<a name="line93"> 93: </a>  }
+<a name="line94"> 94: </a>  //intf(<font color="#666666">"%d %d gg2[1][1]=%g\n"</font>,myelem,qj_start,gg2[1][dim-1]);
+<a name="line95"> 95: </a>  <font color="#B22222">/* Jacobian transform - g2 */</font>
+<a name="line96"> 96: </a>  <font color="#4169E1">for</font> (fieldA = 0; fieldA &lt; Nf; ++fieldA) {
+<a name="line97"> 97: </a>    <font color="#4169E1">for</font> (d = 0; d &lt; dim; ++d) {
+<a name="line98"> 98: </a>      g2[myQi][mySubBlk][fieldA][d] = 0.0;
+<a name="line99"> 99: </a>      <font color="#4169E1">for</font> (d2 = 0; d2 &lt; dim; ++d2) {
+<a name="line100">100: </a>        g2[myQi][mySubBlk][fieldA][d] += invJj[d*dim+d2]*gg2[fieldA][d2];
+<a name="line101">101: </a>        //printf(<font color="#666666">"\t:g2[%d][%d][%d]=%g\n"</font>,fieldA,qj_start,d,g2[myQi][mySubBlk][fieldA][d]);
+<a name="line102">102: </a>        g3[myQi][mySubBlk][fieldA][d][d2] = 0.0;
+<a name="line103">103: </a>        <font color="#4169E1">for</font> (d3 = 0; d3 &lt; dim; ++d3) {
+<a name="line104">104: </a>          <font color="#4169E1">for</font> (dp = 0; dp &lt; dim; ++dp) {
+<a name="line105">105: </a>            g3[myQi][mySubBlk][fieldA][d][d2] += invJj[d*dim + d3]*gg3[fieldA][d3][dp]*invJj[d2*dim + dp];
+<a name="line106">106: </a>            //printf(<font color="#666666">"\t\t\t:%d %d %d %d g3=%g\n"</font>,qj_start,fieldA,d,d2,g3[myQi][mySubBlk][fieldA][d][d2]);
+<a name="line107">107: </a>          }
+<a name="line108">108: </a>        }
+<a name="line109">109: </a>        g3[myQi][mySubBlk][fieldA][d][d2] *= wj;
+<a name="line110">110: </a>      }
+<a name="line111">111: </a>      g2[myQi][mySubBlk][fieldA][d] *= wj;
+<a name="line112">112: </a>    }
+<a name="line113">113: </a>  }
+<a name="line114">114: </a>  // Synchronize (ensure all the data is available) and sum g2 &amp; g3
+<a name="line115">115: </a>  PETSC_THREAD_SYNC;
+<a name="line116">116: </a>  <font color="#4169E1">if</font> (mySubBlk==0) { <font color="#B22222">/* on one thread, sum up g2 &amp; g3 (noop with one subblock) -- could parallelize! */</font>
+<a name="line117">117: </a>    <font color="#4169E1">for</font> (fieldA = 0; fieldA &lt; Nf; ++fieldA) {
+<a name="line118">118: </a>      <font color="#4169E1">for</font> (d = 0; d &lt; dim; ++d) {
+<a name="line119">119: </a>        <font color="#4169E1">for</font> (d3 = 1; d3 &lt; nSubBlks; ++d3) {
+<a name="line120">120: </a>          g2[myQi][0][fieldA][d] += g2[myQi][d3][fieldA][d];
+<a name="line121">121: </a>          <font color="#4169E1">for</font> (dp = 0; dp &lt; dim; ++dp) {
+<a name="line122">122: </a>            g3[myQi][0][fieldA][d][dp] += g3[myQi][d3][fieldA][d][dp];
+<a name="line123">123: </a>          }
+<a name="line124">124: </a>        }
+<a name="line125">125: </a>      }
+<a name="line126">126: </a>    }
+<a name="line127">127: </a>  }
+
+<a name="line129">129: </a>  <font color="#B22222">/* FE matrix construction */</font>
+<a name="line130">130: </a>  PETSC_THREAD_SYNC;   // Synchronize (ensure all the data is available) and sum IP matrices
+<a name="line131">131: </a>  {
+<a name="line132">132: </a>    <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>  fieldA,d,f,qj,qj_0,d2,g,totDim=Nb*Nf;
+<a name="line133">133: </a>    <font color="#B22222">/* assemble - on the diagonal (I,I) */</font>
+<a name="line134">134: </a>    <font color="#4169E1">for</font> (fieldA = mySubBlk; fieldA &lt; Nf ; fieldA += nSubBlks) {
+<a name="line135">135: </a>      <font color="#4169E1">for</font> (f = myQi; f &lt; Nb ; f += qi_inc) { <font color="#B22222">/* vectorizing here, maybe */</font>
+<a name="line136">136: </a>        const <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> i = fieldA*Nb + f; <font color="#B22222">/* Element matrix row */</font>
+<a name="line137">137: </a>        <font color="#4169E1">for</font> (g = 0; g &lt; Nb; ++g) {
+<a name="line138">138: </a>          const <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> j    = fieldA*Nb + g; <font color="#B22222">/* Element matrix column */</font>
+<a name="line139">139: </a>          const <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> fOff = i*totDim + j;
+<a name="line140">140: </a>          <font color="#4169E1">for</font> (qj = qj_start, qj_0 = 0 ; qj &lt; qj_end ; qj++, qj_0++) {
+<a name="line141">141: </a>            const <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> *BJq = &amp;BB[qj*Nb], *DIq = &amp;DD[qj*Nb*dim];
+<a name="line142">142: </a>            <font color="#4169E1">for</font> (d = 0; d &lt; dim; ++d) {
+<a name="line143">143: </a>              elemMat[fOff] += DIq[f*dim+d]*g2[qj_0][0][fieldA][d]*BJq[g];
+<a name="line144">144: </a>              //intf(<font color="#666666">"\tmat[%d %d %d %d %d]=%g D[%d]=%g g2[%d][%d][%d]=%g B=%g\n"</font>, print, fOff,fieldA,qj,d, elemMat[fOff],f*dim+d,DIq[f*dim+d],fieldA,qj,d,g2[qj_0][0][fieldA][d],BJq[g]);
+<a name="line145">145: </a>              <font color="#4169E1">for</font> (d2 = 0; d2 &lt; dim; ++d2) {
+<a name="line146">146: </a>                elemMat[fOff] += DIq[f*dim + d]*g3[qj_0][0][fieldA][d][d2]*DIq[g*dim + d2];
+<a name="line147">147: </a>              }
+<a name="line148">148: </a>            }
+<a name="line149">149: </a>          }
+<a name="line150">150: </a>        }
+<a name="line151">151: </a>      }
+<a name="line152">152: </a>    }
+<a name="line153">153: </a>  }
+<a name="line154">154: </a>}
+</pre>
+</body>
+
+</html>

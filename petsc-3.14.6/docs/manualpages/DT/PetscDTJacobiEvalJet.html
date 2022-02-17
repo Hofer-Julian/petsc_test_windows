@@ -1,0 +1,50 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DT/PetscDTJacobiEvalJet.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>PetscDTJacobiEvalJet</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/DT/PetscDTJacobiEvalJet.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="PetscDTJacobiEvalJet"><H1>PetscDTJacobiEvalJet</H1></A>
+Evaluate the jet (function and derivatives) of the Jacobi polynomials basis up to a given degree.  The Jacobi polynomials with indices $\alpha$ and $\beta$ are orthogonal with respect to the weighted inner product $\langle f, g \rangle = \int_{-1}^1 (1+x)^{\alpha} (1-x)^{\beta) f(x) g(x) dx$. 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscdt.h" 
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../DT/PetscDTJacobiEvalJet.html#PetscDTJacobiEvalJet">PetscDTJacobiEvalJet</A>(<A HREF="../Sys/PetscReal.html#PetscReal">PetscReal</A> alpha, <A HREF="../Sys/PetscReal.html#PetscReal">PetscReal</A> beta, <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> npoints, const <A HREF="../Sys/PetscReal.html#PetscReal">PetscReal</A> points[], <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> degree, <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> k, <A HREF="../Sys/PetscReal.html#PetscReal">PetscReal</A> p[])
+</PRE>
+<H3><FONT COLOR="#CC3333">Input Arguments</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>alpha </B></TD><TD>- the left exponent of the weight
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>beta </B></TD><TD>- the right exponetn of the weight
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>npoints </B></TD><TD>- the number of points to evaluate the polynomials at
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>points </B></TD><TD>- [npoints] array of point coordinates
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>degree </B></TD><TD>- the maximm degree polynomial space to evaluate, (degree + 1) will be evaluated total.
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>k </B></TD><TD>- the maximum derivative to evaluate in the jet, (k + 1) will be evaluated total.
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Output Argments</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>p </B></TD><TD>- an array containing the evaluations of the Jacobi polynomials's jets on the points.  the size is (degree + 1) x
+(k + 1) x npoints, which also describes the order of the dimensions of this three-dimensional array: the first
+(slowest varying) dimension is polynomial degree; the second dimension is derivative order; the third (fastest
+varying) dimension is the index of the evaluation point.
+</TD></TR></TABLE>
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../DT/PetscDTJacobiEval.html#PetscDTJacobiEval">PetscDTJacobiEval</A>(), <A HREF="../DT/PetscDTPKDEvalJet.html#PetscDTPKDEvalJet">PetscDTPKDEvalJet</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>advanced<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/dm/dt/interface/dt.c.html#PetscDTJacobiEvalJet">src/dm/dt/interface/dt.c</A>
+<BR><A HREF="./index.html">Index of all DT routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

@@ -1,0 +1,220 @@
+<center><a href="partchaco.c">Actual source code: partchaco.c</a></center><br>
+
+<html>
+<head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/src/dm/partitioner/impls/chaco/partchaco.c.html" />
+<title></title>
+<meta name="generator" content="c2html 0.9.4">
+<meta name="date" content="2021-03-30T16:51:06+00:00">
+</head>
+
+<body bgcolor="#FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 src/dm/partitioner/impls/chaco/partchaco.c.html "><small>Report Typos and Errors</small></a></div>
+<pre width="80">
+<a name="line1">  1: </a>#include <A href="../../../../../include/petsc/private/partitionerimpl.h.html">&lt;petsc/private/partitionerimpl.h&gt;</A>
+
+<a name="line3">  3: </a><a href="../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>  ChacoPartitionerCite = <a href="../../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line4">  4: </a>const char ChacoPartitionerCitation[] =
+<a name="line5">  5: </a>  <font color="#666666">"@inproceedings{Chaco95,\n"</font>
+<a name="line6">  6: </a>  <font color="#666666">"  author    = {Bruce Hendrickson and Robert Leland},\n"</font>
+<a name="line7">  7: </a>  <font color="#666666">"  title     = {A multilevel algorithm for partitioning graphs},\n"</font>
+<a name="line8">  8: </a>  <font color="#666666">"  booktitle = {Supercomputing '95: Proceedings of the 1995 ACM/IEEE Conference on Supercomputing (CDROM)},"</font>
+<a name="line9">  9: </a>  <font color="#666666">"  isbn      = {0-89791-816-9},\n"</font>
+<a name="line10"> 10: </a>  <font color="#666666">"  pages     = {28},\n"</font>
+<a name="line11"> 11: </a>  <font color="#666666">"  doi       = {https://doi.acm.org/10.1145/224170.224228},\n"</font>
+<a name="line12"> 12: </a>  <font color="#666666">"  publisher = {ACM Press},\n"</font>
+<a name="line13"> 13: </a>  <font color="#666666">"  address   = {New York},\n"</font>
+<a name="line14"> 14: </a>  <font color="#666666">"  year      = {1995}\n"</font>
+<a name="line15"> 15: </a>  <font color="#666666">"}\n"</font>;
+
+<a name="line17"> 17: </a><font color="#4169E1">typedef</font> <font color="#4169E1">struct</font> {
+<a name="line18"> 18: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> dummy;
+<a name="line19"> 19: </a>} PetscPartitioner_Chaco;
+
+<a name="line21"> 21: </a><strong><font color="#4169E1"><a name="PetscPartitionerDestroy_Chaco"></a>static <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscPartitionerDestroy_Chaco(<a href="../../../../../docs/manualpages/DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</a> part)</font></strong>
+<a name="line22"> 22: </a>{
+<a name="line23"> 23: </a>  PetscPartitioner_Chaco *p = (PetscPartitioner_Chaco *) part-&gt;data;
+<a name="line24"> 24: </a>  <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>          ierr;
+
+<a name="line27"> 27: </a>  <a href="../../../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(p);
+<a name="line28"> 28: </a>  <font color="#4169E1">return</font>(0);
+<a name="line29"> 29: </a>}
+
+<a name="line31"> 31: </a><strong><font color="#4169E1"><a name="PetscPartitionerView_Chaco_ASCII"></a>static <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscPartitionerView_Chaco_ASCII(<a href="../../../../../docs/manualpages/DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</a> part, <a href="../../../../../docs/manualpages/Viewer/PetscViewer.html#PetscViewer">PetscViewer</a> viewer)</font></strong>
+<a name="line32"> 32: </a>{
+<a name="line34"> 34: </a>  <font color="#4169E1">return</font>(0);
+<a name="line35"> 35: </a>}
+
+<a name="line37"> 37: </a><strong><font color="#4169E1"><a name="PetscPartitionerView_Chaco"></a>static <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscPartitionerView_Chaco(<a href="../../../../../docs/manualpages/DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</a> part, <a href="../../../../../docs/manualpages/Viewer/PetscViewer.html#PetscViewer">PetscViewer</a> viewer)</font></strong>
+<a name="line38"> 38: </a>{
+<a name="line39"> 39: </a>  <a href="../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>      iascii;
+
+<a name="line45"> 45: </a>  <a href="../../../../../docs/manualpages/Sys/PetscObjectTypeCompare.html#PetscObjectTypeCompare">PetscObjectTypeCompare</a>((<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>) viewer, <a href="../../../../../docs/manualpages/Viewer/PETSCVIEWERASCII.html#PETSCVIEWERASCII">PETSCVIEWERASCII</a>, &amp;iascii);
+<a name="line46"> 46: </a>  <font color="#4169E1">if</font> (iascii) {PetscPartitionerView_Chaco_ASCII(part, viewer);}
+<a name="line47"> 47: </a>  <font color="#4169E1">return</font>(0);
+<a name="line48"> 48: </a>}
+
+<a name="line50"> 50: </a><font color="#A020F0">#if defined(PETSC_HAVE_CHACO)</font>
+<a name="line51"> 51: </a><font color="#A020F0">#if defined(PETSC_HAVE_UNISTD_H)</font>
+<a name="line52"> 52: </a><font color="#A020F0">#include &lt;unistd.h&gt;</font>
+<a name="line53"> 53: </a><font color="#A020F0">#endif</font>
+<a name="line54"> 54: </a><font color="#A020F0">#if defined(PETSC_HAVE_CHACO_INT_ASSIGNMENT)</font>
+<a name="line55"> 55: </a><font color="#A020F0">#include &lt;chaco.h&gt;</font>
+<a name="line56"> 56: </a><font color="#A020F0">#else</font>
+<a name="line57"> 57: </a><font color="#B22222">/* Older versions of Chaco do not have an include file */</font>
+<a name="line58"> 58: </a>PETSC_EXTERN int interface(int nvtxs, int *start, int *adjacency, int *vwgts,
+<a name="line59"> 59: </a>                       float *ewgts, float *x, float *y, float *z, char *outassignname,
+<a name="line60"> 60: </a>                       char *outfilename, short *assignment, int architecture, int ndims_tot,
+<a name="line61"> 61: </a>                       int mesh_dims[3], double *goal, int global_method, int local_method,
+<a name="line62"> 62: </a>                       int rqi_flag, int vmax, int ndims, double eigtol, long seed);
+<a name="line63"> 63: </a><font color="#A020F0">#endif</font>
+<a name="line64"> 64: </a>extern int FREE_GRAPH;
+<a name="line65"> 65: </a><font color="#A020F0">#endif</font>
+
+<a name="line67"> 67: </a><strong><font color="#4169E1"><a name="PetscPartitionerPartition_Chaco"></a>static <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscPartitionerPartition_Chaco(<a href="../../../../../docs/manualpages/DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</a> part, <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> nparts, <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> numVertices, <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> start[], <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> adjacency[], <a href="../../../../../docs/manualpages/PetscSection/PetscSection.html#PetscSection">PetscSection</a> vertSection, <a href="../../../../../docs/manualpages/PetscSection/PetscSection.html#PetscSection">PetscSection</a> targetSection, <a href="../../../../../docs/manualpages/PetscSection/PetscSection.html#PetscSection">PetscSection</a> partSection, <a href="../../../../../docs/manualpages/IS/IS.html#IS">IS</a> *partition)</font></strong>
+<a name="line68"> 68: </a>{
+<a name="line69"> 69: </a><font color="#A020F0">#if defined(PETSC_HAVE_CHACO)</font>
+<a name="line70"> 70: </a>  <font color="#4169E1">enum</font> {DEFAULT_METHOD = 1, INERTIAL_METHOD = 3};
+<a name="line71"> 71: </a>  <a href="../../../../../docs/manualpages/Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</a>       comm;
+<a name="line72"> 72: </a>  int            nvtxs          = numVertices; <font color="#B22222">/* number of vertices in full graph */</font>
+<a name="line73"> 73: </a>  int           *vwgts          = NULL;   <font color="#B22222">/* weights for all vertices */</font>
+<a name="line74"> 74: </a>  float         *ewgts          = NULL;   <font color="#B22222">/* weights for all edges */</font>
+<a name="line75"> 75: </a>  float         *x              = NULL, *y = NULL, *z = NULL; <font color="#B22222">/* coordinates for inertial method */</font>
+<a name="line76"> 76: </a>  char          *outassignname  = NULL;   <font color="#B22222">/*  name of assignment output file */</font>
+<a name="line77"> 77: </a>  char          *outfilename    = NULL;   <font color="#B22222">/* output file name */</font>
+<a name="line78"> 78: </a>  int            architecture   = 1;      <font color="#B22222">/* 0 =&gt; hypercube, d =&gt; d-dimensional mesh */</font>
+<a name="line79"> 79: </a>  int            ndims_tot      = 0;      <font color="#B22222">/* total number of cube dimensions to divide */</font>
+<a name="line80"> 80: </a>  int            mesh_dims[3];            <font color="#B22222">/* dimensions of mesh of processors */</font>
+<a name="line81"> 81: </a>  double        *goal          = NULL;    <font color="#B22222">/* desired set sizes for each set */</font>
+<a name="line82"> 82: </a>  int            global_method = 1;       <font color="#B22222">/* global partitioning algorithm */</font>
+<a name="line83"> 83: </a>  int            local_method  = 1;       <font color="#B22222">/* local partitioning algorithm */</font>
+<a name="line84"> 84: </a>  int            rqi_flag      = 0;       <font color="#B22222">/* should I use RQI/Symmlq eigensolver? */</font>
+<a name="line85"> 85: </a>  int            vmax          = 200;     <font color="#B22222">/* how many vertices to coarsen down to? */</font>
+<a name="line86"> 86: </a>  int            ndims         = 1;       <font color="#B22222">/* number of eigenvectors (2^d sets) */</font>
+<a name="line87"> 87: </a>  double         eigtol        = 0.001;   <font color="#B22222">/* tolerance on eigenvectors */</font>
+<a name="line88"> 88: </a>  long           seed          = 123636512; <font color="#B22222">/* for random graph mutations */</font>
+<a name="line89"> 89: </a><font color="#A020F0">#if defined(PETSC_HAVE_CHACO_INT_ASSIGNMENT)</font>
+<a name="line90"> 90: </a>  int           *assignment;              <font color="#B22222">/* Output partition */</font>
+<a name="line91"> 91: </a><font color="#A020F0">#else</font>
+<a name="line92"> 92: </a>  short int     *assignment;              <font color="#B22222">/* Output partition */</font>
+<a name="line93"> 93: </a><font color="#A020F0">#endif</font>
+<a name="line94"> 94: </a>  int            fd_stdout, fd_pipe[2];
+<a name="line95"> 95: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>      *points;
+<a name="line96"> 96: </a>  int            i, v, p;
+
+<a name="line100">100: </a>  <a href="../../../../../docs/manualpages/Sys/PetscObjectGetComm.html#PetscObjectGetComm">PetscObjectGetComm</a>((<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)part,&amp;comm);
+<a name="line101">101: </a>  <font color="#4169E1">if</font> (<a href="../../../../../docs/manualpages/Sys/PetscDefined.html#PetscDefined">PetscDefined</a> (USE_DEBUG)) {
+<a name="line102">102: </a>    int ival,isum;
+<a name="line103">103: </a>    <a href="../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> distributed;
+
+<a name="line105">105: </a>    ival = (numVertices &gt; 0);
+<a name="line106">106: </a>    <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Allreduce.html#MPI_Allreduce">MPI_Allreduce</a>(&amp;ival, &amp;isum, 1, MPI_INT, MPI_SUM, comm);
+<a name="line107">107: </a>    distributed = (isum &gt; 1) ? <a href="../../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a> : <a href="../../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line108">108: </a>    <font color="#4169E1">if</font> (distributed) <a href="../../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(comm, PETSC_ERR_SUP, <font color="#666666">"Chaco cannot partition a distributed graph"</font>);
+<a name="line109">109: </a>  }
+<a name="line110">110: </a>  <font color="#4169E1">if</font> (!numVertices) { <font color="#B22222">/* distributed case, return if not holding the graph */</font>
+<a name="line111">111: </a>    <a href="../../../../../docs/manualpages/IS/ISCreateGeneral.html#ISCreateGeneral">ISCreateGeneral</a>(comm, 0, NULL, <a href="../../../../../docs/manualpages/Sys/PetscCopyMode.html#PetscCopyMode">PETSC_OWN_POINTER</a>, partition);
+<a name="line112">112: </a>    <font color="#4169E1">return</font>(0);
+<a name="line113">113: </a>  }
+<a name="line114">114: </a>  FREE_GRAPH = 0; <font color="#B22222">/* Do not let Chaco free my memory */</font>
+<a name="line115">115: </a>  <font color="#4169E1">for</font> (i = 0; i &lt; start[numVertices]; ++i) ++adjacency[i];
+
+<a name="line117">117: </a>  <font color="#4169E1">if</font> (global_method == INERTIAL_METHOD) {
+<a name="line118">118: </a>    <font color="#B22222">/* manager.createCellCoordinates(nvtxs, &amp;x, &amp;y, &amp;z); */</font>
+<a name="line119">119: </a>    <a href="../../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, PETSC_ERR_SUP, <font color="#666666">"Inertial partitioning not yet supported"</font>);
+<a name="line120">120: </a>  }
+<a name="line121">121: </a>  mesh_dims[0] = nparts;
+<a name="line122">122: </a>  mesh_dims[1] = 1;
+<a name="line123">123: </a>  mesh_dims[2] = 1;
+<a name="line124">124: </a>  <a href="../../../../../docs/manualpages/Sys/PetscMalloc1.html#PetscMalloc1">PetscMalloc1</a>(nvtxs, &amp;assignment);
+<a name="line125">125: </a>  <font color="#B22222">/* Chaco outputs to stdout. We redirect this to a buffer. */</font>
+<a name="line126">126: </a>  <font color="#B22222">/* TODO: check error codes for UNIX calls */</font>
+<a name="line127">127: </a><font color="#A020F0">#if defined(PETSC_HAVE_UNISTD_H)</font>
+<a name="line128">128: </a>  {
+<a name="line129">129: </a>    int piperet;
+<a name="line130">130: </a>    piperet = pipe(fd_pipe);
+<a name="line131">131: </a>    <font color="#4169E1">if</font> (piperet) <a href="../../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_SYS,<font color="#666666">"Could not create pipe"</font>);
+<a name="line132">132: </a>    fd_stdout = dup(1);
+<a name="line133">133: </a>    close(1);
+<a name="line134">134: </a>    dup2(fd_pipe[1], 1);
+<a name="line135">135: </a>  }
+<a name="line136">136: </a><font color="#A020F0">#endif</font>
+<a name="line137">137: </a>  <font color="#4169E1">if</font> (part-&gt;usevwgt) { <a href="../../../../../docs/manualpages/Profiling/PetscInfo.html#PetscInfo">PetscInfo</a>(part,<font color="#666666">"<a href="../../../../../docs/manualpages/DM/PETSCPARTITIONERCHACO.html#PETSCPARTITIONERCHACO">PETSCPARTITIONERCHACO</a> ignores vertex weights\n"</font>); }
+<a name="line138">138: </a>  interface(nvtxs, (int*) start, (int*) adjacency, vwgts, ewgts, x, y, z, outassignname, outfilename,
+<a name="line139">139: </a>                   assignment, architecture, ndims_tot, mesh_dims, goal, global_method, local_method, rqi_flag,
+<a name="line140">140: </a>                   vmax, ndims, eigtol, seed);
+<a name="line141">141: </a><font color="#A020F0">#if defined(PETSC_HAVE_UNISTD_H)</font>
+<a name="line142">142: </a>  {
+<a name="line143">143: </a>    char msgLog[10000];
+<a name="line144">144: </a>    int  count;
+
+<a name="line146">146: </a>    fflush(stdout);
+<a name="line147">147: </a>    count = read(fd_pipe[0], msgLog, (10000-1)*<font color="#4169E1">sizeof</font>(char));
+<a name="line148">148: </a>    <font color="#4169E1">if</font> (count &lt; 0) count = 0;
+<a name="line149">149: </a>    msgLog[count] = 0;
+<a name="line150">150: </a>    close(1);
+<a name="line151">151: </a>    dup2(fd_stdout, 1);
+<a name="line152">152: </a>    close(fd_stdout);
+<a name="line153">153: </a>    close(fd_pipe[0]);
+<a name="line154">154: </a>    close(fd_pipe[1]);
+<a name="line155">155: </a>    <font color="#4169E1">if</font> (ierr) <a href="../../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, PETSC_ERR_LIB, <font color="#666666">"Error in Chaco library: %s"</font>, msgLog);
+<a name="line156">156: </a>  }
+<a name="line157">157: </a><font color="#A020F0">#else</font>
+<a name="line158">158: </a>  <font color="#4169E1">if</font> (ierr) <a href="../../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, PETSC_ERR_LIB, <font color="#666666">"Error in Chaco library: %s"</font>, <font color="#666666">"error in stdout"</font>);
+<a name="line159">159: </a><font color="#A020F0">#endif</font>
+<a name="line160">160: </a>  <font color="#B22222">/* Convert to <a href="../../../../../docs/manualpages/PetscSection/PetscSection.html#PetscSection">PetscSection</a>+<a href="../../../../../docs/manualpages/IS/IS.html#IS">IS</a> */</font>
+<a name="line161">161: </a>  <font color="#4169E1">for</font> (v = 0; v &lt; nvtxs; ++v) {
+<a name="line162">162: </a>    <a href="../../../../../docs/manualpages/PetscSection/PetscSectionAddDof.html#PetscSectionAddDof">PetscSectionAddDof</a>(partSection, assignment[v], 1);
+<a name="line163">163: </a>  }
+<a name="line164">164: </a>  <a href="../../../../../docs/manualpages/Sys/PetscMalloc1.html#PetscMalloc1">PetscMalloc1</a>(nvtxs, &amp;points);
+<a name="line165">165: </a>  <font color="#4169E1">for</font> (p = 0, i = 0; p &lt; nparts; ++p) {
+<a name="line166">166: </a>    <font color="#4169E1">for</font> (v = 0; v &lt; nvtxs; ++v) {
+<a name="line167">167: </a>      <font color="#4169E1">if</font> (assignment[v] == p) points[i++] = v;
+<a name="line168">168: </a>    }
+<a name="line169">169: </a>  }
+<a name="line170">170: </a>  <font color="#4169E1">if</font> (i != nvtxs) <a href="../../../../../docs/manualpages/Sys/SETERRQ2.html#SETERRQ2">SETERRQ2</a>(<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, PETSC_ERR_PLIB, <font color="#666666">"Number of points %D should be %D"</font>, i, nvtxs);
+<a name="line171">171: </a>  <a href="../../../../../docs/manualpages/IS/ISCreateGeneral.html#ISCreateGeneral">ISCreateGeneral</a>(comm, nvtxs, points, <a href="../../../../../docs/manualpages/Sys/PetscCopyMode.html#PetscCopyMode">PETSC_OWN_POINTER</a>, partition);
+<a name="line172">172: </a>  <font color="#4169E1">if</font> (global_method == INERTIAL_METHOD) {
+<a name="line173">173: </a>    <font color="#B22222">/* manager.destroyCellCoordinates(nvtxs, &amp;x, &amp;y, &amp;z); */</font>
+<a name="line174">174: </a>  }
+<a name="line175">175: </a>  <a href="../../../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(assignment);
+<a name="line176">176: </a>  <font color="#4169E1">for</font> (i = 0; i &lt; start[numVertices]; ++i) --adjacency[i];
+<a name="line177">177: </a>  <font color="#4169E1">return</font>(0);
+<a name="line178">178: </a><font color="#A020F0">#else</font>
+<a name="line179">179: </a>  <a href="../../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>) part), PETSC_ERR_SUP, <font color="#666666">"Mesh partitioning needs external package support.\nPlease reconfigure with --download-chaco."</font>);
+<a name="line180">180: </a><font color="#A020F0">#endif</font>
+<a name="line181">181: </a>}
+
+<a name="line183">183: </a><strong><font color="#4169E1"><a name="PetscPartitionerInitialize_Chaco"></a>static <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscPartitionerInitialize_Chaco(<a href="../../../../../docs/manualpages/DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</a> part)</font></strong>
+<a name="line184">184: </a>{
+<a name="line186">186: </a>  part-&gt;noGraph        = <a href="../../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line187">187: </a>  part-&gt;ops-&gt;view      = PetscPartitionerView_Chaco;
+<a name="line188">188: </a>  part-&gt;ops-&gt;destroy   = PetscPartitionerDestroy_Chaco;
+<a name="line189">189: </a>  part-&gt;ops-&gt;partition = PetscPartitionerPartition_Chaco;
+<a name="line190">190: </a>  <font color="#4169E1">return</font>(0);
+<a name="line191">191: </a>}
+
+<a name="line193">193: </a><font color="#B22222">/*MC</font>
+<a name="line194">194: </a><font color="#B22222">  <a href="../../../../../docs/manualpages/DM/PETSCPARTITIONERCHACO.html#PETSCPARTITIONERCHACO">PETSCPARTITIONERCHACO</a> = "chaco" - A <a href="../../../../../docs/manualpages/DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</a> object using the Chaco library</font>
+
+<a name="line196">196: </a><font color="#B22222">  Level: intermediate</font>
+
+<a name="line198">198: </a><font color="#B22222">.seealso: <a href="../../../../../docs/manualpages/DM/PetscPartitionerType.html#PetscPartitionerType">PetscPartitionerType</a>, <a href="../../../../../docs/manualpages/DM/PetscPartitionerCreate.html#PetscPartitionerCreate">PetscPartitionerCreate</a>(), <a href="../../../../../docs/manualpages/DM/PetscPartitionerSetType.html#PetscPartitionerSetType">PetscPartitionerSetType</a>()</font>
+<a name="line199">199: </a><font color="#B22222">M*/</font>
+
+<a name="line201">201: </a><strong><font color="#4169E1"><a name="PetscPartitionerCreate_Chaco"></a>PETSC_EXTERN <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscPartitionerCreate_Chaco(<a href="../../../../../docs/manualpages/DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</a> part)</font></strong>
+<a name="line202">202: </a>{
+<a name="line203">203: </a>  PetscPartitioner_Chaco *p;
+<a name="line204">204: </a>  <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>          ierr;
+
+<a name="line208">208: </a>  <a href="../../../../../docs/manualpages/Sys/PetscNewLog.html#PetscNewLog">PetscNewLog</a>(part, &amp;p);
+<a name="line209">209: </a>  part-&gt;data = p;
+
+<a name="line211">211: </a>  PetscPartitionerInitialize_Chaco(part);
+<a name="line212">212: </a>  <a href="../../../../../docs/manualpages/Sys/PetscCitationsRegister.html#PetscCitationsRegister">PetscCitationsRegister</a>(ChacoPartitionerCitation, &amp;ChacoPartitionerCite);
+<a name="line213">213: </a>  <font color="#4169E1">return</font>(0);
+<a name="line214">214: </a>}
+</pre>
+</body>
+
+</html>

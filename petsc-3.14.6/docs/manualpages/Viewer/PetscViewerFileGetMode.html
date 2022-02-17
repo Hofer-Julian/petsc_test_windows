@@ -1,0 +1,55 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Viewer/PetscViewerFileGetMode.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>PetscViewerFileGetMode</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/Viewer/PetscViewerFileGetMode.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="PetscViewerFileGetMode"><H1>PetscViewerFileGetMode</H1></A>
+Gets the open mode of file 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscviewer.h"   
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../Viewer/PetscViewerFileGetMode.html#PetscViewerFileGetMode">PetscViewerFileGetMode</A>(<A HREF="../Viewer/PetscViewer.html#PetscViewer">PetscViewer</A> viewer,<A HREF="../Sys/PetscFileMode.html#PetscFileMode">PetscFileMode</A> *mode)
+</PRE>
+Not Collective
+<P>
+<H3><FONT COLOR="#CC3333">Input Parameter</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>viewer </B></TD><TD>- the <A HREF="../Viewer/PetscViewer.html#PetscViewer">PetscViewer</A>; must be a <A HREF="../Viewer/PETSCVIEWERBINARY.html#PETSCVIEWERBINARY">PETSCVIEWERBINARY</A>, <A HREF="../Viewer/PETSCVIEWERMATLAB.html#PETSCVIEWERMATLAB">PETSCVIEWERMATLAB</A>, <A HREF="../Viewer/PETSCVIEWERHDF5.html#PETSCVIEWERHDF5">PETSCVIEWERHDF5</A>, or <A HREF="../Viewer/PETSCVIEWERASCII.html#PETSCVIEWERASCII">PETSCVIEWERASCII</A>  <A HREF="../Viewer/PetscViewer.html#PetscViewer">PetscViewer</A>
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Output Parameter</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>mode </B></TD><TD>- open mode of file
+</TD></TR></TABLE>
+<pre>
+   <A HREF="../Sys/PetscFileMode.html#PetscFileMode">FILE_MODE_WRITE</A> - create new file for binary output
+</pre>
+<pre>
+   <A HREF="../Sys/PetscFileMode.html#PetscFileMode">FILE_MODE_READ</A> - open existing file for binary input
+</pre>
+<pre>
+   <A HREF="../Sys/PetscFileMode.html#PetscFileMode">FILE_MODE_APPEND</A> - open existing file for binary output
+</pre>
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../Viewer/PetscViewerFileSetMode.html#PetscViewerFileSetMode">PetscViewerFileSetMode</A>(), <A HREF="../Viewer/PetscViewerCreate.html#PetscViewerCreate">PetscViewerCreate</A>(), <A HREF="../Viewer/PetscViewerSetType.html#PetscViewerSetType">PetscViewerSetType</A>(), <A HREF="../Viewer/PetscViewerBinaryOpen.html#PetscViewerBinaryOpen">PetscViewerBinaryOpen</A>()
+<BR>
+<P>
+<P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>advanced<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/sys/classes/viewer/impls/binary/binv.c.html#PetscViewerFileGetMode">src/sys/classes/viewer/impls/binary/binv.c</A>
+<P><H3><FONT COLOR="CC3333">Implementations</FONT></H3><A HREF="../../../src/dm/impls/plex/plexexodusii.c.html#PetscViewerFileGetMode_ExodusII">PetscViewerFileGetMode_ExodusII in src/dm/impls/plex/plexexodusii.c</A><BR>
+<A HREF="../../../src/sys/classes/viewer/impls/ascii/filev.c.html#PetscViewerFileGetMode_ASCII">PetscViewerFileGetMode_ASCII in src/sys/classes/viewer/impls/ascii/filev.c</A><BR>
+<A HREF="../../../src/sys/classes/viewer/impls/binary/binv.c.html#PetscViewerFileGetMode_Binary">PetscViewerFileGetMode_Binary in src/sys/classes/viewer/impls/binary/binv.c</A><BR>
+<A HREF="../../../src/sys/classes/viewer/impls/hdf5/hdf5v.c.html#PetscViewerFileGetMode_HDF5">PetscViewerFileGetMode_HDF5 in src/sys/classes/viewer/impls/hdf5/hdf5v.c</A><BR>
+<A HREF="../../../src/sys/classes/viewer/impls/vtk/vtkv.c.html#PetscViewerFileGetMode_VTK">PetscViewerFileGetMode_VTK in src/sys/classes/viewer/impls/vtk/vtkv.c</A><BR>
+<BR><A HREF="./index.html">Index of all Viewer routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

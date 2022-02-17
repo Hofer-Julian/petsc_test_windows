@@ -1,0 +1,6 @@
+[proxy:0:0@l02595] HYD_spawn (..\windows\src\hydra_spawn.c:282): unable to create process ../ex2f -pc_type jacobi -ksp_monitor_short -ksp_gmres_cgs_refinement_type refine_always (error code 2)
+[proxy:0:0@l02595] launch_processes (proxy.c:596): error creating process (error code 2). The system cannot find the file specified.
+
+[proxy:0:0@l02595] main (proxy.c:969): error launching_processes
+[mpiexec@l02595] wmain (mpiexec.c:2125): assert (pg->intel.exitcodes != NULL) failed
+[mpiexec@l02595] HYD_sock_write (..\windows\src\hydra_sock.c:387): write error (errno = 34)

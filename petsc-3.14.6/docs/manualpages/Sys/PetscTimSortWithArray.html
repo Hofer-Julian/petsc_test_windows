@@ -1,0 +1,117 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscTimSortWithArray.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>PetscTimSortWithArray</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/Sys/PetscTimSortWithArray.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="PetscTimSortWithArray"><H1>PetscTimSortWithArray</H1></A>
+Sorts an array in place in increasing order using Tim Peters adaptive sorting algorithm and reorders a second array to match the first. The arrays need not be the same type. 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscsys.h"  
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../Sys/PetscTimSortWithArray.html#PetscTimSortWithArray">PetscTimSortWithArray</A>(<A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> n, void *arr, size_t asize, void *barr, size_t bsize, int (*cmp)(const void *, const void *, void *), void *ctx)
+</PRE>
+Not Collective
+<P>
+<H3><FONT COLOR="#CC3333">Input Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>n     </B></TD><TD>- number of values
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>arr   </B></TD><TD>- array to be sorted
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>asize </B></TD><TD>- size in bytes of the datatype held in arr
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>barr  </B></TD><TD>- array to be reordered
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>asize </B></TD><TD>- size in bytes of the datatype held in barr
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>cmp   </B></TD><TD>- function pointer to comparison function
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>ctx   </B></TD><TD>- optional context to be passed to comparison function, NULL if not needed
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Output Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>arr  </B></TD><TD>- sorted array
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>barr </B></TD><TD>- reordered array
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Notes</FONT></H3>
+The arrays need not be of the same type, however barr MUST contain at least as many elements as arr and the two CANNOT
+overlap.
+<P>
+Timsort makes the assumption that input data is already likely partially ordered, or that it contains contiguous
+sections (termed 'runs') where the data is locally ordered (but not necessarily globally ordered). It therefore aims
+to select slices of the array in such a way that resulting mergesorts operate on near perfectly length-balanced
+arrays. To do so it repeatedly triggers attempts throughout to merge adjacent runs.
+<P>
+Should one run continuously "win" a comparison the algorithm begins the "gallop" phase. It will aggressively search
+the "winner" for the location of the "losers" next entry (and vice versa) to copy all preceding elements into place in
+bulk. However if the data is truly unordered (as is the case with random data) the immense gains possible from these
+searches are expected __not__ to repay their costs. While adjacent arrays are almost all nearly the same size, they
+likely all contain similar data.
+<P>
+<H3><FONT COLOR="#CC3333">Sample usage</FONT></H3>
+The comparison function must follow the qsort() comparison function paradigm, returning the sign of the difference
+between its arguments. If left &lt; right : return -1, if left == right : return 0, if left &gt; right : return 1. The user
+may also change or reverse the order of the sort by flipping the above. Note that stability of the sort is only
+guaranteed if the comparison function forms a valid trigraph. For example when sorting an array of type "my_type" in
+increasing order
+<P>
+<PRE>
+  int my_increasing_comparison_function(const void *left, const void *right, void *ctx) {
+    my_type l = *(my_type *) left, r = *(my_type *) right;
+    return (l &lt; r) ? -1 : (l &gt; r);
+  }
+</PRE>
+
+Note the context is unused here but you may use it to pass and subsequently access whatever information required
+inside the comparison function. The context pointer will unaltered except for any changes made inside the comparison function.
+Then pass the function
+<PRE>
+  <A HREF="../Sys/PetscTimSortWithArray.html#PetscTimSortWithArray">PetscTimSortWithArray</A>(n, arr, sizeof(arr[0]), barr, sizeof(barr[0]), my_increasing_comparison_function, ctx)
+</PRE>
+
+<P>
+<P>
+<H3><FONT COLOR="#CC3333">Fortran Notes</FONT></H3>
+To use this from fortran you must write a comparison subroutine with 4 arguments which accepts left, right, ctx and
+returns result. For example
+<PRE>
+ subroutine CompareIntegers(left,right,ctx,result)
+   implicit none
+
+   <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A>,intent(in) :: left, right
+   type(UserCtx)       :: ctx
+   integer,intent(out) :: result
+
+   if (left &lt; right) then
+     result = -1
+   else if (left == right) then
+     result = 0
+   else
+     result = 1
+   end if
+   return
+ end subroutine CompareIntegers
+</PRE>
+
+<P>
+<H3><FONT COLOR="#CC3333">References</FONT></H3>
+1. - Tim Peters. https://bugs.python.org/file4451/timsort.txt
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../Sys/PetscTimSort.html#PetscTimSort">PetscTimSort</A>(), <A HREF="../Sys/PetscIntSortSemiOrderedWithArray.html#PetscIntSortSemiOrderedWithArray">PetscIntSortSemiOrderedWithArray</A>(), <A HREF="../Sys/PetscRealSortSemiOrderedWithArrayInt.html#PetscRealSortSemiOrderedWithArrayInt">PetscRealSortSemiOrderedWithArrayInt</A>(), <A HREF="../Sys/PetscMPIIntSortSemiOrderedWithArray.html#PetscMPIIntSortSemiOrderedWithArray">PetscMPIIntSortSemiOrderedWithArray</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>developer<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/sys/utils/sortso.c.html#PetscTimSortWithArray">src/sys/utils/sortso.c</A>
+<BR><A HREF="./index.html">Index of all Sys routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

@@ -1,0 +1,579 @@
+<center><a href="pchara.cu">Actual source code: pchara.cu</a></center><br>
+
+<html>
+<head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/src/ksp/pc/impls/hara/pchara.cu.html" />
+<title></title>
+<meta name="generator" content="c2html 0.9.4">
+<meta name="date" content="2021-03-30T16:51:15+00:00">
+</head>
+
+<body bgcolor="#FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 src/ksp/pc/impls/hara/pchara.cu.html "><small>Report Typos and Errors</small></a></div>
+<pre width="80">
+<a name="line1">  1: </a>#include <A href="../../../../../include/petsc/private/pcimpl.h.html">&lt;petsc/private/pcimpl.h&gt;</A>
+<a name="line2">  2: </a>#include <A href="../../../../../include/petsc/private/matimpl.h.html">&lt;petsc/private/matimpl.h&gt;</A>
+
+<a name="line4">  4: </a><font color="#4169E1">typedef</font> <font color="#4169E1">struct</font> {
+<a name="line5">  5: </a>  <a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a>         M;
+<a name="line6">  6: </a>  <a href="../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> s0;
+
+<a name="line8">  8: </a>  <font color="#B22222">/* sampler for Newton-Schultz */</font>
+<a name="line9">  9: </a>  <a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a>      S;
+<a name="line10"> 10: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> hyperorder;
+<a name="line11"> 11: </a>  <a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a>      wns[4];
+<a name="line12"> 12: </a>  <a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a>      wnsmat[4];
+
+<a name="line14"> 14: </a>  <font color="#B22222">/* convergence testing */</font>
+<a name="line15"> 15: </a>  <a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> T;
+<a name="line16"> 16: </a>  <a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> w;
+
+<a name="line18"> 18: </a>  <font color="#B22222">/* Support for <a href="../../../../../docs/manualpages/PC/PCSetCoordinates.html#PCSetCoordinates">PCSetCoordinates</a> */</font>
+<a name="line19"> 19: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>  sdim;
+<a name="line20"> 20: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>  nlocc;
+<a name="line21"> 21: </a>  <a href="../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> *coords;
+
+<a name="line23"> 23: </a>  <font color="#B22222">/* Newton-Schultz customization */</font>
+<a name="line24"> 24: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>  maxits;
+<a name="line25"> 25: </a>  <a href="../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> rtol,atol;
+<a name="line26"> 26: </a>  <a href="../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> monitor;
+<a name="line27"> 27: </a>  <a href="../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> useapproximatenorms;
+<a name="line28"> 28: </a>} PC_HARA;
+
+<a name="line30"> 30: </a><strong><font color="#4169E1"><a name="PCReset_HARA"></a>static <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PCReset_HARA(<a href="../../../../../docs/manualpages/PC/PC.html#PC">PC</a> pc)</font></strong>
+<a name="line31"> 31: </a>{
+<a name="line32"> 32: </a>  PC_HARA        *pchara = (PC_HARA*)pc-&gt;data;
+
+<a name="line36"> 36: </a>  pchara-&gt;sdim  = 0;
+<a name="line37"> 37: </a>  pchara-&gt;nlocc = 0;
+<a name="line38"> 38: </a>  <a href="../../../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(pchara-&gt;coords);
+<a name="line39"> 39: </a>  <a href="../../../../../docs/manualpages/Mat/MatDestroy.html#MatDestroy">MatDestroy</a>(&amp;pchara-&gt;M);
+<a name="line40"> 40: </a>  <a href="../../../../../docs/manualpages/Mat/MatDestroy.html#MatDestroy">MatDestroy</a>(&amp;pchara-&gt;T);
+<a name="line41"> 41: </a>  <a href="../../../../../docs/manualpages/Vec/VecDestroy.html#VecDestroy">VecDestroy</a>(&amp;pchara-&gt;w);
+<a name="line42"> 42: </a>  <a href="../../../../../docs/manualpages/Mat/MatDestroy.html#MatDestroy">MatDestroy</a>(&amp;pchara-&gt;S);
+<a name="line43"> 43: </a>  <a href="../../../../../docs/manualpages/Vec/VecDestroy.html#VecDestroy">VecDestroy</a>(&amp;pchara-&gt;wns[0]);
+<a name="line44"> 44: </a>  <a href="../../../../../docs/manualpages/Vec/VecDestroy.html#VecDestroy">VecDestroy</a>(&amp;pchara-&gt;wns[1]);
+<a name="line45"> 45: </a>  <a href="../../../../../docs/manualpages/Vec/VecDestroy.html#VecDestroy">VecDestroy</a>(&amp;pchara-&gt;wns[2]);
+<a name="line46"> 46: </a>  <a href="../../../../../docs/manualpages/Vec/VecDestroy.html#VecDestroy">VecDestroy</a>(&amp;pchara-&gt;wns[3]);
+<a name="line47"> 47: </a>  <a href="../../../../../docs/manualpages/Mat/MatDestroy.html#MatDestroy">MatDestroy</a>(&amp;pchara-&gt;wnsmat[0]);
+<a name="line48"> 48: </a>  <a href="../../../../../docs/manualpages/Mat/MatDestroy.html#MatDestroy">MatDestroy</a>(&amp;pchara-&gt;wnsmat[1]);
+<a name="line49"> 49: </a>  <a href="../../../../../docs/manualpages/Mat/MatDestroy.html#MatDestroy">MatDestroy</a>(&amp;pchara-&gt;wnsmat[2]);
+<a name="line50"> 50: </a>  <a href="../../../../../docs/manualpages/Mat/MatDestroy.html#MatDestroy">MatDestroy</a>(&amp;pchara-&gt;wnsmat[3]);
+<a name="line51"> 51: </a>  <font color="#4169E1">return</font>(0);
+<a name="line52"> 52: </a>}
+
+<a name="line54"> 54: </a><strong><font color="#4169E1"><a name="PCSetCoordinates_HARA"></a>static <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PCSetCoordinates_HARA(<a href="../../../../../docs/manualpages/PC/PC.html#PC">PC</a> pc, <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> sdim, <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> nlocc, <a href="../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> *coords)</font></strong>
+<a name="line55"> 55: </a>{
+<a name="line56"> 56: </a>  PC_HARA        *pchara = (PC_HARA*)pc-&gt;data;
+<a name="line57"> 57: </a>  <a href="../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>      reset = <a href="../../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>;
+
+<a name="line61"> 61: </a>  <font color="#4169E1">if</font> (pchara-&gt;sdim &amp;&amp; sdim == pchara-&gt;sdim &amp;&amp; nlocc == pchara-&gt;nlocc) {
+<a name="line62"> 62: </a>    <a href="../../../../../docs/manualpages/Sys/PetscArraycmp.html#PetscArraycmp">PetscArraycmp</a>(pchara-&gt;coords,coords,sdim*nlocc,&amp;reset);
+<a name="line63"> 63: </a>    reset = (<a href="../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>)!reset;
+<a name="line64"> 64: </a>  }
+<a name="line65"> 65: </a>  <a href="../../../../../docs/manualpages/Sys/MPIU_Allreduce.html#MPIU_Allreduce">MPIU_Allreduce</a>(MPI_IN_PLACE,&amp;reset,1,MPIU_BOOL,MPI_LOR,<a href="../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)pc));
+<a name="line66"> 66: </a>  <font color="#4169E1">if</font> (reset) {
+<a name="line67"> 67: </a>    PCReset_HARA(pc);
+<a name="line68"> 68: </a>    <a href="../../../../../docs/manualpages/Sys/PetscMalloc1.html#PetscMalloc1">PetscMalloc1</a>(sdim*nlocc,&amp;pchara-&gt;coords);
+<a name="line69"> 69: </a>    <a href="../../../../../docs/manualpages/Sys/PetscArraycpy.html#PetscArraycpy">PetscArraycpy</a>(pchara-&gt;coords,coords,sdim*nlocc);
+<a name="line70"> 70: </a>    pchara-&gt;sdim  = sdim;
+<a name="line71"> 71: </a>    pchara-&gt;nlocc = nlocc;
+<a name="line72"> 72: </a>  }
+<a name="line73"> 73: </a>  <font color="#4169E1">return</font>(0);
+<a name="line74"> 74: </a>}
+
+<a name="line76"> 76: </a><strong><font color="#4169E1"><a name="PCDestroy_HARA"></a>static <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PCDestroy_HARA(<a href="../../../../../docs/manualpages/PC/PC.html#PC">PC</a> pc)</font></strong>
+<a name="line77"> 77: </a>{
+
+<a name="line81"> 81: </a>  PCReset_HARA(pc);
+<a name="line82"> 82: </a>  <a href="../../../../../docs/manualpages/Sys/PetscObjectComposeFunction.html#PetscObjectComposeFunction">PetscObjectComposeFunction</a>((<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)pc,<font color="#666666">"PCSetCoordinates_C"</font>,NULL);
+<a name="line83"> 83: </a>  <a href="../../../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(pc-&gt;data);
+<a name="line84"> 84: </a>  <font color="#4169E1">return</font>(0);
+<a name="line85"> 85: </a>}
+
+<a name="line87"> 87: </a><strong><font color="#4169E1"><a name="PCSetFromOptions_HARA"></a>static <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PCSetFromOptions_HARA(PetscOptionItems *PetscOptionsObject,<a href="../../../../../docs/manualpages/PC/PC.html#PC">PC</a> pc)</font></strong>
+<a name="line88"> 88: </a>{
+<a name="line89"> 89: </a>  PC_HARA       *pchara = (PC_HARA*)pc-&gt;data;
+
+<a name="line93"> 93: </a>  <a href="../../../../../docs/manualpages/Sys/PetscOptionsHead.html#PetscOptionsHead">PetscOptionsHead</a>(PetscOptionsObject,<font color="#666666">"HARA options"</font>);
+<a name="line94"> 94: </a>  <a href="../../../../../docs/manualpages/Sys/PetscOptionsInt.html#PetscOptionsInt">PetscOptionsInt</a>(<font color="#666666">"-pc_hara_maxits"</font>,<font color="#666666">"Maximum number of iterations for Newton-Schultz"</font>,NULL,pchara-&gt;maxits,&amp;pchara-&gt;maxits,NULL);
+<a name="line95"> 95: </a>  <a href="../../../../../docs/manualpages/Sys/PetscOptionsBool.html#PetscOptionsBool">PetscOptionsBool</a>(<font color="#666666">"-pc_hara_monitor"</font>,<font color="#666666">"Monitor Newton-Schultz convergence"</font>,NULL,pchara-&gt;monitor,&amp;pchara-&gt;monitor,NULL);
+<a name="line96"> 96: </a>  <a href="../../../../../docs/manualpages/Sys/PetscOptionsReal.html#PetscOptionsReal">PetscOptionsReal</a>(<font color="#666666">"-pc_hara_atol"</font>,<font color="#666666">"Absolute tolerance"</font>,NULL,pchara-&gt;atol,&amp;pchara-&gt;atol,NULL);
+<a name="line97"> 97: </a>  <a href="../../../../../docs/manualpages/Sys/PetscOptionsReal.html#PetscOptionsReal">PetscOptionsReal</a>(<font color="#666666">"-pc_hara_rtol"</font>,<font color="#666666">"Relative tolerance"</font>,NULL,pchara-&gt;rtol,&amp;pchara-&gt;rtol,NULL);
+<a name="line98"> 98: </a>  <a href="../../../../../docs/manualpages/Sys/PetscOptionsInt.html#PetscOptionsInt">PetscOptionsInt</a>(<font color="#666666">"-pc_hara_hyperorder"</font>,<font color="#666666">"Hyper power order of sampling"</font>,NULL,pchara-&gt;hyperorder,&amp;pchara-&gt;hyperorder,NULL);
+<a name="line99"> 99: </a>  <a href="../../../../../docs/manualpages/Sys/PetscOptionsTail.html#PetscOptionsTail">PetscOptionsTail</a>();
+<a name="line100">100: </a>  <font color="#4169E1">return</font>(0);
+<a name="line101">101: </a>}
+
+<a name="line103">103: </a><strong><font color="#4169E1"><a name="PCApplyKernel_HARA"></a>static <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PCApplyKernel_HARA(<a href="../../../../../docs/manualpages/PC/PC.html#PC">PC</a> pc, <a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> x, <a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> y, <a href="../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> t)</font></strong>
+<a name="line104">104: </a>{
+<a name="line105">105: </a>  PC_HARA        *pchara = (PC_HARA*)pc-&gt;data;
+<a name="line107">107: </a>  <a href="../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>      flg = <a href="../../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+
+<a name="line110">110: </a>  <a href="../../../../../docs/manualpages/Mat/MatAssembled.html#MatAssembled">MatAssembled</a>(pchara-&gt;M,&amp;flg);
+<a name="line111">111: </a>  <font color="#4169E1">if</font> (flg) {
+<a name="line112">112: </a>    <font color="#4169E1">if</font> (t) {
+<a name="line113">113: </a>      <a href="../../../../../docs/manualpages/Mat/MatMultTranspose.html#MatMultTranspose">MatMultTranspose</a>(pchara-&gt;M,x,y);
+<a name="line114">114: </a>    } <font color="#4169E1">else</font> {
+<a name="line115">115: </a>      <a href="../../../../../docs/manualpages/Mat/MatMult.html#MatMult">MatMult</a>(pchara-&gt;M,x,y);
+<a name="line116">116: </a>    }
+<a name="line117">117: </a>  } <font color="#4169E1">else</font> { <font color="#B22222">/* Not assembled, initial approximation */</font>
+<a name="line118">118: </a>    <a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> A = pc-&gt;useAmat ? pc-&gt;mat : pc-&gt;pmat;
+
+<a name="line120">120: </a>    <font color="#4169E1">if</font> (pchara-&gt;s0 &lt; 0.0) <a href="../../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_PLIB,<font color="#666666">"Wrong scaling"</font>);
+<a name="line121">121: </a>    <font color="#B22222">/* X_0 = s0 * A^T */</font>
+<a name="line122">122: </a>    <font color="#4169E1">if</font> (t) {
+<a name="line123">123: </a>      <a href="../../../../../docs/manualpages/Mat/MatMult.html#MatMult">MatMult</a>(A,x,y);
+<a name="line124">124: </a>    } <font color="#4169E1">else</font> {
+<a name="line125">125: </a>      <a href="../../../../../docs/manualpages/Mat/MatMultTranspose.html#MatMultTranspose">MatMultTranspose</a>(A,x,y);
+<a name="line126">126: </a>    }
+<a name="line127">127: </a>    <a href="../../../../../docs/manualpages/Vec/VecScale.html#VecScale">VecScale</a>(y,pchara-&gt;s0);
+<a name="line128">128: </a>  }
+<a name="line129">129: </a>  <font color="#4169E1">return</font>(0);
+<a name="line130">130: </a>}
+
+<a name="line132">132: </a><strong><font color="#4169E1"><a name="PCApplyMatKernel_HARA"></a>static <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PCApplyMatKernel_HARA(<a href="../../../../../docs/manualpages/PC/PC.html#PC">PC</a> pc, <a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> X, <a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> Y, <a href="../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> t)</font></strong>
+<a name="line133">133: </a>{
+<a name="line134">134: </a>  PC_HARA        *pchara = (PC_HARA*)pc-&gt;data;
+<a name="line136">136: </a>  <a href="../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>      flg = <a href="../../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+
+<a name="line139">139: </a>  <a href="../../../../../docs/manualpages/Mat/MatAssembled.html#MatAssembled">MatAssembled</a>(pchara-&gt;M,&amp;flg);
+<a name="line140">140: </a>  <font color="#4169E1">if</font> (flg) {
+<a name="line141">141: </a>    <font color="#4169E1">if</font> (t) {
+<a name="line142">142: </a>      <a href="../../../../../docs/manualpages/Mat/MatTransposeMatMult.html#MatTransposeMatMult">MatTransposeMatMult</a>(pchara-&gt;M,X,<a href="../../../../../docs/manualpages/Mat/MatReuse.html#MatReuse">MAT_REUSE_MATRIX</a>,<a href="../../../../../docs/manualpages/Sys/PETSC_DEFAULT.html#PETSC_DEFAULT">PETSC_DEFAULT</a>,&amp;Y);
+<a name="line143">143: </a>    } <font color="#4169E1">else</font> {
+<a name="line144">144: </a>      <a href="../../../../../docs/manualpages/Mat/MatMatMult.html#MatMatMult">MatMatMult</a>(pchara-&gt;M,X,<a href="../../../../../docs/manualpages/Mat/MatReuse.html#MatReuse">MAT_REUSE_MATRIX</a>,<a href="../../../../../docs/manualpages/Sys/PETSC_DEFAULT.html#PETSC_DEFAULT">PETSC_DEFAULT</a>,&amp;Y);
+<a name="line145">145: </a>    }
+<a name="line146">146: </a>  } <font color="#4169E1">else</font> { <font color="#B22222">/* Not assembled, initial approximation */</font>
+<a name="line147">147: </a>    <a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> A = pc-&gt;useAmat ? pc-&gt;mat : pc-&gt;pmat;
+
+<a name="line149">149: </a>    <font color="#4169E1">if</font> (pchara-&gt;s0 &lt; 0.0) <a href="../../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_PLIB,<font color="#666666">"Wrong scaling"</font>);
+<a name="line150">150: </a>    <font color="#B22222">/* X_0 = s0 * A^T */</font>
+<a name="line151">151: </a>    <font color="#4169E1">if</font> (t) {
+<a name="line152">152: </a>      <a href="../../../../../docs/manualpages/Mat/MatMatMult.html#MatMatMult">MatMatMult</a>(A,X,<a href="../../../../../docs/manualpages/Mat/MatReuse.html#MatReuse">MAT_REUSE_MATRIX</a>,<a href="../../../../../docs/manualpages/Sys/PETSC_DEFAULT.html#PETSC_DEFAULT">PETSC_DEFAULT</a>,&amp;Y);
+<a name="line153">153: </a>    } <font color="#4169E1">else</font> {
+<a name="line154">154: </a>      <a href="../../../../../docs/manualpages/Mat/MatTransposeMatMult.html#MatTransposeMatMult">MatTransposeMatMult</a>(A,X,<a href="../../../../../docs/manualpages/Mat/MatReuse.html#MatReuse">MAT_REUSE_MATRIX</a>,<a href="../../../../../docs/manualpages/Sys/PETSC_DEFAULT.html#PETSC_DEFAULT">PETSC_DEFAULT</a>,&amp;Y);
+<a name="line155">155: </a>    }
+<a name="line156">156: </a>    <a href="../../../../../docs/manualpages/Mat/MatScale.html#MatScale">MatScale</a>(Y,pchara-&gt;s0);
+<a name="line157">157: </a>  }
+<a name="line158">158: </a>  <font color="#4169E1">return</font>(0);
+<a name="line159">159: </a>}
+
+<a name="line161">161: </a><strong><font color="#4169E1"><a name="PCApplyMat_HARA"></a>static <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PCApplyMat_HARA(<a href="../../../../../docs/manualpages/PC/PC.html#PC">PC</a> pc, <a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> X, <a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> Y)</font></strong>
+<a name="line162">162: </a>{
+
+<a name="line166">166: </a>  PCApplyMatKernel_HARA(pc,X,Y,<a href="../../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>);
+<a name="line167">167: </a>  <font color="#4169E1">return</font>(0);
+<a name="line168">168: </a>}
+
+<a name="line170">170: </a><strong><font color="#4169E1"><a name="PCApplyTransposeMat_HARA"></a>static <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PCApplyTransposeMat_HARA(<a href="../../../../../docs/manualpages/PC/PC.html#PC">PC</a> pc, <a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> X, <a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> Y)</font></strong>
+<a name="line171">171: </a>{
+
+<a name="line175">175: </a>  PCApplyMatKernel_HARA(pc,X,Y,<a href="../../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>);
+<a name="line176">176: </a>  <font color="#4169E1">return</font>(0);
+<a name="line177">177: </a>}
+
+<a name="line179">179: </a><strong><font color="#4169E1"><a name="PCApply_HARA"></a>static <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PCApply_HARA(<a href="../../../../../docs/manualpages/PC/PC.html#PC">PC</a> pc, <a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> x, <a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> y)</font></strong>
+<a name="line180">180: </a>{
+
+<a name="line184">184: </a>  PCApplyKernel_HARA(pc,x,y,<a href="../../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>);
+<a name="line185">185: </a>  <font color="#4169E1">return</font>(0);
+<a name="line186">186: </a>}
+
+<a name="line188">188: </a><strong><font color="#4169E1"><a name="PCApplyTranspose_HARA"></a>static <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PCApplyTranspose_HARA(<a href="../../../../../docs/manualpages/PC/PC.html#PC">PC</a> pc, <a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> x, <a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> y)</font></strong>
+<a name="line189">189: </a>{
+
+<a name="line193">193: </a>  PCApplyKernel_HARA(pc,x,y,<a href="../../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>);
+<a name="line194">194: </a>  <font color="#4169E1">return</font>(0);
+<a name="line195">195: </a>}
+
+<a name="line197">197: </a><font color="#B22222">/* used to test norm of (M^-1 A - I) */</font>
+<a name="line198">198: </a><strong><font color="#4169E1"><a name="MatMultKernel_MAmI"></a>static <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatMultKernel_MAmI(<a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> M, <a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> x, <a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> y, <a href="../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> t)</font></strong>
+<a name="line199">199: </a>{
+<a name="line200">200: </a>  <a href="../../../../../docs/manualpages/PC/PC.html#PC">PC</a>             pc;
+<a name="line201">201: </a>  <a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a>            A;
+<a name="line202">202: </a>  PC_HARA        *pchara;
+
+<a name="line206">206: </a>  <a href="../../../../../docs/manualpages/Mat/MatShellGetContext.html#MatShellGetContext">MatShellGetContext</a>(M,(void*)&amp;pc);
+<a name="line207">207: </a>  pchara = (PC_HARA*)pc-&gt;data;
+<a name="line208">208: </a>  <font color="#4169E1">if</font> (!pchara-&gt;w) {
+<a name="line209">209: </a>    <a href="../../../../../docs/manualpages/Mat/MatCreateVecs.html#MatCreateVecs">MatCreateVecs</a>(pchara-&gt;M,&amp;pchara-&gt;w,NULL);
+<a name="line210">210: </a>  }
+<a name="line211">211: </a>  A = pc-&gt;useAmat ? pc-&gt;mat : pc-&gt;pmat;
+<a name="line212">212: </a>  <font color="#4169E1">if</font> (t) {
+<a name="line213">213: </a>    PCApplyTranspose_HARA(pc,x,pchara-&gt;w);
+<a name="line214">214: </a>    <a href="../../../../../docs/manualpages/Mat/MatMultTranspose.html#MatMultTranspose">MatMultTranspose</a>(A,pchara-&gt;w,y);
+<a name="line215">215: </a>  } <font color="#4169E1">else</font> {
+<a name="line216">216: </a>    <a href="../../../../../docs/manualpages/Mat/MatMult.html#MatMult">MatMult</a>(A,x,pchara-&gt;w);
+<a name="line217">217: </a>    PCApply_HARA(pc,pchara-&gt;w,y);
+<a name="line218">218: </a>  }
+<a name="line219">219: </a>  <a href="../../../../../docs/manualpages/Vec/VecAXPY.html#VecAXPY">VecAXPY</a>(y,-1.0,x);
+<a name="line220">220: </a>  <font color="#4169E1">return</font>(0);
+<a name="line221">221: </a>}
+
+<a name="line223">223: </a><strong><font color="#4169E1"><a name="MatMult_MAmI"></a>static <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatMult_MAmI(<a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> A, <a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> x, <a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> y)</font></strong>
+<a name="line224">224: </a>{
+
+<a name="line228">228: </a>  MatMultKernel_MAmI(A,x,y,<a href="../../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>);
+<a name="line229">229: </a>  <font color="#4169E1">return</font>(0);
+<a name="line230">230: </a>}
+
+<a name="line232">232: </a><strong><font color="#4169E1"><a name="MatMultTranspose_MAmI"></a>static <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatMultTranspose_MAmI(<a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> A, <a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> x, <a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> y)</font></strong>
+<a name="line233">233: </a>{
+
+<a name="line237">237: </a>  MatMultKernel_MAmI(A,x,y,<a href="../../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>);
+<a name="line238">238: </a>  <font color="#4169E1">return</font>(0);
+<a name="line239">239: </a>}
+
+<a name="line241">241: </a><font color="#B22222">/* HyperPower kernel:</font>
+<a name="line242">242: </a><font color="#B22222">Y = R = x</font>
+<a name="line243">243: </a><font color="#B22222">for i = 1 . . . l - 1 do</font>
+<a name="line244">244: </a><font color="#B22222">  R = (I - AXk)R</font>
+<a name="line245">245: </a><font color="#B22222">  Y = Y + R</font>
+<a name="line246">246: </a><font color="#B22222">Y = XkY</font>
+<a name="line247">247: </a><font color="#B22222">*/</font>
+<a name="line248">248: </a><strong><font color="#4169E1"><a name="MatMultKernel_Hyper"></a>static <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatMultKernel_Hyper(<a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> M, <a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> x, <a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> y, <a href="../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> t)</font></strong>
+<a name="line249">249: </a>{
+<a name="line250">250: </a>  <a href="../../../../../docs/manualpages/PC/PC.html#PC">PC</a>             pc;
+<a name="line251">251: </a>  <a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a>            A;
+<a name="line252">252: </a>  PC_HARA        *pchara;
+<a name="line253">253: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       i;
+
+<a name="line257">257: </a>  <a href="../../../../../docs/manualpages/Mat/MatShellGetContext.html#MatShellGetContext">MatShellGetContext</a>(M,(void*)&amp;pc);
+<a name="line258">258: </a>  A = pc-&gt;useAmat ? pc-&gt;mat : pc-&gt;pmat;
+<a name="line259">259: </a>  pchara = (PC_HARA*)pc-&gt;data;
+<a name="line260">260: </a>  <a href="../../../../../docs/manualpages/Mat/MatCreateVecs.html#MatCreateVecs">MatCreateVecs</a>(pchara-&gt;M,pchara-&gt;wns[0] ? NULL : &amp;pchara-&gt;wns[0],pchara-&gt;wns[1] ? NULL : &amp;pchara-&gt;wns[1]);
+<a name="line261">261: </a>  <a href="../../../../../docs/manualpages/Mat/MatCreateVecs.html#MatCreateVecs">MatCreateVecs</a>(pchara-&gt;M,pchara-&gt;wns[2] ? NULL : &amp;pchara-&gt;wns[2],pchara-&gt;wns[3] ? NULL : &amp;pchara-&gt;wns[3]);
+<a name="line262">262: </a>  <a href="../../../../../docs/manualpages/Vec/VecCopy.html#VecCopy">VecCopy</a>(x,pchara-&gt;wns[0]);
+<a name="line263">263: </a>  <a href="../../../../../docs/manualpages/Vec/VecCopy.html#VecCopy">VecCopy</a>(x,pchara-&gt;wns[3]);
+<a name="line264">264: </a>  <font color="#4169E1">if</font> (t) {
+<a name="line265">265: </a>    <font color="#4169E1">for</font> (i=0;i&lt;pchara-&gt;hyperorder-1;i++) {
+<a name="line266">266: </a>      <a href="../../../../../docs/manualpages/Mat/MatMultTranspose.html#MatMultTranspose">MatMultTranspose</a>(A,pchara-&gt;wns[0],pchara-&gt;wns[1]);
+<a name="line267">267: </a>      PCApplyTranspose_HARA(pc,pchara-&gt;wns[1],pchara-&gt;wns[2]);
+<a name="line268">268: </a>      <a href="../../../../../docs/manualpages/Vec/VecAXPBYPCZ.html#VecAXPBYPCZ">VecAXPBYPCZ</a>(pchara-&gt;wns[3],-1.,1.,1.,pchara-&gt;wns[2],pchara-&gt;wns[0]);
+<a name="line269">269: </a>    }
+<a name="line270">270: </a>    PCApplyTranspose_HARA(pc,pchara-&gt;wns[3],y);
+<a name="line271">271: </a>  } <font color="#4169E1">else</font> {
+<a name="line272">272: </a>    <font color="#4169E1">for</font> (i=0;i&lt;pchara-&gt;hyperorder-1;i++) {
+<a name="line273">273: </a>      PCApply_HARA(pc,pchara-&gt;wns[0],pchara-&gt;wns[1]);
+<a name="line274">274: </a>      <a href="../../../../../docs/manualpages/Mat/MatMult.html#MatMult">MatMult</a>(A,pchara-&gt;wns[1],pchara-&gt;wns[2]);
+<a name="line275">275: </a>      <a href="../../../../../docs/manualpages/Vec/VecAXPBYPCZ.html#VecAXPBYPCZ">VecAXPBYPCZ</a>(pchara-&gt;wns[3],-1.,1.,1.,pchara-&gt;wns[2],pchara-&gt;wns[0]);
+<a name="line276">276: </a>    }
+<a name="line277">277: </a>    PCApply_HARA(pc,pchara-&gt;wns[3],y);
+<a name="line278">278: </a>  }
+<a name="line279">279: </a>  <font color="#4169E1">return</font>(0);
+<a name="line280">280: </a>}
+
+<a name="line282">282: </a><strong><font color="#4169E1"><a name="MatMult_Hyper"></a>static <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatMult_Hyper(<a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> M, <a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> x, <a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> y)</font></strong>
+<a name="line283">283: </a>{
+
+<a name="line287">287: </a>  MatMultKernel_Hyper(M,x,y,<a href="../../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>);
+<a name="line288">288: </a>  <font color="#4169E1">return</font>(0);
+<a name="line289">289: </a>}
+
+<a name="line291">291: </a><strong><font color="#4169E1"><a name="MatMultTranspose_Hyper"></a>static <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatMultTranspose_Hyper(<a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> M, <a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> x, <a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> y)</font></strong>
+<a name="line292">292: </a>{
+
+<a name="line296">296: </a>  MatMultKernel_Hyper(M,x,y,<a href="../../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>);
+<a name="line297">297: </a>  <font color="#4169E1">return</font>(0);
+<a name="line298">298: </a>}
+
+<a name="line300">300: </a><font color="#B22222">/* Hyper power kernel, MatMat version */</font>
+<a name="line301">301: </a><strong><font color="#4169E1"><a name="MatMatMultKernel_Hyper"></a>static <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatMatMultKernel_Hyper(<a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> M, <a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> X, <a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> Y, <a href="../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> t)</font></strong>
+<a name="line302">302: </a>{
+<a name="line303">303: </a>  <a href="../../../../../docs/manualpages/PC/PC.html#PC">PC</a>             pc;
+<a name="line304">304: </a>  <a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a>            A;
+<a name="line305">305: </a>  PC_HARA        *pchara;
+<a name="line306">306: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       i;
+
+<a name="line310">310: </a>  <a href="../../../../../docs/manualpages/Mat/MatShellGetContext.html#MatShellGetContext">MatShellGetContext</a>(M,(void*)&amp;pc);
+<a name="line311">311: </a>  A = pc-&gt;useAmat ? pc-&gt;mat : pc-&gt;pmat;
+<a name="line312">312: </a>  pchara = (PC_HARA*)pc-&gt;data;
+<a name="line313">313: </a>  <a href="../../../../../docs/manualpages/Mat/MatDuplicate.html#MatDuplicate">MatDuplicate</a>(X,<a href="../../../../../docs/manualpages/Mat/MatDuplicateOption.html#MatDuplicateOption">MAT_SHARE_NONZERO_PATTERN</a>,&amp;pchara-&gt;wnsmat[0]);
+<a name="line314">314: </a>  <a href="../../../../../docs/manualpages/Mat/MatDuplicate.html#MatDuplicate">MatDuplicate</a>(Y,<a href="../../../../../docs/manualpages/Mat/MatDuplicateOption.html#MatDuplicateOption">MAT_SHARE_NONZERO_PATTERN</a>,&amp;pchara-&gt;wnsmat[1]);
+<a name="line315">315: </a>  <a href="../../../../../docs/manualpages/Mat/MatDuplicate.html#MatDuplicate">MatDuplicate</a>(X,<a href="../../../../../docs/manualpages/Mat/MatDuplicateOption.html#MatDuplicateOption">MAT_SHARE_NONZERO_PATTERN</a>,&amp;pchara-&gt;wnsmat[2]);
+<a name="line316">316: </a>  <a href="../../../../../docs/manualpages/Mat/MatDuplicate.html#MatDuplicate">MatDuplicate</a>(Y,<a href="../../../../../docs/manualpages/Mat/MatDuplicateOption.html#MatDuplicateOption">MAT_SHARE_NONZERO_PATTERN</a>,&amp;pchara-&gt;wnsmat[3]);
+<a name="line317">317: </a>  <a href="../../../../../docs/manualpages/Mat/MatCopy.html#MatCopy">MatCopy</a>(X,pchara-&gt;wnsmat[0],<a href="../../../../../docs/manualpages/Mat/MatStructure.html#MatStructure">SAME_NONZERO_PATTERN</a>);
+<a name="line318">318: </a>  <a href="../../../../../docs/manualpages/Mat/MatCopy.html#MatCopy">MatCopy</a>(X,pchara-&gt;wnsmat[3],<a href="../../../../../docs/manualpages/Mat/MatStructure.html#MatStructure">SAME_NONZERO_PATTERN</a>);
+<a name="line319">319: </a>  <font color="#4169E1">if</font> (t) {
+<a name="line320">320: </a>    <font color="#4169E1">for</font> (i=0;i&lt;pchara-&gt;hyperorder-1;i++) {
+<a name="line321">321: </a>      <a href="../../../../../docs/manualpages/Mat/MatTransposeMatMult.html#MatTransposeMatMult">MatTransposeMatMult</a>(A,pchara-&gt;wnsmat[0],<a href="../../../../../docs/manualpages/Mat/MatReuse.html#MatReuse">MAT_REUSE_MATRIX</a>,<a href="../../../../../docs/manualpages/Sys/PETSC_DEFAULT.html#PETSC_DEFAULT">PETSC_DEFAULT</a>,&amp;pchara-&gt;wnsmat[1]);
+<a name="line322">322: </a>      PCApplyTransposeMat_HARA(pc,pchara-&gt;wnsmat[1],pchara-&gt;wnsmat[2]);
+<a name="line323">323: </a>      <a href="../../../../../docs/manualpages/Mat/MatAXPY.html#MatAXPY">MatAXPY</a>(pchara-&gt;wnsmat[0],-1.,pchara-&gt;wnsmat[2],<a href="../../../../../docs/manualpages/Mat/MatStructure.html#MatStructure">SAME_NONZERO_PATTERN</a>);
+<a name="line324">324: </a>      <a href="../../../../../docs/manualpages/Mat/MatAXPY.html#MatAXPY">MatAXPY</a>(pchara-&gt;wnsmat[3],1.,pchara-&gt;wnsmat[0],<a href="../../../../../docs/manualpages/Mat/MatStructure.html#MatStructure">SAME_NONZERO_PATTERN</a>);
+<a name="line325">325: </a>    }
+<a name="line326">326: </a>    PCApplyTransposeMat_HARA(pc,pchara-&gt;wnsmat[3],Y);
+<a name="line327">327: </a>  } <font color="#4169E1">else</font> {
+<a name="line328">328: </a>    <font color="#4169E1">for</font> (i=0;i&lt;pchara-&gt;hyperorder-1;i++) {
+<a name="line329">329: </a>      PCApplyMat_HARA(pc,pchara-&gt;wnsmat[0],pchara-&gt;wnsmat[1]);
+<a name="line330">330: </a>      <a href="../../../../../docs/manualpages/Mat/MatMatMult.html#MatMatMult">MatMatMult</a>(A,pchara-&gt;wnsmat[1],<a href="../../../../../docs/manualpages/Mat/MatReuse.html#MatReuse">MAT_REUSE_MATRIX</a>,<a href="../../../../../docs/manualpages/Sys/PETSC_DEFAULT.html#PETSC_DEFAULT">PETSC_DEFAULT</a>,&amp;pchara-&gt;wnsmat[2]);
+<a name="line331">331: </a>      <a href="../../../../../docs/manualpages/Mat/MatAXPY.html#MatAXPY">MatAXPY</a>(pchara-&gt;wnsmat[0],-1.,pchara-&gt;wnsmat[2],<a href="../../../../../docs/manualpages/Mat/MatStructure.html#MatStructure">SAME_NONZERO_PATTERN</a>);
+<a name="line332">332: </a>      <a href="../../../../../docs/manualpages/Mat/MatAXPY.html#MatAXPY">MatAXPY</a>(pchara-&gt;wnsmat[3],1.,pchara-&gt;wnsmat[0],<a href="../../../../../docs/manualpages/Mat/MatStructure.html#MatStructure">SAME_NONZERO_PATTERN</a>);
+<a name="line333">333: </a>    }
+<a name="line334">334: </a>    PCApplyMat_HARA(pc,pchara-&gt;wnsmat[3],Y);
+<a name="line335">335: </a>  }
+<a name="line336">336: </a>  <a href="../../../../../docs/manualpages/Mat/MatDestroy.html#MatDestroy">MatDestroy</a>(&amp;pchara-&gt;wnsmat[0]);
+<a name="line337">337: </a>  <a href="../../../../../docs/manualpages/Mat/MatDestroy.html#MatDestroy">MatDestroy</a>(&amp;pchara-&gt;wnsmat[1]);
+<a name="line338">338: </a>  <a href="../../../../../docs/manualpages/Mat/MatDestroy.html#MatDestroy">MatDestroy</a>(&amp;pchara-&gt;wnsmat[2]);
+<a name="line339">339: </a>  <a href="../../../../../docs/manualpages/Mat/MatDestroy.html#MatDestroy">MatDestroy</a>(&amp;pchara-&gt;wnsmat[3]);
+<a name="line340">340: </a>  <font color="#4169E1">return</font>(0);
+<a name="line341">341: </a>}
+
+<a name="line343">343: </a><strong><font color="#4169E1"><a name="MatMatMultNumeric_Hyper"></a>static <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatMatMultNumeric_Hyper(<a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> M, <a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> X, <a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> Y,void *ctx)</font></strong>
+<a name="line344">344: </a>{
+
+<a name="line348">348: </a>  MatMatMultKernel_Hyper(M,X,Y,<a href="../../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>);
+<a name="line349">349: </a>  <font color="#4169E1">return</font>(0);
+<a name="line350">350: </a>}
+
+<a name="line352">352: </a><font color="#B22222">/* Basic Newton-Schultz sampler: (2 * I - M * A) * M */</font>
+<a name="line353">353: </a><strong><font color="#4169E1"><a name="MatMultKernel_NS"></a>static <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatMultKernel_NS(<a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> M, <a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> x, <a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> y, <a href="../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> t)</font></strong>
+<a name="line354">354: </a>{
+<a name="line355">355: </a>  <a href="../../../../../docs/manualpages/PC/PC.html#PC">PC</a>             pc;
+<a name="line356">356: </a>  <a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a>            A;
+<a name="line357">357: </a>  PC_HARA        *pchara;
+
+<a name="line361">361: </a>  <a href="../../../../../docs/manualpages/Mat/MatShellGetContext.html#MatShellGetContext">MatShellGetContext</a>(M,(void*)&amp;pc);
+<a name="line362">362: </a>  A = pc-&gt;useAmat ? pc-&gt;mat : pc-&gt;pmat;
+<a name="line363">363: </a>  pchara = (PC_HARA*)pc-&gt;data;
+<a name="line364">364: </a>  <a href="../../../../../docs/manualpages/Mat/MatCreateVecs.html#MatCreateVecs">MatCreateVecs</a>(pchara-&gt;M,pchara-&gt;wns[0] ? NULL : &amp;pchara-&gt;wns[0],pchara-&gt;wns[1] ? NULL : &amp;pchara-&gt;wns[1]);
+<a name="line365">365: </a>  <font color="#4169E1">if</font> (t) {
+<a name="line366">366: </a>    PCApplyTranspose_HARA(pc,x,y);
+<a name="line367">367: </a>    <a href="../../../../../docs/manualpages/Mat/MatMultTranspose.html#MatMultTranspose">MatMultTranspose</a>(A,y,pchara-&gt;wns[1]);
+<a name="line368">368: </a>    PCApplyTranspose_HARA(pc,pchara-&gt;wns[1],pchara-&gt;wns[0]);
+<a name="line369">369: </a>    <a href="../../../../../docs/manualpages/Vec/VecAXPBY.html#VecAXPBY">VecAXPBY</a>(y,-1.,2.,pchara-&gt;wns[0]);
+<a name="line370">370: </a>  } <font color="#4169E1">else</font> {
+<a name="line371">371: </a>    PCApply_HARA(pc,x,y);
+<a name="line372">372: </a>    <a href="../../../../../docs/manualpages/Mat/MatMult.html#MatMult">MatMult</a>(A,y,pchara-&gt;wns[0]);
+<a name="line373">373: </a>    PCApply_HARA(pc,pchara-&gt;wns[0],pchara-&gt;wns[1]);
+<a name="line374">374: </a>    <a href="../../../../../docs/manualpages/Vec/VecAXPBY.html#VecAXPBY">VecAXPBY</a>(y,-1.,2.,pchara-&gt;wns[1]);
+<a name="line375">375: </a>  }
+<a name="line376">376: </a>  <font color="#4169E1">return</font>(0);
+<a name="line377">377: </a>}
+
+<a name="line379">379: </a><strong><font color="#4169E1"><a name="MatMult_NS"></a>static <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatMult_NS(<a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> M, <a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> x, <a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> y)</font></strong>
+<a name="line380">380: </a>{
+
+<a name="line384">384: </a>  MatMultKernel_NS(M,x,y,<a href="../../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>);
+<a name="line385">385: </a>  <font color="#4169E1">return</font>(0);
+<a name="line386">386: </a>}
+
+<a name="line388">388: </a><strong><font color="#4169E1"><a name="MatMultTranspose_NS"></a>static <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatMultTranspose_NS(<a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> M, <a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> x, <a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> y)</font></strong>
+<a name="line389">389: </a>{
+
+<a name="line393">393: </a>  MatMultKernel_NS(M,x,y,<a href="../../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>);
+<a name="line394">394: </a>  <font color="#4169E1">return</font>(0);
+<a name="line395">395: </a>}
+
+<a name="line397">397: </a><font color="#B22222">/* (2 * I - M * A) * M, MatMat version */</font>
+<a name="line398">398: </a><strong><font color="#4169E1"><a name="MatMatMultKernel_NS"></a>static <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatMatMultKernel_NS(<a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> M, <a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> X, <a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> Y, <a href="../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> t)</font></strong>
+<a name="line399">399: </a>{
+<a name="line400">400: </a>  <a href="../../../../../docs/manualpages/PC/PC.html#PC">PC</a>             pc;
+<a name="line401">401: </a>  <a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a>            A;
+<a name="line402">402: </a>  PC_HARA        *pchara;
+
+<a name="line406">406: </a>  <a href="../../../../../docs/manualpages/Mat/MatShellGetContext.html#MatShellGetContext">MatShellGetContext</a>(M,(void*)&amp;pc);
+<a name="line407">407: </a>  A = pc-&gt;useAmat ? pc-&gt;mat : pc-&gt;pmat;
+<a name="line408">408: </a>  pchara = (PC_HARA*)pc-&gt;data;
+<a name="line409">409: </a>  <a href="../../../../../docs/manualpages/Mat/MatDuplicate.html#MatDuplicate">MatDuplicate</a>(X,<a href="../../../../../docs/manualpages/Mat/MatDuplicateOption.html#MatDuplicateOption">MAT_SHARE_NONZERO_PATTERN</a>,&amp;pchara-&gt;wnsmat[0]);
+<a name="line410">410: </a>  <a href="../../../../../docs/manualpages/Mat/MatDuplicate.html#MatDuplicate">MatDuplicate</a>(Y,<a href="../../../../../docs/manualpages/Mat/MatDuplicateOption.html#MatDuplicateOption">MAT_SHARE_NONZERO_PATTERN</a>,&amp;pchara-&gt;wnsmat[1]);
+<a name="line411">411: </a>  <font color="#4169E1">if</font> (t) {
+<a name="line412">412: </a>    PCApplyTransposeMat_HARA(pc,X,Y);
+<a name="line413">413: </a>    <a href="../../../../../docs/manualpages/Mat/MatTransposeMatMult.html#MatTransposeMatMult">MatTransposeMatMult</a>(A,Y,<a href="../../../../../docs/manualpages/Mat/MatReuse.html#MatReuse">MAT_REUSE_MATRIX</a>,<a href="../../../../../docs/manualpages/Sys/PETSC_DEFAULT.html#PETSC_DEFAULT">PETSC_DEFAULT</a>,&amp;pchara-&gt;wnsmat[1]);
+<a name="line414">414: </a>    PCApplyTransposeMat_HARA(pc,pchara-&gt;wnsmat[1],pchara-&gt;wnsmat[0]);
+<a name="line415">415: </a>    <a href="../../../../../docs/manualpages/Mat/MatScale.html#MatScale">MatScale</a>(Y,2.);
+<a name="line416">416: </a>    <a href="../../../../../docs/manualpages/Mat/MatAXPY.html#MatAXPY">MatAXPY</a>(Y,-1.,pchara-&gt;wnsmat[0],<a href="../../../../../docs/manualpages/Mat/MatStructure.html#MatStructure">SAME_NONZERO_PATTERN</a>);
+<a name="line417">417: </a>  } <font color="#4169E1">else</font> {
+<a name="line418">418: </a>    PCApplyMat_HARA(pc,X,Y);
+<a name="line419">419: </a>    <a href="../../../../../docs/manualpages/Mat/MatMatMult.html#MatMatMult">MatMatMult</a>(A,Y,<a href="../../../../../docs/manualpages/Mat/MatReuse.html#MatReuse">MAT_REUSE_MATRIX</a>,<a href="../../../../../docs/manualpages/Sys/PETSC_DEFAULT.html#PETSC_DEFAULT">PETSC_DEFAULT</a>,&amp;pchara-&gt;wnsmat[0]);
+<a name="line420">420: </a>    PCApplyMat_HARA(pc,pchara-&gt;wnsmat[0],pchara-&gt;wnsmat[1]);
+<a name="line421">421: </a>    <a href="../../../../../docs/manualpages/Mat/MatScale.html#MatScale">MatScale</a>(Y,2.);
+<a name="line422">422: </a>    <a href="../../../../../docs/manualpages/Mat/MatAXPY.html#MatAXPY">MatAXPY</a>(Y,-1.,pchara-&gt;wnsmat[1],<a href="../../../../../docs/manualpages/Mat/MatStructure.html#MatStructure">SAME_NONZERO_PATTERN</a>);
+<a name="line423">423: </a>  }
+<a name="line424">424: </a>  <a href="../../../../../docs/manualpages/Mat/MatDestroy.html#MatDestroy">MatDestroy</a>(&amp;pchara-&gt;wnsmat[0]);
+<a name="line425">425: </a>  <a href="../../../../../docs/manualpages/Mat/MatDestroy.html#MatDestroy">MatDestroy</a>(&amp;pchara-&gt;wnsmat[1]);
+<a name="line426">426: </a>  <font color="#4169E1">return</font>(0);
+<a name="line427">427: </a>}
+
+<a name="line429">429: </a><strong><font color="#4169E1"><a name="MatMatMultNumeric_NS"></a>static <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatMatMultNumeric_NS(<a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> M, <a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> X, <a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> Y, void *)</font></strong>
+<a name="line430">430: </a>{
+
+<a name="line434">434: </a>  MatMatMultKernel_NS(M,X,Y,<a href="../../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>);
+<a name="line435">435: </a>  <font color="#4169E1">return</font>(0);
+<a name="line436">436: </a>}
+
+<a name="line438">438: </a><strong><font color="#4169E1">PETSC_EXTERN <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatNorm_HARA(<a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a>,<a href="../../../../../docs/manualpages/Vec/NormType.html#NormType">NormType</a>,<a href="../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>*)</font></strong>;
+
+<a name="line440">440: </a><strong><font color="#4169E1"><a name="PCHaraSetUpSampler_Private"></a>static <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PCHaraSetUpSampler_Private(<a href="../../../../../docs/manualpages/PC/PC.html#PC">PC</a> pc)</font></strong>
+<a name="line441">441: </a>{
+<a name="line442">442: </a>  PC_HARA        *pchara = (PC_HARA*)pc-&gt;data;
+<a name="line443">443: </a>  <a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a>            A = pc-&gt;useAmat ? pc-&gt;mat : pc-&gt;pmat;
+
+<a name="line447">447: </a>  <font color="#4169E1">if</font> (!pchara-&gt;S) {
+<a name="line448">448: </a>    <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> M,N,m,n;
+
+<a name="line450">450: </a>    <a href="../../../../../docs/manualpages/Mat/MatGetSize.html#MatGetSize">MatGetSize</a>(A,&amp;M,&amp;N);
+<a name="line451">451: </a>    <a href="../../../../../docs/manualpages/Mat/MatGetLocalSize.html#MatGetLocalSize">MatGetLocalSize</a>(A,&amp;m,&amp;n);
+<a name="line452">452: </a>    <a href="../../../../../docs/manualpages/Mat/MatCreateShell.html#MatCreateShell">MatCreateShell</a>(<a href="../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)A),m,n,M,N,pc,&amp;pchara-&gt;S);
+<a name="line453">453: </a>    <a href="../../../../../docs/manualpages/Mat/MatSetBlockSizesFromMats.html#MatSetBlockSizesFromMats">MatSetBlockSizesFromMats</a>(pchara-&gt;S,A,A);
+<a name="line454">454: </a><font color="#A020F0">#if defined(PETSC_HAVE_CUDA)</font>
+<a name="line455">455: </a>    <a href="../../../../../docs/manualpages/Mat/MatShellSetVecType.html#MatShellSetVecType">MatShellSetVecType</a>(pchara-&gt;S,<a href="../../../../../docs/manualpages/Vec/VECCUDA.html#VECCUDA">VECCUDA</a>);
+<a name="line456">456: </a><font color="#A020F0">#endif</font>
+<a name="line457">457: </a>  }
+<a name="line458">458: </a>  <font color="#4169E1">if</font> (pchara-&gt;hyperorder &gt;= 2) {
+<a name="line459">459: </a>    <a href="../../../../../docs/manualpages/Mat/MatShellSetOperation.html#MatShellSetOperation">MatShellSetOperation</a>(pchara-&gt;S,MATOP_MULT,(void (*)(void))MatMult_Hyper);
+<a name="line460">460: </a>    <a href="../../../../../docs/manualpages/Mat/MatShellSetOperation.html#MatShellSetOperation">MatShellSetOperation</a>(pchara-&gt;S,MATOP_MULT_TRANSPOSE,(void (*)(void))MatMultTranspose_Hyper);
+<a name="line461">461: </a>    <a href="../../../../../docs/manualpages/Mat/MatShellSetMatProductOperation.html#MatShellSetMatProductOperation">MatShellSetMatProductOperation</a>(pchara-&gt;S,<a href="../../../../../docs/manualpages/Mat/MatProductType.html#MatProductType">MATPRODUCT_AB</a>,NULL,MatMatMultNumeric_Hyper,NULL,<a href="../../../../../docs/manualpages/Mat/MATDENSE.html#MATDENSE">MATDENSE</a>,<a href="../../../../../docs/manualpages/Mat/MATDENSE.html#MATDENSE">MATDENSE</a>);
+<a name="line462">462: </a>    <a href="../../../../../docs/manualpages/Mat/MatShellSetMatProductOperation.html#MatShellSetMatProductOperation">MatShellSetMatProductOperation</a>(pchara-&gt;S,<a href="../../../../../docs/manualpages/Mat/MatProductType.html#MatProductType">MATPRODUCT_AB</a>,NULL,MatMatMultNumeric_Hyper,NULL,<a href="../../../../../docs/manualpages/Mat/MATDENSECUDA.html#MATDENSECUDA">MATDENSECUDA</a>,<a href="../../../../../docs/manualpages/Mat/MATDENSECUDA.html#MATDENSECUDA">MATDENSECUDA</a>);
+<a name="line463">463: </a>  } <font color="#4169E1">else</font> {
+<a name="line464">464: </a>    <a href="../../../../../docs/manualpages/Mat/MatShellSetOperation.html#MatShellSetOperation">MatShellSetOperation</a>(pchara-&gt;S,MATOP_MULT,(void (*)(void))MatMult_NS);
+<a name="line465">465: </a>    <a href="../../../../../docs/manualpages/Mat/MatShellSetOperation.html#MatShellSetOperation">MatShellSetOperation</a>(pchara-&gt;S,MATOP_MULT_TRANSPOSE,(void (*)(void))MatMultTranspose_NS);
+<a name="line466">466: </a>    <a href="../../../../../docs/manualpages/Mat/MatShellSetMatProductOperation.html#MatShellSetMatProductOperation">MatShellSetMatProductOperation</a>(pchara-&gt;S,<a href="../../../../../docs/manualpages/Mat/MatProductType.html#MatProductType">MATPRODUCT_AB</a>,NULL,MatMatMultNumeric_NS,NULL,<a href="../../../../../docs/manualpages/Mat/MATDENSE.html#MATDENSE">MATDENSE</a>,<a href="../../../../../docs/manualpages/Mat/MATDENSE.html#MATDENSE">MATDENSE</a>);
+<a name="line467">467: </a>    <a href="../../../../../docs/manualpages/Mat/MatShellSetMatProductOperation.html#MatShellSetMatProductOperation">MatShellSetMatProductOperation</a>(pchara-&gt;S,<a href="../../../../../docs/manualpages/Mat/MatProductType.html#MatProductType">MATPRODUCT_AB</a>,NULL,MatMatMultNumeric_NS,NULL,<a href="../../../../../docs/manualpages/Mat/MATDENSECUDA.html#MATDENSECUDA">MATDENSECUDA</a>,<a href="../../../../../docs/manualpages/Mat/MATDENSECUDA.html#MATDENSECUDA">MATDENSECUDA</a>);
+<a name="line468">468: </a>  }
+<a name="line469">469: </a>  <a href="../../../../../docs/manualpages/Mat/MatPropagateSymmetryOptions.html#MatPropagateSymmetryOptions">MatPropagateSymmetryOptions</a>(A,pchara-&gt;S);
+<a name="line470">470: </a>  <font color="#4169E1">return</font>(0);
+<a name="line471">471: </a>}
+
+<a name="line473">473: </a><font color="#B22222">/* NS */</font>
+<a name="line474">474: </a><strong><font color="#4169E1"><a name="PCSetUp_HARA"></a>static <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PCSetUp_HARA(<a href="../../../../../docs/manualpages/PC/PC.html#PC">PC</a> pc)</font></strong>
+<a name="line475">475: </a>{
+<a name="line476">476: </a>  PC_HARA        *pchara = (PC_HARA*)pc-&gt;data;
+<a name="line477">477: </a>  <a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a>            A = pc-&gt;useAmat ? pc-&gt;mat : pc-&gt;pmat;
+<a name="line479">479: </a>  <a href="../../../../../docs/manualpages/Vec/NormType.html#NormType">NormType</a>       norm = <a href="../../../../../docs/manualpages/Vec/NORM_2.html#NORM_2">NORM_2</a>;
+<a name="line480">480: </a>  <a href="../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>      initerr,err;
+
+<a name="line483">483: </a>  <font color="#4169E1">if</font> (!pchara-&gt;T) {
+<a name="line484">484: </a>    <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> M,N,m,n;
+
+<a name="line486">486: </a>    <a href="../../../../../docs/manualpages/Mat/MatGetSize.html#MatGetSize">MatGetSize</a>(pc-&gt;pmat,&amp;M,&amp;N);
+<a name="line487">487: </a>    <a href="../../../../../docs/manualpages/Mat/MatGetLocalSize.html#MatGetLocalSize">MatGetLocalSize</a>(pc-&gt;pmat,&amp;m,&amp;n);
+<a name="line488">488: </a>    <a href="../../../../../docs/manualpages/Mat/MatCreateShell.html#MatCreateShell">MatCreateShell</a>(<a href="../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)pc-&gt;pmat),m,n,M,N,pc,&amp;pchara-&gt;T);
+<a name="line489">489: </a>    <a href="../../../../../docs/manualpages/Mat/MatSetBlockSizesFromMats.html#MatSetBlockSizesFromMats">MatSetBlockSizesFromMats</a>(pchara-&gt;T,pc-&gt;pmat,pc-&gt;pmat);
+<a name="line490">490: </a>    <a href="../../../../../docs/manualpages/Mat/MatShellSetOperation.html#MatShellSetOperation">MatShellSetOperation</a>(pchara-&gt;T,MATOP_MULT,(void (*)(void))MatMult_MAmI);
+<a name="line491">491: </a>    <a href="../../../../../docs/manualpages/Mat/MatShellSetOperation.html#MatShellSetOperation">MatShellSetOperation</a>(pchara-&gt;T,MATOP_MULT_TRANSPOSE,(void (*)(void))MatMultTranspose_MAmI);
+<a name="line492">492: </a>    <a href="../../../../../docs/manualpages/Mat/MatShellSetOperation.html#MatShellSetOperation">MatShellSetOperation</a>(pchara-&gt;T,MATOP_NORM,(void (*)(void))MatNorm_HARA);
+<a name="line493">493: </a><font color="#A020F0">#if defined(PETSC_HAVE_CUDA)</font>
+<a name="line494">494: </a>    <a href="../../../../../docs/manualpages/Mat/MatShellSetVecType.html#MatShellSetVecType">MatShellSetVecType</a>(pchara-&gt;T,<a href="../../../../../docs/manualpages/Vec/VECCUDA.html#VECCUDA">VECCUDA</a>);
+<a name="line495">495: </a><font color="#A020F0">#endif</font>
+<a name="line496">496: </a>    PetscLogObjectParent((<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)pc,(<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)pchara-&gt;T);
+<a name="line497">497: </a>  }
+<a name="line498">498: </a>  <font color="#4169E1">if</font> (!pchara-&gt;M) {
+<a name="line499">499: </a>    <a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a>       Ain = pc-&gt;pmat;
+<a name="line500">500: </a>    <a href="../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> ishara,flg;
+<a name="line501">501: </a>    <a href="../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> onenormA,infnormA;
+<a name="line502">502: </a>    void      (*normfunc)(void);
+
+<a name="line504">504: </a>    <a href="../../../../../docs/manualpages/Sys/PetscObjectTypeCompare.html#PetscObjectTypeCompare">PetscObjectTypeCompare</a>((<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)Ain,MATHARA,&amp;ishara);
+<a name="line505">505: </a>    <font color="#4169E1">if</font> (!ishara) {
+<a name="line506">506: </a>      Ain  = pc-&gt;mat;
+<a name="line507">507: </a>      <a href="../../../../../docs/manualpages/Sys/PetscObjectTypeCompare.html#PetscObjectTypeCompare">PetscObjectTypeCompare</a>((<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)Ain,MATHARA,&amp;ishara);
+<a name="line508">508: </a>    }
+<a name="line509">509: </a>    <font color="#4169E1">if</font> (!ishara) {
+<a name="line510">510: </a>      MatCreateHaraFromMat(A,pchara-&gt;sdim,pchara-&gt;coords,<a href="../../../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a>,<a href="../../../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a>,<a href="../../../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a>,<a href="../../../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a>,<a href="../../../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a>,&amp;pchara-&gt;M);
+<a name="line511">511: </a>    } <font color="#4169E1">else</font> {
+<a name="line512">512: </a>      <a href="../../../../../docs/manualpages/Mat/MatDuplicate.html#MatDuplicate">MatDuplicate</a>(Ain,<a href="../../../../../docs/manualpages/Mat/MatDuplicateOption.html#MatDuplicateOption">MAT_SHARE_NONZERO_PATTERN</a>,&amp;pchara-&gt;M);
+<a name="line513">513: </a>    }
+
+<a name="line515">515: </a>    <a href="../../../../../docs/manualpages/Mat/MatGetOperation.html#MatGetOperation">MatGetOperation</a>(A,MATOP_NORM,&amp;normfunc);
+<a name="line516">516: </a>    <font color="#4169E1">if</font> (!normfunc || pchara-&gt;useapproximatenorms) {
+<a name="line517">517: </a>      <a href="../../../../../docs/manualpages/Mat/MatSetOperation.html#MatSetOperation">MatSetOperation</a>(A,MATOP_NORM,(void (*)(void))MatNorm_HARA);
+<a name="line518">518: </a>    }
+<a name="line519">519: </a>    <a href="../../../../../docs/manualpages/Mat/MatNorm.html#MatNorm">MatNorm</a>(A,<a href="../../../../../docs/manualpages/Vec/NORM_1.html#NORM_1">NORM_1</a>,&amp;onenormA);
+<a name="line520">520: </a>    <a href="../../../../../docs/manualpages/Mat/MatGetOption.html#MatGetOption">MatGetOption</a>(A,<a href="../../../../../docs/manualpages/Mat/MatOption.html#MatOption">MAT_SYMMETRIC</a>,&amp;flg);
+<a name="line521">521: </a>    <font color="#4169E1">if</font> (!flg) {
+<a name="line522">522: </a>      <a href="../../../../../docs/manualpages/Mat/MatNorm.html#MatNorm">MatNorm</a>(A,<a href="../../../../../docs/manualpages/Vec/NORM_INFINITY.html#NORM_INFINITY">NORM_INFINITY</a>,&amp;infnormA);
+<a name="line523">523: </a>    } <font color="#4169E1">else</font> infnormA = onenormA;
+<a name="line524">524: </a>    <a href="../../../../../docs/manualpages/Mat/MatSetOperation.html#MatSetOperation">MatSetOperation</a>(A,MATOP_NORM,normfunc);
+<a name="line525">525: </a>    pchara-&gt;s0 = 1./(infnormA*onenormA);
+<a name="line526">526: </a>  }
+<a name="line527">527: </a>  <a href="../../../../../docs/manualpages/Mat/MatNorm.html#MatNorm">MatNorm</a>(pchara-&gt;T,norm,&amp;initerr);
+<a name="line528">528: </a>  <font color="#4169E1">if</font> (initerr &gt; pchara-&gt;atol) {
+<a name="line529">529: </a>    <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> i;
+
+<a name="line531">531: </a>    PCHaraSetUpSampler_Private(pc);
+<a name="line532">532: </a>    err  = initerr;
+<a name="line533">533: </a>    <font color="#4169E1">if</font> (pchara-&gt;monitor) { <a href="../../../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)pc),<font color="#666666">"%D: %g %g\n"</font>,0,(double)err,(double)(err/initerr)); }
+<a name="line534">534: </a>    <font color="#4169E1">for</font> (i = 0; i &lt; pchara-&gt;maxits; i++) {
+<a name="line535">535: </a>      <a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a>         M;
+<a name="line536">536: </a>      const char* prefix;
+
+<a name="line538">538: </a>      <a href="../../../../../docs/manualpages/Mat/MatDuplicate.html#MatDuplicate">MatDuplicate</a>(pchara-&gt;M,<a href="../../../../../docs/manualpages/Mat/MatDuplicateOption.html#MatDuplicateOption">MAT_SHARE_NONZERO_PATTERN</a>,&amp;M);
+<a name="line539">539: </a>      <a href="../../../../../docs/manualpages/Mat/MatGetOptionsPrefix.html#MatGetOptionsPrefix">MatGetOptionsPrefix</a>(M,&amp;prefix);
+<a name="line540">540: </a>      <font color="#4169E1">if</font> (!prefix) {
+<a name="line541">541: </a>        <a href="../../../../../docs/manualpages/PC/PCGetOptionsPrefix.html#PCGetOptionsPrefix">PCGetOptionsPrefix</a>(pc,&amp;prefix);
+<a name="line542">542: </a>        <a href="../../../../../docs/manualpages/Mat/MatSetOptionsPrefix.html#MatSetOptionsPrefix">MatSetOptionsPrefix</a>(M,prefix);
+<a name="line543">543: </a>        <a href="../../../../../docs/manualpages/Mat/MatAppendOptionsPrefix.html#MatAppendOptionsPrefix">MatAppendOptionsPrefix</a>(M,<font color="#666666">"pc_hara_inv_"</font>);
+<a name="line544">544: </a>      }
+<a name="line545">545: </a><font color="#A020F0">#if 0</font>
+<a name="line546">546: </a>  {
+<a name="line547">547: </a>     <a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> Sd1,Sd2,Id;
+<a name="line548">548: </a>     <a href="../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> err;
+<a name="line549">549: </a>     <a href="../../../../../docs/manualpages/Mat/MatComputeOperator.html#MatComputeOperator">MatComputeOperator</a>(pchara-&gt;S,<a href="../../../../../docs/manualpages/Mat/MATDENSE.html#MATDENSE">MATDENSE</a>,&amp;Sd1);
+<a name="line550">550: </a>     <a href="../../../../../docs/manualpages/Mat/MatDuplicate.html#MatDuplicate">MatDuplicate</a>(Sd1,<a href="../../../../../docs/manualpages/Mat/MatDuplicateOption.html#MatDuplicateOption">MAT_COPY_VALUES</a>,&amp;Id);
+<a name="line551">551: </a>     <a href="../../../../../docs/manualpages/Mat/MatZeroEntries.html#MatZeroEntries">MatZeroEntries</a>(Id);
+<a name="line552">552: </a>     <a href="../../../../../docs/manualpages/Mat/MatShift.html#MatShift">MatShift</a>(Id,1.);
+<a name="line553">553: </a>     <a href="../../../../../docs/manualpages/Mat/MatMatMult.html#MatMatMult">MatMatMult</a>(pchara-&gt;S,Id,<a href="../../../../../docs/manualpages/Mat/MatReuse.html#MatReuse">MAT_INITIAL_MATRIX</a>,<a href="../../../../../docs/manualpages/Sys/PETSC_DEFAULT.html#PETSC_DEFAULT">PETSC_DEFAULT</a>,&amp;Sd2);
+<a name="line554">554: </a>     <a href="../../../../../docs/manualpages/Mat/MatAXPY.html#MatAXPY">MatAXPY</a>(Sd2,-1.,Sd1,<a href="../../../../../docs/manualpages/Mat/MatStructure.html#MatStructure">SAME_NONZERO_PATTERN</a>);
+<a name="line555">555: </a>     <a href="../../../../../docs/manualpages/Mat/MatNorm.html#MatNorm">MatNorm</a>(Sd2,<a href="../../../../../docs/manualpages/Vec/NORM_FROBENIUS.html#NORM_FROBENIUS">NORM_FROBENIUS</a>,&amp;err);
+<a name="line556">556: </a>     <a href="../../../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)Sd2),<font color="#666666">"ERR %g\n"</font>,err);
+<a name="line557">557: </a>     <a href="../../../../../docs/manualpages/Mat/MatViewFromOptions.html#MatViewFromOptions">MatViewFromOptions</a>(Sd2,NULL,<font color="#666666">"-Sd_view"</font>);
+<a name="line558">558: </a>     <a href="../../../../../docs/manualpages/Mat/MatDestroy.html#MatDestroy">MatDestroy</a>(&amp;Sd1);
+<a name="line559">559: </a>     <a href="../../../../../docs/manualpages/Mat/MatDestroy.html#MatDestroy">MatDestroy</a>(&amp;Sd2);
+<a name="line560">560: </a>     <a href="../../../../../docs/manualpages/Mat/MatDestroy.html#MatDestroy">MatDestroy</a>(&amp;Id);
+<a name="line561">561: </a>  }
+<a name="line562">562: </a><font color="#A020F0">#endif</font>
+<a name="line563">563: </a>      MatHaraSetSamplingMat(M,pchara-&gt;S,1,<a href="../../../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a>);
+<a name="line564">564: </a>      <font color="#4169E1">if</font> (pc-&gt;setfromoptionscalled) {
+<a name="line565">565: </a>        <a href="../../../../../docs/manualpages/Mat/MatSetFromOptions.html#MatSetFromOptions">MatSetFromOptions</a>(M);
+<a name="line566">566: </a>      }
+<a name="line567">567: </a>      <a href="../../../../../docs/manualpages/Mat/MatAssemblyBegin.html#MatAssemblyBegin">MatAssemblyBegin</a>(M,<a href="../../../../../docs/manualpages/Mat/MatAssemblyType.html#MatAssemblyType">MAT_FINAL_ASSEMBLY</a>);
+<a name="line568">568: </a>      <a href="../../../../../docs/manualpages/Mat/MatAssemblyEnd.html#MatAssemblyEnd">MatAssemblyEnd</a>(M,<a href="../../../../../docs/manualpages/Mat/MatAssemblyType.html#MatAssemblyType">MAT_FINAL_ASSEMBLY</a>);
+<a name="line569">569: </a><font color="#A020F0">#if 0</font>
+<a name="line570">570: </a>      {
+<a name="line571">571: </a>         <a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> Md;
+<a name="line572">572: </a>         <a href="../../../../../docs/manualpages/Mat/MatComputeOperator.html#MatComputeOperator">MatComputeOperator</a>(M,<a href="../../../../../docs/manualpages/Mat/MATDENSE.html#MATDENSE">MATDENSE</a>,&amp;Md);
+<a name="line573">573: </a>         <a href="../../../../../docs/manualpages/Mat/MatViewFromOptions.html#MatViewFromOptions">MatViewFromOptions</a>(Md,NULL,<font color="#666666">"-Md_view"</font>);
+<a name="line574">574: </a>         <a href="../../../../../docs/manualpages/Mat/MatDestroy.html#MatDestroy">MatDestroy</a>(&amp;Md);
+<a name="line575">575: </a>         <a href="../../../../../docs/manualpages/Mat/MatComputeOperator.html#MatComputeOperator">MatComputeOperator</a>(pchara-&gt;S,<a href="../../../../../docs/manualpages/Mat/MATDENSE.html#MATDENSE">MATDENSE</a>,&amp;Md);
+<a name="line576">576: </a>         <a href="../../../../../docs/manualpages/Mat/MatViewFromOptions.html#MatViewFromOptions">MatViewFromOptions</a>(Md,NULL,<font color="#666666">"-Md_view"</font>);
+<a name="line577">577: </a>         <a href="../../../../../docs/manualpages/Mat/MatDestroy.html#MatDestroy">MatDestroy</a>(&amp;Md);
+<a name="line578">578: </a>      }
+<a name="line579">579: </a><font color="#A020F0">#endif</font>
+<a name="line580">580: </a>      <a href="../../../../../docs/manualpages/Mat/MatDestroy.html#MatDestroy">MatDestroy</a>(&amp;pchara-&gt;M);
+<a name="line581">581: </a>      pchara-&gt;M = M;
+<a name="line582">582: </a>      <a href="../../../../../docs/manualpages/Mat/MatNorm.html#MatNorm">MatNorm</a>(pchara-&gt;T,norm,&amp;err);
+<a name="line583">583: </a>      <font color="#4169E1">if</font> (pchara-&gt;monitor) { <a href="../../../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)pc),<font color="#666666">"%D: %g %g\n"</font>,i+1,(double)err,(double)(err/initerr)); }
+<a name="line584">584: </a>      <font color="#4169E1">if</font> (err &lt; pchara-&gt;atol || err &lt; pchara-&gt;rtol*initerr) <font color="#4169E1">break</font>;
+<a name="line585">585: </a>    }
+<a name="line586">586: </a>  }
+<a name="line587">587: </a>  <font color="#4169E1">return</font>(0);
+<a name="line588">588: </a>}
+
+<a name="line590">590: </a><strong><font color="#4169E1"><a name="PCCreate_HARA"></a>PETSC_EXTERN <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PCCreate_HARA(<a href="../../../../../docs/manualpages/PC/PC.html#PC">PC</a> pc)</font></strong>
+<a name="line591">591: </a>{
+<a name="line593">593: </a>  PC_HARA        *pchara;
+
+<a name="line596">596: </a>  <a href="../../../../../docs/manualpages/Sys/PetscNewLog.html#PetscNewLog">PetscNewLog</a>(pc,&amp;pchara);
+<a name="line597">597: </a>  pc-&gt;data = (void*)pchara;
+
+<a name="line599">599: </a>  pchara-&gt;atol       = 1.e-2;
+<a name="line600">600: </a>  pchara-&gt;rtol       = 1.e-6;
+<a name="line601">601: </a>  pchara-&gt;maxits     = 50;
+<a name="line602">602: </a>  pchara-&gt;hyperorder = 1; <font color="#B22222">/* default to basic NewtonSchultz */</font>
+
+<a name="line604">604: </a>  pc-&gt;ops-&gt;destroy        = PCDestroy_HARA;
+<a name="line605">605: </a>  pc-&gt;ops-&gt;setup          = PCSetUp_HARA;
+<a name="line606">606: </a>  pc-&gt;ops-&gt;apply          = PCApply_HARA;
+<a name="line607">607: </a>  pc-&gt;ops-&gt;matapply       = PCApplyMat_HARA;
+<a name="line608">608: </a>  pc-&gt;ops-&gt;applytranspose = PCApplyTranspose_HARA;
+<a name="line609">609: </a>  pc-&gt;ops-&gt;reset          = PCReset_HARA;
+<a name="line610">610: </a>  pc-&gt;ops-&gt;setfromoptions = PCSetFromOptions_HARA;
+
+<a name="line612">612: </a>  <a href="../../../../../docs/manualpages/Sys/PetscObjectComposeFunction.html#PetscObjectComposeFunction">PetscObjectComposeFunction</a>((<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)pc,<font color="#666666">"PCSetCoordinates_C"</font>,PCSetCoordinates_HARA);
+<a name="line613">613: </a>  <font color="#4169E1">return</font>(0);
+<a name="line614">614: </a>}
+</pre>
+</body>
+
+</html>

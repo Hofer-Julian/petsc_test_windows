@@ -1,0 +1,34 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscWaitOnError.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>PetscWaitOnError</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/Sys/PetscWaitOnError.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="PetscWaitOnError"><H1>PetscWaitOnError</H1></A>
+If an error is detected and the process would normally exit the main program with MPI_Abort() sleep instead of exiting. 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscsys.h"   
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A>  <A HREF="../Sys/PetscWaitOnError.html#PetscWaitOnError">PetscWaitOnError</A>()
+</PRE>
+Not Collective
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">Notes</FONT></H3>
+When -start_in_debugger -debugger_ranks x,y,z is used this prevents the processes NOT listed in x,y,z from calling MPI_Abort and
+killing the user's debugging sessions.
+<P>
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../Sys/PetscSetDebugger.html#PetscSetDebugger">PetscSetDebugger</A>(), <A HREF="../Sys/PetscAttachDebugger.html#PetscAttachDebugger">PetscAttachDebugger</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>advanced<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/sys/error/adebug.c.html#PetscWaitOnError">src/sys/error/adebug.c</A>
+<BR><A HREF="./index.html">Index of all Sys routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

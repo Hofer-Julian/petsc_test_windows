@@ -1,0 +1,41 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscOptionsInsertStringYAML.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>PetscOptionsInsertStringYAML</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/Sys/PetscOptionsInsertStringYAML.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="PetscOptionsInsertStringYAML"><H1>PetscOptionsInsertStringYAML</H1></A>
+Inserts YAML-formatted options into the database from a string 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscsys.h"   
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../Sys/PetscOptionsInsertStringYAML.html#PetscOptionsInsertStringYAML">PetscOptionsInsertStringYAML</A>(PetscOptions options,const char in_str[])
+</PRE>
+Logically Collective
+<P>
+<H3><FONT COLOR="#CC3333">Input Parameter</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>options </B></TD><TD>- options object
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>in_str </B></TD><TD>- YAML-formatted string op options
+</TD></TR></TABLE>
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../Sys/PetscOptionsSetValue.html#PetscOptionsSetValue">PetscOptionsSetValue</A>(), <A HREF="../Sys/PetscOptionsView.html#PetscOptionsView">PetscOptionsView</A>(), <A HREF="../Sys/PetscOptionsHasName.html#PetscOptionsHasName">PetscOptionsHasName</A>(), <A HREF="../Sys/PetscOptionsGetInt.html#PetscOptionsGetInt">PetscOptionsGetInt</A>(),
+<BR><A HREF="../Sys/PetscOptionsGetReal.html#PetscOptionsGetReal">PetscOptionsGetReal</A>(), <A HREF="../Sys/PetscOptionsGetString.html#PetscOptionsGetString">PetscOptionsGetString</A>(), <A HREF="../Sys/PetscOptionsGetIntArray.html#PetscOptionsGetIntArray">PetscOptionsGetIntArray</A>(), <A HREF="../Sys/PetscOptionsBool.html#PetscOptionsBool">PetscOptionsBool</A>(),
+<A HREF="../Sys/PetscOptionsName.html#PetscOptionsName">PetscOptionsName</A>(), <A HREF="../Sys/PetscOptionsBegin.html#PetscOptionsBegin">PetscOptionsBegin</A>(), <A HREF="../Sys/PetscOptionsEnd.html#PetscOptionsEnd">PetscOptionsEnd</A>(), <A HREF="../Sys/PetscOptionsHead.html#PetscOptionsHead">PetscOptionsHead</A>(),
+<A HREF="../Sys/PetscOptionsStringArray.html#PetscOptionsStringArray">PetscOptionsStringArray</A>(),<A HREF="../Sys/PetscOptionsRealArray.html#PetscOptionsRealArray">PetscOptionsRealArray</A>(), <A HREF="../Sys/PetscOptionsScalar.html#PetscOptionsScalar">PetscOptionsScalar</A>(),
+<A HREF="../Sys/PetscOptionsBoolGroupBegin.html#PetscOptionsBoolGroupBegin">PetscOptionsBoolGroupBegin</A>(), <A HREF="../Sys/PetscOptionsBoolGroup.html#PetscOptionsBoolGroup">PetscOptionsBoolGroup</A>(), <A HREF="../Sys/PetscOptionsBoolGroupEnd.html#PetscOptionsBoolGroupEnd">PetscOptionsBoolGroupEnd</A>(),
+<A HREF="../Sys/PetscOptionsFList.html#PetscOptionsFList">PetscOptionsFList</A>(), <A HREF="../Sys/PetscOptionsEList.html#PetscOptionsEList">PetscOptionsEList</A>(), <A HREF="../Sys/PetscOptionsInsertFile.html#PetscOptionsInsertFile">PetscOptionsInsertFile</A>(), <A HREF="../Sys/PetscOptionsInsertFileYAML.html#PetscOptionsInsertFileYAML">PetscOptionsInsertFileYAML</A>()
+<P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>intermediate<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/sys/yaml/yamlimpls.c.html#PetscOptionsInsertStringYAML">src/sys/yaml/yamlimpls.c</A>
+<BR><A HREF="./index.html">Index of all Sys routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

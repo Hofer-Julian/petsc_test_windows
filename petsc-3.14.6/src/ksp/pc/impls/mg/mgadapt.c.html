@@ -1,0 +1,248 @@
+<center><a href="mgadapt.c">Actual source code: mgadapt.c</a></center><br>
+
+<html>
+<head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/src/ksp/pc/impls/mg/mgadapt.c.html" />
+<title></title>
+<meta name="generator" content="c2html 0.9.4">
+<meta name="date" content="2021-03-30T16:51:08+00:00">
+</head>
+
+<body bgcolor="#FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 src/ksp/pc/impls/mg/mgadapt.c.html "><small>Report Typos and Errors</small></a></div>
+<pre width="80">
+<a name="line1">  1: </a>#include <A href="../../../../../include/petsc/private/pcmgimpl.h.html">&lt;petsc/private/pcmgimpl.h&gt;</A>
+<a name="line2">  2: </a>#include <A href="../../../../../include/petscdm.h.html">&lt;petscdm.h&gt;</A>
+
+<a name="line4">  4: </a><strong><font color="#4169E1"><a name="xfunc"></a>static <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> xfunc(<a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> dim, <a href="../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> time, const <a href="../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> coords[], <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> Nc, <a href="../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> *u, void *ctx)</font></strong>
+<a name="line5">  5: </a>{
+<a name="line6">  6: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> k = *((<a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *) ctx), c;
+
+<a name="line8">  8: </a>  <font color="#4169E1">for</font> (c = 0; c &lt; Nc; ++c) u[c] = PetscPowRealInt(coords[0], k);
+<a name="line9">  9: </a>  <font color="#4169E1">return</font> 0;
+<a name="line10"> 10: </a>}
+<a name="line11"> 11: </a><strong><font color="#4169E1"><a name="yfunc"></a>static <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> yfunc(<a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> dim, <a href="../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> time, const <a href="../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> coords[], <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> Nc, <a href="../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> *u, void *ctx)</font></strong>
+<a name="line12"> 12: </a>{
+<a name="line13"> 13: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> k = *((<a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *) ctx), c;
+
+<a name="line15"> 15: </a>  <font color="#4169E1">for</font> (c = 0; c &lt; Nc; ++c) u[c] = PetscPowRealInt(coords[1], k);
+<a name="line16"> 16: </a>  <font color="#4169E1">return</font> 0;
+<a name="line17"> 17: </a>}
+<a name="line18"> 18: </a><strong><font color="#4169E1"><a name="zfunc"></a>static <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> zfunc(<a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> dim, <a href="../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> time, const <a href="../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> coords[], <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> Nc, <a href="../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> *u, void *ctx)</font></strong>
+<a name="line19"> 19: </a>{
+<a name="line20"> 20: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> k = *((<a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *) ctx), c;
+
+<a name="line22"> 22: </a>  <font color="#4169E1">for</font> (c = 0; c &lt; Nc; ++c) u[c] = PetscPowRealInt(coords[2], k);
+<a name="line23"> 23: </a>  <font color="#4169E1">return</font> 0;
+<a name="line24"> 24: </a>}
+<a name="line25"> 25: </a><strong><font color="#4169E1"><a name="xsin"></a>static <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> xsin(<a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> dim, <a href="../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> time, const <a href="../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> coords[], <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> Nc, <a href="../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> *u, void *ctx)</font></strong>
+<a name="line26"> 26: </a>{
+<a name="line27"> 27: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> k = *((<a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *) ctx), c;
+
+<a name="line29"> 29: </a>  <font color="#4169E1">for</font> (c = 0; c &lt; Nc; ++c) u[c] = PetscSinReal(PETSC_PI*(k+1)*coords[0]);
+<a name="line30"> 30: </a>  <font color="#4169E1">return</font> 0;
+<a name="line31"> 31: </a>}
+<a name="line32"> 32: </a><strong><font color="#4169E1"><a name="ysin"></a>static <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> ysin(<a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> dim, <a href="../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> time, const <a href="../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> coords[], <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> Nc, <a href="../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> *u, void *ctx)</font></strong>
+<a name="line33"> 33: </a>{
+<a name="line34"> 34: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> k = *((<a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *) ctx), c;
+
+<a name="line36"> 36: </a>  <font color="#4169E1">for</font> (c = 0; c &lt; Nc; ++c) u[c] = PetscSinReal(PETSC_PI*(k+1)*coords[1]);
+<a name="line37"> 37: </a>  <font color="#4169E1">return</font> 0;
+<a name="line38"> 38: </a>}
+<a name="line39"> 39: </a><strong><font color="#4169E1"><a name="zsin"></a>static <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> zsin(<a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> dim, <a href="../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> time, const <a href="../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> coords[], <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> Nc, <a href="../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> *u, void *ctx)</font></strong>
+<a name="line40"> 40: </a>{
+<a name="line41"> 41: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> k = *((<a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *) ctx), c;
+
+<a name="line43"> 43: </a>  <font color="#4169E1">for</font> (c = 0; c &lt; Nc; ++c) u[c] = PetscSinReal(PETSC_PI*(k+1)*coords[2]);
+<a name="line44"> 44: </a>  <font color="#4169E1">return</font> 0;
+<a name="line45"> 45: </a>}
+
+<a name="line47"> 47: </a><strong><font color="#4169E1"><a name="DMSetBasisFunction_Internal"></a><a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> DMSetBasisFunction_Internal(<a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> Nf, <a href="../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> usePoly, <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> dir, <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> (**funcs)(<a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>, <a href="../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>, const <a href="../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>[], <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>, <a href="../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> *, void *))</font></strong>
+<a name="line48"> 48: </a>{
+<a name="line49"> 49: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> f;
+
+<a name="line52"> 52: </a>  <font color="#4169E1">for</font> (f = 0; f &lt; Nf; ++f) {
+<a name="line53"> 53: </a>    <font color="#4169E1">if</font> (usePoly) {
+<a name="line54"> 54: </a>      <font color="#4169E1">switch</font> (dir) {
+<a name="line55"> 55: </a>      <font color="#4169E1">case</font> 0: funcs[f] = xfunc;<font color="#4169E1">break</font>;
+<a name="line56"> 56: </a>      <font color="#4169E1">case</font> 1: funcs[f] = yfunc;<font color="#4169E1">break</font>;
+<a name="line57"> 57: </a>      <font color="#4169E1">case</font> 2: funcs[f] = zfunc;<font color="#4169E1">break</font>;
+<a name="line58"> 58: </a><strong><font color="#FF0000">      default:</font></strong> <a href="../../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, PETSC_ERR_ARG_OUTOFRANGE, <font color="#666666">"No function for direction %D"</font>, dir);
+<a name="line59"> 59: </a>      }
+<a name="line60"> 60: </a>    } <font color="#4169E1">else</font> {
+<a name="line61"> 61: </a>      <font color="#4169E1">switch</font> (dir) {
+<a name="line62"> 62: </a>      <font color="#4169E1">case</font> 0: funcs[f] = xsin;<font color="#4169E1">break</font>;
+<a name="line63"> 63: </a>      <font color="#4169E1">case</font> 1: funcs[f] = ysin;<font color="#4169E1">break</font>;
+<a name="line64"> 64: </a>      <font color="#4169E1">case</font> 2: funcs[f] = zsin;<font color="#4169E1">break</font>;
+<a name="line65"> 65: </a><strong><font color="#FF0000">      default:</font></strong> <a href="../../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, PETSC_ERR_ARG_OUTOFRANGE, <font color="#666666">"No function for direction %D"</font>, dir);
+<a name="line66"> 66: </a>      }
+<a name="line67"> 67: </a>    }
+<a name="line68"> 68: </a>  }
+<a name="line69"> 69: </a>  <font color="#4169E1">return</font>(0);
+<a name="line70"> 70: </a>}
+
+<a name="line72"> 72: </a><strong><font color="#4169E1"><a name="PCMGCreateCoarseSpaceDefault_Private"></a>static <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PCMGCreateCoarseSpaceDefault_Private(<a href="../../../../../docs/manualpages/PC/PC.html#PC">PC</a> pc, <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> level, <a href="../../../../../docs/manualpages/PC/PCMGCoarseSpaceType.html#PCMGCoarseSpaceType">PCMGCoarseSpaceType</a> cstype, <a href="../../../../../docs/manualpages/DM/DM.html#DM">DM</a> dm, <a href="../../../../../docs/manualpages/KSP/KSP.html#KSP">KSP</a> ksp, <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> Nc, const <a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> initialGuess[], <a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> **coarseSpace)</font></strong>
+<a name="line73"> 73: </a>{
+<a name="line74"> 74: </a>  <a href="../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>         poly = cstype == <a href="../../../../../docs/manualpages/PC/PCMGCoarseSpaceType.html#PCMGCoarseSpaceType">PCMG_POLYNOMIAL</a> ? <a href="../../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a> : <a href="../../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line75"> 75: </a>  <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> (**funcs)(<a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>,<a href="../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>,const <a href="../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>[],<a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>,<a href="../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>*,void*);
+<a name="line76"> 76: </a>  void            **ctxs;
+<a name="line77"> 77: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>          dim, d, Nf, f, k;
+<a name="line78"> 78: </a>  <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>    ierr;
+
+<a name="line81"> 81: </a>  <a href="../../../../../docs/manualpages/DM/DMGetCoordinateDim.html#DMGetCoordinateDim">DMGetCoordinateDim</a>(dm, &amp;dim);
+<a name="line82"> 82: </a>  <a href="../../../../../docs/manualpages/DM/DMGetNumFields.html#DMGetNumFields">DMGetNumFields</a>(dm, &amp;Nf);
+<a name="line83"> 83: </a>  <font color="#4169E1">if</font> (Nc % dim) <a href="../../../../../docs/manualpages/Sys/SETERRQ2.html#SETERRQ2">SETERRQ2</a>(<a href="../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>) pc), PETSC_ERR_ARG_WRONG, <font color="#666666">"The number of coarse vectors %D must be divisible by the dimension %D"</font>, Nc, dim);
+<a name="line84"> 84: </a>  <a href="../../../../../docs/manualpages/Sys/PetscMalloc2.html#PetscMalloc2">PetscMalloc2</a>(Nf, &amp;funcs, Nf, &amp;ctxs);
+<a name="line85"> 85: </a>  <font color="#4169E1">if</font> (!*coarseSpace) {<a href="../../../../../docs/manualpages/Sys/PetscCalloc1.html#PetscCalloc1">PetscCalloc1</a>(Nc, coarseSpace);}
+<a name="line86"> 86: </a>  <font color="#4169E1">for</font> (k = 0; k &lt; Nc/dim; ++k) {
+<a name="line87"> 87: </a>    <font color="#4169E1">for</font> (f = 0; f &lt; Nf; ++f) {ctxs[f] = &amp;k;}
+<a name="line88"> 88: </a>    <font color="#4169E1">for</font> (d = 0; d &lt; dim; ++d) {
+<a name="line89"> 89: </a>      <font color="#4169E1">if</font> (!(*coarseSpace)[k*dim+d]) {<a href="../../../../../docs/manualpages/DM/DMCreateGlobalVector.html#DMCreateGlobalVector">DMCreateGlobalVector</a>(dm, &amp;(*coarseSpace)[k*dim+d]);}
+<a name="line90"> 90: </a>      DMSetBasisFunction_Internal(Nf, poly, d, funcs);
+<a name="line91"> 91: </a>      <a href="../../../../../docs/manualpages/DM/DMProjectFunction.html#DMProjectFunction">DMProjectFunction</a>(dm, 0.0, funcs, ctxs, <a href="../../../../../docs/manualpages/Sys/InsertMode.html#InsertMode">INSERT_ALL_VALUES</a>, (*coarseSpace)[k*dim+d]);
+<a name="line92"> 92: </a>    }
+<a name="line93"> 93: </a>  }
+<a name="line94"> 94: </a>  <a href="../../../../../docs/manualpages/Sys/PetscFree2.html#PetscFree2">PetscFree2</a>(funcs, ctxs);
+<a name="line95"> 95: </a>  <font color="#4169E1">return</font>(0);
+<a name="line96"> 96: </a>}
+
+<a name="line98"> 98: </a><strong><font color="#4169E1"><a name="PCMGCreateCoarseSpace_Polynomial"></a>static <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PCMGCreateCoarseSpace_Polynomial(<a href="../../../../../docs/manualpages/PC/PC.html#PC">PC</a> pc, <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> level, <a href="../../../../../docs/manualpages/DM/DM.html#DM">DM</a> dm, <a href="../../../../../docs/manualpages/KSP/KSP.html#KSP">KSP</a> ksp, <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> Nc, const <a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> initialGuess[], <a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> **coarseSpace)</font></strong>
+<a name="line99"> 99: </a>{
+
+<a name="line103">103: </a>  PCMGCreateCoarseSpaceDefault_Private(pc, level, <a href="../../../../../docs/manualpages/PC/PCMGCoarseSpaceType.html#PCMGCoarseSpaceType">PCMG_POLYNOMIAL</a>, dm, ksp, Nc, initialGuess, coarseSpace);
+<a name="line104">104: </a>  <font color="#4169E1">return</font>(0);
+<a name="line105">105: </a>}
+
+<a name="line107">107: </a><strong><font color="#4169E1"><a name="PCMGCreateCoarseSpace_Harmonic"></a><a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PCMGCreateCoarseSpace_Harmonic(<a href="../../../../../docs/manualpages/PC/PC.html#PC">PC</a> pc, <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> level, <a href="../../../../../docs/manualpages/DM/DM.html#DM">DM</a> dm, <a href="../../../../../docs/manualpages/KSP/KSP.html#KSP">KSP</a> ksp, <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> Nc, const <a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> initialGuess[], <a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> **coarseSpace)</font></strong>
+<a name="line108">108: </a>{
+
+<a name="line112">112: </a>  PCMGCreateCoarseSpaceDefault_Private(pc, level, <a href="../../../../../docs/manualpages/PC/PCMGCoarseSpaceType.html#PCMGCoarseSpaceType">PCMG_HARMONIC</a>, dm, ksp, Nc, initialGuess, coarseSpace);
+<a name="line113">113: </a>  <font color="#4169E1">return</font>(0);
+<a name="line114">114: </a>}
+
+<a name="line116">116: </a><font color="#B22222">/*</font>
+<a name="line117">117: </a><font color="#B22222">  PCMGComputeCoarseSpace_Internal - Compute vectors on level l that must be accurately interpolated.</font>
+
+<a name="line119">119: </a><font color="#B22222">  Input Parameters:</font>
+<a name="line120">120: </a><font color="#B22222">+ pc     - The <a href="../../../../../docs/manualpages/PC/PCMG.html#PCMG">PCMG</a></font>
+<a name="line121">121: </a><font color="#B22222">. l      - The level</font>
+<a name="line122">122: </a><font color="#B22222">. Nc     - The size of the space (number of vectors)</font>
+<a name="line123">123: </a><font color="#B22222">- cspace - The space from level l-1, or NULL</font>
+
+<a name="line125">125: </a><font color="#B22222">  Output Parameter:</font>
+<a name="line126">126: </a><font color="#B22222">. space  - The space which must be accurately interpolated.</font>
+
+<a name="line128">128: </a><font color="#B22222">  Level: developer</font>
+
+<a name="line130">130: </a><font color="#B22222">  Note: This space is normally used to adapt the interpolator.</font>
+
+<a name="line132">132: </a><font color="#B22222">.seealso: PCMGAdaptInterpolator_Private()</font>
+<a name="line133">133: </a><font color="#B22222">*/</font>
+<a name="line134">134: </a><strong><font color="#4169E1"><a name="PCMGComputeCoarseSpace_Internal"></a><a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PCMGComputeCoarseSpace_Internal(<a href="../../../../../docs/manualpages/PC/PC.html#PC">PC</a> pc, <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> l, <a href="../../../../../docs/manualpages/PC/PCMGCoarseSpaceType.html#PCMGCoarseSpaceType">PCMGCoarseSpaceType</a> cstype, <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> Nc, const <a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> cspace[], <a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> *space[])</font></strong>
+<a name="line135">135: </a>{
+<a name="line136">136: </a>  <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> (*coarseConstructor)(<a href="../../../../../docs/manualpages/PC/PC.html#PC">PC</a>, <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>, <a href="../../../../../docs/manualpages/DM/DM.html#DM">DM</a>, <a href="../../../../../docs/manualpages/KSP/KSP.html#KSP">KSP</a>, <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>, const <a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a>[], <a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a>*[]);
+<a name="line137">137: </a>  <a href="../../../../../docs/manualpages/DM/DM.html#DM">DM</a>             dm;
+<a name="line138">138: </a>  <a href="../../../../../docs/manualpages/KSP/KSP.html#KSP">KSP</a>            smooth;
+
+<a name="line142">142: </a>  <font color="#4169E1">switch</font> (cstype) {
+<a name="line143">143: </a>  <font color="#4169E1">case</font> <a href="../../../../../docs/manualpages/PC/PCMGCoarseSpaceType.html#PCMGCoarseSpaceType">PCMG_POLYNOMIAL</a>: coarseConstructor = &amp;PCMGCreateCoarseSpace_Polynomial;<font color="#4169E1">break</font>;
+<a name="line144">144: </a>  <font color="#4169E1">case</font> <a href="../../../../../docs/manualpages/PC/PCMGCoarseSpaceType.html#PCMGCoarseSpaceType">PCMG_HARMONIC</a>:   coarseConstructor = &amp;PCMGCreateCoarseSpace_Harmonic;<font color="#4169E1">break</font>;
+<a name="line145">145: </a>  <font color="#4169E1">case</font> <a href="../../../../../docs/manualpages/PC/PCMGCoarseSpaceType.html#PCMGCoarseSpaceType">PCMG_EIGENVECTOR</a>:
+<a name="line146">146: </a>    <font color="#4169E1">if</font> (l &gt; 0) {<a href="../../../../../docs/manualpages/PC/PCMGGetCoarseSpaceConstructor.html#PCMGGetCoarseSpaceConstructor">PCMGGetCoarseSpaceConstructor</a>(<font color="#666666">"BAMG_MEV"</font>, &amp;coarseConstructor);}
+<a name="line147">147: </a>    <font color="#4169E1">else</font>       {<a href="../../../../../docs/manualpages/PC/PCMGGetCoarseSpaceConstructor.html#PCMGGetCoarseSpaceConstructor">PCMGGetCoarseSpaceConstructor</a>(<font color="#666666">"BAMG_EV"</font>, &amp;coarseConstructor);}
+<a name="line148">148: </a>    <font color="#4169E1">break</font>;
+<a name="line149">149: </a>  <font color="#4169E1">case</font> <a href="../../../../../docs/manualpages/PC/PCMGCoarseSpaceType.html#PCMGCoarseSpaceType">PCMG_GENERALIZED_EIGENVECTOR</a>:
+<a name="line150">150: </a>    <font color="#4169E1">if</font> (l &gt; 0) {<a href="../../../../../docs/manualpages/PC/PCMGGetCoarseSpaceConstructor.html#PCMGGetCoarseSpaceConstructor">PCMGGetCoarseSpaceConstructor</a>(<font color="#666666">"BAMG_MGEV"</font>, &amp;coarseConstructor);}
+<a name="line151">151: </a>    <font color="#4169E1">else</font>       {<a href="../../../../../docs/manualpages/PC/PCMGGetCoarseSpaceConstructor.html#PCMGGetCoarseSpaceConstructor">PCMGGetCoarseSpaceConstructor</a>(<font color="#666666">"BAMG_GEV"</font>, &amp;coarseConstructor);}
+<a name="line152">152: </a>    <font color="#4169E1">break</font>;
+<a name="line153">153: </a><strong><font color="#FF0000">  default:</font></strong> <a href="../../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)pc), PETSC_ERR_ARG_OUTOFRANGE, <font color="#666666">"Cannot handle coarse space type %D"</font>, cstype);
+<a name="line154">154: </a>  }
+<a name="line155">155: </a>  <a href="../../../../../docs/manualpages/PC/PCMGGetSmoother.html#PCMGGetSmoother">PCMGGetSmoother</a>(pc, l, &amp;smooth);
+<a name="line156">156: </a>  <a href="../../../../../docs/manualpages/KSP/KSPGetDM.html#KSPGetDM">KSPGetDM</a>(smooth, &amp;dm);
+<a name="line157">157: </a>  (*coarseConstructor)(pc, l, dm, smooth, Nc, cspace, space);
+<a name="line158">158: </a>  <font color="#4169E1">return</font>(0);
+<a name="line159">159: </a>}
+
+<a name="line161">161: </a><font color="#B22222">/*</font>
+<a name="line162">162: </a><font color="#B22222">  PCMGAdaptInterpolator_Internal - Adapt interpolator from level l-1 to level 1</font>
+
+<a name="line164">164: </a><font color="#B22222">  Input Parameters:</font>
+<a name="line165">165: </a><font color="#B22222">+ pc      - The <a href="../../../../../docs/manualpages/PC/PCMG.html#PCMG">PCMG</a></font>
+<a name="line166">166: </a><font color="#B22222">. l       - The level l</font>
+<a name="line167">167: </a><font color="#B22222">. csmooth - The (coarse) smoother for level l-1</font>
+<a name="line168">168: </a><font color="#B22222">. fsmooth - The (fine) smoother for level l</font>
+<a name="line169">169: </a><font color="#B22222">. Nc      - The size of the subspace used for adaptation</font>
+<a name="line170">170: </a><font color="#B22222">. cspace  - The (coarse) vectors in the subspace for level l-1</font>
+<a name="line171">171: </a><font color="#B22222">- fspace  - The (fine) vectors in the subspace for level l</font>
+
+<a name="line173">173: </a><font color="#B22222">  Level: developer</font>
+
+<a name="line175">175: </a><font color="#B22222">  Note: This routine resets the interpolation and restriction for level l.</font>
+
+<a name="line177">177: </a><font color="#B22222">.seealso: PCMGComputeCoarseSpace_Private()</font>
+<a name="line178">178: </a><font color="#B22222">*/</font>
+<a name="line179">179: </a><strong><font color="#4169E1"><a name="PCMGAdaptInterpolator_Internal"></a><a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PCMGAdaptInterpolator_Internal(<a href="../../../../../docs/manualpages/PC/PC.html#PC">PC</a> pc, <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> l, <a href="../../../../../docs/manualpages/KSP/KSP.html#KSP">KSP</a> csmooth, <a href="../../../../../docs/manualpages/KSP/KSP.html#KSP">KSP</a> fsmooth, <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> Nc, <a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> cspace[], <a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> fspace[])</font></strong>
+<a name="line180">180: </a>{
+<a name="line181">181: </a>  PC_MG         *mg = (PC_MG *) pc-&gt;data;
+<a name="line182">182: </a>  <a href="../../../../../docs/manualpages/DM/DM.html#DM">DM</a>             dm, cdm;
+<a name="line183">183: </a>  <a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a>            Interp, InterpAdapt;
+
+<a name="line187">187: </a>  <font color="#B22222">/* There is no interpolator for the coarse level */</font>
+<a name="line188">188: </a>  <font color="#4169E1">if</font> (!l) <font color="#4169E1">return</font>(0);
+<a name="line189">189: </a>  <a href="../../../../../docs/manualpages/KSP/KSPGetDM.html#KSPGetDM">KSPGetDM</a>(csmooth, &amp;cdm);
+<a name="line190">190: </a>  <a href="../../../../../docs/manualpages/KSP/KSPGetDM.html#KSPGetDM">KSPGetDM</a>(fsmooth, &amp;dm);
+<a name="line191">191: </a>  <a href="../../../../../docs/manualpages/PC/PCMGGetInterpolation.html#PCMGGetInterpolation">PCMGGetInterpolation</a>(pc, l, &amp;Interp);
+
+<a name="line193">193: </a>  DMAdaptInterpolator(cdm, dm, Interp, fsmooth, Nc, fspace, cspace, &amp;InterpAdapt, pc);
+<a name="line194">194: </a>  <font color="#4169E1">if</font> (mg-&gt;mespMonitor) {DMCheckInterpolator(dm, InterpAdapt, Nc, cspace, fspace, 0.5<font color="#B22222">/* PETSC_SMALL */</font>);}
+<a name="line195">195: </a>  <a href="../../../../../docs/manualpages/PC/PCMGSetInterpolation.html#PCMGSetInterpolation">PCMGSetInterpolation</a>(pc, l, InterpAdapt);
+<a name="line196">196: </a>  <a href="../../../../../docs/manualpages/PC/PCMGSetRestriction.html#PCMGSetRestriction">PCMGSetRestriction</a>(pc, l, InterpAdapt);
+<a name="line197">197: </a>  <a href="../../../../../docs/manualpages/Mat/MatDestroy.html#MatDestroy">MatDestroy</a>(&amp;InterpAdapt);
+<a name="line198">198: </a>  <font color="#4169E1">return</font>(0);
+<a name="line199">199: </a>}
+
+<a name="line201">201: </a><font color="#B22222">/*</font>
+<a name="line202">202: </a><font color="#B22222">  PCMGRecomputeLevelOperators_Internal - Recomputes Galerkin coarse operator when interpolation is adapted</font>
+
+<a name="line204">204: </a><font color="#B22222">  Input Parameters:</font>
+<a name="line205">205: </a><font color="#B22222">+ pc - The <a href="../../../../../docs/manualpages/PC/PCMG.html#PCMG">PCMG</a></font>
+<a name="line206">206: </a><font color="#B22222">- l  - The level l</font>
+
+<a name="line208">208: </a><font color="#B22222">  Level: developer</font>
+
+<a name="line210">210: </a><font color="#B22222">  Note: This routine recomputes the Galerkin triple product for the operator on level l.</font>
+<a name="line211">211: </a><font color="#B22222">*/</font>
+<a name="line212">212: </a><strong><font color="#4169E1"><a name="PCMGRecomputeLevelOperators_Internal"></a><a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PCMGRecomputeLevelOperators_Internal(<a href="../../../../../docs/manualpages/PC/PC.html#PC">PC</a> pc, <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> l)</font></strong>
+<a name="line213">213: </a>{
+<a name="line214">214: </a>  <a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a>              fA, fB;                   <font color="#B22222">/* The system and preconditioning operators on level l+1 */</font>
+<a name="line215">215: </a>  <a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a>              A,  B;                    <font color="#B22222">/* The system and preconditioning operators on level l */</font>
+<a name="line216">216: </a>  <a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a>              Interp, Restrc;           <font color="#B22222">/* The interpolation operator from level l to l+1, and restriction operator from level l+1 to l */</font>
+<a name="line217">217: </a>  <a href="../../../../../docs/manualpages/KSP/KSP.html#KSP">KSP</a>              smooth, fsmooth;          <font color="#B22222">/* The smoothers on levels l and l+1 */</font>
+<a name="line218">218: </a>  PCMGGalerkinType galerkin;                 <font color="#B22222">/* The Galerkin projection flag */</font>
+<a name="line219">219: </a>  <a href="../../../../../docs/manualpages/Mat/MatReuse.html#MatReuse">MatReuse</a>         reuse = <a href="../../../../../docs/manualpages/Mat/MatReuse.html#MatReuse">MAT_REUSE_MATRIX</a>; <font color="#B22222">/* The matrices are always assumed to be present already */</font>
+<a name="line220">220: </a>  <a href="../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>        doA   = <a href="../../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;      <font color="#B22222">/* Updates the system operator */</font>
+<a name="line221">221: </a>  <a href="../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>        doB   = <a href="../../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;      <font color="#B22222">/* Updates the preconditioning operator (A == B, then update B) */</font>
+<a name="line222">222: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>         n;                        <font color="#B22222">/* The number of multigrid levels */</font>
+<a name="line223">223: </a>  <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>   ierr;
+
+<a name="line226">226: </a>  <a href="../../../../../docs/manualpages/PC/PCMGGetGalerkin.html#PCMGGetGalerkin">PCMGGetGalerkin</a>(pc, &amp;galerkin);
+<a name="line227">227: </a>  <font color="#4169E1">if</font> (galerkin &gt;= <a href="../../../../../docs/manualpages/PC/PCMGalerkinType.html#PCMGalerkinType">PC_MG_GALERKIN_NONE</a>) <font color="#4169E1">return</font>(0);
+<a name="line228">228: </a>  <a href="../../../../../docs/manualpages/PC/PCMGGetLevels.html#PCMGGetLevels">PCMGGetLevels</a>(pc, &amp;n);
+<a name="line229">229: </a>  <font color="#B22222">/* Do not recompute operator for the finest grid */</font>
+<a name="line230">230: </a>  <font color="#4169E1">if</font> (l == n-1) <font color="#4169E1">return</font>(0);
+<a name="line231">231: </a>  <a href="../../../../../docs/manualpages/PC/PCMGGetSmoother.html#PCMGGetSmoother">PCMGGetSmoother</a>(pc, l,   &amp;smooth);
+<a name="line232">232: </a>  <a href="../../../../../docs/manualpages/KSP/KSPGetOperators.html#KSPGetOperators">KSPGetOperators</a>(smooth, &amp;A, &amp;B);
+<a name="line233">233: </a>  <a href="../../../../../docs/manualpages/PC/PCMGGetSmoother.html#PCMGGetSmoother">PCMGGetSmoother</a>(pc, l+1, &amp;fsmooth);
+<a name="line234">234: </a>  <a href="../../../../../docs/manualpages/KSP/KSPGetOperators.html#KSPGetOperators">KSPGetOperators</a>(fsmooth, &amp;fA, &amp;fB);
+<a name="line235">235: </a>  <a href="../../../../../docs/manualpages/PC/PCMGGetInterpolation.html#PCMGGetInterpolation">PCMGGetInterpolation</a>(pc, l+1, &amp;Interp);
+<a name="line236">236: </a>  <a href="../../../../../docs/manualpages/PC/PCMGGetRestriction.html#PCMGGetRestriction">PCMGGetRestriction</a>(pc, l+1, &amp;Restrc);
+<a name="line237">237: </a>  <font color="#4169E1">if</font> ((galerkin == <a href="../../../../../docs/manualpages/PC/PCMGalerkinType.html#PCMGalerkinType">PC_MG_GALERKIN_PMAT</a>) ||  (galerkin == <a href="../../../../../docs/manualpages/PC/PCMGalerkinType.html#PCMGalerkinType">PC_MG_GALERKIN_BOTH</a>))                doB = <a href="../../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>;
+<a name="line238">238: </a>  <font color="#4169E1">if</font> ((galerkin == <a href="../../../../../docs/manualpages/PC/PCMGalerkinType.html#PCMGalerkinType">PC_MG_GALERKIN_MAT</a>)  || ((galerkin == <a href="../../../../../docs/manualpages/PC/PCMGalerkinType.html#PCMGalerkinType">PC_MG_GALERKIN_BOTH</a>) &amp;&amp; (fA != fB))) doA = <a href="../../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>;
+<a name="line239">239: </a>  <font color="#4169E1">if</font> (doA) {<a href="../../../../../docs/manualpages/Mat/MatGalerkin.html#MatGalerkin">MatGalerkin</a>(Restrc, fA, Interp, reuse, 1.0, &amp;A);}
+<a name="line240">240: </a>  <font color="#4169E1">if</font> (doB) {<a href="../../../../../docs/manualpages/Mat/MatGalerkin.html#MatGalerkin">MatGalerkin</a>(Restrc, fB, Interp, reuse, 1.0, &amp;B);}
+<a name="line241">241: </a>  <font color="#4169E1">return</font>(0);
+<a name="line242">242: </a>}
+</pre>
+</body>
+
+</html>

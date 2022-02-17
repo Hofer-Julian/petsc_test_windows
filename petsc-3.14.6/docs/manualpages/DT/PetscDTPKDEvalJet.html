@@ -1,0 +1,56 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DT/PetscDTPKDEvalJet.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>PetscDTPKDEvalJet</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/DT/PetscDTPKDEvalJet.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="PetscDTPKDEvalJet"><H1>PetscDTPKDEvalJet</H1></A>
+Evaluate the jet (function and derivatives) of the Prioriol-Koornwinder-Dubiner (PKD) basis for the space of polynomials up to a given degree.  The PKD basis is L2-orthonormal on the biunit simplex (which is used as the reference element for finite elements in PETSc), which makes it a stable basis to use for evaluating polynomials in that domain. 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscdt.h" 
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../DT/PetscDTPKDEvalJet.html#PetscDTPKDEvalJet">PetscDTPKDEvalJet</A>(<A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> dim, <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> npoints, const <A HREF="../Sys/PetscReal.html#PetscReal">PetscReal</A> points[], <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> degree, <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> k, <A HREF="../Sys/PetscReal.html#PetscReal">PetscReal</A> p[])
+</PRE>
+<H3><FONT COLOR="#CC3333">Input Arguments</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>dim </B></TD><TD>- the number of variables in the multivariate polynomials
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>npoints </B></TD><TD>- the number of points to evaluate the polynomials at
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>points </B></TD><TD>- [npoints x dim] array of point coordinates
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>degree </B></TD><TD>- the degree (sum of degrees on the variables in a monomial) of the polynomial space to evaluate.  There are ((dim + degree) choose dim) polynomials in this space.
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>k </B></TD><TD>- the maximum order partial derivative to evaluate in the jet.  There are (dim + k choose dim) partial derivatives
+in the jet.  Choosing k = 0 means to evaluate just the function and no derivatives
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Output Argments</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>p </B></TD><TD>- an array containing the evaluations of the PKD polynomials' jets on the points.  The size is ((dim + degree)
+choose dim) x ((dim + k) choose dim) x npoints, which also describes the order of the dimensions of this
+three-dimensional array: the first (slowest varying) dimension is basis function index; the second dimension is jet
+index; the third (fastest varying) dimension is the index of the evaluation point.
+</TD></TR></TABLE>
+<P>
+
+<P>
+Note: The ordering of the basis functions, and the ordering of the derivatives in the jet, both follow the graded
+ordering of <A HREF="../DT/PetscDTIndexToGradedOrder.html#PetscDTIndexToGradedOrder">PetscDTIndexToGradedOrder</A>() and <A HREF="../DT/PetscDTGradedOrderToIndex.html#PetscDTGradedOrderToIndex">PetscDTGradedOrderToIndex</A>().  For example, in 3D, the polynomial with
+leading monomial x^3,y^1,z^2, which as degree tuple (2,0,1), which by <A HREF="../DT/PetscDTGradedOrderToIndex.html#PetscDTGradedOrderToIndex">PetscDTGradedOrderToIndex</A>() has index 12 (it is the 13th basis function in the space);
+the partial derivative $\partial_x \partial_z$ has order tuple (1,0,1), appears at index 6 in the jet (it is the 7th partial derivative in the jet).
+<P>
+The implementation uses Kirby's singularity-free evaluation algorithm, https://doi.org/10.1145/1644001.1644006.
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../DT/PetscDTGradedOrderToIndex.html#PetscDTGradedOrderToIndex">PetscDTGradedOrderToIndex</A>(), <A HREF="../DT/PetscDTIndexToGradedOrder.html#PetscDTIndexToGradedOrder">PetscDTIndexToGradedOrder</A>(), <A HREF="../DT/PetscDTJacobiEvalJet.html#PetscDTJacobiEvalJet">PetscDTJacobiEvalJet</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>advanced<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/dm/dt/interface/dt.c.html#PetscDTPKDEvalJet">src/dm/dt/interface/dt.c</A>
+<BR><A HREF="./index.html">Index of all DT routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

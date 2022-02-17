@@ -1,0 +1,28 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/TS/TSDISCGRAD.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>TSDISCGRAD</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/TS/TSDISCGRAD.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="TSDISCGRAD"><H1>TSDISCGRAD</H1></A>
+ODE solver using the discrete gradients version of the implicit midpoint method 
+<P>
+Notes: This is the implicit midpoint rule, with an optional term that guarantees the discrete gradient property. This
+timestepper applies to systems of the form
+<pre>
+u_t = S(u) grad F(u)
+</pre>
+where S(u) is a linear operator, and F is a functional of u.
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../TS/TSCreate.html#TSCreate">TSCreate</A>(), <A HREF="../TS/TSSetType.html#TSSetType">TSSetType</A>(), <A HREF="../TS/TS.html#TS">TS</A>, <A HREF="../TS/TSTHETA.html#TSTHETA">TSTHETA</A>, <A HREF="../TS/TSDiscGradSetFormulation.html#TSDiscGradSetFormulation">TSDiscGradSetFormulation</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>beginner<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/ts/impls/implicit/discgrad/tsdiscgrad.c.html#TSDISCGRAD">src/ts/impls/implicit/discgrad/tsdiscgrad.c</A>
+<BR><A HREF="./index.html">Index of all TS routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

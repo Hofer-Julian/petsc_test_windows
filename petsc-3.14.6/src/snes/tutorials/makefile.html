@@ -1,0 +1,127 @@
+
+<html>
+<head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/src/snes/tutorials/makefile.html" />
+<title></title>
+<meta name="generator" content="c2html 0.9.4">
+<meta name="date" content="2021-03-30T16:51:44+00:00">
+</head>
+
+<body bgcolor="#FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 src/snes/tutorials/makefile.html "><small>Report Typos and Errors</small></a></div>
+<pre width="80">-include ../../../petscdir.mk
+CFLAGS           =
+FFLAGS		 =
+CPPFLAGS         =
+FPPFLAGS         =
+LOCDIR		 = src/snes/tutorials/
+MANSEC           = <a href="ROOT/docs/manualpages/SNES/SNES.html#SNES">SNES</a>
+EXAMPLESC	 = ex1.c ex2.c ex3.c  ex5.c ex9.c \
+                   ex12.c ex14.c ex15.c ex17.c ex18.c ex19.c ex21.c ex22.c \
+                   ex25.c ex28.c ex30.c ex33.c \
+                   ex35.c ex42.c ex46.c ex48.c \
+                   ex56.c ex58.c ex59.c \
+                   ex62.c ex70.c ex77.c ex78.c \
+                   ex47cu.cu
+EXAMPLESF	 = ex1f.F90 ex5f.F90 ex5f90.F90 ex5f90t.F90 ex40f90.F90 ex73f90t.F90
+EXAMPLESCH	 =
+EXAMPLESFH       = ex5f.h
+EXAMPLESMATLAB   = ex5m.m  ex61genm.m ex61m.m
+DIRS		 = ex10d network
+
+include ${PETSC_DIR}/lib/petsc/conf/variables
+include ${PETSC_DIR}/lib/petsc/conf/rules
+
+<font color="#A020F0">#-------------------------------------------------------------------------</font>
+
+<font color="#A020F0">#  these tests are used by the makefile in PETSC_DIR for basic tests of the install and should not be removed</font>
+<strong><font color="#FF0000">testex5f:</font></strong> ex5f.PETSc
+	@<font color="#4169E1">if</font> [ <font color="#666666">"${PETSC_WITH_BATCH}"</font> != <font color="#666666">""</font> ]; then \
+           echo <font color="#666666">"Running with batch filesystem; to test run src/snes/tutorials/ex5f with"</font> ; \
+           echo <font color="#666666">"your systems batch system"</font>; \
+        elif [ <font color="#666666">"${MPIEXEC}"</font> = <font color="#666666">"/bin/false"</font> ]; then \
+           echo <font color="#666666">"*mpiexec not found*. Please run src/snes/tutorials/ex5f manually"</font>; \
+        elif [ -f ex5f ]; then \
+	   ${MPIEXEC} -n 1 ./ex5f &gt; ex5f_1.tmp 2&gt;&amp;1; \
+	   <font color="#4169E1">if</font> (${DIFF} output/ex5f_1.testout ex5f_1.tmp &gt; /dev/null 2&gt;&amp;1) then \
+           echo <font color="#666666">"Fortran example src/snes/tutorials/ex5f run successfully with 1 MPI process"</font>; \
+	   <font color="#4169E1">else</font> echo <font color="#666666">"Possible error running Fortran example src/snes/tutorials/ex5f with 1 MPI process"</font>; \
+           echo <font color="#666666">"See http://www.mcs.anl.gov/petsc/documentation/faq.html"</font>;\
+           cat ex5f_1.tmp; fi;  \
+         ${RM} -f ex5f_1.tmp ;\
+         ${MAKE} PETSC_ARCH=${PETSC_ARCH} PETSC_DIR=${PETSC_DIR} ex5f.rm; fi
+
+<strong><font color="#FF0000">testex19:</font></strong> ex19.PETSc
+	-@<font color="#4169E1">if</font> [ <font color="#666666">"${PETSC_WITH_BATCH}"</font> != <font color="#666666">""</font> ]; then \
+           echo <font color="#666666">"Running with batch filesystem; to test run src/snes/tutorials/ex19 with"</font> ; \
+           echo <font color="#666666">"your systems batch system"</font>; \
+        elif [ <font color="#666666">"${MPIEXEC}"</font> = <font color="#666666">"/bin/false"</font> ]; then \
+           echo <font color="#666666">"*mpiexec not found*. Please run src/snes/tutorials/ex19 manually"</font>; \
+	elif [ -f ex19 ]; then \
+           ${MPIEXEC} -n 1 ./ex19 -da_refine 3 -pc_type mg -ksp_type fgmres  &gt; ex19_1.tmp 2&gt;&amp;1; \
+	   <font color="#4169E1">if</font> (${DIFF} output/ex19_1.testout ex19_1.tmp &gt; /dev/null 2&gt;&amp;1) then \
+           echo <font color="#666666">"C/C++ example src/snes/tutorials/ex19 run successfully with 1 MPI process"</font>; \
+	   <font color="#4169E1">else</font> echo <font color="#666666">"Possible error running C/C++ src/snes/tutorials/ex19 with 1 MPI process"</font>; \
+           echo <font color="#666666">"See http://www.mcs.anl.gov/petsc/documentation/faq.html"</font>;\
+           cat ex19_1.tmp; fi; \
+	<font color="#4169E1">if</font> [ ! <font color="#666666">"${MPI_IS_MPIUNI}"</font> ]; then \
+           ${MPIEXEC} -n 2 ./ex19 -da_refine 3 -pc_type mg -ksp_type fgmres  &gt; ex19_1.tmp 2&gt;&amp;1; \
+	   <font color="#4169E1">if</font> (${DIFF} output/ex19_1.testout ex19_1.tmp &gt; /dev/null 2&gt;&amp;1) then \
+           echo <font color="#666666">"C/C++ example src/snes/tutorials/ex19 run successfully with 2 MPI processes"</font>; \
+	   <font color="#4169E1">else</font> echo <font color="#666666">"Possible error running C/C++ src/snes/tutorials/ex19 with 2 MPI processes"</font>; \
+           echo <font color="#666666">"See http://www.mcs.anl.gov/petsc/documentation/faq.html"</font>;\
+           cat ex19_1.tmp; fi; fi; \
+        ${RM} -f ex19_1.tmp; fi
+<strong><font color="#FF0000">runex19_hypre:</font></strong>
+	-@${MPIEXEC} -n 2 ./ex19 -da_refine 3 -snes_monitor_short -pc_type hypre &gt; ex19_1.tmp 2&gt;&amp;1; \
+	   <font color="#4169E1">if</font> (${DIFF} output/ex19_hypre.out ex19_1.tmp) then \
+           echo <font color="#666666">"C/C++ example src/snes/tutorials/ex19 run successfully with hypre"</font>; \
+           <font color="#4169E1">else</font>  printf <font color="#666666">"${PWD}\nPossible problem with ex19 running with hypre, diffs above\n=========================================\n"</font>; fi; \
+	   ${RM} -f ex19_1.tmp
+<strong><font color="#FF0000">runex19_cuda:</font></strong>
+	-@${MPIEXEC} -n 1 ./ex19 -snes_monitor -dm_mat_type seqaijcusparse -dm_vec_type seqcuda -pc_type gamg -ksp_monitor -mg_levels_ksp_max_it 3  &gt; ex19_1.tmp 2&gt;&amp;1; \
+	   <font color="#4169E1">if</font> (${DIFF} output/ex19_cuda_1.out ex19_1.tmp) then \
+           echo <font color="#666666">"C/C++ example src/snes/tutorials/ex19 run successfully with cuda"</font>; \
+           <font color="#4169E1">else</font>  printf <font color="#666666">"${PWD}\nPossible problem with ex19 running with cuda, diffs above\n=========================================\n"</font>; fi; \
+	   ${RM} -f ex19_1.tmp
+<strong><font color="#FF0000">runex19_ml:</font></strong>
+	-@${MPIEXEC} -n 2 ./ex19 -da_refine 3 -snes_monitor_short -pc_type ml &gt; ex19_1.tmp 2&gt;&amp;1; \
+	   <font color="#4169E1">if</font> (${DIFF} output/ex19_ml.out ex19_1.tmp) then  \
+           echo <font color="#666666">"C/C++ example src/snes/tutorials/ex19 run successfully with ml"</font>; \
+           <font color="#4169E1">else</font>  printf <font color="#666666">"${PWD}\nPossible problem with ex19 running with ml, diffs above\n=========================================\n"</font>; fi; \
+           ${RM} -f ex19_1.tmp
+<strong><font color="#FF0000">runex19_fieldsplit_mumps:</font></strong>
+	-@${MPIEXEC} -n 2 ./ex19 -pc_type fieldsplit -pc_fieldsplit_block_size 4 -pc_fieldsplit_type SCHUR -pc_fieldsplit_0_fields 0,1,2 -pc_fieldsplit_1_fields 3 -fieldsplit_0_pc_type lu -fieldsplit_1_pc_type lu -snes_monitor_short -ksp_monitor_short  -fieldsplit_0_pc_factor_mat_solver_type mumps -fieldsplit_1_pc_factor_mat_solver_type mumps &gt; ex19_6.tmp 2&gt;&amp;1; \
+	   <font color="#4169E1">if</font> (${DIFF} output/ex19_fieldsplit_5.out ex19_6.tmp) then  \
+           echo <font color="#666666">"C/C++ example src/snes/tutorials/ex19 run successfully with mumps"</font>; \
+           <font color="#4169E1">else</font>  printf <font color="#666666">"${PWD}\nPossible problem with ex19 running with mumps, diffs above\n=========================================\n"</font>; fi; \
+           ${RM} -f ex19_6.tmp
+<strong><font color="#FF0000">runex19_superlu_dist:</font></strong>
+	-@${MPIEXEC} -n 1 ./ex19 -da_grid_x 20 -da_grid_y 20 -pc_type lu -pc_factor_mat_solver_type superlu_dist &gt; ex19.tmp 2&gt;&amp;1; \
+	   <font color="#4169E1">if</font> (${DIFF} output/ex19_superlu.out ex19.tmp) then \
+           echo <font color="#666666">"C/C++ example src/snes/tutorials/ex19 run successfully with superlu_dist"</font>; \
+           <font color="#4169E1">else</font>  printf <font color="#666666">"${PWD}\nPossible problem with ex19 running with superlu_dist, diffs above\n=========================================\n"</font>; fi; \
+	   ${RM} -f ex19.tmp
+<strong><font color="#FF0000">runex19_suitesparse:</font></strong>
+	-@${MPIEXEC} -n 1 ./ex19 -da_refine 3 -snes_monitor_short -pc_type lu -pc_factor_mat_solver_type umfpack &gt; ex19_1.tmp 2&gt;&amp;1; \
+	   <font color="#4169E1">if</font> (${DIFF} output/ex19_suitesparse.out ex19_1.tmp) then \
+           echo <font color="#666666">"C/C++ example src/snes/tutorials/ex19 run successfully with suitesparse"</font>; \
+           <font color="#4169E1">else</font>  printf <font color="#666666">"${PWD}\nPossible problem with ex19 running with suitesparse, diffs above\n=========================================\n"</font>; fi; \
+	   ${RM} -f ex19_1.tmp
+<strong><font color="#FF0000">runex3_kokkos:</font></strong> ex3k.PETSc
+ifneq ($(KOKKOS_BIN),)
+	-@${MPIEXEC} -n 1 ./ex3k -view_initial -view_kokkos_configuration false -dm_vec_type cuda -vec_pinned_memory_min 0 -use_gpu_aware_mpi 0 -snes_monitor | grep -v <font color="#666666">"type:"</font> &gt; ex3k_1.tmp 2&gt;&amp;1
+<font color="#4169E1">else</font>
+	-@${MPIEXEC} -n 1 ./ex3k -view_initial -view_kokkos_configuration false -snes_monitor | grep -v <font color="#666666">"type:"</font>  &gt; ex3k_1.tmp 2&gt;&amp;1
+endif
+	-@<font color="#4169E1">if</font> (${DIFF} output/ex3k_1.out ex3k_1.tmp) then \
+           echo <font color="#666666">"C/C++ example src/snes/tutorials/ex3k run successfully with kokkos"</font>; \
+           <font color="#4169E1">else</font>  printf <font color="#666666">"${PWD}\nPossible problem with ex3k running with kokkos, diffs above\n=========================================\n"</font>; \
+        fi; \
+	${RM} -f ex3k_1.tm
+
+include ${PETSC_DIR}/lib/petsc/conf/test
+</pre>
+</body>
+
+</html>

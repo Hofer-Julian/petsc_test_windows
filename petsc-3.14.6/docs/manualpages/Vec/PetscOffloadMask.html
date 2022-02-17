@@ -1,0 +1,29 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/PetscOffloadMask.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>PetscOffloadMask</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/Vec/PetscOffloadMask.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="PetscOffloadMask"><H1>PetscOffloadMask</H1></A>
+indicates which memory (CPU, GPU, or none) contains valid data 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+typedef enum {<A HREF="../Vec/PetscOffloadMask.html#PetscOffloadMask">PETSC_OFFLOAD_UNALLOCATED</A>=0x0,<A HREF="../Vec/PetscOffloadMask.html#PetscOffloadMask">PETSC_OFFLOAD_CPU</A>=0x1,<A HREF="../Vec/PetscOffloadMask.html#PetscOffloadMask">PETSC_OFFLOAD_GPU</A>=0x2,<A HREF="../Vec/PetscOffloadMask.html#PetscOffloadMask">PETSC_OFFLOAD_BOTH</A>=0x3,<A HREF="../Vec/PetscOffloadMask.html#PetscOffloadMask">PETSC_OFFLOAD_VECKOKKOS</A>=0x100} <A HREF="../Vec/PetscOffloadMask.html#PetscOffloadMask">PetscOffloadMask</A>;
+</PRE>
+<A HREF="../Vec/PetscOffloadMask.html#PetscOffloadMask">PETSC_OFFLOAD_UNALLOCATED</A>  - no memory contains valid matrix entries; NEVER used for vectors
+<A HREF="../Vec/PetscOffloadMask.html#PetscOffloadMask">PETSC_OFFLOAD_GPU</A> - GPU has valid vector/matrix entries
+<A HREF="../Vec/PetscOffloadMask.html#PetscOffloadMask">PETSC_OFFLOAD_CPU</A> - CPU has valid vector/matrix entries
+<A HREF="../Vec/PetscOffloadMask.html#PetscOffloadMask">PETSC_OFFLOAD_BOTH</A> - Both GPU and CPU have valid vector/matrix entries and they match
+<A HREF="../Vec/PetscOffloadMask.html#PetscOffloadMask">PETSC_OFFLOAD_VECKOKKOS</A> - Reserved for Vec_Kokkos. The offload is managed by Kokkos, thus this flag is not used in Vec_Kokkos.
+<P>
+
+<P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>developer<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/vec/vscat/../../../include/petscvec.h.html#PetscOffloadMask">src/vec/vscat/../../../include/petscvec.h</A>
+<BR><A HREF="./index.html">Index of all Vec routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

@@ -1,0 +1,49 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DMPLEX/PetscPartitionerDMPlexPartition.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>PetscPartitionerDMPlexPartition</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/DMPLEX/PetscPartitionerDMPlexPartition.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="PetscPartitionerDMPlexPartition"><H1>PetscPartitionerDMPlexPartition</H1></A>
+Create a non-overlapping partition of the cells in the mesh 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscdmplex.h"   
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../DMPLEX/PetscPartitionerDMPlexPartition.html#PetscPartitionerDMPlexPartition">PetscPartitionerDMPlexPartition</A>(<A HREF="../DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</A> part, <A HREF="../DM/DM.html#DM">DM</A> dm, <A HREF="../PetscSection/PetscSection.html#PetscSection">PetscSection</A> targetSection, <A HREF="../PetscSection/PetscSection.html#PetscSection">PetscSection</A> partSection, <A HREF="../IS/IS.html#IS">IS</A> *partition)
+</PRE>
+Collective on <A HREF="../DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</A>
+<P>
+<H3><FONT COLOR="#CC3333">Input Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>part    </B></TD><TD>- The <A HREF="../DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</A>
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>targetSection </B></TD><TD>- The <A HREF="../PetscSection/PetscSection.html#PetscSection">PetscSection</A> describing the absolute weight of each partition (can be NULL)
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>dm      </B></TD><TD>- The mesh <A HREF="../DM/DM.html#DM">DM</A>
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Output Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>partSection     </B></TD><TD>- The <A HREF="../PetscSection/PetscSection.html#PetscSection">PetscSection</A> giving the division of points by partition
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>partition       </B></TD><TD>- The list of points by partition
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Notes</FONT></H3>
+If the <A HREF="../DM/DM.html#DM">DM</A> has a local section associated, each point to be partitioned will be weighted by the total number of dofs identified
+by the section in the transitive closure of the point.
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+<A HREF="../DMPLEX/DMPlexDistribute.html#DMPlexDistribute">DMPlexDistribute</A>(), <A HREF="../DM/PetscPartitionerCreate.html#PetscPartitionerCreate">PetscPartitionerCreate</A>(), <A HREF="../PetscSection/PetscSectionCreate.html#PetscSectionCreate">PetscSectionCreate</A>(), <A HREF="../PetscSection/PetscSectionSetChart.html#PetscSectionSetChart">PetscSectionSetChart</A>(), <A HREF="../DM/PetscPartitionerPartition.html#PetscPartitionerPartition">PetscPartitionerPartition</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>developer<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/dm/impls/plex/plexpartition.c.html#PetscPartitionerDMPlexPartition">src/dm/impls/plex/plexpartition.c</A>
+<BR><A HREF="./index.html">Index of all DMPLEX routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

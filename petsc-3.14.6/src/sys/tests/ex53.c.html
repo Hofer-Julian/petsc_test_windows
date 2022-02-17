@@ -1,0 +1,82 @@
+<center><a href="ex53.c">Actual source code: ex53.c</a></center><br>
+
+<html>
+<head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/src/sys/tests/ex53.c.html" />
+<title></title>
+<meta name="generator" content="c2html 0.9.4">
+<meta name="date" content="2021-03-30T16:49:34+00:00">
+</head>
+
+<body bgcolor="#FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 src/sys/tests/ex53.c.html "><small>Report Typos and Errors</small></a></div>
+<pre width="80">
+<a name="line1">  1: </a>static char help[] = <font color="#666666">"Test resource recycling and <a href="../../../docs/manualpages/Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</a> and keyval creation in mpi or mpiuni\n"</font>;
+
+<a name="line3">  3: </a>#include <A href="../../../include/petscsys.h.html">&lt;petscsys.h&gt;</A>
+
+<a name="line5">  5: </a><strong><font color="#228B22">#define  CHKMPIERR(ierr)  do {if (ierr) <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Abort.html#MPI_Abort">MPI_Abort</a>(MPI_COMM_WORLD, ierr);} while (0)</font></strong>
+
+<a name="line7">  7: </a><strong><font color="#4169E1"><a name="main"></a>int main(int argc,char **argv)</font></strong>
+<a name="line8">  8: </a>{
+<a name="line10"> 10: </a>  <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       i;
+<a name="line11"> 11: </a>  <a href="../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a>    key1,key2,attr1=100,attr2=200,*attr,flag;
+<a name="line12"> 12: </a>  <a href="../../../docs/manualpages/Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</a>       newcomm;
+
+<a name="line14"> 14: </a>  <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Init.html#MPI_Init">MPI_Init</a>(&amp;argc,&amp;argv);CHKMPIERR(ierr);
+
+<a name="line16"> 16: </a>  <font color="#B22222">/* Repeated keyval or comm create/free should not blow up MPI */</font>
+<a name="line17"> 17: </a>  <font color="#4169E1">for</font> (i=0; i&lt;500; i++) {
+<a name="line18"> 18: </a>    <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_create_keyval.html#MPI_Comm_create_keyval">MPI_Comm_create_keyval</a>(MPI_COMM_NULL_COPY_FN,MPI_COMM_NULL_DELETE_FN,&amp;key1,NULL);CHKMPIERR(ierr);
+<a name="line19"> 19: </a>    <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_free_keyval.html#MPI_Comm_free_keyval">MPI_Comm_free_keyval</a>(&amp;key1);CHKMPIERR(ierr);
+<a name="line20"> 20: </a>    <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_dup.html#MPI_Comm_dup">MPI_Comm_dup</a>(MPI_COMM_WORLD,&amp;newcomm);CHKMPIERR(ierr);
+<a name="line21"> 21: </a>    <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_free.html#MPI_Comm_free">MPI_Comm_free</a>(&amp;newcomm);CHKMPIERR(ierr);
+<a name="line22"> 22: </a>  }
+
+<a name="line24"> 24: </a>  <font color="#B22222">/* The following keyval/attr code exposes a bug in old mpiuni code, where it had wrong newcomm returned in <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_dup.html#MPI_Comm_dup">MPI_Comm_dup</a>. */</font>
+<a name="line25"> 25: </a>  <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_create_keyval.html#MPI_Comm_create_keyval">MPI_Comm_create_keyval</a>(MPI_COMM_NULL_COPY_FN,MPI_COMM_NULL_DELETE_FN,&amp;key1,NULL);CHKMPIERR(ierr);
+<a name="line26"> 26: </a>  <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_create_keyval.html#MPI_Comm_create_keyval">MPI_Comm_create_keyval</a>(MPI_COMM_NULL_COPY_FN,MPI_COMM_NULL_DELETE_FN,&amp;key2,NULL);CHKMPIERR(ierr);
+<a name="line27"> 27: </a>  <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_dup.html#MPI_Comm_dup">MPI_Comm_dup</a>(MPI_COMM_WORLD,&amp;newcomm);CHKMPIERR(ierr);
+<a name="line28"> 28: </a>  <font color="#4169E1">if</font> (MPI_COMM_WORLD == newcomm) printf(<font color="#666666">"Error: wrong newcomm returned by <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_dup.html#MPI_Comm_dup">MPI_Comm_dup</a>()\n"</font>);
+
+<a name="line30"> 30: </a>  <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_set_attr.html#MPI_Comm_set_attr">MPI_Comm_set_attr</a>(MPI_COMM_WORLD,key1,&amp;attr1);CHKMPIERR(ierr);
+<a name="line31"> 31: </a>  <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_set_attr.html#MPI_Comm_set_attr">MPI_Comm_set_attr</a>(newcomm,key2,&amp;attr2);CHKMPIERR(ierr);
+<a name="line32"> 32: </a>  <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_get_attr.html#MPI_Comm_get_attr">MPI_Comm_get_attr</a>(newcomm,key1,&amp;attr,&amp;flag);CHKMPIERR(ierr);
+<a name="line33"> 33: </a>  <font color="#4169E1">if</font> (flag) printf(<font color="#666666">"Error: newcomm should not have attribute for keyval %d\n"</font>, (int)key1);
+<a name="line34"> 34: </a>  <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_get_attr.html#MPI_Comm_get_attr">MPI_Comm_get_attr</a>(MPI_COMM_WORLD,key1,&amp;attr,&amp;flag);CHKMPIERR(ierr);
+<a name="line35"> 35: </a>  <font color="#4169E1">if</font> (*attr != attr1) printf(<font color="#666666">"Error: expected attribute %d, but got %d\n"</font>, (int)attr1, (int)*attr);
+<a name="line36"> 36: </a>  <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_get_attr.html#MPI_Comm_get_attr">MPI_Comm_get_attr</a>(newcomm,key2,&amp;attr,&amp;flag);CHKMPIERR(ierr);
+<a name="line37"> 37: </a>  <font color="#4169E1">if</font> (*attr != attr2) printf(<font color="#666666">"Error: expected attribute %d, but got %d\n"</font>, (int)attr2, (int)*attr);
+
+<a name="line39"> 39: </a>  <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_delete_attr.html#MPI_Comm_delete_attr">MPI_Comm_delete_attr</a>(MPI_COMM_WORLD,key1);CHKMPIERR(ierr);
+<a name="line40"> 40: </a>  <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_delete_attr.html#MPI_Comm_delete_attr">MPI_Comm_delete_attr</a>(newcomm,key2);CHKMPIERR(ierr);
+<a name="line41"> 41: </a>  <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_free_keyval.html#MPI_Comm_free_keyval">MPI_Comm_free_keyval</a>(&amp;key1);CHKMPIERR(ierr);
+<a name="line42"> 42: </a>  <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_free_keyval.html#MPI_Comm_free_keyval">MPI_Comm_free_keyval</a>(&amp;key2);CHKMPIERR(ierr);
+<a name="line43"> 43: </a>  <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_free.html#MPI_Comm_free">MPI_Comm_free</a>(&amp;newcomm);CHKMPIERR(ierr);
+
+<a name="line45"> 45: </a>  <font color="#B22222">/* Init/Finalize PETSc multiple times when MPI is initialized */</font>
+<a name="line46"> 46: </a>  <font color="#4169E1">for</font> (i=0; i&lt;500; i++) {
+<a name="line47"> 47: </a>    <a href="../../../docs/manualpages/Sys/PetscInitialize.html#PetscInitialize">PetscInitialize</a>(&amp;argc,&amp;argv,(char*)0,help);<font color="#4169E1">if</font> (ierr) <font color="#4169E1">return</font> ierr;
+<a name="line48"> 48: </a>    <a href="../../../docs/manualpages/Sys/PetscFinalize.html#PetscFinalize">PetscFinalize</a>();<font color="#4169E1">if</font> (ierr) <font color="#4169E1">return</font> ierr;
+<a name="line49"> 49: </a>  }
+
+<a name="line51"> 51: </a>  <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Finalize.html#MPI_Finalize">MPI_Finalize</a>();
+<a name="line52"> 52: </a>  <font color="#4169E1">return</font> ierr;
+<a name="line53"> 53: </a>}
+
+<a name="line55"> 55: </a><font color="#B22222">/*TEST</font>
+<a name="line56"> 56: </a><font color="#B22222">   # Elemental in debug mode has bugs that it can not be repeatedly init/finalize'd for more than 300 times</font>
+<a name="line57"> 57: </a><font color="#B22222">   testset:</font>
+<a name="line58"> 58: </a><font color="#B22222">    output_file: output/ex53_1.out</font>
+<a name="line59"> 59: </a><font color="#B22222">    test:</font>
+<a name="line60"> 60: </a><font color="#B22222">      suffix: 1</font>
+<a name="line61"> 61: </a><font color="#B22222">      requires: !elemental</font>
+
+<a name="line63"> 63: </a><font color="#B22222">    test:</font>
+<a name="line64"> 64: </a><font color="#B22222">      suffix: 2</font>
+<a name="line65"> 65: </a><font color="#B22222">      requires: elemental !define(PETSC_USE_DEBUG)</font>
+<a name="line66"> 66: </a><font color="#B22222">TEST*/</font>
+</pre>
+</body>
+
+</html>

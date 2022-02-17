@@ -1,0 +1,39 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DT/PetscDSHasBdJacobianPreconditioner.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>PetscDSHasBdJacobianPreconditioner</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/DT/PetscDSHasBdJacobianPreconditioner.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="PetscDSHasBdJacobianPreconditioner"><H1>PetscDSHasBdJacobianPreconditioner</H1></A>
+Signals that boundary Jacobian preconditioner functions have been set 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscds.h" 
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../DT/PetscDSHasBdJacobianPreconditioner.html#PetscDSHasBdJacobianPreconditioner">PetscDSHasBdJacobianPreconditioner</A>(<A HREF="../DM/PetscDS.html#PetscDS">PetscDS</A> prob, <A HREF="../Sys/PetscBool.html#PetscBool">PetscBool</A> *hasBdJacPre)
+</PRE>
+Not collective
+<P>
+<H3><FONT COLOR="#CC3333">Input Parameter</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>prob </B></TD><TD>- The <A HREF="../DM/PetscDS.html#PetscDS">PetscDS</A>
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Output Parameter</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>hasBdJac </B></TD><TD>- flag that pointwise function for the boundary Jacobian preconditioner has been set
+</TD></TR></TABLE>
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../DT/PetscDSHasJacobian.html#PetscDSHasJacobian">PetscDSHasJacobian</A>(), <A HREF="../DT/PetscDSSetBdJacobian.html#PetscDSSetBdJacobian">PetscDSSetBdJacobian</A>(), <A HREF="../DT/PetscDSGetBdJacobian.html#PetscDSGetBdJacobian">PetscDSGetBdJacobian</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>intermediate<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/dm/dt/interface/dtds.c.html#PetscDSHasBdJacobianPreconditioner">src/dm/dt/interface/dtds.c</A>
+<BR><A HREF="./index.html">Index of all DT routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

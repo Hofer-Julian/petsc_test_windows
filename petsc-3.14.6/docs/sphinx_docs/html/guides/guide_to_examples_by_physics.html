@@ -1,0 +1,270 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/sphinx_docs/html/guides/guide_to_examples_by_physics.html" />
+    <meta charset="utf-8" />
+    <title>Guide to PETSc Tutorial Examples, by Physics &#8212; PETSc 3.14.6 documentation</title>
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/katex-math.css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/contrib/auto-render.min.js"></script>
+    <script src="../_static/katex_autorenderer.js"></script>
+    <link rel="shortcut icon" href="../_static/PETSc_RGB-logo.png"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Guide to the Stokes Equations using Finite Elements in PETSc" href="physics/guide_to_stokes.html" />
+    <link rel="prev" title="Guide to PETSc Tutorial Examples" href="guide_to_examples.html" /> 
+  </head><body>
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/sphinx_docs/html/guides/guide_to_examples_by_physics.html "><small>Report Typos and Errors</small></a></div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="physics/guide_to_stokes.html" title="Guide to the Stokes Equations using Finite Elements in PETSc"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="guide_to_examples.html" title="Guide to PETSc Tutorial Examples"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">PETSc 3.14.6 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="guide_to_examples.html" accesskey="U">Guide to PETSc Tutorial Examples</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/PETSc-TAO_RGB.svg" alt="Logo"/>
+            </a></p>
+  <h3><a href="../index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Guide to PETSc Tutorial Examples, by Physics</a><ul>
+<li><a class="reference internal" href="#poisson">Poisson</a></li>
+<li><a class="reference internal" href="#elastostatics">Elastostatics</a></li>
+<li><a class="reference internal" href="#stokes">Stokes</a></li>
+<li><a class="reference internal" href="#euler">Euler</a></li>
+<li><a class="reference internal" href="#heat-equation">Heat equation</a></li>
+<li><a class="reference internal" href="#navier-stokes">Navier-Stokes</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="guide_to_examples.html"
+                        title="previous chapter">Guide to PETSc Tutorial Examples</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="physics/guide_to_stokes.html"
+                        title="next chapter">Guide to the Stokes Equations using Finite Elements in PETSc</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/guides/guide_to_examples_by_physics.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="guide-to-petsc-tutorial-examples-by-physics">
+<h1>Guide to PETSc Tutorial Examples, by Physics<a class="headerlink" href="#guide-to-petsc-tutorial-examples-by-physics" title="Permalink to this headline">¶</a></h1>
+<p>Below we list examples which simulate particular physics problems so that users interested in a particular set of governing equations can easily locate a relevant example. Often PETSc will have several examples looking at the same physics using different numerical tools, such as different discretizations, meshing strategy, closure model, or parameter regime.</p>
+<div class="section" id="poisson">
+<h2>Poisson<a class="headerlink" href="#poisson" title="Permalink to this headline">¶</a></h2>
+<p>The Poisson equation</p>
+<div class="math">
+\[-\Delta u = f\]</div>
+<p>is used to model electrostatics, steady-state diffusion, and other physical processes. Many PETSc examples solve this equation.</p>
+<blockquote>
+<div><dl class="simple">
+<dt>Finite Difference</dt><dd><dl class="field-list simple">
+<dt class="field-odd">2D</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://www.mcs.anl.gov/petsc/petsc-current/src/snes/tutorials/ex5.c.html">SNES example 5</a></p>
+</dd>
+<dt class="field-even">3D</dt>
+<dd class="field-even"><p><a class="reference external" href="https://www.mcs.anl.gov/petsc/petsc-current/src/ksp/ksp/tutorials/ex45.c.html">KSP example 45</a></p>
+</dd>
+</dl>
+</dd>
+<dt>Finite Element</dt><dd><dl class="field-list simple">
+<dt class="field-odd">2D</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://www.mcs.anl.gov/petsc/petsc-current/src/snes/tutorials/ex12.c.html">SNES example 12</a></p>
+</dd>
+<dt class="field-even">3D</dt>
+<dd class="field-even"><p><a class="reference external" href="https://www.mcs.anl.gov/petsc/petsc-current/src/snes/tutorials/ex12.c.html">SNES example 12</a></p>
+</dd>
+</dl>
+</dd>
+</dl>
+</div></blockquote>
+</div>
+<div class="section" id="elastostatics">
+<h2>Elastostatics<a class="headerlink" href="#elastostatics" title="Permalink to this headline">¶</a></h2>
+<p>The equation for elastostatics balances body forces against stresses in the body</p>
+<div class="math">
+\[-\nabla\cdot \bm \sigma = \bm f\]</div>
+<p>where <span class="math">\(\bm\sigma\)</span> is the stress tensor. Linear, isotropic elasticity governing infinitesimal strains has the particular stress-strain relation</p>
+<div class="math">
+\[-\nabla\cdot \left( \lambda I \operatorname{trace}(\bm\varepsilon) + 2\mu \bm\varepsilon \right) = \bm f\]</div>
+<p>where the strain tensor <span class="math">\(\bm \varepsilon\)</span> is given by</p>
+<div class="math">
+\[\bm \varepsilon = \frac{1}{2} \left(\nabla \bm u + (\nabla \bm u)^T \right)\]</div>
+<p>where <span class="math">\(\bm u\)</span> is the infinitesimal displacement of the body.</p>
+<dl class="simple">
+<dt>Finite Element</dt><dd><dl class="field-list simple">
+<dt class="field-odd">2D</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://www.mcs.anl.gov/petsc/petsc-current/src/snes/tutorials/ex17.c.html">SNES example 17</a></p>
+</dd>
+<dt class="field-even">3D</dt>
+<dd class="field-even"><p><a class="reference external" href="https://www.mcs.anl.gov/petsc/petsc-current/src/snes/tutorials/ex17.c.html">SNES example 17</a></p>
+</dd>
+<dt class="field-odd">3D</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://www.mcs.anl.gov/petsc/petsc-current/src/snes/tutorials/ex56.c.html">SNES example 56</a></p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p>If we allow finite strains in the body, we can express the stress-strain relation in terms of the Jacobian of the deformation gradient</p>
+<div class="math">
+\[J = \mathrm{det}(F) = \mathrm{det}\left(\nabla u\right)\]</div>
+<p>and the right Cauchy-Green deformation tensor</p>
+<div class="math">
+\[C = F^T F\]</div>
+<p>so that</p>
+<div class="math">
+\[\frac{\mu}{2} \left( \mathrm{Tr}(C) - 3 \right) + J p + \frac{\kappa}{2} (J - 1) = 0\]</div>
+<p>In the example itself, everything can be expressed in terms of determinants and cofactors of <span class="math">\(F\)</span>.</p>
+<blockquote>
+<div><dl class="simple">
+<dt>Finite Element</dt><dd><dl class="field-list simple">
+<dt class="field-odd">3D</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://www.mcs.anl.gov/petsc/petsc-current/src/snes/tutorials/ex77.c.html">SNES example 77</a></p>
+</dd>
+</dl>
+</dd>
+</dl>
+</div></blockquote>
+</div>
+<div class="section" id="stokes">
+<h2>Stokes<a class="headerlink" href="#stokes" title="Permalink to this headline">¶</a></h2>
+<p>The Stokes equations</p>
+<div class="math">
+\[\begin{aligned}
+-\nabla \cdot \left(\mu \left(\nabla u + \nabla u^T \right)\right) + \nabla p + f &= 0 \\
+\nabla\cdot u &= 0 \end{aligned}\]</div>
+<p>describe slow flow of an incompressible fluid with velocity <span class="math">\(u\)</span>, pressure <span class="math">\(p\)</span>, and body force <span class="math">\(f\)</span>.</p>
+<blockquote>
+<div><dl>
+<dt>Finite Element</dt><dd><dl class="field-list simple">
+<dt class="field-odd">2D</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://www.mcs.anl.gov/petsc/petsc-current/src/snes/tutorials/ex62.c.html">SNES example 62</a></p>
+</dd>
+<dt class="field-even">3D</dt>
+<dd class="field-even"><p><a class="reference external" href="https://www.mcs.anl.gov/petsc/petsc-current/src/snes/tutorials/ex62.c.html">SNES example 62</a></p>
+</dd>
+</dl>
+<p>See <a class="reference internal" href="physics/guide_to_stokes.html"><span class="doc">Guide to the Stokes Equations using Finite Elements in PETSc</span></a> for more.</p>
+</dd>
+</dl>
+</div></blockquote>
+</div>
+<div class="section" id="euler">
+<h2>Euler<a class="headerlink" href="#euler" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="heat-equation">
+<h2>Heat equation<a class="headerlink" href="#heat-equation" title="Permalink to this headline">¶</a></h2>
+<p>The heat equation</p>
+<div class="math">
+\[\frac{\partial u}{\partial t} - \Delta u = f\]</div>
+<p>is used to model heat flow, time-dependent diffusion, and other physical processes.</p>
+<blockquote>
+<div><dl class="simple">
+<dt>Finite Element</dt><dd><dl class="field-list simple">
+<dt class="field-odd">2D</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://www.mcs.anl.gov/petsc/petsc-current/src/ts/tutorials/ex45.c.html">TS example 45</a></p>
+</dd>
+<dt class="field-even">3D</dt>
+<dd class="field-even"><p><a class="reference external" href="https://www.mcs.anl.gov/petsc/petsc-current/src/ts/tutorials/ex45.c.html">TS example 45</a></p>
+</dd>
+</dl>
+</dd>
+</dl>
+</div></blockquote>
+</div>
+<div class="section" id="navier-stokes">
+<h2>Navier-Stokes<a class="headerlink" href="#navier-stokes" title="Permalink to this headline">¶</a></h2>
+<p>The incompressible Navier-Stokes equations</p>
+<div class="math">
+\[\begin{aligned}
+\frac{\partial u}{\partial t} + u\cdot\nabla u - \nabla \cdot \left(\mu \left(\nabla u + \nabla u^T\right)\right) + \nabla p + f &= 0 \\
+\nabla\cdot u &= 0 \end{aligned}\]</div>
+<p>are appropriate for flow of an incompressible fluid at low to moderate Reynolds number.</p>
+<blockquote>
+<div><dl class="simple">
+<dt>Finite Element</dt><dd><dl class="field-list simple">
+<dt class="field-odd">2D</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://www.mcs.anl.gov/petsc/petsc-current/src/ts/tutorials/ex46.c.html">TS example 46</a></p>
+</dd>
+<dt class="field-even">3D</dt>
+<dd class="field-even"><p><a class="reference external" href="https://www.mcs.anl.gov/petsc/petsc-current/src/ts/tutorials/ex46.c.html">TS example 46</a></p>
+</dd>
+</dl>
+</dd>
+</dl>
+</div></blockquote>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="physics/guide_to_stokes.html" title="Guide to the Stokes Equations using Finite Elements in PETSc"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="guide_to_examples.html" title="Guide to PETSc Tutorial Examples"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">PETSc 3.14.6 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="guide_to_examples.html" >Guide to PETSc Tutorial Examples</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 1991-2021, UChicago Argonne, LLC and the PETSc Development Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.4.
+    </div>
+  </body>
+</html>

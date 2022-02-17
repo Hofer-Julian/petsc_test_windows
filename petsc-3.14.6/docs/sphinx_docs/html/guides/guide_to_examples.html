@@ -1,0 +1,135 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/sphinx_docs/html/guides/guide_to_examples.html" />
+    <meta charset="utf-8" />
+    <title>Guide to PETSc Tutorial Examples &#8212; PETSc 3.14.6 documentation</title>
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/katex-math.css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/contrib/auto-render.min.js"></script>
+    <script src="../_static/katex_autorenderer.js"></script>
+    <link rel="shortcut icon" href="../_static/PETSc_RGB-logo.png"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Guide to PETSc Tutorial Examples, by Physics" href="guide_to_examples_by_physics.html" />
+    <link rel="prev" title="Acknowledgments" href="../manual/acknowledgements.html" /> 
+  </head><body>
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/sphinx_docs/html/guides/guide_to_examples.html "><small>Report Typos and Errors</small></a></div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="guide_to_examples_by_physics.html" title="Guide to PETSc Tutorial Examples, by Physics"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="../manual/acknowledgements.html" title="Acknowledgments"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">PETSc 3.14.6 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/PETSc-TAO_RGB.svg" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="../manual/acknowledgements.html"
+                        title="previous chapter">Acknowledgments</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="guide_to_examples_by_physics.html"
+                        title="next chapter">Guide to PETSc Tutorial Examples, by Physics</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/guides/guide_to_examples.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="guide-to-petsc-tutorial-examples">
+<h1>Guide to PETSc Tutorial Examples<a class="headerlink" href="#guide-to-petsc-tutorial-examples" title="Permalink to this headline">¶</a></h1>
+<p>PETSc has many tutorial examples, found in <code class="docutils literal notranslate"><span class="pre">tutorials/</span></code>
+directories throughout the <code class="docutils literal notranslate"><span class="pre">src/</span></code> tree. Since these do not have informative
+names and vary greatly in their complexity and level of internal documentation,
+this page provides guides to connect the tutorial examples to particular physics,
+discretizations, solvers, etc. that you might be interested in.</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="guide_to_examples_by_physics.html">Guide to PETSc Tutorial Examples, by Physics</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="guide_to_examples_by_physics.html#poisson">Poisson</a></li>
+<li class="toctree-l2"><a class="reference internal" href="guide_to_examples_by_physics.html#elastostatics">Elastostatics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="guide_to_examples_by_physics.html#stokes">Stokes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="guide_to_examples_by_physics.html#euler">Euler</a></li>
+<li class="toctree-l2"><a class="reference internal" href="guide_to_examples_by_physics.html#heat-equation">Heat equation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="guide_to_examples_by_physics.html#navier-stokes">Navier-Stokes</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="physics/guide_to_stokes.html">Guide to the Stokes Equations using Finite Elements in PETSc</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="physics/guide_to_stokes.html#equation-definition">Equation Definition</a></li>
+<li class="toctree-l2"><a class="reference internal" href="physics/guide_to_stokes.html#mms-solutions">MMS Solutions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="physics/guide_to_stokes.html#dealing-with-parameters">Dealing with Parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="physics/guide_to_stokes.html#bibliography">Bibliography</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="guide_to_examples_by_physics.html" title="Guide to PETSc Tutorial Examples, by Physics"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="../manual/acknowledgements.html" title="Acknowledgments"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">PETSc 3.14.6 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 1991-2021, UChicago Argonne, LLC and the PETSc Development Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.4.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,1205 @@
+<center><a href="febasic.c">Actual source code: febasic.c</a></center><br>
+
+<html>
+<head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/src/dm/dt/fe/impls/basic/febasic.c.html" />
+<title></title>
+<meta name="generator" content="c2html 0.9.4">
+<meta name="date" content="2021-03-30T16:51:03+00:00">
+</head>
+
+<body bgcolor="#FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 src/dm/dt/fe/impls/basic/febasic.c.html "><small>Report Typos and Errors</small></a></div>
+<pre width="80">
+<a name="line1">  1: </a>#include <A href="../../../../../../include/petsc/private/petscfeimpl.h.html">&lt;petsc/private/petscfeimpl.h&gt;</A>
+<a name="line2">  2: </a>#include <A href="../../../../../../include/petscblaslapack.h.html">&lt;petscblaslapack.h&gt;</A>
+
+<a name="line4">  4: </a><strong><font color="#4169E1"><a name="PetscFEDestroy_Basic"></a>static <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscFEDestroy_Basic(<a href="../../../../../../docs/manualpages/FE/PetscFE.html#PetscFE">PetscFE</a> fem)</font></strong>
+<a name="line5">  5: </a>{
+<a name="line6">  6: </a>  PetscFE_Basic *b = (PetscFE_Basic *) fem-&gt;data;
+
+<a name="line10"> 10: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(b);
+<a name="line11"> 11: </a>  <font color="#4169E1">return</font>(0);
+<a name="line12"> 12: </a>}
+
+<a name="line14"> 14: </a><strong><font color="#4169E1"><a name="PetscFEView_Basic_Ascii"></a>static <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscFEView_Basic_Ascii(<a href="../../../../../../docs/manualpages/FE/PetscFE.html#PetscFE">PetscFE</a> fe, <a href="../../../../../../docs/manualpages/Viewer/PetscViewer.html#PetscViewer">PetscViewer</a> v)</font></strong>
+<a name="line15"> 15: </a>{
+<a name="line16"> 16: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>          dim, Nc;
+<a name="line17"> 17: </a>  <a href="../../../../../../docs/manualpages/FE/PetscSpace.html#PetscSpace">PetscSpace</a>        basis = NULL;
+<a name="line18"> 18: </a>  <a href="../../../../../../docs/manualpages/FE/PetscDualSpace.html#PetscDualSpace">PetscDualSpace</a>    dual = NULL;
+<a name="line19"> 19: </a>  <a href="../../../../../../docs/manualpages/FE/PetscQuadrature.html#PetscQuadrature">PetscQuadrature</a>   quad = NULL;
+<a name="line20"> 20: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>    ierr;
+
+<a name="line23"> 23: </a>  <a href="../../../../../../docs/manualpages/FE/PetscFEGetSpatialDimension.html#PetscFEGetSpatialDimension">PetscFEGetSpatialDimension</a>(fe, &amp;dim);
+<a name="line24"> 24: </a>  <a href="../../../../../../docs/manualpages/FE/PetscFEGetNumComponents.html#PetscFEGetNumComponents">PetscFEGetNumComponents</a>(fe, &amp;Nc);
+<a name="line25"> 25: </a>  <a href="../../../../../../docs/manualpages/FE/PetscFEGetBasisSpace.html#PetscFEGetBasisSpace">PetscFEGetBasisSpace</a>(fe, &amp;basis);
+<a name="line26"> 26: </a>  <a href="../../../../../../docs/manualpages/FE/PetscFEGetDualSpace.html#PetscFEGetDualSpace">PetscFEGetDualSpace</a>(fe, &amp;dual);
+<a name="line27"> 27: </a>  <a href="../../../../../../docs/manualpages/FE/PetscFEGetQuadrature.html#PetscFEGetQuadrature">PetscFEGetQuadrature</a>(fe, &amp;quad);
+<a name="line28"> 28: </a>  <a href="../../../../../../docs/manualpages/Viewer/PetscViewerASCIIPushTab.html#PetscViewerASCIIPushTab">PetscViewerASCIIPushTab</a>(v);
+<a name="line29"> 29: </a>  <a href="../../../../../../docs/manualpages/Viewer/PetscViewerASCIIPrintf.html#PetscViewerASCIIPrintf">PetscViewerASCIIPrintf</a>(v, <font color="#666666">"Basic Finite Element in %D dimensions with %D components\n"</font>,dim,Nc);
+<a name="line30"> 30: </a>  <font color="#4169E1">if</font> (basis) {<a href="../../../../../../docs/manualpages/SPACE/PetscSpaceView.html#PetscSpaceView">PetscSpaceView</a>(basis, v);}
+<a name="line31"> 31: </a>  <font color="#4169E1">if</font> (dual)  {<a href="../../../../../../docs/manualpages/DUALSPACE/PetscDualSpaceView.html#PetscDualSpaceView">PetscDualSpaceView</a>(dual, v);}
+<a name="line32"> 32: </a>  <font color="#4169E1">if</font> (quad)  {<a href="../../../../../../docs/manualpages/DT/PetscQuadratureView.html#PetscQuadratureView">PetscQuadratureView</a>(quad, v);}
+<a name="line33"> 33: </a>  <a href="../../../../../../docs/manualpages/Viewer/PetscViewerASCIIPopTab.html#PetscViewerASCIIPopTab">PetscViewerASCIIPopTab</a>(v);
+<a name="line34"> 34: </a>  <font color="#4169E1">return</font>(0);
+<a name="line35"> 35: </a>}
+
+<a name="line37"> 37: </a><strong><font color="#4169E1"><a name="PetscFEView_Basic"></a>static <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscFEView_Basic(<a href="../../../../../../docs/manualpages/FE/PetscFE.html#PetscFE">PetscFE</a> fe, <a href="../../../../../../docs/manualpages/Viewer/PetscViewer.html#PetscViewer">PetscViewer</a> v)</font></strong>
+<a name="line38"> 38: </a>{
+<a name="line39"> 39: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>      iascii;
+
+<a name="line43"> 43: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscObjectTypeCompare.html#PetscObjectTypeCompare">PetscObjectTypeCompare</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>) v, <a href="../../../../../../docs/manualpages/Viewer/PETSCVIEWERASCII.html#PETSCVIEWERASCII">PETSCVIEWERASCII</a>, &amp;iascii);
+<a name="line44"> 44: </a>  <font color="#4169E1">if</font> (iascii) {PetscFEView_Basic_Ascii(fe, v);}
+<a name="line45"> 45: </a>  <font color="#4169E1">return</font>(0);
+<a name="line46"> 46: </a>}
+
+<a name="line48"> 48: </a><font color="#B22222">/* Construct the change of basis from prime basis to nodal basis */</font>
+<a name="line49"> 49: </a><strong><font color="#4169E1"><a name="PetscFESetUp_Basic"></a><a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscFESetUp_Basic(<a href="../../../../../../docs/manualpages/FE/PetscFE.html#PetscFE">PetscFE</a> fem)</font></strong>
+<a name="line50"> 50: </a>{
+<a name="line51"> 51: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>     *work;
+<a name="line52"> 52: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscBLASInt.html#PetscBLASInt">PetscBLASInt</a>  *pivots;
+<a name="line53"> 53: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscBLASInt.html#PetscBLASInt">PetscBLASInt</a>   n, info;
+<a name="line54"> 54: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       pdim, j;
+
+<a name="line58"> 58: </a>  <a href="../../../../../../docs/manualpages/DUALSPACE/PetscDualSpaceGetDimension.html#PetscDualSpaceGetDimension">PetscDualSpaceGetDimension</a>(fem-&gt;dualSpace, &amp;pdim);
+<a name="line59"> 59: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscMalloc1.html#PetscMalloc1">PetscMalloc1</a>(pdim*pdim,&amp;fem-&gt;invV);
+<a name="line60"> 60: </a>  <font color="#4169E1">for</font> (j = 0; j &lt; pdim; ++j) {
+<a name="line61"> 61: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>       *Bf;
+<a name="line62"> 62: </a>    <a href="../../../../../../docs/manualpages/FE/PetscQuadrature.html#PetscQuadrature">PetscQuadrature</a>  f;
+<a name="line63"> 63: </a>    const <a href="../../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> *points, *weights;
+<a name="line64"> 64: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>         Nc, Nq, q, k, c;
+
+<a name="line66"> 66: </a>    <a href="../../../../../../docs/manualpages/DUALSPACE/PetscDualSpaceGetFunctional.html#PetscDualSpaceGetFunctional">PetscDualSpaceGetFunctional</a>(fem-&gt;dualSpace, j, &amp;f);
+<a name="line67"> 67: </a>    <a href="../../../../../../docs/manualpages/DT/PetscQuadratureGetData.html#PetscQuadratureGetData">PetscQuadratureGetData</a>(f, NULL, &amp;Nc, &amp;Nq, &amp;points, &amp;weights);
+<a name="line68"> 68: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscMalloc1.html#PetscMalloc1">PetscMalloc1</a>(Nc*Nq*pdim,&amp;Bf);
+<a name="line69"> 69: </a>    <a href="../../../../../../docs/manualpages/SPACE/PetscSpaceEvaluate.html#PetscSpaceEvaluate">PetscSpaceEvaluate</a>(fem-&gt;basisSpace, Nq, points, Bf, NULL, NULL);
+<a name="line70"> 70: </a>    <font color="#4169E1">for</font> (k = 0; k &lt; pdim; ++k) {
+<a name="line71"> 71: </a>      <font color="#B22222">/* V_{jk} = n_j(\phi_k) = \int \phi_k(x) n_j(x) dx */</font>
+<a name="line72"> 72: </a>      fem-&gt;invV[j*pdim+k] = 0.0;
+
+<a name="line74"> 74: </a>      <font color="#4169E1">for</font> (q = 0; q &lt; Nq; ++q) {
+<a name="line75"> 75: </a>        <font color="#4169E1">for</font> (c = 0; c &lt; Nc; ++c) fem-&gt;invV[j*pdim+k] += Bf[(q*pdim + k)*Nc + c]*weights[q*Nc + c];
+<a name="line76"> 76: </a>      }
+<a name="line77"> 77: </a>    }
+<a name="line78"> 78: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(Bf);
+<a name="line79"> 79: </a>  }
+
+<a name="line81"> 81: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscMalloc2.html#PetscMalloc2">PetscMalloc2</a>(pdim,&amp;pivots,pdim,&amp;work);
+<a name="line82"> 82: </a>  n = pdim;
+<a name="line83"> 83: </a>  PetscStackCallBLAS(<font color="#666666">"LAPACKgetrf"</font>, LAPACKREALgetrf_(&amp;n, &amp;n, fem-&gt;invV, &amp;n, pivots, &amp;info));
+<a name="line84"> 84: </a>  <font color="#4169E1">if</font> (info) <a href="../../../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_LIB,<font color="#666666">"Error returned from LAPACKgetrf %D"</font>,(<a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>)info);
+<a name="line85"> 85: </a>  PetscStackCallBLAS(<font color="#666666">"LAPACKgetri"</font>, LAPACKREALgetri_(&amp;n, fem-&gt;invV, &amp;n, pivots, work, &amp;n, &amp;info));
+<a name="line86"> 86: </a>  <font color="#4169E1">if</font> (info) <a href="../../../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_LIB,<font color="#666666">"Error returned from LAPACKgetri %D"</font>,(<a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>)info);
+<a name="line87"> 87: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscFree2.html#PetscFree2">PetscFree2</a>(pivots,work);
+<a name="line88"> 88: </a>  <font color="#4169E1">return</font>(0);
+<a name="line89"> 89: </a>}
+
+<a name="line91"> 91: </a><strong><font color="#4169E1"><a name="PetscFEGetDimension_Basic"></a><a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscFEGetDimension_Basic(<a href="../../../../../../docs/manualpages/FE/PetscFE.html#PetscFE">PetscFE</a> fem, <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *dim)</font></strong>
+<a name="line92"> 92: </a>{
+
+<a name="line96"> 96: </a>  <a href="../../../../../../docs/manualpages/DUALSPACE/PetscDualSpaceGetDimension.html#PetscDualSpaceGetDimension">PetscDualSpaceGetDimension</a>(fem-&gt;dualSpace, dim);
+<a name="line97"> 97: </a>  <font color="#4169E1">return</font>(0);
+<a name="line98"> 98: </a>}
+
+<a name="line100">100: </a><font color="#B22222">/* Tensor contraction on the middle index,</font>
+<a name="line101">101: </a><font color="#B22222"> *    C[m,n,p] = A[m,k,p] * B[k,n]</font>
+<a name="line102">102: </a><font color="#B22222"> * where all matrices use C-style ordering.</font>
+<a name="line103">103: </a><font color="#B22222"> */</font>
+<a name="line104">104: </a><strong><font color="#4169E1"><a name="TensorContract_Private"></a>static <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> TensorContract_Private(<a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> m,<a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> n,<a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> p,<a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> k,const <a href="../../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> *A,const <a href="../../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> *B,<a href="../../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> *C)</font></strong> {
+<a name="line106">106: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> i;
+
+<a name="line109">109: </a>  <font color="#4169E1">for</font> (i=0; i&lt;m; i++) {
+<a name="line110">110: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscBLASInt.html#PetscBLASInt">PetscBLASInt</a> n_,p_,k_,lda,ldb,ldc;
+<a name="line111">111: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> one = 1, zero = 0;
+<a name="line112">112: </a>    <font color="#B22222">/* Taking contiguous submatrices, we wish to comput c[n,p] = a[k,p] * B[k,n]</font>
+<a name="line113">113: </a><font color="#B22222">     * or, in Fortran ordering, c(p,n) = a(p,k) * B(n,k)</font>
+<a name="line114">114: </a><font color="#B22222">     */</font>
+<a name="line115">115: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscBLASIntCast.html#PetscBLASIntCast">PetscBLASIntCast</a>(n,&amp;n_);
+<a name="line116">116: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscBLASIntCast.html#PetscBLASIntCast">PetscBLASIntCast</a>(p,&amp;p_);
+<a name="line117">117: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscBLASIntCast.html#PetscBLASIntCast">PetscBLASIntCast</a>(k,&amp;k_);
+<a name="line118">118: </a>    lda = p_;
+<a name="line119">119: </a>    ldb = n_;
+<a name="line120">120: </a>    ldc = p_;
+<a name="line121">121: </a>    PetscStackCallBLAS(<font color="#666666">"BLASgemm"</font>,BLASREALgemm_(<font color="#666666">"N"</font>,<font color="#666666">"T"</font>,&amp;p_,&amp;n_,&amp;k_,&amp;one,A+i*k*p,&amp;lda,B,&amp;ldb,&amp;zero,C+i*n*p,&amp;ldc));
+<a name="line122">122: </a>  }
+<a name="line123">123: </a>  <a href="../../../../../../docs/manualpages/Profiling/PetscLogFlops.html#PetscLogFlops">PetscLogFlops</a>(2.*m*n*p*k);
+<a name="line124">124: </a>  <font color="#4169E1">return</font>(0);
+<a name="line125">125: </a>}
+
+<a name="line127">127: </a><strong><font color="#4169E1"><a name="PetscFECreateTabulation_Basic"></a><a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscFECreateTabulation_Basic(<a href="../../../../../../docs/manualpages/FE/PetscFE.html#PetscFE">PetscFE</a> fem, <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> npoints, const <a href="../../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> points[], <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> K, PetscTabulation T)</font></strong>
+<a name="line128">128: </a>{
+<a name="line129">129: </a>  <a href="../../../../../../docs/manualpages/DM/DM.html#DM">DM</a>               dm;
+<a name="line130">130: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>         pdim; <font color="#B22222">/* Dimension of FE space P */</font>
+<a name="line131">131: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>         dim;  <font color="#B22222">/* Spatial dimension */</font>
+<a name="line132">132: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>         Nc;   <font color="#B22222">/* Field components */</font>
+<a name="line133">133: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>       *B = K &gt;= 0 ? T-&gt;T[0] : NULL;
+<a name="line134">134: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>       *D = K &gt;= 1 ? T-&gt;T[1] : NULL;
+<a name="line135">135: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>       *H = K &gt;= 2 ? T-&gt;T[2] : NULL;
+<a name="line136">136: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>       *tmpB = NULL, *tmpD = NULL, *tmpH = NULL;
+<a name="line137">137: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>   ierr;
+
+<a name="line140">140: </a>  <a href="../../../../../../docs/manualpages/DUALSPACE/PetscDualSpaceGetDM.html#PetscDualSpaceGetDM">PetscDualSpaceGetDM</a>(fem-&gt;dualSpace, &amp;dm);
+<a name="line141">141: </a>  <a href="../../../../../../docs/manualpages/DM/DMGetDimension.html#DMGetDimension">DMGetDimension</a>(dm, &amp;dim);
+<a name="line142">142: </a>  <a href="../../../../../../docs/manualpages/DUALSPACE/PetscDualSpaceGetDimension.html#PetscDualSpaceGetDimension">PetscDualSpaceGetDimension</a>(fem-&gt;dualSpace, &amp;pdim);
+<a name="line143">143: </a>  <a href="../../../../../../docs/manualpages/FE/PetscFEGetNumComponents.html#PetscFEGetNumComponents">PetscFEGetNumComponents</a>(fem, &amp;Nc);
+<a name="line144">144: </a>  <font color="#B22222">/* Evaluate the prime basis functions at all points */</font>
+<a name="line145">145: </a>  <font color="#4169E1">if</font> (K &gt;= 0) {<a href="../../../../../../docs/manualpages/DM/DMGetWorkArray.html#DMGetWorkArray">DMGetWorkArray</a>(dm, npoints*pdim*Nc, <a href="../../../../../../docs/manualpages/Sys/MPIU_REAL.html#MPIU_REAL">MPIU_REAL</a>, &amp;tmpB);}
+<a name="line146">146: </a>  <font color="#4169E1">if</font> (K &gt;= 1) {<a href="../../../../../../docs/manualpages/DM/DMGetWorkArray.html#DMGetWorkArray">DMGetWorkArray</a>(dm, npoints*pdim*Nc*dim, <a href="../../../../../../docs/manualpages/Sys/MPIU_REAL.html#MPIU_REAL">MPIU_REAL</a>, &amp;tmpD);}
+<a name="line147">147: </a>  <font color="#4169E1">if</font> (K &gt;= 2) {<a href="../../../../../../docs/manualpages/DM/DMGetWorkArray.html#DMGetWorkArray">DMGetWorkArray</a>(dm, npoints*pdim*Nc*dim*dim, <a href="../../../../../../docs/manualpages/Sys/MPIU_REAL.html#MPIU_REAL">MPIU_REAL</a>, &amp;tmpH);}
+<a name="line148">148: </a>  <a href="../../../../../../docs/manualpages/SPACE/PetscSpaceEvaluate.html#PetscSpaceEvaluate">PetscSpaceEvaluate</a>(fem-&gt;basisSpace, npoints, points, tmpB, tmpD, tmpH);
+<a name="line149">149: </a>  <font color="#B22222">/* Translate from prime to nodal basis */</font>
+<a name="line150">150: </a>  <font color="#4169E1">if</font> (B) {
+<a name="line151">151: </a>    <font color="#B22222">/* B[npoints, nodes, Nc] = tmpB[npoints, prime, Nc] * invV[prime, nodes] */</font>
+<a name="line152">152: </a>    TensorContract_Private(npoints, pdim, Nc, pdim, tmpB, fem-&gt;invV, B);
+<a name="line153">153: </a>  }
+<a name="line154">154: </a>  <font color="#4169E1">if</font> (D) {
+<a name="line155">155: </a>    <font color="#B22222">/* D[npoints, nodes, Nc, dim] = tmpD[npoints, prime, Nc, dim] * invV[prime, nodes] */</font>
+<a name="line156">156: </a>    TensorContract_Private(npoints, pdim, Nc*dim, pdim, tmpD, fem-&gt;invV, D);
+<a name="line157">157: </a>  }
+<a name="line158">158: </a>  <font color="#4169E1">if</font> (H) {
+<a name="line159">159: </a>    <font color="#B22222">/* H[npoints, nodes, Nc, dim, dim] = tmpH[npoints, prime, Nc, dim, dim] * invV[prime, nodes] */</font>
+<a name="line160">160: </a>    TensorContract_Private(npoints, pdim, Nc*dim*dim, pdim, tmpH, fem-&gt;invV, H);
+<a name="line161">161: </a>  }
+<a name="line162">162: </a>  <font color="#4169E1">if</font> (K &gt;= 0) {<a href="../../../../../../docs/manualpages/DM/DMRestoreWorkArray.html#DMRestoreWorkArray">DMRestoreWorkArray</a>(dm, npoints*pdim*Nc, <a href="../../../../../../docs/manualpages/Sys/MPIU_REAL.html#MPIU_REAL">MPIU_REAL</a>, &amp;tmpB);}
+<a name="line163">163: </a>  <font color="#4169E1">if</font> (K &gt;= 1) {<a href="../../../../../../docs/manualpages/DM/DMRestoreWorkArray.html#DMRestoreWorkArray">DMRestoreWorkArray</a>(dm, npoints*pdim*Nc*dim, <a href="../../../../../../docs/manualpages/Sys/MPIU_REAL.html#MPIU_REAL">MPIU_REAL</a>, &amp;tmpD);}
+<a name="line164">164: </a>  <font color="#4169E1">if</font> (K &gt;= 2) {<a href="../../../../../../docs/manualpages/DM/DMRestoreWorkArray.html#DMRestoreWorkArray">DMRestoreWorkArray</a>(dm, npoints*pdim*Nc*dim*dim, <a href="../../../../../../docs/manualpages/Sys/MPIU_REAL.html#MPIU_REAL">MPIU_REAL</a>, &amp;tmpH);}
+<a name="line165">165: </a>  <font color="#4169E1">return</font>(0);
+<a name="line166">166: </a>}
+
+<a name="line168">168: </a><strong><font color="#4169E1"><a name="PetscFEIntegrate_Basic"></a>static <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscFEIntegrate_Basic(<a href="../../../../../../docs/manualpages/DM/PetscDS.html#PetscDS">PetscDS</a> ds, <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> field, <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> Ne, PetscFEGeom *cgeom,</font></strong>
+<a name="line169">169: </a><strong><font color="#4169E1">                                             const <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> coefficients[], <a href="../../../../../../docs/manualpages/DM/PetscDS.html#PetscDS">PetscDS</a> dsAux, const <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> coefficientsAux[], <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> integral[])</font></strong>
+<a name="line170">170: </a>{
+<a name="line171">171: </a>  const <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>     debug = 0;
+<a name="line172">172: </a>  <a href="../../../../../../docs/manualpages/FE/PetscFE.html#PetscFE">PetscFE</a>            fe;
+<a name="line173">173: </a>  PetscPointFunc     obj_func;
+<a name="line174">174: </a>  <a href="../../../../../../docs/manualpages/FE/PetscQuadrature.html#PetscQuadrature">PetscQuadrature</a>    quad;
+<a name="line175">175: </a>  PetscTabulation   *T, *TAux = NULL;
+<a name="line176">176: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>       *u, *u_x, *a, *a_x;
+<a name="line177">177: </a>  const <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> *constants;
+<a name="line178">178: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>         *x;
+<a name="line179">179: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>          *uOff, *uOff_x, *aOff = NULL, *aOff_x = NULL;
+<a name="line180">180: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>           dim, dE, Np, numConstants, Nf, NfAux = 0, totDim, totDimAux = 0, cOffset = 0, cOffsetAux = 0, e;
+<a name="line181">181: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>          isAffine;
+<a name="line182">182: </a>  const <a href="../../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>   *quadPoints, *quadWeights;
+<a name="line183">183: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>           qNc, Nq, q;
+<a name="line184">184: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>     ierr;
+
+<a name="line187">187: </a>  PetscDSGetObjective(ds, field, &amp;obj_func);
+<a name="line188">188: </a>  <font color="#4169E1">if</font> (!obj_func) <font color="#4169E1">return</font>(0);
+<a name="line189">189: </a>  <a href="../../../../../../docs/manualpages/DT/PetscDSGetDiscretization.html#PetscDSGetDiscretization">PetscDSGetDiscretization</a>(ds, field, (<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a> *) &amp;fe);
+<a name="line190">190: </a>  <a href="../../../../../../docs/manualpages/FE/PetscFEGetSpatialDimension.html#PetscFEGetSpatialDimension">PetscFEGetSpatialDimension</a>(fe, &amp;dim);
+<a name="line191">191: </a>  <a href="../../../../../../docs/manualpages/FE/PetscFEGetQuadrature.html#PetscFEGetQuadrature">PetscFEGetQuadrature</a>(fe, &amp;quad);
+<a name="line192">192: </a>  <a href="../../../../../../docs/manualpages/DT/PetscDSGetNumFields.html#PetscDSGetNumFields">PetscDSGetNumFields</a>(ds, &amp;Nf);
+<a name="line193">193: </a>  <a href="../../../../../../docs/manualpages/DT/PetscDSGetTotalDimension.html#PetscDSGetTotalDimension">PetscDSGetTotalDimension</a>(ds, &amp;totDim);
+<a name="line194">194: </a>  <a href="../../../../../../docs/manualpages/DT/PetscDSGetComponentOffsets.html#PetscDSGetComponentOffsets">PetscDSGetComponentOffsets</a>(ds, &amp;uOff);
+<a name="line195">195: </a>  <a href="../../../../../../docs/manualpages/DT/PetscDSGetComponentDerivativeOffsets.html#PetscDSGetComponentDerivativeOffsets">PetscDSGetComponentDerivativeOffsets</a>(ds, &amp;uOff_x);
+<a name="line196">196: </a>  <a href="../../../../../../docs/manualpages/DT/PetscDSGetTabulation.html#PetscDSGetTabulation">PetscDSGetTabulation</a>(ds, &amp;T);
+<a name="line197">197: </a>  PetscDSGetEvaluationArrays(ds, &amp;u, NULL, &amp;u_x);
+<a name="line198">198: </a>  PetscDSGetWorkspace(ds, &amp;x, NULL, NULL, NULL, NULL);
+<a name="line199">199: </a>  <a href="../../../../../../docs/manualpages/DT/PetscDSGetConstants.html#PetscDSGetConstants">PetscDSGetConstants</a>(ds, &amp;numConstants, &amp;constants);
+<a name="line200">200: </a>  <font color="#4169E1">if</font> (dsAux) {
+<a name="line201">201: </a>    <a href="../../../../../../docs/manualpages/DT/PetscDSGetNumFields.html#PetscDSGetNumFields">PetscDSGetNumFields</a>(dsAux, &amp;NfAux);
+<a name="line202">202: </a>    <a href="../../../../../../docs/manualpages/DT/PetscDSGetTotalDimension.html#PetscDSGetTotalDimension">PetscDSGetTotalDimension</a>(dsAux, &amp;totDimAux);
+<a name="line203">203: </a>    <a href="../../../../../../docs/manualpages/DT/PetscDSGetComponentOffsets.html#PetscDSGetComponentOffsets">PetscDSGetComponentOffsets</a>(dsAux, &amp;aOff);
+<a name="line204">204: </a>    <a href="../../../../../../docs/manualpages/DT/PetscDSGetComponentDerivativeOffsets.html#PetscDSGetComponentDerivativeOffsets">PetscDSGetComponentDerivativeOffsets</a>(dsAux, &amp;aOff_x);
+<a name="line205">205: </a>    <a href="../../../../../../docs/manualpages/DT/PetscDSGetTabulation.html#PetscDSGetTabulation">PetscDSGetTabulation</a>(dsAux, &amp;TAux);
+<a name="line206">206: </a>    PetscDSGetEvaluationArrays(dsAux, &amp;a, NULL, &amp;a_x);
+<a name="line207">207: </a>    <font color="#4169E1">if</font> (T[0]-&gt;Np != TAux[0]-&gt;Np) <a href="../../../../../../docs/manualpages/Sys/SETERRQ2.html#SETERRQ2">SETERRQ2</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, PETSC_ERR_ARG_WRONG, <font color="#666666">"Number of tabulation points %D != %D number of auxiliary tabulation points"</font>, T[0]-&gt;Np, TAux[0]-&gt;Np);
+<a name="line208">208: </a>  }
+<a name="line209">209: </a>  <a href="../../../../../../docs/manualpages/DT/PetscQuadratureGetData.html#PetscQuadratureGetData">PetscQuadratureGetData</a>(quad, NULL, &amp;qNc, &amp;Nq, &amp;quadPoints, &amp;quadWeights);
+<a name="line210">210: </a>  <font color="#4169E1">if</font> (qNc != 1) <a href="../../../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, PETSC_ERR_SUP, <font color="#666666">"Only supports scalar quadrature, not %D components\n"</font>, qNc);
+<a name="line211">211: </a>  Np = cgeom-&gt;numPoints;
+<a name="line212">212: </a>  dE = cgeom-&gt;dimEmbed;
+<a name="line213">213: </a>  isAffine = cgeom-&gt;isAffine;
+<a name="line214">214: </a>  <font color="#4169E1">for</font> (e = 0; e &lt; Ne; ++e) {
+<a name="line215">215: </a>    PetscFEGeom fegeom;
+
+<a name="line217">217: </a>    fegeom.dim      = cgeom-&gt;dim;
+<a name="line218">218: </a>    fegeom.dimEmbed = cgeom-&gt;dimEmbed;
+<a name="line219">219: </a>    <font color="#4169E1">if</font> (isAffine) {
+<a name="line220">220: </a>      fegeom.v    = x;
+<a name="line221">221: </a>      fegeom.xi   = cgeom-&gt;xi;
+<a name="line222">222: </a>      fegeom.J    = &amp;cgeom-&gt;J[e*Np*dE*dE];
+<a name="line223">223: </a>      fegeom.invJ = &amp;cgeom-&gt;invJ[e*Np*dE*dE];
+<a name="line224">224: </a>      fegeom.detJ = &amp;cgeom-&gt;detJ[e*Np];
+<a name="line225">225: </a>    }
+<a name="line226">226: </a>    <font color="#4169E1">for</font> (q = 0; q &lt; Nq; ++q) {
+<a name="line227">227: </a>      <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> integrand;
+<a name="line228">228: </a>      <a href="../../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>   w;
+
+<a name="line230">230: </a>      <font color="#4169E1">if</font> (isAffine) {
+<a name="line231">231: </a>        CoordinatesRefToReal(dE, dim, fegeom.xi, &amp;cgeom-&gt;v[e*Np*dE], fegeom.J, &amp;quadPoints[q*dim], x);
+<a name="line232">232: </a>      } <font color="#4169E1">else</font> {
+<a name="line233">233: </a>        fegeom.v    = &amp;cgeom-&gt;v[(e*Np+q)*dE];
+<a name="line234">234: </a>        fegeom.J    = &amp;cgeom-&gt;J[(e*Np+q)*dE*dE];
+<a name="line235">235: </a>        fegeom.invJ = &amp;cgeom-&gt;invJ[(e*Np+q)*dE*dE];
+<a name="line236">236: </a>        fegeom.detJ = &amp;cgeom-&gt;detJ[e*Np+q];
+<a name="line237">237: </a>      }
+<a name="line238">238: </a>      w = fegeom.detJ[0]*quadWeights[q];
+<a name="line239">239: </a>      <font color="#4169E1">if</font> (debug &gt; 1 &amp;&amp; q &lt; Np) {
+<a name="line240">240: </a>        <a href="../../../../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, <font color="#666666">"  detJ: %g\n"</font>, fegeom.detJ[0]);
+<a name="line241">241: </a><font color="#A020F0">#if !defined(PETSC_USE_COMPLEX)</font>
+<a name="line242">242: </a>        DMPrintCellMatrix(e, <font color="#666666">"invJ"</font>, dim, dim, fegeom.invJ);
+<a name="line243">243: </a><font color="#A020F0">#endif</font>
+<a name="line244">244: </a>      }
+<a name="line245">245: </a>      <font color="#4169E1">if</font> (debug) {<a href="../../../../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, <font color="#666666">"  quad point %d\n"</font>, q);}
+<a name="line246">246: </a>      PetscFEEvaluateFieldJets_Internal(ds, Nf, 0, q, T, &amp;fegeom, &amp;coefficients[cOffset], NULL, u, u_x, NULL);
+<a name="line247">247: </a>      <font color="#4169E1">if</font> (dsAux) {PetscFEEvaluateFieldJets_Internal(dsAux, NfAux, 0, q, TAux, &amp;fegeom, &amp;coefficientsAux[cOffsetAux], NULL, a, a_x, NULL);}
+<a name="line248">248: </a>      obj_func(dim, Nf, NfAux, uOff, uOff_x, u, NULL, u_x, aOff, aOff_x, a, NULL, a_x, 0.0, fegeom.v, numConstants, constants, &amp;integrand);
+<a name="line249">249: </a>      integrand *= w;
+<a name="line250">250: </a>      integral[e*Nf+field] += integrand;
+<a name="line251">251: </a>      <font color="#4169E1">if</font> (debug &gt; 1) {<a href="../../../../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, <font color="#666666">"    int: %g %g\n"</font>, (double) <a href="../../../../../../docs/manualpages/Sys/PetscRealPart.html#PetscRealPart">PetscRealPart</a>(integrand), (double) <a href="../../../../../../docs/manualpages/Sys/PetscRealPart.html#PetscRealPart">PetscRealPart</a>(integral[field]));}
+<a name="line252">252: </a>    }
+<a name="line253">253: </a>    cOffset    += totDim;
+<a name="line254">254: </a>    cOffsetAux += totDimAux;
+<a name="line255">255: </a>  }
+<a name="line256">256: </a>  <font color="#4169E1">return</font>(0);
+<a name="line257">257: </a>}
+
+<a name="line259">259: </a><strong><font color="#4169E1"><a name="PetscFEIntegrateBd_Basic"></a>static <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscFEIntegrateBd_Basic(<a href="../../../../../../docs/manualpages/DM/PetscDS.html#PetscDS">PetscDS</a> ds, <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> field,</font></strong>
+<a name="line260">260: </a><strong><font color="#4169E1">                                               PetscBdPointFunc obj_func,</font></strong>
+<a name="line261">261: </a><strong><font color="#4169E1">                                               <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> Ne, PetscFEGeom *fgeom, const <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> coefficients[], <a href="../../../../../../docs/manualpages/DM/PetscDS.html#PetscDS">PetscDS</a> dsAux, const <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> coefficientsAux[], <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> integral[])</font></strong>
+<a name="line262">262: </a>{
+<a name="line263">263: </a>  const <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>     debug = 0;
+<a name="line264">264: </a>  <a href="../../../../../../docs/manualpages/FE/PetscFE.html#PetscFE">PetscFE</a>            fe;
+<a name="line265">265: </a>  <a href="../../../../../../docs/manualpages/FE/PetscQuadrature.html#PetscQuadrature">PetscQuadrature</a>    quad;
+<a name="line266">266: </a>  PetscTabulation   *Tf, *TfAux = NULL;
+<a name="line267">267: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>       *u, *u_x, *a, *a_x, *basisReal, *basisDerReal;
+<a name="line268">268: </a>  const <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> *constants;
+<a name="line269">269: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>         *x;
+<a name="line270">270: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>          *uOff, *uOff_x, *aOff = NULL, *aOff_x = NULL;
+<a name="line271">271: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>          isAffine, auxOnBd;
+<a name="line272">272: </a>  const <a href="../../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>   *quadPoints, *quadWeights;
+<a name="line273">273: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>           qNc, Nq, q, Np, dE;
+<a name="line274">274: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>           dim, dimAux, numConstants, Nf, NfAux = 0, totDim, totDimAux = 0, cOffset = 0, cOffsetAux = 0, e;
+<a name="line275">275: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>     ierr;
+
+<a name="line278">278: </a>  <font color="#4169E1">if</font> (!obj_func) <font color="#4169E1">return</font>(0);
+<a name="line279">279: </a>  <a href="../../../../../../docs/manualpages/DT/PetscDSGetDiscretization.html#PetscDSGetDiscretization">PetscDSGetDiscretization</a>(ds, field, (<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a> *) &amp;fe);
+<a name="line280">280: </a>  <a href="../../../../../../docs/manualpages/FE/PetscFEGetSpatialDimension.html#PetscFEGetSpatialDimension">PetscFEGetSpatialDimension</a>(fe, &amp;dim);
+<a name="line281">281: </a>  <a href="../../../../../../docs/manualpages/FE/PetscFEGetFaceQuadrature.html#PetscFEGetFaceQuadrature">PetscFEGetFaceQuadrature</a>(fe, &amp;quad);
+<a name="line282">282: </a>  <a href="../../../../../../docs/manualpages/DT/PetscDSGetNumFields.html#PetscDSGetNumFields">PetscDSGetNumFields</a>(ds, &amp;Nf);
+<a name="line283">283: </a>  <a href="../../../../../../docs/manualpages/DT/PetscDSGetTotalDimension.html#PetscDSGetTotalDimension">PetscDSGetTotalDimension</a>(ds, &amp;totDim);
+<a name="line284">284: </a>  <a href="../../../../../../docs/manualpages/DT/PetscDSGetComponentOffsets.html#PetscDSGetComponentOffsets">PetscDSGetComponentOffsets</a>(ds, &amp;uOff);
+<a name="line285">285: </a>  <a href="../../../../../../docs/manualpages/DT/PetscDSGetComponentDerivativeOffsets.html#PetscDSGetComponentDerivativeOffsets">PetscDSGetComponentDerivativeOffsets</a>(ds, &amp;uOff_x);
+<a name="line286">286: </a>  PetscDSGetEvaluationArrays(ds, &amp;u, NULL, &amp;u_x);
+<a name="line287">287: </a>  PetscDSGetWorkspace(ds, &amp;x, &amp;basisReal, &amp;basisDerReal, NULL, NULL);
+<a name="line288">288: </a>  <a href="../../../../../../docs/manualpages/DT/PetscDSGetFaceTabulation.html#PetscDSGetFaceTabulation">PetscDSGetFaceTabulation</a>(ds, &amp;Tf);
+<a name="line289">289: </a>  <a href="../../../../../../docs/manualpages/DT/PetscDSGetConstants.html#PetscDSGetConstants">PetscDSGetConstants</a>(ds, &amp;numConstants, &amp;constants);
+<a name="line290">290: </a>  <font color="#4169E1">if</font> (dsAux) {
+<a name="line291">291: </a>    <a href="../../../../../../docs/manualpages/DT/PetscDSGetSpatialDimension.html#PetscDSGetSpatialDimension">PetscDSGetSpatialDimension</a>(dsAux, &amp;dimAux);
+<a name="line292">292: </a>    <a href="../../../../../../docs/manualpages/DT/PetscDSGetNumFields.html#PetscDSGetNumFields">PetscDSGetNumFields</a>(dsAux, &amp;NfAux);
+<a name="line293">293: </a>    <a href="../../../../../../docs/manualpages/DT/PetscDSGetTotalDimension.html#PetscDSGetTotalDimension">PetscDSGetTotalDimension</a>(dsAux, &amp;totDimAux);
+<a name="line294">294: </a>    <a href="../../../../../../docs/manualpages/DT/PetscDSGetComponentOffsets.html#PetscDSGetComponentOffsets">PetscDSGetComponentOffsets</a>(dsAux, &amp;aOff);
+<a name="line295">295: </a>    <a href="../../../../../../docs/manualpages/DT/PetscDSGetComponentDerivativeOffsets.html#PetscDSGetComponentDerivativeOffsets">PetscDSGetComponentDerivativeOffsets</a>(dsAux, &amp;aOff_x);
+<a name="line296">296: </a>    PetscDSGetEvaluationArrays(dsAux, &amp;a, NULL, &amp;a_x);
+<a name="line297">297: </a>    auxOnBd = dimAux &lt; dim ? <a href="../../../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a> : <a href="../../../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line298">298: </a>    <font color="#4169E1">if</font> (auxOnBd) {<a href="../../../../../../docs/manualpages/DT/PetscDSGetTabulation.html#PetscDSGetTabulation">PetscDSGetTabulation</a>(dsAux, &amp;TfAux);}
+<a name="line299">299: </a>    <font color="#4169E1">else</font>         {<a href="../../../../../../docs/manualpages/DT/PetscDSGetFaceTabulation.html#PetscDSGetFaceTabulation">PetscDSGetFaceTabulation</a>(dsAux, &amp;TfAux);}
+<a name="line300">300: </a>    <font color="#4169E1">if</font> (Tf[0]-&gt;Np != TfAux[0]-&gt;Np) <a href="../../../../../../docs/manualpages/Sys/SETERRQ2.html#SETERRQ2">SETERRQ2</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, PETSC_ERR_ARG_WRONG, <font color="#666666">"Number of tabulation points %D != %D number of auxiliary tabulation points"</font>, Tf[0]-&gt;Np, TfAux[0]-&gt;Np);
+<a name="line301">301: </a>  }
+<a name="line302">302: </a>  <a href="../../../../../../docs/manualpages/DT/PetscQuadratureGetData.html#PetscQuadratureGetData">PetscQuadratureGetData</a>(quad, NULL, &amp;qNc, &amp;Nq, &amp;quadPoints, &amp;quadWeights);
+<a name="line303">303: </a>  <font color="#4169E1">if</font> (qNc != 1) <a href="../../../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, PETSC_ERR_SUP, <font color="#666666">"Only supports scalar quadrature, not %D components\n"</font>, qNc);
+<a name="line304">304: </a>  Np = fgeom-&gt;numPoints;
+<a name="line305">305: </a>  dE = fgeom-&gt;dimEmbed;
+<a name="line306">306: </a>  isAffine = fgeom-&gt;isAffine;
+<a name="line307">307: </a>  <font color="#4169E1">for</font> (e = 0; e &lt; Ne; ++e) {
+<a name="line308">308: </a>    PetscFEGeom    fegeom, cgeom;
+<a name="line309">309: </a>    const <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> face = fgeom-&gt;face[e][0]; <font color="#B22222">/* Local face number in cell */</font>
+<a name="line310">310: </a>    fegeom.n = NULL;
+<a name="line311">311: </a>    fegeom.v = NULL;
+<a name="line312">312: </a>    fegeom.J = NULL;
+<a name="line313">313: </a>    fegeom.detJ = NULL;
+<a name="line314">314: </a>    fegeom.dim      = fgeom-&gt;dim;
+<a name="line315">315: </a>    fegeom.dimEmbed = fgeom-&gt;dimEmbed;
+<a name="line316">316: </a>    cgeom.dim       = fgeom-&gt;dim;
+<a name="line317">317: </a>    cgeom.dimEmbed  = fgeom-&gt;dimEmbed;
+<a name="line318">318: </a>    <font color="#4169E1">if</font> (isAffine) {
+<a name="line319">319: </a>      fegeom.v    = x;
+<a name="line320">320: </a>      fegeom.xi   = fgeom-&gt;xi;
+<a name="line321">321: </a>      fegeom.J    = &amp;fgeom-&gt;J[e*Np*dE*dE];
+<a name="line322">322: </a>      fegeom.invJ = &amp;fgeom-&gt;invJ[e*Np*dE*dE];
+<a name="line323">323: </a>      fegeom.detJ = &amp;fgeom-&gt;detJ[e*Np];
+<a name="line324">324: </a>      fegeom.n    = &amp;fgeom-&gt;n[e*Np*dE];
+
+<a name="line326">326: </a>      cgeom.J     = &amp;fgeom-&gt;suppJ[0][e*Np*dE*dE];
+<a name="line327">327: </a>      cgeom.invJ  = &amp;fgeom-&gt;suppInvJ[0][e*Np*dE*dE];
+<a name="line328">328: </a>      cgeom.detJ  = &amp;fgeom-&gt;suppDetJ[0][e*Np];
+<a name="line329">329: </a>    }
+<a name="line330">330: </a>    <font color="#4169E1">for</font> (q = 0; q &lt; Nq; ++q) {
+<a name="line331">331: </a>      <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> integrand;
+<a name="line332">332: </a>      <a href="../../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>   w;
+
+<a name="line334">334: </a>      <font color="#4169E1">if</font> (isAffine) {
+<a name="line335">335: </a>        CoordinatesRefToReal(dE, dim-1, fegeom.xi, &amp;fgeom-&gt;v[e*Np*dE], fegeom.J, &amp;quadPoints[q*(dim-1)], x);
+<a name="line336">336: </a>      } <font color="#4169E1">else</font> {
+<a name="line337">337: </a>        fegeom.v    = &amp;fgeom-&gt;v[(e*Np+q)*dE];
+<a name="line338">338: </a>        fegeom.J    = &amp;fgeom-&gt;J[(e*Np+q)*dE*dE];
+<a name="line339">339: </a>        fegeom.invJ = &amp;fgeom-&gt;invJ[(e*Np+q)*dE*dE];
+<a name="line340">340: </a>        fegeom.detJ = &amp;fgeom-&gt;detJ[e*Np+q];
+<a name="line341">341: </a>        fegeom.n    = &amp;fgeom-&gt;n[(e*Np+q)*dE];
+
+<a name="line343">343: </a>        cgeom.J     = &amp;fgeom-&gt;suppJ[0][(e*Np+q)*dE*dE];
+<a name="line344">344: </a>        cgeom.invJ  = &amp;fgeom-&gt;suppInvJ[0][(e*Np+q)*dE*dE];
+<a name="line345">345: </a>        cgeom.detJ  = &amp;fgeom-&gt;suppDetJ[0][e*Np+q];
+<a name="line346">346: </a>      }
+<a name="line347">347: </a>      w = fegeom.detJ[0]*quadWeights[q];
+<a name="line348">348: </a>      <font color="#4169E1">if</font> (debug &gt; 1 &amp;&amp; q &lt; Np) {
+<a name="line349">349: </a>        <a href="../../../../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, <font color="#666666">"  detJ: %g\n"</font>, fegeom.detJ[0]);
+<a name="line350">350: </a><font color="#A020F0">#ifndef PETSC_USE_COMPLEX</font>
+<a name="line351">351: </a>        DMPrintCellMatrix(e, <font color="#666666">"invJ"</font>, dim, dim, fegeom.invJ);
+<a name="line352">352: </a><font color="#A020F0">#endif</font>
+<a name="line353">353: </a>      }
+<a name="line354">354: </a>      <font color="#4169E1">if</font> (debug &gt; 1) {<a href="../../../../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, <font color="#666666">"  quad point %d\n"</font>, q);}
+<a name="line355">355: </a>      PetscFEEvaluateFieldJets_Internal(ds, Nf, face, q, Tf, &amp;cgeom, &amp;coefficients[cOffset], NULL, u, u_x, NULL);
+<a name="line356">356: </a>      <font color="#4169E1">if</font> (dsAux) {PetscFEEvaluateFieldJets_Internal(dsAux, NfAux, face, q, TfAux, &amp;cgeom, &amp;coefficientsAux[cOffsetAux], NULL, a, a_x, NULL);}
+<a name="line357">357: </a>      obj_func(dim, Nf, NfAux, uOff, uOff_x, u, NULL, u_x, aOff, aOff_x, a, NULL, a_x, 0.0, fegeom.v, fegeom.n, numConstants, constants, &amp;integrand);
+<a name="line358">358: </a>      integrand *= w;
+<a name="line359">359: </a>      integral[e*Nf+field] += integrand;
+<a name="line360">360: </a>      <font color="#4169E1">if</font> (debug &gt; 1) {<a href="../../../../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, <font color="#666666">"    int: %g %g\n"</font>, (double) <a href="../../../../../../docs/manualpages/Sys/PetscRealPart.html#PetscRealPart">PetscRealPart</a>(integrand), (double) <a href="../../../../../../docs/manualpages/Sys/PetscRealPart.html#PetscRealPart">PetscRealPart</a>(integral[e*Nf+field]));}
+<a name="line361">361: </a>    }
+<a name="line362">362: </a>    cOffset    += totDim;
+<a name="line363">363: </a>    cOffsetAux += totDimAux;
+<a name="line364">364: </a>  }
+<a name="line365">365: </a>  <font color="#4169E1">return</font>(0);
+<a name="line366">366: </a>}
+
+<a name="line368">368: </a><strong><font color="#4169E1"><a name="PetscFEIntegrateResidual_Basic"></a><a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscFEIntegrateResidual_Basic(<a href="../../../../../../docs/manualpages/DM/PetscDS.html#PetscDS">PetscDS</a> ds, <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> field, <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> Ne, PetscFEGeom *cgeom,</font></strong>
+<a name="line369">369: </a><strong><font color="#4169E1">                                              const <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> coefficients[], const <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> coefficients_t[], <a href="../../../../../../docs/manualpages/DM/PetscDS.html#PetscDS">PetscDS</a> dsAux, const <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> coefficientsAux[], <a href="../../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> t, <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> elemVec[])</font></strong>
+<a name="line370">370: </a>{
+<a name="line371">371: </a>  const <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>     debug = 0;
+<a name="line372">372: </a>  <a href="../../../../../../docs/manualpages/FE/PetscFE.html#PetscFE">PetscFE</a>            fe;
+<a name="line373">373: </a>  PetscPointFunc     f0_func;
+<a name="line374">374: </a>  PetscPointFunc     f1_func;
+<a name="line375">375: </a>  <a href="../../../../../../docs/manualpages/FE/PetscQuadrature.html#PetscQuadrature">PetscQuadrature</a>    quad;
+<a name="line376">376: </a>  PetscTabulation   *T, *TAux = NULL;
+<a name="line377">377: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>       *f0, *f1, *u, *u_t = NULL, *u_x, *a, *a_x, *basisReal, *basisDerReal;
+<a name="line378">378: </a>  const <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> *constants;
+<a name="line379">379: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>         *x;
+<a name="line380">380: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>          *uOff, *uOff_x, *aOff = NULL, *aOff_x = NULL;
+<a name="line381">381: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>           dim, numConstants, Nf, NfAux = 0, totDim, totDimAux = 0, cOffset = 0, cOffsetAux = 0, fOffset, e;
+<a name="line382">382: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>          isAffine;
+<a name="line383">383: </a>  const <a href="../../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>   *quadPoints, *quadWeights;
+<a name="line384">384: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>           qNc, Nq, q, Np, dE;
+<a name="line385">385: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>     ierr;
+
+<a name="line388">388: </a>  <a href="../../../../../../docs/manualpages/DT/PetscDSGetDiscretization.html#PetscDSGetDiscretization">PetscDSGetDiscretization</a>(ds, field, (<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a> *) &amp;fe);
+<a name="line389">389: </a>  <a href="../../../../../../docs/manualpages/FE/PetscFEGetSpatialDimension.html#PetscFEGetSpatialDimension">PetscFEGetSpatialDimension</a>(fe, &amp;dim);
+<a name="line390">390: </a>  <a href="../../../../../../docs/manualpages/FE/PetscFEGetQuadrature.html#PetscFEGetQuadrature">PetscFEGetQuadrature</a>(fe, &amp;quad);
+<a name="line391">391: </a>  <a href="../../../../../../docs/manualpages/DT/PetscDSGetNumFields.html#PetscDSGetNumFields">PetscDSGetNumFields</a>(ds, &amp;Nf);
+<a name="line392">392: </a>  <a href="../../../../../../docs/manualpages/DT/PetscDSGetTotalDimension.html#PetscDSGetTotalDimension">PetscDSGetTotalDimension</a>(ds, &amp;totDim);
+<a name="line393">393: </a>  <a href="../../../../../../docs/manualpages/DT/PetscDSGetComponentOffsets.html#PetscDSGetComponentOffsets">PetscDSGetComponentOffsets</a>(ds, &amp;uOff);
+<a name="line394">394: </a>  <a href="../../../../../../docs/manualpages/DT/PetscDSGetComponentDerivativeOffsets.html#PetscDSGetComponentDerivativeOffsets">PetscDSGetComponentDerivativeOffsets</a>(ds, &amp;uOff_x);
+<a name="line395">395: </a>  <a href="../../../../../../docs/manualpages/DT/PetscDSGetFieldOffset.html#PetscDSGetFieldOffset">PetscDSGetFieldOffset</a>(ds, field, &amp;fOffset);
+<a name="line396">396: </a>  <a href="../../../../../../docs/manualpages/DT/PetscDSGetResidual.html#PetscDSGetResidual">PetscDSGetResidual</a>(ds, field, &amp;f0_func, &amp;f1_func);
+<a name="line397">397: </a>  PetscDSGetEvaluationArrays(ds, &amp;u, coefficients_t ? &amp;u_t : NULL, &amp;u_x);
+<a name="line398">398: </a>  PetscDSGetWorkspace(ds, &amp;x, &amp;basisReal, &amp;basisDerReal, NULL, NULL);
+<a name="line399">399: </a>  PetscDSGetWeakFormArrays(ds, &amp;f0, &amp;f1, NULL, NULL, NULL, NULL);
+<a name="line400">400: </a>  <font color="#4169E1">if</font> (!f0_func &amp;&amp; !f1_func) <font color="#4169E1">return</font>(0);
+<a name="line401">401: </a>  <a href="../../../../../../docs/manualpages/DT/PetscDSGetTabulation.html#PetscDSGetTabulation">PetscDSGetTabulation</a>(ds, &amp;T);
+<a name="line402">402: </a>  <a href="../../../../../../docs/manualpages/DT/PetscDSGetConstants.html#PetscDSGetConstants">PetscDSGetConstants</a>(ds, &amp;numConstants, &amp;constants);
+<a name="line403">403: </a>  <font color="#4169E1">if</font> (dsAux) {
+<a name="line404">404: </a>    <a href="../../../../../../docs/manualpages/DT/PetscDSGetNumFields.html#PetscDSGetNumFields">PetscDSGetNumFields</a>(dsAux, &amp;NfAux);
+<a name="line405">405: </a>    <a href="../../../../../../docs/manualpages/DT/PetscDSGetTotalDimension.html#PetscDSGetTotalDimension">PetscDSGetTotalDimension</a>(dsAux, &amp;totDimAux);
+<a name="line406">406: </a>    <a href="../../../../../../docs/manualpages/DT/PetscDSGetComponentOffsets.html#PetscDSGetComponentOffsets">PetscDSGetComponentOffsets</a>(dsAux, &amp;aOff);
+<a name="line407">407: </a>    <a href="../../../../../../docs/manualpages/DT/PetscDSGetComponentDerivativeOffsets.html#PetscDSGetComponentDerivativeOffsets">PetscDSGetComponentDerivativeOffsets</a>(dsAux, &amp;aOff_x);
+<a name="line408">408: </a>    PetscDSGetEvaluationArrays(dsAux, &amp;a, NULL, &amp;a_x);
+<a name="line409">409: </a>    <a href="../../../../../../docs/manualpages/DT/PetscDSGetTabulation.html#PetscDSGetTabulation">PetscDSGetTabulation</a>(dsAux, &amp;TAux);
+<a name="line410">410: </a>    <font color="#4169E1">if</font> (T[0]-&gt;Np != TAux[0]-&gt;Np) <a href="../../../../../../docs/manualpages/Sys/SETERRQ2.html#SETERRQ2">SETERRQ2</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, PETSC_ERR_ARG_WRONG, <font color="#666666">"Number of tabulation points %D != %D number of auxiliary tabulation points"</font>, T[0]-&gt;Np, TAux[0]-&gt;Np);
+<a name="line411">411: </a>  }
+<a name="line412">412: </a>  <a href="../../../../../../docs/manualpages/DT/PetscQuadratureGetData.html#PetscQuadratureGetData">PetscQuadratureGetData</a>(quad, NULL, &amp;qNc, &amp;Nq, &amp;quadPoints, &amp;quadWeights);
+<a name="line413">413: </a>  <font color="#4169E1">if</font> (qNc != 1) <a href="../../../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, PETSC_ERR_SUP, <font color="#666666">"Only supports scalar quadrature, not %D components\n"</font>, qNc);
+<a name="line414">414: </a>  Np = cgeom-&gt;numPoints;
+<a name="line415">415: </a>  dE = cgeom-&gt;dimEmbed;
+<a name="line416">416: </a>  isAffine = cgeom-&gt;isAffine;
+<a name="line417">417: </a>  <font color="#4169E1">for</font> (e = 0; e &lt; Ne; ++e) {
+<a name="line418">418: </a>    PetscFEGeom fegeom;
+
+<a name="line420">420: </a>    fegeom.dim      = cgeom-&gt;dim;
+<a name="line421">421: </a>    fegeom.dimEmbed = cgeom-&gt;dimEmbed;
+<a name="line422">422: </a>    <font color="#4169E1">if</font> (isAffine) {
+<a name="line423">423: </a>      fegeom.v    = x;
+<a name="line424">424: </a>      fegeom.xi   = cgeom-&gt;xi;
+<a name="line425">425: </a>      fegeom.J    = &amp;cgeom-&gt;J[e*Np*dE*dE];
+<a name="line426">426: </a>      fegeom.invJ = &amp;cgeom-&gt;invJ[e*Np*dE*dE];
+<a name="line427">427: </a>      fegeom.detJ = &amp;cgeom-&gt;detJ[e*Np];
+<a name="line428">428: </a>    }
+<a name="line429">429: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscArrayzero.html#PetscArrayzero">PetscArrayzero</a>(f0, Nq*T[field]-&gt;Nc);
+<a name="line430">430: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscArrayzero.html#PetscArrayzero">PetscArrayzero</a>(f1, Nq*T[field]-&gt;Nc*dE);
+<a name="line431">431: </a>    <font color="#4169E1">for</font> (q = 0; q &lt; Nq; ++q) {
+<a name="line432">432: </a>      <a href="../../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> w;
+<a name="line433">433: </a>      <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>  c, d;
+
+<a name="line435">435: </a>      <font color="#4169E1">if</font> (isAffine) {
+<a name="line436">436: </a>        CoordinatesRefToReal(dE, dim, fegeom.xi, &amp;cgeom-&gt;v[e*Np*dE], fegeom.J, &amp;quadPoints[q*dim], x);
+<a name="line437">437: </a>      } <font color="#4169E1">else</font> {
+<a name="line438">438: </a>        fegeom.v    = &amp;cgeom-&gt;v[(e*Np+q)*dE];
+<a name="line439">439: </a>        fegeom.J    = &amp;cgeom-&gt;J[(e*Np+q)*dE*dE];
+<a name="line440">440: </a>        fegeom.invJ = &amp;cgeom-&gt;invJ[(e*Np+q)*dE*dE];
+<a name="line441">441: </a>        fegeom.detJ = &amp;cgeom-&gt;detJ[e*Np+q];
+<a name="line442">442: </a>      }
+<a name="line443">443: </a>      w = fegeom.detJ[0]*quadWeights[q];
+<a name="line444">444: </a>      <font color="#4169E1">if</font> (debug &gt; 1 &amp;&amp; q &lt; Np) {
+<a name="line445">445: </a>        <a href="../../../../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, <font color="#666666">"  detJ: %g\n"</font>, fegeom.detJ[0]);
+<a name="line446">446: </a><font color="#A020F0">#if !defined(PETSC_USE_COMPLEX)</font>
+<a name="line447">447: </a>        DMPrintCellMatrix(e, <font color="#666666">"invJ"</font>, dim, dim, fegeom.invJ);
+<a name="line448">448: </a><font color="#A020F0">#endif</font>
+<a name="line449">449: </a>      }
+<a name="line450">450: </a>      <font color="#4169E1">if</font> (debug) {<a href="../../../../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, <font color="#666666">"  quad point %d\n"</font>, q);}
+<a name="line451">451: </a>      PetscFEEvaluateFieldJets_Internal(ds, Nf, 0, q, T, &amp;fegeom, &amp;coefficients[cOffset], &amp;coefficients_t[cOffset], u, u_x, u_t);
+<a name="line452">452: </a>      <font color="#4169E1">if</font> (dsAux) {PetscFEEvaluateFieldJets_Internal(dsAux, NfAux, 0, q, TAux, &amp;fegeom, &amp;coefficientsAux[cOffsetAux], NULL, a, a_x, NULL);}
+<a name="line453">453: </a>      <font color="#4169E1">if</font> (f0_func) {
+<a name="line454">454: </a>        f0_func(dim, Nf, NfAux, uOff, uOff_x, u, u_t, u_x, aOff, aOff_x, a, NULL, a_x, t, fegeom.v, numConstants, constants, &amp;f0[q*T[field]-&gt;Nc]);
+<a name="line455">455: </a>        <font color="#4169E1">for</font> (c = 0; c &lt; T[field]-&gt;Nc; ++c) f0[q*T[field]-&gt;Nc+c] *= w;
+<a name="line456">456: </a>      }
+<a name="line457">457: </a>      <font color="#4169E1">if</font> (f1_func) {
+<a name="line458">458: </a>        f1_func(dim, Nf, NfAux, uOff, uOff_x, u, u_t, u_x, aOff, aOff_x, a, NULL, a_x, t, fegeom.v, numConstants, constants, &amp;f1[q*T[field]-&gt;Nc*dim]);
+<a name="line459">459: </a>        <font color="#4169E1">for</font> (c = 0; c &lt; T[field]-&gt;Nc; ++c) <font color="#4169E1">for</font> (d = 0; d &lt; dim; ++d) f1[(q*T[field]-&gt;Nc+c)*dim+d] *= w;
+<a name="line460">460: </a>      }
+<a name="line461">461: </a>    }
+<a name="line462">462: </a>    PetscFEUpdateElementVec_Internal(fe, T[field], 0, basisReal, basisDerReal, &amp;fegeom, f0, f1, &amp;elemVec[cOffset+fOffset]);
+<a name="line463">463: </a>    cOffset    += totDim;
+<a name="line464">464: </a>    cOffsetAux += totDimAux;
+<a name="line465">465: </a>  }
+<a name="line466">466: </a>  <font color="#4169E1">return</font>(0);
+<a name="line467">467: </a>}
+
+<a name="line469">469: </a><strong><font color="#4169E1"><a name="PetscFEIntegrateBdResidual_Basic"></a><a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscFEIntegrateBdResidual_Basic(<a href="../../../../../../docs/manualpages/DM/PetscDS.html#PetscDS">PetscDS</a> ds, <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> field, <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> Ne, PetscFEGeom *fgeom,</font></strong>
+<a name="line470">470: </a><strong><font color="#4169E1">                                                const <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> coefficients[], const <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> coefficients_t[], <a href="../../../../../../docs/manualpages/DM/PetscDS.html#PetscDS">PetscDS</a> dsAux, const <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> coefficientsAux[], <a href="../../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> t, <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> elemVec[])</font></strong>
+<a name="line471">471: </a>{
+<a name="line472">472: </a>  const <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>     debug = 0;
+<a name="line473">473: </a>  <a href="../../../../../../docs/manualpages/FE/PetscFE.html#PetscFE">PetscFE</a>            fe;
+<a name="line474">474: </a>  PetscBdPointFunc   f0_func;
+<a name="line475">475: </a>  PetscBdPointFunc   f1_func;
+<a name="line476">476: </a>  <a href="../../../../../../docs/manualpages/FE/PetscQuadrature.html#PetscQuadrature">PetscQuadrature</a>    quad;
+<a name="line477">477: </a>  PetscTabulation   *Tf, *TfAux = NULL;
+<a name="line478">478: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>       *f0, *f1, *u, *u_t = NULL, *u_x, *a, *a_x, *basisReal, *basisDerReal;
+<a name="line479">479: </a>  const <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> *constants;
+<a name="line480">480: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>         *x;
+<a name="line481">481: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>          *uOff, *uOff_x, *aOff = NULL, *aOff_x = NULL;
+<a name="line482">482: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>           dim, dimAux, numConstants, Nf, NfAux = 0, totDim, totDimAux = 0, cOffset = 0, cOffsetAux = 0, fOffset, e, NcI;
+<a name="line483">483: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>          isAffine, auxOnBd = <a href="../../../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line484">484: </a>  const <a href="../../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>   *quadPoints, *quadWeights;
+<a name="line485">485: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>           qNc, Nq, q, Np, dE;
+<a name="line486">486: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>     ierr;
+
+<a name="line489">489: </a>  <a href="../../../../../../docs/manualpages/DT/PetscDSGetDiscretization.html#PetscDSGetDiscretization">PetscDSGetDiscretization</a>(ds, field, (<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a> *) &amp;fe);
+<a name="line490">490: </a>  <a href="../../../../../../docs/manualpages/FE/PetscFEGetSpatialDimension.html#PetscFEGetSpatialDimension">PetscFEGetSpatialDimension</a>(fe, &amp;dim);
+<a name="line491">491: </a>  <a href="../../../../../../docs/manualpages/FE/PetscFEGetFaceQuadrature.html#PetscFEGetFaceQuadrature">PetscFEGetFaceQuadrature</a>(fe, &amp;quad);
+<a name="line492">492: </a>  <a href="../../../../../../docs/manualpages/DT/PetscDSGetNumFields.html#PetscDSGetNumFields">PetscDSGetNumFields</a>(ds, &amp;Nf);
+<a name="line493">493: </a>  <a href="../../../../../../docs/manualpages/DT/PetscDSGetTotalDimension.html#PetscDSGetTotalDimension">PetscDSGetTotalDimension</a>(ds, &amp;totDim);
+<a name="line494">494: </a>  <a href="../../../../../../docs/manualpages/DT/PetscDSGetComponentOffsets.html#PetscDSGetComponentOffsets">PetscDSGetComponentOffsets</a>(ds, &amp;uOff);
+<a name="line495">495: </a>  <a href="../../../../../../docs/manualpages/DT/PetscDSGetComponentDerivativeOffsets.html#PetscDSGetComponentDerivativeOffsets">PetscDSGetComponentDerivativeOffsets</a>(ds, &amp;uOff_x);
+<a name="line496">496: </a>  <a href="../../../../../../docs/manualpages/DT/PetscDSGetFieldOffset.html#PetscDSGetFieldOffset">PetscDSGetFieldOffset</a>(ds, field, &amp;fOffset);
+<a name="line497">497: </a>  <a href="../../../../../../docs/manualpages/DT/PetscDSGetBdResidual.html#PetscDSGetBdResidual">PetscDSGetBdResidual</a>(ds, field, &amp;f0_func, &amp;f1_func);
+<a name="line498">498: </a>  <font color="#4169E1">if</font> (!f0_func &amp;&amp; !f1_func) <font color="#4169E1">return</font>(0);
+<a name="line499">499: </a>  PetscDSGetEvaluationArrays(ds, &amp;u, coefficients_t ? &amp;u_t : NULL, &amp;u_x);
+<a name="line500">500: </a>  PetscDSGetWorkspace(ds, &amp;x, &amp;basisReal, &amp;basisDerReal, NULL, NULL);
+<a name="line501">501: </a>  PetscDSGetWeakFormArrays(ds, &amp;f0, &amp;f1, NULL, NULL, NULL, NULL);
+<a name="line502">502: </a>  <a href="../../../../../../docs/manualpages/DT/PetscDSGetFaceTabulation.html#PetscDSGetFaceTabulation">PetscDSGetFaceTabulation</a>(ds, &amp;Tf);
+<a name="line503">503: </a>  <a href="../../../../../../docs/manualpages/DT/PetscDSGetConstants.html#PetscDSGetConstants">PetscDSGetConstants</a>(ds, &amp;numConstants, &amp;constants);
+<a name="line504">504: </a>  <font color="#4169E1">if</font> (dsAux) {
+<a name="line505">505: </a>    <a href="../../../../../../docs/manualpages/DT/PetscDSGetSpatialDimension.html#PetscDSGetSpatialDimension">PetscDSGetSpatialDimension</a>(dsAux, &amp;dimAux);
+<a name="line506">506: </a>    <a href="../../../../../../docs/manualpages/DT/PetscDSGetNumFields.html#PetscDSGetNumFields">PetscDSGetNumFields</a>(dsAux, &amp;NfAux);
+<a name="line507">507: </a>    <a href="../../../../../../docs/manualpages/DT/PetscDSGetTotalDimension.html#PetscDSGetTotalDimension">PetscDSGetTotalDimension</a>(dsAux, &amp;totDimAux);
+<a name="line508">508: </a>    <a href="../../../../../../docs/manualpages/DT/PetscDSGetComponentOffsets.html#PetscDSGetComponentOffsets">PetscDSGetComponentOffsets</a>(dsAux, &amp;aOff);
+<a name="line509">509: </a>    <a href="../../../../../../docs/manualpages/DT/PetscDSGetComponentDerivativeOffsets.html#PetscDSGetComponentDerivativeOffsets">PetscDSGetComponentDerivativeOffsets</a>(dsAux, &amp;aOff_x);
+<a name="line510">510: </a>    PetscDSGetEvaluationArrays(dsAux, &amp;a, NULL, &amp;a_x);
+<a name="line511">511: </a>    auxOnBd = dimAux &lt; dim ? <a href="../../../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a> : <a href="../../../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line512">512: </a>    <font color="#4169E1">if</font> (auxOnBd) {<a href="../../../../../../docs/manualpages/DT/PetscDSGetTabulation.html#PetscDSGetTabulation">PetscDSGetTabulation</a>(dsAux, &amp;TfAux);}
+<a name="line513">513: </a>    <font color="#4169E1">else</font>         {<a href="../../../../../../docs/manualpages/DT/PetscDSGetFaceTabulation.html#PetscDSGetFaceTabulation">PetscDSGetFaceTabulation</a>(dsAux, &amp;TfAux);}
+<a name="line514">514: </a>    <font color="#4169E1">if</font> (Tf[0]-&gt;Np != TfAux[0]-&gt;Np) <a href="../../../../../../docs/manualpages/Sys/SETERRQ2.html#SETERRQ2">SETERRQ2</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, PETSC_ERR_ARG_WRONG, <font color="#666666">"Number of tabulation points %D != %D number of auxiliary tabulation points"</font>, Tf[0]-&gt;Np, TfAux[0]-&gt;Np);
+<a name="line515">515: </a>  }
+<a name="line516">516: </a>  NcI = Tf[field]-&gt;Nc;
+<a name="line517">517: </a>  <a href="../../../../../../docs/manualpages/DT/PetscQuadratureGetData.html#PetscQuadratureGetData">PetscQuadratureGetData</a>(quad, NULL, &amp;qNc, &amp;Nq, &amp;quadPoints, &amp;quadWeights);
+<a name="line518">518: </a>  <font color="#4169E1">if</font> (qNc != 1) <a href="../../../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, PETSC_ERR_SUP, <font color="#666666">"Only supports scalar quadrature, not %D components\n"</font>, qNc);
+<a name="line519">519: </a>  Np = fgeom-&gt;numPoints;
+<a name="line520">520: </a>  dE = fgeom-&gt;dimEmbed;
+<a name="line521">521: </a>  isAffine = fgeom-&gt;isAffine;
+<a name="line522">522: </a>  <font color="#4169E1">for</font> (e = 0; e &lt; Ne; ++e) {
+<a name="line523">523: </a>    PetscFEGeom    fegeom, cgeom;
+<a name="line524">524: </a>    const <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> face = fgeom-&gt;face[e][0];
+<a name="line525">525: </a>    fegeom.n = NULL;
+<a name="line526">526: </a>    fegeom.v = NULL;
+<a name="line527">527: </a>    fegeom.J = NULL;
+<a name="line528">528: </a>    fegeom.detJ = NULL;
+<a name="line529">529: </a>    fegeom.dim      = fgeom-&gt;dim;
+<a name="line530">530: </a>    fegeom.dimEmbed = fgeom-&gt;dimEmbed;
+<a name="line531">531: </a>    cgeom.dim       = fgeom-&gt;dim;
+<a name="line532">532: </a>    cgeom.dimEmbed  = fgeom-&gt;dimEmbed;
+<a name="line533">533: </a>    <font color="#4169E1">if</font> (isAffine) {
+<a name="line534">534: </a>      fegeom.v    = x;
+<a name="line535">535: </a>      fegeom.xi   = fgeom-&gt;xi;
+<a name="line536">536: </a>      fegeom.J    = &amp;fgeom-&gt;J[e*Np*dE*dE];
+<a name="line537">537: </a>      fegeom.invJ = &amp;fgeom-&gt;invJ[e*Np*dE*dE];
+<a name="line538">538: </a>      fegeom.detJ = &amp;fgeom-&gt;detJ[e*Np];
+<a name="line539">539: </a>      fegeom.n    = &amp;fgeom-&gt;n[e*Np*dE];
+
+<a name="line541">541: </a>      cgeom.J     = &amp;fgeom-&gt;suppJ[0][e*Np*dE*dE];
+<a name="line542">542: </a>      cgeom.invJ  = &amp;fgeom-&gt;suppInvJ[0][e*Np*dE*dE];
+<a name="line543">543: </a>      cgeom.detJ  = &amp;fgeom-&gt;suppDetJ[0][e*Np];
+<a name="line544">544: </a>    }
+<a name="line545">545: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscArrayzero.html#PetscArrayzero">PetscArrayzero</a>(f0, Nq*NcI);
+<a name="line546">546: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscArrayzero.html#PetscArrayzero">PetscArrayzero</a>(f1, Nq*NcI*dE);
+<a name="line547">547: </a>    <font color="#4169E1">for</font> (q = 0; q &lt; Nq; ++q) {
+<a name="line548">548: </a>      <a href="../../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> w;
+<a name="line549">549: </a>      <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>  c, d;
+
+<a name="line551">551: </a>      <font color="#4169E1">if</font> (isAffine) {
+<a name="line552">552: </a>        CoordinatesRefToReal(dE, dim-1, fegeom.xi, &amp;fgeom-&gt;v[e*Np*dE], fegeom.J, &amp;quadPoints[q*(dim-1)], x);
+<a name="line553">553: </a>      } <font color="#4169E1">else</font> {
+<a name="line554">554: </a>        fegeom.v    = &amp;fgeom-&gt;v[(e*Np+q)*dE];
+<a name="line555">555: </a>        fegeom.J    = &amp;fgeom-&gt;J[(e*Np+q)*dE*dE];
+<a name="line556">556: </a>        fegeom.invJ = &amp;fgeom-&gt;invJ[(e*Np+q)*dE*dE];
+<a name="line557">557: </a>        fegeom.detJ = &amp;fgeom-&gt;detJ[e*Np+q];
+<a name="line558">558: </a>        fegeom.n    = &amp;fgeom-&gt;n[(e*Np+q)*dE];
+
+<a name="line560">560: </a>        cgeom.J     = &amp;fgeom-&gt;suppJ[0][(e*Np+q)*dE*dE];
+<a name="line561">561: </a>        cgeom.invJ  = &amp;fgeom-&gt;suppInvJ[0][(e*Np+q)*dE*dE];
+<a name="line562">562: </a>        cgeom.detJ  = &amp;fgeom-&gt;suppDetJ[0][e*Np+q];
+<a name="line563">563: </a>      }
+<a name="line564">564: </a>      w = fegeom.detJ[0]*quadWeights[q];
+<a name="line565">565: </a>      <font color="#4169E1">if</font> (debug &gt; 1 &amp;&amp; q &lt; Np) {
+<a name="line566">566: </a>        <a href="../../../../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, <font color="#666666">"  detJ: %g\n"</font>, fegeom.detJ[0]);
+<a name="line567">567: </a><font color="#A020F0">#if !defined(PETSC_USE_COMPLEX)</font>
+<a name="line568">568: </a>        DMPrintCellMatrix(e, <font color="#666666">"invJ"</font>, dim, dim, fegeom.invJ);
+<a name="line569">569: </a><font color="#A020F0">#endif</font>
+<a name="line570">570: </a>      }
+<a name="line571">571: </a>      <font color="#4169E1">if</font> (debug) {<a href="../../../../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, <font color="#666666">"  quad point %d\n"</font>, q);}
+<a name="line572">572: </a>      PetscFEEvaluateFieldJets_Internal(ds, Nf, face, q, Tf, &amp;cgeom, &amp;coefficients[cOffset], &amp;coefficients_t[cOffset], u, u_x, u_t);
+<a name="line573">573: </a>      <font color="#4169E1">if</font> (dsAux) {PetscFEEvaluateFieldJets_Internal(dsAux, NfAux, auxOnBd ? 0 : face, q, TfAux, &amp;cgeom, &amp;coefficientsAux[cOffsetAux], NULL, a, a_x, NULL);}
+<a name="line574">574: </a>      <font color="#4169E1">if</font> (f0_func) {
+<a name="line575">575: </a>        f0_func(dim, Nf, NfAux, uOff, uOff_x, u, u_t, u_x, aOff, aOff_x, a, NULL, a_x, t, fegeom.v, fegeom.n, numConstants, constants, &amp;f0[q*NcI]);
+<a name="line576">576: </a>        <font color="#4169E1">for</font> (c = 0; c &lt; NcI; ++c) f0[q*NcI+c] *= w;
+<a name="line577">577: </a>      }
+<a name="line578">578: </a>      <font color="#4169E1">if</font> (f1_func) {
+<a name="line579">579: </a>        f1_func(dim, Nf, NfAux, uOff, uOff_x, u, u_t, u_x, aOff, aOff_x, a, NULL, a_x, t, fegeom.v, fegeom.n, numConstants, constants, &amp;f1[q*NcI*dim]);
+<a name="line580">580: </a>        <font color="#4169E1">for</font> (c = 0; c &lt; NcI; ++c) <font color="#4169E1">for</font> (d = 0; d &lt; dim; ++d) f1[(q*NcI+c)*dim+d] *= w;
+<a name="line581">581: </a>      }
+<a name="line582">582: </a>    }
+<a name="line583">583: </a>    PetscFEUpdateElementVec_Internal(fe, Tf[field], face, basisReal, basisDerReal, &amp;cgeom, f0, f1, &amp;elemVec[cOffset+fOffset]);
+<a name="line584">584: </a>    cOffset    += totDim;
+<a name="line585">585: </a>    cOffsetAux += totDimAux;
+<a name="line586">586: </a>  }
+<a name="line587">587: </a>  <font color="#4169E1">return</font>(0);
+<a name="line588">588: </a>}
+
+<a name="line590">590: </a><font color="#B22222">/*</font>
+<a name="line591">591: </a><font color="#B22222">  BdIntegral: Operates completely in the embedding dimension. The trick is to have special "face quadrature" so we only integrate over the face, but</font>
+<a name="line592">592: </a><font color="#B22222">              all transforms operate in the full space and are square.</font>
+
+<a name="line594">594: </a><font color="#B22222">  HybridIntegral: The discretization is lower dimensional. That means the transforms are non-square.</font>
+<a name="line595">595: </a><font color="#B22222">    1) <a href="../../../../../../docs/manualpages/DMPLEX/DMPlexGetCellFields.html#DMPlexGetCellFields">DMPlexGetCellFields</a>() retrieves from the hybrid cell, so it gets fields from both faces</font>
+<a name="line596">596: </a><font color="#B22222">    2) We need to assume that the orientation is 0 for both</font>
+<a name="line597">597: </a><font color="#B22222">    3) TODO We need to use a non-square Jacobian for the derivative maps, meaning the embedding dimension has to go to EvaluateFieldJets() and UpdateElementVec()</font>
+<a name="line598">598: </a><font color="#B22222">*/</font>
+<a name="line599">599: </a><strong><font color="#4169E1"><a name="PetscFEIntegrateHybridResidual_Basic"></a>static <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscFEIntegrateHybridResidual_Basic(<a href="../../../../../../docs/manualpages/DM/PetscDS.html#PetscDS">PetscDS</a> ds, <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> field, <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> Ne, PetscFEGeom *fgeom,</font></strong>
+<a name="line600">600: </a><strong><font color="#4169E1">                                                           const <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> coefficients[], const <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> coefficients_t[], <a href="../../../../../../docs/manualpages/DM/PetscDS.html#PetscDS">PetscDS</a> dsAux, const <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> coefficientsAux[], <a href="../../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> t, <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> elemVec[])</font></strong>
+<a name="line601">601: </a>{
+<a name="line602">602: </a>  const <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>     debug = 0;
+<a name="line603">603: </a>  <a href="../../../../../../docs/manualpages/FE/PetscFE.html#PetscFE">PetscFE</a>            fe;
+<a name="line604">604: </a>  PetscBdPointFunc   f0_func;
+<a name="line605">605: </a>  PetscBdPointFunc   f1_func;
+<a name="line606">606: </a>  <a href="../../../../../../docs/manualpages/FE/PetscQuadrature.html#PetscQuadrature">PetscQuadrature</a>    quad;
+<a name="line607">607: </a>  PetscTabulation   *Tf, *TfAux = NULL;
+<a name="line608">608: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>       *f0, *f1, *u, *u_t = NULL, *u_x, *a, *a_x, *basisReal, *basisDerReal;
+<a name="line609">609: </a>  const <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> *constants;
+<a name="line610">610: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>         *x;
+<a name="line611">611: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>          *uOff, *uOff_x, *aOff = NULL, *aOff_x = NULL;
+<a name="line612">612: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>           dim, dimAux, numConstants, Nf, NfAux = 0, totDim, totDimAux = 0, cOffset = 0, cOffsetAux = 0, fOffset, e, NcI, NcS;
+<a name="line613">613: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>          isCohesiveField, isAffine, auxOnBd = <a href="../../../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line614">614: </a>  const <a href="../../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>   *quadPoints, *quadWeights;
+<a name="line615">615: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>           qNc, Nq, q, Np, dE;
+<a name="line616">616: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>     ierr;
+
+<a name="line619">619: </a>  <font color="#B22222">/* Hybrid discretization is posed directly on faces */</font>
+<a name="line620">620: </a>  <a href="../../../../../../docs/manualpages/DT/PetscDSGetDiscretization.html#PetscDSGetDiscretization">PetscDSGetDiscretization</a>(ds, field, (<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a> *) &amp;fe);
+<a name="line621">621: </a>  <a href="../../../../../../docs/manualpages/FE/PetscFEGetSpatialDimension.html#PetscFEGetSpatialDimension">PetscFEGetSpatialDimension</a>(fe, &amp;dim);
+<a name="line622">622: </a>  <a href="../../../../../../docs/manualpages/FE/PetscFEGetQuadrature.html#PetscFEGetQuadrature">PetscFEGetQuadrature</a>(fe, &amp;quad);
+<a name="line623">623: </a>  <a href="../../../../../../docs/manualpages/DT/PetscDSGetNumFields.html#PetscDSGetNumFields">PetscDSGetNumFields</a>(ds, &amp;Nf);
+<a name="line624">624: </a>  <a href="../../../../../../docs/manualpages/DT/PetscDSGetTotalDimension.html#PetscDSGetTotalDimension">PetscDSGetTotalDimension</a>(ds, &amp;totDim);
+<a name="line625">625: </a>  <a href="../../../../../../docs/manualpages/DT/PetscDSGetComponentOffsets.html#PetscDSGetComponentOffsets">PetscDSGetComponentOffsets</a>(ds, &amp;uOff);
+<a name="line626">626: </a>  <a href="../../../../../../docs/manualpages/DT/PetscDSGetComponentDerivativeOffsets.html#PetscDSGetComponentDerivativeOffsets">PetscDSGetComponentDerivativeOffsets</a>(ds, &amp;uOff_x);
+<a name="line627">627: </a>  <a href="../../../../../../docs/manualpages/DT/PetscDSGetFieldOffset.html#PetscDSGetFieldOffset">PetscDSGetFieldOffset</a>(ds, field, &amp;fOffset);
+<a name="line628">628: </a>  <a href="../../../../../../docs/manualpages/DT/PetscDSGetBdResidual.html#PetscDSGetBdResidual">PetscDSGetBdResidual</a>(ds, field, &amp;f0_func, &amp;f1_func);
+<a name="line629">629: </a>  <font color="#4169E1">if</font> (!f0_func &amp;&amp; !f1_func) <font color="#4169E1">return</font>(0);
+<a name="line630">630: </a>  PetscDSGetEvaluationArrays(ds, &amp;u, coefficients_t ? &amp;u_t : NULL, &amp;u_x);
+<a name="line631">631: </a>  PetscDSGetWorkspace(ds, &amp;x, &amp;basisReal, &amp;basisDerReal, NULL, NULL);
+<a name="line632">632: </a>  PetscDSGetWeakFormArrays(ds, &amp;f0, &amp;f1, NULL, NULL, NULL, NULL);
+<a name="line633">633: </a>  <font color="#B22222">/* NOTE This is a bulk tabulation because the DS is a face discretization */</font>
+<a name="line634">634: </a>  <a href="../../../../../../docs/manualpages/DT/PetscDSGetTabulation.html#PetscDSGetTabulation">PetscDSGetTabulation</a>(ds, &amp;Tf);
+<a name="line635">635: </a>  <a href="../../../../../../docs/manualpages/DT/PetscDSGetConstants.html#PetscDSGetConstants">PetscDSGetConstants</a>(ds, &amp;numConstants, &amp;constants);
+<a name="line636">636: </a>  <font color="#4169E1">if</font> (dsAux) {
+<a name="line637">637: </a>    <a href="../../../../../../docs/manualpages/DT/PetscDSGetSpatialDimension.html#PetscDSGetSpatialDimension">PetscDSGetSpatialDimension</a>(dsAux, &amp;dimAux);
+<a name="line638">638: </a>    <a href="../../../../../../docs/manualpages/DT/PetscDSGetNumFields.html#PetscDSGetNumFields">PetscDSGetNumFields</a>(dsAux, &amp;NfAux);
+<a name="line639">639: </a>    <a href="../../../../../../docs/manualpages/DT/PetscDSGetTotalDimension.html#PetscDSGetTotalDimension">PetscDSGetTotalDimension</a>(dsAux, &amp;totDimAux);
+<a name="line640">640: </a>    <a href="../../../../../../docs/manualpages/DT/PetscDSGetComponentOffsets.html#PetscDSGetComponentOffsets">PetscDSGetComponentOffsets</a>(dsAux, &amp;aOff);
+<a name="line641">641: </a>    <a href="../../../../../../docs/manualpages/DT/PetscDSGetComponentDerivativeOffsets.html#PetscDSGetComponentDerivativeOffsets">PetscDSGetComponentDerivativeOffsets</a>(dsAux, &amp;aOff_x);
+<a name="line642">642: </a>    PetscDSGetEvaluationArrays(dsAux, &amp;a, NULL, &amp;a_x);
+<a name="line643">643: </a>    auxOnBd = dimAux == dim ? <a href="../../../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a> : <a href="../../../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line644">644: </a>    <font color="#4169E1">if</font> (auxOnBd) {<a href="../../../../../../docs/manualpages/DT/PetscDSGetTabulation.html#PetscDSGetTabulation">PetscDSGetTabulation</a>(dsAux, &amp;TfAux);}
+<a name="line645">645: </a>    <font color="#4169E1">else</font>         {<a href="../../../../../../docs/manualpages/DT/PetscDSGetFaceTabulation.html#PetscDSGetFaceTabulation">PetscDSGetFaceTabulation</a>(dsAux, &amp;TfAux);}
+<a name="line646">646: </a>    <font color="#4169E1">if</font> (Tf[0]-&gt;Np != TfAux[0]-&gt;Np) <a href="../../../../../../docs/manualpages/Sys/SETERRQ2.html#SETERRQ2">SETERRQ2</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, PETSC_ERR_ARG_WRONG, <font color="#666666">"Number of tabulation points %D != %D number of auxiliary tabulation points"</font>, Tf[0]-&gt;Np, TfAux[0]-&gt;Np);
+<a name="line647">647: </a>  }
+<a name="line648">648: </a>  isCohesiveField = field == Nf-1 ? <a href="../../../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a> : <a href="../../../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line649">649: </a>  NcI = Tf[field]-&gt;Nc;
+<a name="line650">650: </a>  NcS = isCohesiveField ? NcI : 2*NcI;
+<a name="line651">651: </a>  <a href="../../../../../../docs/manualpages/DT/PetscQuadratureGetData.html#PetscQuadratureGetData">PetscQuadratureGetData</a>(quad, NULL, &amp;qNc, &amp;Nq, &amp;quadPoints, &amp;quadWeights);
+<a name="line652">652: </a>  <font color="#4169E1">if</font> (qNc != 1) <a href="../../../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, PETSC_ERR_SUP, <font color="#666666">"Only supports scalar quadrature, not %D components\n"</font>, qNc);
+<a name="line653">653: </a>  Np = fgeom-&gt;numPoints;
+<a name="line654">654: </a>  dE = fgeom-&gt;dimEmbed;
+<a name="line655">655: </a>  isAffine = fgeom-&gt;isAffine;
+<a name="line656">656: </a>  <font color="#4169E1">for</font> (e = 0; e &lt; Ne; ++e) {
+<a name="line657">657: </a>    PetscFEGeom    fegeom;
+<a name="line658">658: </a>    const <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> face = fgeom-&gt;face[e][0];
+
+<a name="line660">660: </a>    fegeom.dim      = fgeom-&gt;dim;
+<a name="line661">661: </a>    fegeom.dimEmbed = fgeom-&gt;dimEmbed;
+<a name="line662">662: </a>    <font color="#4169E1">if</font> (isAffine) {
+<a name="line663">663: </a>      fegeom.v    = x;
+<a name="line664">664: </a>      fegeom.xi   = fgeom-&gt;xi;
+<a name="line665">665: </a>      fegeom.J    = &amp;fgeom-&gt;J[e*dE*dE];
+<a name="line666">666: </a>      fegeom.invJ = &amp;fgeom-&gt;invJ[e*dE*dE];
+<a name="line667">667: </a>      fegeom.detJ = &amp;fgeom-&gt;detJ[e];
+<a name="line668">668: </a>      fegeom.n    = &amp;fgeom-&gt;n[e*dE];
+<a name="line669">669: </a>    }
+<a name="line670">670: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscArrayzero.html#PetscArrayzero">PetscArrayzero</a>(f0, Nq*NcS);
+<a name="line671">671: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscArrayzero.html#PetscArrayzero">PetscArrayzero</a>(f1, Nq*NcS*dE);
+<a name="line672">672: </a>    <font color="#4169E1">for</font> (q = 0; q &lt; Nq; ++q) {
+<a name="line673">673: </a>      <a href="../../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> w;
+<a name="line674">674: </a>      <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>  c, d;
+
+<a name="line676">676: </a>      <font color="#4169E1">if</font> (isAffine) {
+<a name="line677">677: </a>        CoordinatesRefToReal(dE, dim, fegeom.xi, &amp;fgeom-&gt;v[e*dE], fegeom.J, &amp;quadPoints[q*dim], x);
+<a name="line678">678: </a>      } <font color="#4169E1">else</font> {
+<a name="line679">679: </a>        fegeom.v    = &amp;fgeom-&gt;v[(e*Np+q)*dE];
+<a name="line680">680: </a>        fegeom.J    = &amp;fgeom-&gt;J[(e*Np+q)*dE*dE];
+<a name="line681">681: </a>        fegeom.invJ = &amp;fgeom-&gt;invJ[(e*Np+q)*dE*dE];
+<a name="line682">682: </a>        fegeom.detJ = &amp;fgeom-&gt;detJ[e*Np+q];
+<a name="line683">683: </a>        fegeom.n    = &amp;fgeom-&gt;n[(e*Np+q)*dE];
+<a name="line684">684: </a>      }
+<a name="line685">685: </a>      w = fegeom.detJ[0]*quadWeights[q];
+<a name="line686">686: </a>      <font color="#4169E1">if</font> (debug &gt; 1 &amp;&amp; q &lt; Np) {
+<a name="line687">687: </a>        <a href="../../../../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, <font color="#666666">"  detJ: %g\n"</font>, fegeom.detJ[0]);
+<a name="line688">688: </a><font color="#A020F0">#if !defined(PETSC_USE_COMPLEX)</font>
+<a name="line689">689: </a>        DMPrintCellMatrix(e, <font color="#666666">"invJ"</font>, dim, dE, fegeom.invJ);
+<a name="line690">690: </a><font color="#A020F0">#endif</font>
+<a name="line691">691: </a>      }
+<a name="line692">692: </a>      <font color="#4169E1">if</font> (debug) {<a href="../../../../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, <font color="#666666">"  quad point %d\n"</font>, q);}
+<a name="line693">693: </a>      <font color="#B22222">/* TODO Is this cell or face quadrature, meaning should we use 'q' or 'face*Nq+q' */</font>
+<a name="line694">694: </a>      PetscFEEvaluateFieldJets_Hybrid_Internal(ds, Nf, 0, q, Tf, &amp;fegeom, &amp;coefficients[cOffset], &amp;coefficients_t[cOffset], u, u_x, u_t);
+<a name="line695">695: </a>      <font color="#4169E1">if</font> (dsAux) {PetscFEEvaluateFieldJets_Hybrid_Internal(dsAux, NfAux, 0, auxOnBd ? q : face*Nq+q, TfAux, &amp;fegeom, &amp;coefficientsAux[cOffsetAux], NULL, a, a_x, NULL);}
+<a name="line696">696: </a>      <font color="#4169E1">if</font> (f0_func) {
+<a name="line697">697: </a>        f0_func(dim, Nf, NfAux, uOff, uOff_x, u, u_t, u_x, aOff, aOff_x, a, NULL, a_x, t, fegeom.v, fegeom.n, numConstants, constants, &amp;f0[q*NcS]);
+<a name="line698">698: </a>        <font color="#4169E1">for</font> (c = 0; c &lt; NcS; ++c) f0[q*NcS+c] *= w;
+<a name="line699">699: </a>      }
+<a name="line700">700: </a>      <font color="#4169E1">if</font> (f1_func) {
+<a name="line701">701: </a>        f1_func(dim, Nf, NfAux, uOff, uOff_x, u, u_t, u_x, aOff, aOff_x, a, NULL, a_x, t, fegeom.v, fegeom.n, numConstants, constants, &amp;f1[q*NcS*dim]);
+<a name="line702">702: </a>        <font color="#4169E1">for</font> (c = 0; c &lt; NcS; ++c) <font color="#4169E1">for</font> (d = 0; d &lt; dim; ++d) f1[(q*NcS+c)*dim+d] *= w;
+<a name="line703">703: </a>      }
+<a name="line704">704: </a>    }
+<a name="line705">705: </a>    <font color="#4169E1">if</font> (isCohesiveField) {PetscFEUpdateElementVec_Internal(fe, Tf[field], 0, basisReal, basisDerReal, &amp;fegeom, f0, f1, &amp;elemVec[cOffset+fOffset*2]);}
+<a name="line706">706: </a>    <font color="#4169E1">else</font>                 {PetscFEUpdateElementVec_Hybrid_Internal(fe, Tf[field], 0, basisReal, basisDerReal, &amp;fegeom, f0, f1, &amp;elemVec[cOffset+fOffset*2]);}
+<a name="line707">707: </a>    cOffset    += totDim;
+<a name="line708">708: </a>    cOffsetAux += totDimAux;
+<a name="line709">709: </a>  }
+<a name="line710">710: </a>  <font color="#4169E1">return</font>(0);
+<a name="line711">711: </a>}
+
+<a name="line713">713: </a><strong><font color="#4169E1"><a name="PetscFEIntegrateJacobian_Basic"></a><a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscFEIntegrateJacobian_Basic(<a href="../../../../../../docs/manualpages/DM/PetscDS.html#PetscDS">PetscDS</a> ds, <a href="../../../../../../docs/manualpages/FE/PetscFEJacobianType.html#PetscFEJacobianType">PetscFEJacobianType</a> jtype, <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> fieldI, <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> fieldJ, <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> Ne, PetscFEGeom *cgeom,</font></strong>
+<a name="line714">714: </a><strong><font color="#4169E1">                                              const <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> coefficients[], const <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> coefficients_t[], <a href="../../../../../../docs/manualpages/DM/PetscDS.html#PetscDS">PetscDS</a> dsAux, const <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> coefficientsAux[], <a href="../../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> t, <a href="../../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> u_tshift, <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> elemMat[])</font></strong>
+<a name="line715">715: </a>{
+<a name="line716">716: </a>  const <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>     debug      = 0;
+<a name="line717">717: </a>  <a href="../../../../../../docs/manualpages/FE/PetscFE.html#PetscFE">PetscFE</a>            feI, feJ;
+<a name="line718">718: </a>  PetscPointJac      g0_func, g1_func, g2_func, g3_func;
+<a name="line719">719: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>           cOffset    = 0; <font color="#B22222">/* Offset into coefficients[] for element e */</font>
+<a name="line720">720: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>           cOffsetAux = 0; <font color="#B22222">/* Offset into coefficientsAux[] for element e */</font>
+<a name="line721">721: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>           eOffset    = 0; <font color="#B22222">/* Offset into elemMat[] for element e */</font>
+<a name="line722">722: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>           offsetI    = 0; <font color="#B22222">/* Offset into an element vector for fieldI */</font>
+<a name="line723">723: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>           offsetJ    = 0; <font color="#B22222">/* Offset into an element vector for fieldJ */</font>
+<a name="line724">724: </a>  <a href="../../../../../../docs/manualpages/FE/PetscQuadrature.html#PetscQuadrature">PetscQuadrature</a>    quad;
+<a name="line725">725: </a>  PetscTabulation   *T, *TAux = NULL;
+<a name="line726">726: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>       *g0, *g1, *g2, *g3, *u, *u_t = NULL, *u_x, *a, *a_x, *basisReal, *basisDerReal, *testReal, *testDerReal;
+<a name="line727">727: </a>  const <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> *constants;
+<a name="line728">728: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>         *x;
+<a name="line729">729: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>          *uOff, *uOff_x, *aOff = NULL, *aOff_x = NULL;
+<a name="line730">730: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>           NcI = 0, NcJ = 0;
+<a name="line731">731: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>           dim, numConstants, Nf, NfAux = 0, totDim, totDimAux = 0, e;
+<a name="line732">732: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>           dE, Np;
+<a name="line733">733: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>          isAffine;
+<a name="line734">734: </a>  const <a href="../../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>   *quadPoints, *quadWeights;
+<a name="line735">735: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>           qNc, Nq, q;
+<a name="line736">736: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>     ierr;
+
+<a name="line739">739: </a>  <a href="../../../../../../docs/manualpages/DT/PetscDSGetDiscretization.html#PetscDSGetDiscretization">PetscDSGetDiscretization</a>(ds, fieldI, (<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a> *) &amp;feI);
+<a name="line740">740: </a>  <a href="../../../../../../docs/manualpages/DT/PetscDSGetDiscretization.html#PetscDSGetDiscretization">PetscDSGetDiscretization</a>(ds, fieldJ, (<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a> *) &amp;feJ);
+<a name="line741">741: </a>  <a href="../../../../../../docs/manualpages/FE/PetscFEGetSpatialDimension.html#PetscFEGetSpatialDimension">PetscFEGetSpatialDimension</a>(feI, &amp;dim);
+<a name="line742">742: </a>  <a href="../../../../../../docs/manualpages/FE/PetscFEGetQuadrature.html#PetscFEGetQuadrature">PetscFEGetQuadrature</a>(feI, &amp;quad);
+<a name="line743">743: </a>  <a href="../../../../../../docs/manualpages/DT/PetscDSGetNumFields.html#PetscDSGetNumFields">PetscDSGetNumFields</a>(ds, &amp;Nf);
+<a name="line744">744: </a>  <a href="../../../../../../docs/manualpages/DT/PetscDSGetTotalDimension.html#PetscDSGetTotalDimension">PetscDSGetTotalDimension</a>(ds, &amp;totDim);
+<a name="line745">745: </a>  <a href="../../../../../../docs/manualpages/DT/PetscDSGetComponentOffsets.html#PetscDSGetComponentOffsets">PetscDSGetComponentOffsets</a>(ds, &amp;uOff);
+<a name="line746">746: </a>  <a href="../../../../../../docs/manualpages/DT/PetscDSGetComponentDerivativeOffsets.html#PetscDSGetComponentDerivativeOffsets">PetscDSGetComponentDerivativeOffsets</a>(ds, &amp;uOff_x);
+<a name="line747">747: </a>  <font color="#4169E1">switch</font>(jtype) {
+<a name="line748">748: </a>  <font color="#4169E1">case</font> PETSCFE_JACOBIAN_DYN: <a href="../../../../../../docs/manualpages/DT/PetscDSGetDynamicJacobian.html#PetscDSGetDynamicJacobian">PetscDSGetDynamicJacobian</a>(ds, fieldI, fieldJ, &amp;g0_func, &amp;g1_func, &amp;g2_func, &amp;g3_func);<font color="#4169E1">break</font>;
+<a name="line749">749: </a>  <font color="#4169E1">case</font> PETSCFE_JACOBIAN_PRE: <a href="../../../../../../docs/manualpages/DT/PetscDSGetJacobianPreconditioner.html#PetscDSGetJacobianPreconditioner">PetscDSGetJacobianPreconditioner</a>(ds, fieldI, fieldJ, &amp;g0_func, &amp;g1_func, &amp;g2_func, &amp;g3_func);<font color="#4169E1">break</font>;
+<a name="line750">750: </a>  <font color="#4169E1">case</font> PETSCFE_JACOBIAN:     <a href="../../../../../../docs/manualpages/DT/PetscDSGetJacobian.html#PetscDSGetJacobian">PetscDSGetJacobian</a>(ds, fieldI, fieldJ, &amp;g0_func, &amp;g1_func, &amp;g2_func, &amp;g3_func);<font color="#4169E1">break</font>;
+<a name="line751">751: </a>  }
+<a name="line752">752: </a>  <font color="#4169E1">if</font> (!g0_func &amp;&amp; !g1_func &amp;&amp; !g2_func &amp;&amp; !g3_func) <font color="#4169E1">return</font>(0);
+<a name="line753">753: </a>  PetscDSGetEvaluationArrays(ds, &amp;u, coefficients_t ? &amp;u_t : NULL, &amp;u_x);
+<a name="line754">754: </a>  PetscDSGetWorkspace(ds, &amp;x, &amp;basisReal, &amp;basisDerReal, &amp;testReal, &amp;testDerReal);
+<a name="line755">755: </a>  PetscDSGetWeakFormArrays(ds, NULL, NULL, &amp;g0, &amp;g1, &amp;g2, &amp;g3);
+<a name="line756">756: </a>  <a href="../../../../../../docs/manualpages/DT/PetscDSGetTabulation.html#PetscDSGetTabulation">PetscDSGetTabulation</a>(ds, &amp;T);
+<a name="line757">757: </a>  <a href="../../../../../../docs/manualpages/DT/PetscDSGetFieldOffset.html#PetscDSGetFieldOffset">PetscDSGetFieldOffset</a>(ds, fieldI, &amp;offsetI);
+<a name="line758">758: </a>  <a href="../../../../../../docs/manualpages/DT/PetscDSGetFieldOffset.html#PetscDSGetFieldOffset">PetscDSGetFieldOffset</a>(ds, fieldJ, &amp;offsetJ);
+<a name="line759">759: </a>  <a href="../../../../../../docs/manualpages/DT/PetscDSGetConstants.html#PetscDSGetConstants">PetscDSGetConstants</a>(ds, &amp;numConstants, &amp;constants);
+<a name="line760">760: </a>  <font color="#4169E1">if</font> (dsAux) {
+<a name="line761">761: </a>    <a href="../../../../../../docs/manualpages/DT/PetscDSGetNumFields.html#PetscDSGetNumFields">PetscDSGetNumFields</a>(dsAux, &amp;NfAux);
+<a name="line762">762: </a>    <a href="../../../../../../docs/manualpages/DT/PetscDSGetTotalDimension.html#PetscDSGetTotalDimension">PetscDSGetTotalDimension</a>(dsAux, &amp;totDimAux);
+<a name="line763">763: </a>    <a href="../../../../../../docs/manualpages/DT/PetscDSGetComponentOffsets.html#PetscDSGetComponentOffsets">PetscDSGetComponentOffsets</a>(dsAux, &amp;aOff);
+<a name="line764">764: </a>    <a href="../../../../../../docs/manualpages/DT/PetscDSGetComponentDerivativeOffsets.html#PetscDSGetComponentDerivativeOffsets">PetscDSGetComponentDerivativeOffsets</a>(dsAux, &amp;aOff_x);
+<a name="line765">765: </a>    PetscDSGetEvaluationArrays(dsAux, &amp;a, NULL, &amp;a_x);
+<a name="line766">766: </a>    <a href="../../../../../../docs/manualpages/DT/PetscDSGetTabulation.html#PetscDSGetTabulation">PetscDSGetTabulation</a>(dsAux, &amp;TAux);
+<a name="line767">767: </a>    <font color="#4169E1">if</font> (T[0]-&gt;Np != TAux[0]-&gt;Np) <a href="../../../../../../docs/manualpages/Sys/SETERRQ2.html#SETERRQ2">SETERRQ2</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, PETSC_ERR_ARG_WRONG, <font color="#666666">"Number of tabulation points %D != %D number of auxiliary tabulation points"</font>, T[0]-&gt;Np, TAux[0]-&gt;Np);
+<a name="line768">768: </a>  }
+<a name="line769">769: </a>  NcI = T[fieldI]-&gt;Nc;
+<a name="line770">770: </a>  NcJ = T[fieldJ]-&gt;Nc;
+<a name="line771">771: </a>  Np  = cgeom-&gt;numPoints;
+<a name="line772">772: </a>  dE  = cgeom-&gt;dimEmbed;
+<a name="line773">773: </a>  isAffine = cgeom-&gt;isAffine;
+<a name="line774">774: </a>  <font color="#B22222">/* Initialize here in case the function is not defined */</font>
+<a name="line775">775: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscArrayzero.html#PetscArrayzero">PetscArrayzero</a>(g0, NcI*NcJ);
+<a name="line776">776: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscArrayzero.html#PetscArrayzero">PetscArrayzero</a>(g1, NcI*NcJ*dE);
+<a name="line777">777: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscArrayzero.html#PetscArrayzero">PetscArrayzero</a>(g2, NcI*NcJ*dE);
+<a name="line778">778: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscArrayzero.html#PetscArrayzero">PetscArrayzero</a>(g3, NcI*NcJ*dE*dE);
+<a name="line779">779: </a>  <a href="../../../../../../docs/manualpages/DT/PetscQuadratureGetData.html#PetscQuadratureGetData">PetscQuadratureGetData</a>(quad, NULL, &amp;qNc, &amp;Nq, &amp;quadPoints, &amp;quadWeights);
+<a name="line780">780: </a>  <font color="#4169E1">if</font> (qNc != 1) <a href="../../../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, PETSC_ERR_SUP, <font color="#666666">"Only supports scalar quadrature, not %D components\n"</font>, qNc);
+<a name="line781">781: </a>  <font color="#4169E1">for</font> (e = 0; e &lt; Ne; ++e) {
+<a name="line782">782: </a>    PetscFEGeom fegeom;
+
+<a name="line784">784: </a>    fegeom.dim      = cgeom-&gt;dim;
+<a name="line785">785: </a>    fegeom.dimEmbed = cgeom-&gt;dimEmbed;
+<a name="line786">786: </a>    <font color="#4169E1">if</font> (isAffine) {
+<a name="line787">787: </a>      fegeom.v    = x;
+<a name="line788">788: </a>      fegeom.xi   = cgeom-&gt;xi;
+<a name="line789">789: </a>      fegeom.J    = &amp;cgeom-&gt;J[e*Np*dE*dE];
+<a name="line790">790: </a>      fegeom.invJ = &amp;cgeom-&gt;invJ[e*Np*dE*dE];
+<a name="line791">791: </a>      fegeom.detJ = &amp;cgeom-&gt;detJ[e*Np];
+<a name="line792">792: </a>    }
+<a name="line793">793: </a>    <font color="#4169E1">for</font> (q = 0; q &lt; Nq; ++q) {
+<a name="line794">794: </a>      <a href="../../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> w;
+<a name="line795">795: </a>      <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>  c;
+
+<a name="line797">797: </a>      <font color="#4169E1">if</font> (debug) {<a href="../../../../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, <font color="#666666">"  quad point %d\n"</font>, q);}
+<a name="line798">798: </a>      <font color="#4169E1">if</font> (isAffine) {
+<a name="line799">799: </a>        CoordinatesRefToReal(dE, dim, fegeom.xi, &amp;cgeom-&gt;v[e*Np*dE], fegeom.J, &amp;quadPoints[q*dim], x);
+<a name="line800">800: </a>      } <font color="#4169E1">else</font> {
+<a name="line801">801: </a>        fegeom.v    = &amp;cgeom-&gt;v[(e*Np+q)*dE];
+<a name="line802">802: </a>        fegeom.J    = &amp;cgeom-&gt;J[(e*Np+q)*dE*dE];
+<a name="line803">803: </a>        fegeom.invJ = &amp;cgeom-&gt;invJ[(e*Np+q)*dE*dE];
+<a name="line804">804: </a>        fegeom.detJ = &amp;cgeom-&gt;detJ[e*Np+q];
+<a name="line805">805: </a>      }
+<a name="line806">806: </a>      w = fegeom.detJ[0]*quadWeights[q];
+<a name="line807">807: </a>      <font color="#4169E1">if</font> (coefficients) {PetscFEEvaluateFieldJets_Internal(ds, Nf, 0, q, T, &amp;fegeom, &amp;coefficients[cOffset], &amp;coefficients_t[cOffset], u, u_x, u_t);}
+<a name="line808">808: </a>      <font color="#4169E1">if</font> (dsAux)        {PetscFEEvaluateFieldJets_Internal(dsAux, NfAux, 0, q, TAux, &amp;fegeom, &amp;coefficientsAux[cOffsetAux], NULL, a, a_x, NULL);}
+<a name="line809">809: </a>      <font color="#4169E1">if</font> (g0_func) {
+<a name="line810">810: </a>        <a href="../../../../../../docs/manualpages/Sys/PetscArrayzero.html#PetscArrayzero">PetscArrayzero</a>(g0, NcI*NcJ);
+<a name="line811">811: </a>        g0_func(dim, Nf, NfAux, uOff, uOff_x, u, u_t, u_x, aOff, aOff_x, a, NULL, a_x, t, u_tshift, fegeom.v, numConstants, constants, g0);
+<a name="line812">812: </a>        <font color="#4169E1">for</font> (c = 0; c &lt; NcI*NcJ; ++c) g0[c] *= w;
+<a name="line813">813: </a>      }
+<a name="line814">814: </a>      <font color="#4169E1">if</font> (g1_func) {
+<a name="line815">815: </a>        <a href="../../../../../../docs/manualpages/Sys/PetscArrayzero.html#PetscArrayzero">PetscArrayzero</a>(g1, NcI*NcJ*dE);
+<a name="line816">816: </a>        g1_func(dim, Nf, NfAux, uOff, uOff_x, u, u_t, u_x, aOff, aOff_x, a, NULL, a_x, t, u_tshift, fegeom.v, numConstants, constants, g1);
+<a name="line817">817: </a>        <font color="#4169E1">for</font> (c = 0; c &lt; NcI*NcJ*dim; ++c) g1[c] *= w;
+<a name="line818">818: </a>      }
+<a name="line819">819: </a>      <font color="#4169E1">if</font> (g2_func) {
+<a name="line820">820: </a>        <a href="../../../../../../docs/manualpages/Sys/PetscArrayzero.html#PetscArrayzero">PetscArrayzero</a>(g2, NcI*NcJ*dE);
+<a name="line821">821: </a>        g2_func(dim, Nf, NfAux, uOff, uOff_x, u, u_t, u_x, aOff, aOff_x, a, NULL, a_x, t, u_tshift, fegeom.v, numConstants, constants, g2);
+<a name="line822">822: </a>        <font color="#4169E1">for</font> (c = 0; c &lt; NcI*NcJ*dim; ++c) g2[c] *= w;
+<a name="line823">823: </a>      }
+<a name="line824">824: </a>      <font color="#4169E1">if</font> (g3_func) {
+<a name="line825">825: </a>        <a href="../../../../../../docs/manualpages/Sys/PetscArrayzero.html#PetscArrayzero">PetscArrayzero</a>(g3, NcI*NcJ*dE*dE);
+<a name="line826">826: </a>        g3_func(dim, Nf, NfAux, uOff, uOff_x, u, u_t, u_x, aOff, aOff_x, a, NULL, a_x, t, u_tshift, fegeom.v, numConstants, constants, g3);
+<a name="line827">827: </a>        <font color="#4169E1">for</font> (c = 0; c &lt; NcI*NcJ*dim*dim; ++c) g3[c] *= w;
+<a name="line828">828: </a>      }
+
+<a name="line830">830: </a>      PetscFEUpdateElementMat_Internal(feI, feJ, 0, q, T[fieldI], basisReal, basisDerReal, T[fieldJ], testReal, testDerReal, &amp;fegeom, g0, g1, g2, g3, eOffset, totDim, offsetI, offsetJ, elemMat);
+<a name="line831">831: </a>    }
+<a name="line832">832: </a>    <font color="#4169E1">if</font> (debug &gt; 1) {
+<a name="line833">833: </a>      <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> fc, f, gc, g;
+
+<a name="line835">835: </a>      <a href="../../../../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, <font color="#666666">"Element matrix for fields %d and %d\n"</font>, fieldI, fieldJ);
+<a name="line836">836: </a>      <font color="#4169E1">for</font> (fc = 0; fc &lt; T[fieldI]-&gt;Nc; ++fc) {
+<a name="line837">837: </a>        <font color="#4169E1">for</font> (f = 0; f &lt; T[fieldI]-&gt;Nb; ++f) {
+<a name="line838">838: </a>          const <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> i = offsetI + f*T[fieldI]-&gt;Nc+fc;
+<a name="line839">839: </a>          <font color="#4169E1">for</font> (gc = 0; gc &lt; T[fieldJ]-&gt;Nc; ++gc) {
+<a name="line840">840: </a>            <font color="#4169E1">for</font> (g = 0; g &lt; T[fieldJ]-&gt;Nb; ++g) {
+<a name="line841">841: </a>              const <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> j = offsetJ + g*T[fieldJ]-&gt;Nc+gc;
+<a name="line842">842: </a>              <a href="../../../../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, <font color="#666666">"    elemMat[%d,%d,%d,%d]: %g\n"</font>, f, fc, g, gc, <a href="../../../../../../docs/manualpages/Sys/PetscRealPart.html#PetscRealPart">PetscRealPart</a>(elemMat[eOffset+i*totDim+j]));
+<a name="line843">843: </a>            }
+<a name="line844">844: </a>          }
+<a name="line845">845: </a>          <a href="../../../../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, <font color="#666666">"\n"</font>);
+<a name="line846">846: </a>        }
+<a name="line847">847: </a>      }
+<a name="line848">848: </a>    }
+<a name="line849">849: </a>    cOffset    += totDim;
+<a name="line850">850: </a>    cOffsetAux += totDimAux;
+<a name="line851">851: </a>    eOffset    += <a href="../../../../../../docs/manualpages/Sys/PetscSqr.html#PetscSqr">PetscSqr</a>(totDim);
+<a name="line852">852: </a>  }
+<a name="line853">853: </a>  <font color="#4169E1">return</font>(0);
+<a name="line854">854: </a>}
+
+<a name="line856">856: </a><strong><font color="#4169E1"><a name="PetscFEIntegrateBdJacobian_Basic"></a>static <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscFEIntegrateBdJacobian_Basic(<a href="../../../../../../docs/manualpages/DM/PetscDS.html#PetscDS">PetscDS</a> ds, <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> fieldI, <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> fieldJ, <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> Ne, PetscFEGeom *fgeom,</font></strong>
+<a name="line857">857: </a><strong><font color="#4169E1">                                                       const <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> coefficients[], const <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> coefficients_t[], <a href="../../../../../../docs/manualpages/DM/PetscDS.html#PetscDS">PetscDS</a> dsAux, const <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> coefficientsAux[], <a href="../../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> t, <a href="../../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> u_tshift, <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> elemMat[])</font></strong>
+<a name="line858">858: </a>{
+<a name="line859">859: </a>  const <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>     debug      = 0;
+<a name="line860">860: </a>  <a href="../../../../../../docs/manualpages/FE/PetscFE.html#PetscFE">PetscFE</a>            feI, feJ;
+<a name="line861">861: </a>  PetscBdPointJac    g0_func, g1_func, g2_func, g3_func;
+<a name="line862">862: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>           cOffset    = 0; <font color="#B22222">/* Offset into coefficients[] for element e */</font>
+<a name="line863">863: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>           cOffsetAux = 0; <font color="#B22222">/* Offset into coefficientsAux[] for element e */</font>
+<a name="line864">864: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>           eOffset    = 0; <font color="#B22222">/* Offset into elemMat[] for element e */</font>
+<a name="line865">865: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>           offsetI    = 0; <font color="#B22222">/* Offset into an element vector for fieldI */</font>
+<a name="line866">866: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>           offsetJ    = 0; <font color="#B22222">/* Offset into an element vector for fieldJ */</font>
+<a name="line867">867: </a>  <a href="../../../../../../docs/manualpages/FE/PetscQuadrature.html#PetscQuadrature">PetscQuadrature</a>    quad;
+<a name="line868">868: </a>  PetscTabulation   *T, *TAux = NULL;
+<a name="line869">869: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>       *g0, *g1, *g2, *g3, *u, *u_t = NULL, *u_x, *a, *a_x, *basisReal, *basisDerReal, *testReal, *testDerReal;
+<a name="line870">870: </a>  const <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> *constants;
+<a name="line871">871: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>         *x;
+<a name="line872">872: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>          *uOff, *uOff_x, *aOff = NULL, *aOff_x = NULL;
+<a name="line873">873: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>           NcI = 0, NcJ = 0;
+<a name="line874">874: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>           dim, numConstants, Nf, NfAux = 0, totDim, totDimAux = 0, e;
+<a name="line875">875: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>          isAffine;
+<a name="line876">876: </a>  const <a href="../../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>   *quadPoints, *quadWeights;
+<a name="line877">877: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>           qNc, Nq, q, Np, dE;
+<a name="line878">878: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>     ierr;
+
+<a name="line881">881: </a>  <a href="../../../../../../docs/manualpages/DT/PetscDSGetDiscretization.html#PetscDSGetDiscretization">PetscDSGetDiscretization</a>(ds, fieldI, (<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a> *) &amp;feI);
+<a name="line882">882: </a>  <a href="../../../../../../docs/manualpages/DT/PetscDSGetDiscretization.html#PetscDSGetDiscretization">PetscDSGetDiscretization</a>(ds, fieldJ, (<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a> *) &amp;feJ);
+<a name="line883">883: </a>  <a href="../../../../../../docs/manualpages/FE/PetscFEGetSpatialDimension.html#PetscFEGetSpatialDimension">PetscFEGetSpatialDimension</a>(feI, &amp;dim);
+<a name="line884">884: </a>  <a href="../../../../../../docs/manualpages/FE/PetscFEGetFaceQuadrature.html#PetscFEGetFaceQuadrature">PetscFEGetFaceQuadrature</a>(feI, &amp;quad);
+<a name="line885">885: </a>  <a href="../../../../../../docs/manualpages/DT/PetscDSGetNumFields.html#PetscDSGetNumFields">PetscDSGetNumFields</a>(ds, &amp;Nf);
+<a name="line886">886: </a>  <a href="../../../../../../docs/manualpages/DT/PetscDSGetTotalDimension.html#PetscDSGetTotalDimension">PetscDSGetTotalDimension</a>(ds, &amp;totDim);
+<a name="line887">887: </a>  <a href="../../../../../../docs/manualpages/DT/PetscDSGetComponentOffsets.html#PetscDSGetComponentOffsets">PetscDSGetComponentOffsets</a>(ds, &amp;uOff);
+<a name="line888">888: </a>  <a href="../../../../../../docs/manualpages/DT/PetscDSGetComponentDerivativeOffsets.html#PetscDSGetComponentDerivativeOffsets">PetscDSGetComponentDerivativeOffsets</a>(ds, &amp;uOff_x);
+<a name="line889">889: </a>  <a href="../../../../../../docs/manualpages/DT/PetscDSGetFieldOffset.html#PetscDSGetFieldOffset">PetscDSGetFieldOffset</a>(ds, fieldI, &amp;offsetI);
+<a name="line890">890: </a>  <a href="../../../../../../docs/manualpages/DT/PetscDSGetFieldOffset.html#PetscDSGetFieldOffset">PetscDSGetFieldOffset</a>(ds, fieldJ, &amp;offsetJ);
+<a name="line891">891: </a>  <a href="../../../../../../docs/manualpages/DT/PetscDSGetBdJacobian.html#PetscDSGetBdJacobian">PetscDSGetBdJacobian</a>(ds, fieldI, fieldJ, &amp;g0_func, &amp;g1_func, &amp;g2_func, &amp;g3_func);
+<a name="line892">892: </a>  <font color="#4169E1">if</font> (!g0_func &amp;&amp; !g1_func &amp;&amp; !g2_func &amp;&amp; !g3_func) <font color="#4169E1">return</font>(0);
+<a name="line893">893: </a>  PetscDSGetEvaluationArrays(ds, &amp;u, coefficients_t ? &amp;u_t : NULL, &amp;u_x);
+<a name="line894">894: </a>  PetscDSGetWorkspace(ds, &amp;x, &amp;basisReal, &amp;basisDerReal, &amp;testReal, &amp;testDerReal);
+<a name="line895">895: </a>  PetscDSGetWeakFormArrays(ds, NULL, NULL, &amp;g0, &amp;g1, &amp;g2, &amp;g3);
+<a name="line896">896: </a>  <a href="../../../../../../docs/manualpages/DT/PetscDSGetFaceTabulation.html#PetscDSGetFaceTabulation">PetscDSGetFaceTabulation</a>(ds, &amp;T);
+<a name="line897">897: </a>  <a href="../../../../../../docs/manualpages/DT/PetscDSGetConstants.html#PetscDSGetConstants">PetscDSGetConstants</a>(ds, &amp;numConstants, &amp;constants);
+<a name="line898">898: </a>  <font color="#4169E1">if</font> (dsAux) {
+<a name="line899">899: </a>    <a href="../../../../../../docs/manualpages/DT/PetscDSGetNumFields.html#PetscDSGetNumFields">PetscDSGetNumFields</a>(dsAux, &amp;NfAux);
+<a name="line900">900: </a>    <a href="../../../../../../docs/manualpages/DT/PetscDSGetTotalDimension.html#PetscDSGetTotalDimension">PetscDSGetTotalDimension</a>(dsAux, &amp;totDimAux);
+<a name="line901">901: </a>    <a href="../../../../../../docs/manualpages/DT/PetscDSGetComponentOffsets.html#PetscDSGetComponentOffsets">PetscDSGetComponentOffsets</a>(dsAux, &amp;aOff);
+<a name="line902">902: </a>    <a href="../../../../../../docs/manualpages/DT/PetscDSGetComponentDerivativeOffsets.html#PetscDSGetComponentDerivativeOffsets">PetscDSGetComponentDerivativeOffsets</a>(dsAux, &amp;aOff_x);
+<a name="line903">903: </a>    PetscDSGetEvaluationArrays(dsAux, &amp;a, NULL, &amp;a_x);
+<a name="line904">904: </a>    <a href="../../../../../../docs/manualpages/DT/PetscDSGetFaceTabulation.html#PetscDSGetFaceTabulation">PetscDSGetFaceTabulation</a>(dsAux, &amp;TAux);
+<a name="line905">905: </a>  }
+<a name="line906">906: </a>  NcI = T[fieldI]-&gt;Nc, NcJ = T[fieldJ]-&gt;Nc;
+<a name="line907">907: </a>  Np = fgeom-&gt;numPoints;
+<a name="line908">908: </a>  dE = fgeom-&gt;dimEmbed;
+<a name="line909">909: </a>  isAffine = fgeom-&gt;isAffine;
+<a name="line910">910: </a>  <font color="#B22222">/* Initialize here in case the function is not defined */</font>
+<a name="line911">911: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscArrayzero.html#PetscArrayzero">PetscArrayzero</a>(g0, NcI*NcJ);
+<a name="line912">912: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscArrayzero.html#PetscArrayzero">PetscArrayzero</a>(g1, NcI*NcJ*dE);
+<a name="line913">913: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscArrayzero.html#PetscArrayzero">PetscArrayzero</a>(g2, NcI*NcJ*dE);
+<a name="line914">914: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscArrayzero.html#PetscArrayzero">PetscArrayzero</a>(g3, NcI*NcJ*dE*dE);
+<a name="line915">915: </a>  <a href="../../../../../../docs/manualpages/DT/PetscQuadratureGetData.html#PetscQuadratureGetData">PetscQuadratureGetData</a>(quad, NULL, &amp;qNc, &amp;Nq, &amp;quadPoints, &amp;quadWeights);
+<a name="line916">916: </a>  <font color="#4169E1">if</font> (qNc != 1) <a href="../../../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, PETSC_ERR_SUP, <font color="#666666">"Only supports scalar quadrature, not %D components\n"</font>, qNc);
+<a name="line917">917: </a>  <font color="#4169E1">for</font> (e = 0; e &lt; Ne; ++e) {
+<a name="line918">918: </a>    PetscFEGeom    fegeom, cgeom;
+<a name="line919">919: </a>    const <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> face = fgeom-&gt;face[e][0];
+<a name="line920">920: </a>    fegeom.n = NULL;
+<a name="line921">921: </a>    fegeom.v = NULL;
+<a name="line922">922: </a>    fegeom.J = NULL;
+<a name="line923">923: </a>    fegeom.detJ = NULL;
+<a name="line924">924: </a>    fegeom.dim      = fgeom-&gt;dim;
+<a name="line925">925: </a>    fegeom.dimEmbed = fgeom-&gt;dimEmbed;
+<a name="line926">926: </a>    cgeom.dim       = fgeom-&gt;dim;
+<a name="line927">927: </a>    cgeom.dimEmbed  = fgeom-&gt;dimEmbed;
+<a name="line928">928: </a>    <font color="#4169E1">if</font> (isAffine) {
+<a name="line929">929: </a>      fegeom.v    = x;
+<a name="line930">930: </a>      fegeom.xi   = fgeom-&gt;xi;
+<a name="line931">931: </a>      fegeom.J    = &amp;fgeom-&gt;J[e*Np*dE*dE];
+<a name="line932">932: </a>      fegeom.invJ = &amp;fgeom-&gt;invJ[e*Np*dE*dE];
+<a name="line933">933: </a>      fegeom.detJ = &amp;fgeom-&gt;detJ[e*Np];
+<a name="line934">934: </a>      fegeom.n    = &amp;fgeom-&gt;n[e*Np*dE];
+
+<a name="line936">936: </a>      cgeom.J     = &amp;fgeom-&gt;suppJ[0][e*Np*dE*dE];
+<a name="line937">937: </a>      cgeom.invJ  = &amp;fgeom-&gt;suppInvJ[0][e*Np*dE*dE];
+<a name="line938">938: </a>      cgeom.detJ  = &amp;fgeom-&gt;suppDetJ[0][e*Np];
+<a name="line939">939: </a>    }
+<a name="line940">940: </a>    <font color="#4169E1">for</font> (q = 0; q &lt; Nq; ++q) {
+<a name="line941">941: </a>      <a href="../../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> w;
+<a name="line942">942: </a>      <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>  c;
+
+<a name="line944">944: </a>      <font color="#4169E1">if</font> (debug) {<a href="../../../../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, <font color="#666666">"  quad point %d\n"</font>, q);}
+<a name="line945">945: </a>      <font color="#4169E1">if</font> (isAffine) {
+<a name="line946">946: </a>        CoordinatesRefToReal(dE, dim-1, fegeom.xi, &amp;fgeom-&gt;v[e*Np*dE], fegeom.J, &amp;quadPoints[q*(dim-1)], x);
+<a name="line947">947: </a>      } <font color="#4169E1">else</font> {
+<a name="line948">948: </a>        fegeom.v    = &amp;fgeom-&gt;v[(e*Np+q)*dE];
+<a name="line949">949: </a>        fegeom.J    = &amp;fgeom-&gt;J[(e*Np+q)*dE*dE];
+<a name="line950">950: </a>        fegeom.invJ = &amp;fgeom-&gt;invJ[(e*Np+q)*dE*dE];
+<a name="line951">951: </a>        fegeom.detJ = &amp;fgeom-&gt;detJ[e*Np+q];
+<a name="line952">952: </a>        fegeom.n    = &amp;fgeom-&gt;n[(e*Np+q)*dE];
+
+<a name="line954">954: </a>        cgeom.J     = &amp;fgeom-&gt;suppJ[0][(e*Np+q)*dE*dE];
+<a name="line955">955: </a>        cgeom.invJ  = &amp;fgeom-&gt;suppInvJ[0][(e*Np+q)*dE*dE];
+<a name="line956">956: </a>        cgeom.detJ  = &amp;fgeom-&gt;suppDetJ[0][e*Np+q];
+<a name="line957">957: </a>      }
+<a name="line958">958: </a>      w = fegeom.detJ[0]*quadWeights[q];
+<a name="line959">959: </a>      <font color="#4169E1">if</font> (coefficients) {PetscFEEvaluateFieldJets_Internal(ds, Nf, face, q, T, &amp;cgeom, &amp;coefficients[cOffset], &amp;coefficients_t[cOffset], u, u_x, u_t);}
+<a name="line960">960: </a>      <font color="#4169E1">if</font> (dsAux)        {PetscFEEvaluateFieldJets_Internal(dsAux, NfAux, face, q, TAux, &amp;cgeom, &amp;coefficientsAux[cOffsetAux], NULL, a, a_x, NULL);}
+<a name="line961">961: </a>      <font color="#4169E1">if</font> (g0_func) {
+<a name="line962">962: </a>        <a href="../../../../../../docs/manualpages/Sys/PetscArrayzero.html#PetscArrayzero">PetscArrayzero</a>(g0, NcI*NcJ);
+<a name="line963">963: </a>        g0_func(dim, Nf, NfAux, uOff, uOff_x, u, u_t, u_x, aOff, aOff_x, a, NULL, a_x, t, u_tshift, fegeom.v, fegeom.n, numConstants, constants, g0);
+<a name="line964">964: </a>        <font color="#4169E1">for</font> (c = 0; c &lt; NcI*NcJ; ++c) g0[c] *= w;
+<a name="line965">965: </a>      }
+<a name="line966">966: </a>      <font color="#4169E1">if</font> (g1_func) {
+<a name="line967">967: </a>        <a href="../../../../../../docs/manualpages/Sys/PetscArrayzero.html#PetscArrayzero">PetscArrayzero</a>(g1, NcI*NcJ*dE);
+<a name="line968">968: </a>        g1_func(dim, Nf, NfAux, uOff, uOff_x, u, u_t, u_x, aOff, aOff_x, a, NULL, a_x, t, u_tshift, fegeom.v, fegeom.n, numConstants, constants, g1);
+<a name="line969">969: </a>        <font color="#4169E1">for</font> (c = 0; c &lt; NcI*NcJ*dim; ++c) g1[c] *= w;
+<a name="line970">970: </a>      }
+<a name="line971">971: </a>      <font color="#4169E1">if</font> (g2_func) {
+<a name="line972">972: </a>        <a href="../../../../../../docs/manualpages/Sys/PetscArrayzero.html#PetscArrayzero">PetscArrayzero</a>(g2, NcI*NcJ*dE);
+<a name="line973">973: </a>        g2_func(dim, Nf, NfAux, uOff, uOff_x, u, u_t, u_x, aOff, aOff_x, a, NULL, a_x, t, u_tshift, fegeom.v, fegeom.n, numConstants, constants, g2);
+<a name="line974">974: </a>        <font color="#4169E1">for</font> (c = 0; c &lt; NcI*NcJ*dim; ++c) g2[c] *= w;
+<a name="line975">975: </a>      }
+<a name="line976">976: </a>      <font color="#4169E1">if</font> (g3_func) {
+<a name="line977">977: </a>        <a href="../../../../../../docs/manualpages/Sys/PetscArrayzero.html#PetscArrayzero">PetscArrayzero</a>(g3, NcI*NcJ*dE*dE);
+<a name="line978">978: </a>        g3_func(dim, Nf, NfAux, uOff, uOff_x, u, u_t, u_x, aOff, aOff_x, a, NULL, a_x, t, u_tshift, fegeom.v, fegeom.n, numConstants, constants, g3);
+<a name="line979">979: </a>        <font color="#4169E1">for</font> (c = 0; c &lt; NcI*NcJ*dim*dim; ++c) g3[c] *= w;
+<a name="line980">980: </a>      }
+
+<a name="line982">982: </a>      PetscFEUpdateElementMat_Internal(feI, feJ, face, q, T[fieldI], basisReal, basisDerReal, T[fieldJ], testReal, testDerReal, &amp;cgeom, g0, g1, g2, g3, eOffset, totDim, offsetI, offsetJ, elemMat);
+<a name="line983">983: </a>    }
+<a name="line984">984: </a>    <font color="#4169E1">if</font> (debug &gt; 1) {
+<a name="line985">985: </a>      <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> fc, f, gc, g;
+
+<a name="line987">987: </a>      <a href="../../../../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, <font color="#666666">"Element matrix for fields %d and %d\n"</font>, fieldI, fieldJ);
+<a name="line988">988: </a>      <font color="#4169E1">for</font> (fc = 0; fc &lt; T[fieldI]-&gt;Nc; ++fc) {
+<a name="line989">989: </a>        <font color="#4169E1">for</font> (f = 0; f &lt; T[fieldI]-&gt;Nb; ++f) {
+<a name="line990">990: </a>          const <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> i = offsetI + f*T[fieldI]-&gt;Nc+fc;
+<a name="line991">991: </a>          <font color="#4169E1">for</font> (gc = 0; gc &lt; T[fieldJ]-&gt;Nc; ++gc) {
+<a name="line992">992: </a>            <font color="#4169E1">for</font> (g = 0; g &lt; T[fieldJ]-&gt;Nb; ++g) {
+<a name="line993">993: </a>              const <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> j = offsetJ + g*T[fieldJ]-&gt;Nc+gc;
+<a name="line994">994: </a>              <a href="../../../../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, <font color="#666666">"    elemMat[%d,%d,%d,%d]: %g\n"</font>, f, fc, g, gc, <a href="../../../../../../docs/manualpages/Sys/PetscRealPart.html#PetscRealPart">PetscRealPart</a>(elemMat[eOffset+i*totDim+j]));
+<a name="line995">995: </a>            }
+<a name="line996">996: </a>          }
+<a name="line997">997: </a>          <a href="../../../../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, <font color="#666666">"\n"</font>);
+<a name="line998">998: </a>        }
+<a name="line999">999: </a>      }
+<a name="line1000">1000: </a>    }
+<a name="line1001">1001: </a>    cOffset    += totDim;
+<a name="line1002">1002: </a>    cOffsetAux += totDimAux;
+<a name="line1003">1003: </a>    eOffset    += <a href="../../../../../../docs/manualpages/Sys/PetscSqr.html#PetscSqr">PetscSqr</a>(totDim);
+<a name="line1004">1004: </a>  }
+<a name="line1005">1005: </a>  <font color="#4169E1">return</font>(0);
+<a name="line1006">1006: </a>}
+
+<a name="line1008">1008: </a><strong><font color="#4169E1"><a name="PetscFEIntegrateHybridJacobian_Basic"></a><a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscFEIntegrateHybridJacobian_Basic(<a href="../../../../../../docs/manualpages/DM/PetscDS.html#PetscDS">PetscDS</a> ds, <a href="../../../../../../docs/manualpages/FE/PetscFEJacobianType.html#PetscFEJacobianType">PetscFEJacobianType</a> jtype, <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> fieldI, <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> fieldJ, <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> Ne, PetscFEGeom *fgeom,</font></strong>
+<a name="line1009">1009: </a><strong><font color="#4169E1">                                              const <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> coefficients[], const <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> coefficients_t[], <a href="../../../../../../docs/manualpages/DM/PetscDS.html#PetscDS">PetscDS</a> dsAux, const <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> coefficientsAux[], <a href="../../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> t, <a href="../../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> u_tshift, <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> elemMat[])</font></strong>
+<a name="line1010">1010: </a>{
+<a name="line1011">1011: </a>  const <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>     debug      = 0;
+<a name="line1012">1012: </a>  <a href="../../../../../../docs/manualpages/FE/PetscFE.html#PetscFE">PetscFE</a>            feI, feJ;
+<a name="line1013">1013: </a>  PetscBdPointJac    g0_func, g1_func, g2_func, g3_func;
+<a name="line1014">1014: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>           cOffset    = 0; <font color="#B22222">/* Offset into coefficients[] for element e */</font>
+<a name="line1015">1015: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>           cOffsetAux = 0; <font color="#B22222">/* Offset into coefficientsAux[] for element e */</font>
+<a name="line1016">1016: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>           eOffset    = 0; <font color="#B22222">/* Offset into elemMat[] for element e */</font>
+<a name="line1017">1017: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>           offsetI    = 0; <font color="#B22222">/* Offset into an element vector for fieldI */</font>
+<a name="line1018">1018: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>           offsetJ    = 0; <font color="#B22222">/* Offset into an element vector for fieldJ */</font>
+<a name="line1019">1019: </a>  <a href="../../../../../../docs/manualpages/FE/PetscQuadrature.html#PetscQuadrature">PetscQuadrature</a>    quad;
+<a name="line1020">1020: </a>  PetscTabulation   *T, *TAux = NULL;
+<a name="line1021">1021: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>       *g0, *g1, *g2, *g3, *u, *u_t = NULL, *u_x, *a, *a_x, *basisReal, *basisDerReal, *testReal, *testDerReal;
+<a name="line1022">1022: </a>  const <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> *constants;
+<a name="line1023">1023: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>         *x;
+<a name="line1024">1024: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>          *uOff, *uOff_x, *aOff = NULL, *aOff_x = NULL;
+<a name="line1025">1025: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>           NcI = 0, NcJ = 0, NcS, NcT;
+<a name="line1026">1026: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>           dim, dimAux, numConstants, Nf, NfAux = 0, totDim, totDimAux = 0, e;
+<a name="line1027">1027: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>          isCohesiveFieldI, isCohesiveFieldJ, isAffine, auxOnBd = <a href="../../../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line1028">1028: </a>  const <a href="../../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>   *quadPoints, *quadWeights;
+<a name="line1029">1029: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>           qNc, Nq, q, Np, dE;
+<a name="line1030">1030: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>     ierr;
+
+<a name="line1033">1033: </a>  <font color="#B22222">/* Hybrid discretization is posed directly on faces */</font>
+<a name="line1034">1034: </a>  <a href="../../../../../../docs/manualpages/DT/PetscDSGetDiscretization.html#PetscDSGetDiscretization">PetscDSGetDiscretization</a>(ds, fieldI, (<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a> *) &amp;feI);
+<a name="line1035">1035: </a>  <a href="../../../../../../docs/manualpages/DT/PetscDSGetDiscretization.html#PetscDSGetDiscretization">PetscDSGetDiscretization</a>(ds, fieldJ, (<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a> *) &amp;feJ);
+<a name="line1036">1036: </a>  <a href="../../../../../../docs/manualpages/FE/PetscFEGetSpatialDimension.html#PetscFEGetSpatialDimension">PetscFEGetSpatialDimension</a>(feI, &amp;dim);
+<a name="line1037">1037: </a>  <a href="../../../../../../docs/manualpages/FE/PetscFEGetQuadrature.html#PetscFEGetQuadrature">PetscFEGetQuadrature</a>(feI, &amp;quad);
+<a name="line1038">1038: </a>  <a href="../../../../../../docs/manualpages/DT/PetscDSGetNumFields.html#PetscDSGetNumFields">PetscDSGetNumFields</a>(ds, &amp;Nf);
+<a name="line1039">1039: </a>  <a href="../../../../../../docs/manualpages/DT/PetscDSGetTotalDimension.html#PetscDSGetTotalDimension">PetscDSGetTotalDimension</a>(ds, &amp;totDim);
+<a name="line1040">1040: </a>  <a href="../../../../../../docs/manualpages/DT/PetscDSGetComponentOffsets.html#PetscDSGetComponentOffsets">PetscDSGetComponentOffsets</a>(ds, &amp;uOff);
+<a name="line1041">1041: </a>  <a href="../../../../../../docs/manualpages/DT/PetscDSGetComponentDerivativeOffsets.html#PetscDSGetComponentDerivativeOffsets">PetscDSGetComponentDerivativeOffsets</a>(ds, &amp;uOff_x);
+<a name="line1042">1042: </a>  <font color="#4169E1">switch</font>(jtype) {
+<a name="line1043">1043: </a>  <font color="#4169E1">case</font> PETSCFE_JACOBIAN_PRE: <a href="../../../../../../docs/manualpages/DT/PetscDSGetBdJacobianPreconditioner.html#PetscDSGetBdJacobianPreconditioner">PetscDSGetBdJacobianPreconditioner</a>(ds, fieldI, fieldJ, &amp;g0_func, &amp;g1_func, &amp;g2_func, &amp;g3_func);<font color="#4169E1">break</font>;
+<a name="line1044">1044: </a>  <font color="#4169E1">case</font> PETSCFE_JACOBIAN:     <a href="../../../../../../docs/manualpages/DT/PetscDSGetBdJacobian.html#PetscDSGetBdJacobian">PetscDSGetBdJacobian</a>(ds, fieldI, fieldJ, &amp;g0_func, &amp;g1_func, &amp;g2_func, &amp;g3_func);<font color="#4169E1">break</font>;
+<a name="line1045">1045: </a>  <font color="#4169E1">case</font> PETSCFE_JACOBIAN_DYN: <a href="../../../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, PETSC_ERR_ARG_OUTOFRANGE, <font color="#666666">"No boundary hybrid Jacobians :)"</font>);
+<a name="line1046">1046: </a>  }
+<a name="line1047">1047: </a>  <font color="#4169E1">if</font> (!g0_func &amp;&amp; !g1_func &amp;&amp; !g2_func &amp;&amp; !g3_func) <font color="#4169E1">return</font>(0);
+<a name="line1048">1048: </a>  PetscDSGetEvaluationArrays(ds, &amp;u, coefficients_t ? &amp;u_t : NULL, &amp;u_x);
+<a name="line1049">1049: </a>  PetscDSGetWorkspace(ds, &amp;x, &amp;basisReal, &amp;basisDerReal, &amp;testReal, &amp;testDerReal);
+<a name="line1050">1050: </a>  PetscDSGetWeakFormArrays(ds, NULL, NULL, &amp;g0, &amp;g1, &amp;g2, &amp;g3);
+<a name="line1051">1051: </a>  <a href="../../../../../../docs/manualpages/DT/PetscDSGetTabulation.html#PetscDSGetTabulation">PetscDSGetTabulation</a>(ds, &amp;T);
+<a name="line1052">1052: </a>  <a href="../../../../../../docs/manualpages/DT/PetscDSGetFieldOffset.html#PetscDSGetFieldOffset">PetscDSGetFieldOffset</a>(ds, fieldI, &amp;offsetI);
+<a name="line1053">1053: </a>  <a href="../../../../../../docs/manualpages/DT/PetscDSGetFieldOffset.html#PetscDSGetFieldOffset">PetscDSGetFieldOffset</a>(ds, fieldJ, &amp;offsetJ);
+<a name="line1054">1054: </a>  <a href="../../../../../../docs/manualpages/DT/PetscDSGetConstants.html#PetscDSGetConstants">PetscDSGetConstants</a>(ds, &amp;numConstants, &amp;constants);
+<a name="line1055">1055: </a>  <font color="#4169E1">if</font> (dsAux) {
+<a name="line1056">1056: </a>    <a href="../../../../../../docs/manualpages/DT/PetscDSGetSpatialDimension.html#PetscDSGetSpatialDimension">PetscDSGetSpatialDimension</a>(dsAux, &amp;dimAux);
+<a name="line1057">1057: </a>    <a href="../../../../../../docs/manualpages/DT/PetscDSGetNumFields.html#PetscDSGetNumFields">PetscDSGetNumFields</a>(dsAux, &amp;NfAux);
+<a name="line1058">1058: </a>    <a href="../../../../../../docs/manualpages/DT/PetscDSGetTotalDimension.html#PetscDSGetTotalDimension">PetscDSGetTotalDimension</a>(dsAux, &amp;totDimAux);
+<a name="line1059">1059: </a>    <a href="../../../../../../docs/manualpages/DT/PetscDSGetComponentOffsets.html#PetscDSGetComponentOffsets">PetscDSGetComponentOffsets</a>(dsAux, &amp;aOff);
+<a name="line1060">1060: </a>    <a href="../../../../../../docs/manualpages/DT/PetscDSGetComponentDerivativeOffsets.html#PetscDSGetComponentDerivativeOffsets">PetscDSGetComponentDerivativeOffsets</a>(dsAux, &amp;aOff_x);
+<a name="line1061">1061: </a>    PetscDSGetEvaluationArrays(dsAux, &amp;a, NULL, &amp;a_x);
+<a name="line1062">1062: </a>    auxOnBd = dimAux == dim ? <a href="../../../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a> : <a href="../../../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line1063">1063: </a>    <font color="#4169E1">if</font> (auxOnBd) {<a href="../../../../../../docs/manualpages/DT/PetscDSGetTabulation.html#PetscDSGetTabulation">PetscDSGetTabulation</a>(dsAux, &amp;TAux);}
+<a name="line1064">1064: </a>    <font color="#4169E1">else</font>         {<a href="../../../../../../docs/manualpages/DT/PetscDSGetFaceTabulation.html#PetscDSGetFaceTabulation">PetscDSGetFaceTabulation</a>(dsAux, &amp;TAux);}
+<a name="line1065">1065: </a>    <font color="#4169E1">if</font> (T[0]-&gt;Np != TAux[0]-&gt;Np) <a href="../../../../../../docs/manualpages/Sys/SETERRQ2.html#SETERRQ2">SETERRQ2</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, PETSC_ERR_ARG_WRONG, <font color="#666666">"Number of tabulation points %D != %D number of auxiliary tabulation points"</font>, T[0]-&gt;Np, TAux[0]-&gt;Np);
+<a name="line1066">1066: </a>  }
+<a name="line1067">1067: </a>  isCohesiveFieldI = fieldI == Nf-1 ? <a href="../../../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a> : <a href="../../../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line1068">1068: </a>  isCohesiveFieldJ = fieldJ == Nf-1 ? <a href="../../../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a> : <a href="../../../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line1069">1069: </a>  NcI = T[fieldI]-&gt;Nc;
+<a name="line1070">1070: </a>  NcJ = T[fieldJ]-&gt;Nc;
+<a name="line1071">1071: </a>  NcS = isCohesiveFieldI ? NcI : 2*NcI;
+<a name="line1072">1072: </a>  NcT = isCohesiveFieldJ ? NcJ : 2*NcJ;
+<a name="line1073">1073: </a>  Np = fgeom-&gt;numPoints;
+<a name="line1074">1074: </a>  dE = fgeom-&gt;dimEmbed;
+<a name="line1075">1075: </a>  isAffine = fgeom-&gt;isAffine;
+<a name="line1076">1076: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscArrayzero.html#PetscArrayzero">PetscArrayzero</a>(g0, NcS*NcT);
+<a name="line1077">1077: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscArrayzero.html#PetscArrayzero">PetscArrayzero</a>(g1, NcS*NcT*dE);
+<a name="line1078">1078: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscArrayzero.html#PetscArrayzero">PetscArrayzero</a>(g2, NcS*NcT*dE);
+<a name="line1079">1079: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscArrayzero.html#PetscArrayzero">PetscArrayzero</a>(g3, NcS*NcT*dE*dE);
+<a name="line1080">1080: </a>  <a href="../../../../../../docs/manualpages/DT/PetscQuadratureGetData.html#PetscQuadratureGetData">PetscQuadratureGetData</a>(quad, NULL, &amp;qNc, &amp;Nq, &amp;quadPoints, &amp;quadWeights);
+<a name="line1081">1081: </a>  <font color="#4169E1">if</font> (qNc != 1) <a href="../../../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, PETSC_ERR_SUP, <font color="#666666">"Only supports scalar quadrature, not %D components\n"</font>, qNc);
+<a name="line1082">1082: </a>  <font color="#4169E1">for</font> (e = 0; e &lt; Ne; ++e) {
+<a name="line1083">1083: </a>    PetscFEGeom    fegeom;
+<a name="line1084">1084: </a>    const <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> face = fgeom-&gt;face[e][0];
+
+<a name="line1086">1086: </a>    fegeom.dim      = fgeom-&gt;dim;
+<a name="line1087">1087: </a>    fegeom.dimEmbed = fgeom-&gt;dimEmbed;
+<a name="line1088">1088: </a>    <font color="#4169E1">if</font> (isAffine) {
+<a name="line1089">1089: </a>      fegeom.v    = x;
+<a name="line1090">1090: </a>      fegeom.xi   = fgeom-&gt;xi;
+<a name="line1091">1091: </a>      fegeom.J    = &amp;fgeom-&gt;J[e*dE*dE];
+<a name="line1092">1092: </a>      fegeom.invJ = &amp;fgeom-&gt;invJ[e*dE*dE];
+<a name="line1093">1093: </a>      fegeom.detJ = &amp;fgeom-&gt;detJ[e];
+<a name="line1094">1094: </a>      fegeom.n    = &amp;fgeom-&gt;n[e*dE];
+<a name="line1095">1095: </a>    }
+<a name="line1096">1096: </a>    <font color="#4169E1">for</font> (q = 0; q &lt; Nq; ++q) {
+<a name="line1097">1097: </a>      <a href="../../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> w;
+<a name="line1098">1098: </a>      <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>  c;
+
+<a name="line1100">1100: </a>      <font color="#4169E1">if</font> (isAffine) {
+<a name="line1101">1101: </a>        <font color="#B22222">/* TODO Is it correct to have 'dim' here, or should it be 'dim-1'? */</font>
+<a name="line1102">1102: </a>        CoordinatesRefToReal(dE, dim, fegeom.xi, &amp;fgeom-&gt;v[e*dE], fegeom.J, &amp;quadPoints[q*dim], x);
+<a name="line1103">1103: </a>      } <font color="#4169E1">else</font> {
+<a name="line1104">1104: </a>        fegeom.v    = &amp;fegeom.v[(e*Np+q)*dE];
+<a name="line1105">1105: </a>        fegeom.J    = &amp;fgeom-&gt;J[(e*Np+q)*dE*dE];
+<a name="line1106">1106: </a>        fegeom.invJ = &amp;fgeom-&gt;invJ[(e*Np+q)*dE*dE];
+<a name="line1107">1107: </a>        fegeom.detJ = &amp;fgeom-&gt;detJ[e*Np+q];
+<a name="line1108">1108: </a>        fegeom.n    = &amp;fgeom-&gt;n[(e*Np+q)*dE];
+<a name="line1109">1109: </a>      }
+<a name="line1110">1110: </a>      w = fegeom.detJ[0]*quadWeights[q];
+<a name="line1111">1111: </a>      <font color="#4169E1">if</font> (debug &gt; 1 &amp;&amp; q &lt; Np) {
+<a name="line1112">1112: </a>        <a href="../../../../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, <font color="#666666">"  detJ: %g\n"</font>, fegeom.detJ[0]);
+<a name="line1113">1113: </a><font color="#A020F0">#if !defined(PETSC_USE_COMPLEX)</font>
+<a name="line1114">1114: </a>        DMPrintCellMatrix(e, <font color="#666666">"invJ"</font>, dim, dim, fegeom.invJ);
+<a name="line1115">1115: </a><font color="#A020F0">#endif</font>
+<a name="line1116">1116: </a>      }
+<a name="line1117">1117: </a>      <font color="#4169E1">if</font> (debug) {<a href="../../../../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, <font color="#666666">"  quad point %d\n"</font>, q);}
+<a name="line1118">1118: </a>      <font color="#4169E1">if</font> (coefficients) {PetscFEEvaluateFieldJets_Hybrid_Internal(ds, Nf, 0, q, T, &amp;fegeom, &amp;coefficients[cOffset], &amp;coefficients_t[cOffset], u, u_x, u_t);}
+<a name="line1119">1119: </a>      <font color="#4169E1">if</font> (dsAux) {PetscFEEvaluateFieldJets_Hybrid_Internal(dsAux, NfAux, 0, auxOnBd ? q : face*Nq+q, TAux, &amp;fegeom, &amp;coefficientsAux[cOffsetAux], NULL, a, a_x, NULL);}
+<a name="line1120">1120: </a>      <font color="#4169E1">if</font> (g0_func) {
+<a name="line1121">1121: </a>        <a href="../../../../../../docs/manualpages/Sys/PetscArrayzero.html#PetscArrayzero">PetscArrayzero</a>(g0, NcS*NcT);
+<a name="line1122">1122: </a>        g0_func(dim, Nf, NfAux, uOff, uOff_x, u, u_t, u_x, aOff, aOff_x, a, NULL, a_x, t, u_tshift, fegeom.v, fegeom.n, numConstants, constants, g0);
+<a name="line1123">1123: </a>        <font color="#4169E1">for</font> (c = 0; c &lt; NcS*NcT; ++c) g0[c] *= w;
+<a name="line1124">1124: </a>      }
+<a name="line1125">1125: </a>      <font color="#4169E1">if</font> (g1_func) {
+<a name="line1126">1126: </a>        <a href="../../../../../../docs/manualpages/Sys/PetscArrayzero.html#PetscArrayzero">PetscArrayzero</a>(g1, NcS*NcT*dE);
+<a name="line1127">1127: </a>        g1_func(dim, Nf, NfAux, uOff, uOff_x, u, u_t, u_x, aOff, aOff_x, a, NULL, a_x, t, u_tshift, fegeom.v, fegeom.n, numConstants, constants, g1);
+<a name="line1128">1128: </a>        <font color="#4169E1">for</font> (c = 0; c &lt; NcS*NcT*dE; ++c) g1[c] *= w;
+<a name="line1129">1129: </a>      }
+<a name="line1130">1130: </a>      <font color="#4169E1">if</font> (g2_func) {
+<a name="line1131">1131: </a>        <a href="../../../../../../docs/manualpages/Sys/PetscArrayzero.html#PetscArrayzero">PetscArrayzero</a>(g2, NcS*NcT*dE);
+<a name="line1132">1132: </a>        g2_func(dim, Nf, NfAux, uOff, uOff_x, u, u_t, u_x, aOff, aOff_x, a, NULL, a_x, t, u_tshift, fegeom.v, fegeom.n, numConstants, constants, g2);
+<a name="line1133">1133: </a>        <font color="#4169E1">for</font> (c = 0; c &lt; NcS*NcT*dE; ++c) g2[c] *= w;
+<a name="line1134">1134: </a>      }
+<a name="line1135">1135: </a>      <font color="#4169E1">if</font> (g3_func) {
+<a name="line1136">1136: </a>        <a href="../../../../../../docs/manualpages/Sys/PetscArrayzero.html#PetscArrayzero">PetscArrayzero</a>(g3, NcS*NcT*dE*dE);
+<a name="line1137">1137: </a>        g3_func(dim, Nf, NfAux, uOff, uOff_x, u, u_t, u_x, aOff, aOff_x, a, NULL, a_x, t, u_tshift, fegeom.v, fegeom.n, numConstants, constants, g3);
+<a name="line1138">1138: </a>        <font color="#4169E1">for</font> (c = 0; c &lt; NcS*NcT*dE*dE; ++c) g3[c] *= w;
+<a name="line1139">1139: </a>      }
+
+<a name="line1141">1141: </a>      <font color="#4169E1">if</font> (isCohesiveFieldI &amp;&amp; isCohesiveFieldJ) {
+<a name="line1142">1142: </a>        PetscFEUpdateElementMat_Internal(feI, feJ, 0, q, T[fieldI], basisReal, basisDerReal, T[fieldJ], testReal, testDerReal, &amp;fegeom, g0, g1, g2, g3, eOffset, totDim, offsetI*2, offsetJ*2, elemMat);
+<a name="line1143">1143: </a>      } <font color="#4169E1">else</font> {
+<a name="line1144">1144: </a>        PetscFEUpdateElementMat_Hybrid_Internal(feI, isCohesiveFieldI, feJ, isCohesiveFieldJ, 0, q, T[fieldI], basisReal, basisDerReal, T[fieldJ], testReal, testDerReal, &amp;fegeom, g0, g1, g2, g3, eOffset, totDim, offsetI*2, offsetJ*2, elemMat);
+<a name="line1145">1145: </a>      }
+<a name="line1146">1146: </a>    }
+<a name="line1147">1147: </a>    <font color="#4169E1">if</font> (debug &gt; 1) {
+<a name="line1148">1148: </a>      <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> fc, f, gc, g;
+
+<a name="line1150">1150: </a>      <a href="../../../../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, <font color="#666666">"Element matrix for fields %d and %d\n"</font>, fieldI, fieldJ);
+<a name="line1151">1151: </a>      <font color="#4169E1">for</font> (fc = 0; fc &lt; NcI; ++fc) {
+<a name="line1152">1152: </a>        <font color="#4169E1">for</font> (f = 0; f &lt; T[fieldI]-&gt;Nb; ++f) {
+<a name="line1153">1153: </a>          const <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> i = offsetI + f*NcI+fc;
+<a name="line1154">1154: </a>          <font color="#4169E1">for</font> (gc = 0; gc &lt; NcJ; ++gc) {
+<a name="line1155">1155: </a>            <font color="#4169E1">for</font> (g = 0; g &lt; T[fieldJ]-&gt;Nb; ++g) {
+<a name="line1156">1156: </a>              const <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> j = offsetJ + g*NcJ+gc;
+<a name="line1157">1157: </a>              <a href="../../../../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, <font color="#666666">"    elemMat[%d,%d,%d,%d]: %g\n"</font>, f, fc, g, gc, <a href="../../../../../../docs/manualpages/Sys/PetscRealPart.html#PetscRealPart">PetscRealPart</a>(elemMat[eOffset+i*totDim+j]));
+<a name="line1158">1158: </a>            }
+<a name="line1159">1159: </a>          }
+<a name="line1160">1160: </a>          <a href="../../../../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, <font color="#666666">"\n"</font>);
+<a name="line1161">1161: </a>        }
+<a name="line1162">1162: </a>      }
+<a name="line1163">1163: </a>    }
+<a name="line1164">1164: </a>    cOffset    += totDim;
+<a name="line1165">1165: </a>    cOffsetAux += totDimAux;
+<a name="line1166">1166: </a>    eOffset    += <a href="../../../../../../docs/manualpages/Sys/PetscSqr.html#PetscSqr">PetscSqr</a>(totDim);
+<a name="line1167">1167: </a>  }
+<a name="line1168">1168: </a>  <font color="#4169E1">return</font>(0);
+<a name="line1169">1169: </a>}
+
+<a name="line1171">1171: </a><strong><font color="#4169E1"><a name="PetscFEInitialize_Basic"></a>static <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscFEInitialize_Basic(<a href="../../../../../../docs/manualpages/FE/PetscFE.html#PetscFE">PetscFE</a> fem)</font></strong>
+<a name="line1172">1172: </a>{
+<a name="line1174">1174: </a>  fem-&gt;ops-&gt;setfromoptions          = NULL;
+<a name="line1175">1175: </a>  fem-&gt;ops-&gt;setup                   = PetscFESetUp_Basic;
+<a name="line1176">1176: </a>  fem-&gt;ops-&gt;view                    = PetscFEView_Basic;
+<a name="line1177">1177: </a>  fem-&gt;ops-&gt;destroy                 = PetscFEDestroy_Basic;
+<a name="line1178">1178: </a>  fem-&gt;ops-&gt;getdimension            = PetscFEGetDimension_Basic;
+<a name="line1179">1179: </a>  fem-&gt;ops-&gt;createtabulation        = PetscFECreateTabulation_Basic;
+<a name="line1180">1180: </a>  fem-&gt;ops-&gt;integrate               = PetscFEIntegrate_Basic;
+<a name="line1181">1181: </a>  fem-&gt;ops-&gt;integratebd             = PetscFEIntegrateBd_Basic;
+<a name="line1182">1182: </a>  fem-&gt;ops-&gt;integrateresidual       = PetscFEIntegrateResidual_Basic;
+<a name="line1183">1183: </a>  fem-&gt;ops-&gt;integratebdresidual     = PetscFEIntegrateBdResidual_Basic;
+<a name="line1184">1184: </a>  fem-&gt;ops-&gt;integratehybridresidual = PetscFEIntegrateHybridResidual_Basic;
+<a name="line1185">1185: </a>  fem-&gt;ops-&gt;integratejacobianaction = NULL<font color="#B22222">/* PetscFEIntegrateJacobianAction_Basic */</font>;
+<a name="line1186">1186: </a>  fem-&gt;ops-&gt;integratejacobian       = PetscFEIntegrateJacobian_Basic;
+<a name="line1187">1187: </a>  fem-&gt;ops-&gt;integratebdjacobian     = PetscFEIntegrateBdJacobian_Basic;
+<a name="line1188">1188: </a>  fem-&gt;ops-&gt;integratehybridjacobian = PetscFEIntegrateHybridJacobian_Basic;
+<a name="line1189">1189: </a>  <font color="#4169E1">return</font>(0);
+<a name="line1190">1190: </a>}
+
+<a name="line1192">1192: </a><font color="#B22222">/*MC</font>
+<a name="line1193">1193: </a><font color="#B22222">  <a href="../../../../../../docs/manualpages/FE/PETSCFEBASIC.html#PETSCFEBASIC">PETSCFEBASIC</a> = "basic" - A <a href="../../../../../../docs/manualpages/FE/PetscFE.html#PetscFE">PetscFE</a> object that integrates with basic tiling and no vectorization</font>
+
+<a name="line1195">1195: </a><font color="#B22222">  Level: intermediate</font>
+
+<a name="line1197">1197: </a><font color="#B22222">.seealso: <a href="../../../../../../docs/manualpages/FE/PetscFEType.html#PetscFEType">PetscFEType</a>, <a href="../../../../../../docs/manualpages/FE/PetscFECreate.html#PetscFECreate">PetscFECreate</a>(), <a href="../../../../../../docs/manualpages/FE/PetscFESetType.html#PetscFESetType">PetscFESetType</a>()</font>
+<a name="line1198">1198: </a><font color="#B22222">M*/</font>
+
+<a name="line1200">1200: </a><strong><font color="#4169E1"><a name="PetscFECreate_Basic"></a>PETSC_EXTERN <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscFECreate_Basic(<a href="../../../../../../docs/manualpages/FE/PetscFE.html#PetscFE">PetscFE</a> fem)</font></strong>
+<a name="line1201">1201: </a>{
+<a name="line1202">1202: </a>  PetscFE_Basic *b;
+
+<a name="line1207">1207: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscNewLog.html#PetscNewLog">PetscNewLog</a>(fem,&amp;b);
+<a name="line1208">1208: </a>  fem-&gt;data = b;
+
+<a name="line1210">1210: </a>  PetscFEInitialize_Basic(fem);
+<a name="line1211">1211: </a>  <font color="#4169E1">return</font>(0);
+<a name="line1212">1212: </a>}
+</pre>
+</body>
+
+</html>

@@ -1,0 +1,39 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSPHPDDMSetType.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>KSPHPDDMSetType</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/KSP/KSPHPDDMSetType.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="KSPHPDDMSetType"><H1>KSPHPDDMSetType</H1></A>
+Sets the type of Krylov method used in <A HREF="../KSP/KSPHPDDM.html#KSPHPDDM">KSPHPDDM</A>. 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscksp.h" 
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../KSP/KSPHPDDMSetType.html#KSPHPDDMSetType">KSPHPDDMSetType</A>(<A HREF="../KSP/KSP.html#KSP">KSP</A> ksp, <A HREF="../KSP/KSPHPDDMType.html#KSPHPDDMType">KSPHPDDMType</A> type)
+</PRE>
+<H3><FONT COLOR="#CC3333">Input Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>ksp </B></TD><TD>- iterative context
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>type </B></TD><TD>- any of gmres, bgmres, cg, bcg, gcrodr, bgcrodr, bfbcg, or preonly
+</TD></TR></TABLE>
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">Notes</FONT></H3>
+Unlike <A HREF="../KSP/KSPReset.html#KSPReset">KSPReset</A>(), this function does not destroy any deflation space attached to the <A HREF="../KSP/KSP.html#KSP">KSP</A>.
+As an example, in the following sequence: <A HREF="../KSP/KSPHPDDMSetType.html#KSPHPDDMSetType">KSPHPDDMSetType</A>(ksp, KSPGCRODR); <A HREF="../KSP/KSPSolve.html#KSPSolve">KSPSolve</A>(ksp, b, x); <A HREF="../KSP/KSPHPDDMSetType.html#KSPHPDDMSetType">KSPHPDDMSetType</A>(ksp, <A HREF="../KSP/KSPGMRES.html#KSPGMRES">KSPGMRES</A>); <A HREF="../KSP/KSPHPDDMSetType.html#KSPHPDDMSetType">KSPHPDDMSetType</A>(ksp, KSPGCRODR); <A HREF="../KSP/KSPSolve.html#KSPSolve">KSPSolve</A>(ksp, b, x); the recycled space is reused in the second <A HREF="../KSP/KSPSolve.html#KSPSolve">KSPSolve</A>().
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+  <A HREF="../KSP/KSPCreate.html#KSPCreate">KSPCreate</A>(), <A HREF="../KSP/KSPType.html#KSPType">KSPType</A> (for list of available types), <A HREF="../KSP/KSPHPDDMType.html#KSPHPDDMType">KSPHPDDMType</A>, <A HREF="../KSP/KSPHPDDMGetType.html#KSPHPDDMGetType">KSPHPDDMGetType</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>intermediate<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/ksp/ksp/impls/hpddm/hpddm.cxx.html#KSPHPDDMSetType">src/ksp/ksp/impls/hpddm/hpddm.cxx</A>
+<P><H3><FONT COLOR="CC3333">Implementations</FONT></H3><A HREF="../../../src/ksp/ksp/impls/hpddm/hpddm.cxx.html#KSPHPDDMSetType_HPDDM">KSPHPDDMSetType_HPDDM in src/ksp/ksp/impls/hpddm/hpddm.cxx</A><BR>
+<BR><A HREF="./index.html">Index of all KSP routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

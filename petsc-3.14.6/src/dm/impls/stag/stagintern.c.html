@@ -1,0 +1,87 @@
+<center><a href="stagintern.c">Actual source code: stagintern.c</a></center><br>
+
+<html>
+<head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/src/dm/impls/stag/stagintern.c.html" />
+<title></title>
+<meta name="generator" content="c2html 0.9.4">
+<meta name="date" content="2021-03-30T16:50:52+00:00">
+</head>
+
+<body bgcolor="#FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 src/dm/impls/stag/stagintern.c.html "><small>Report Typos and Errors</small></a></div>
+<pre width="80">
+<a name="line1">  1: </a><font color="#B22222">/* DMStag dimension-independent internal functions. If added to the public API,</font>
+<a name="line2">  2: </a><font color="#B22222">   these would move to stagutils.c */</font>
+
+<a name="line4">  4: </a>#include <A href="../../../../include/petsc/private/dmstagimpl.h.html">&lt;petsc/private/dmstagimpl.h&gt;</A>
+
+<a name="line6">  6: </a><font color="#B22222">/* Note: this is an internal function but we provide a man page in case it's made public */</font>
+<a name="line7">  7: </a><font color="#B22222">/*@C</font>
+<a name="line8">  8: </a><font color="#B22222">  <a href="../../../../docs/manualpages/DMSTAG/DMStagDuplicateWithoutSetup.html#DMStagDuplicateWithoutSetup">DMStagDuplicateWithoutSetup</a> - duplicate a DMStag object without setting it up</font>
+
+<a name="line10"> 10: </a><font color="#B22222">  Collective</font>
+
+<a name="line12"> 12: </a><font color="#B22222">  Input Parameters:</font>
+<a name="line13"> 13: </a><font color="#B22222">+ dm - The original <a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> object</font>
+<a name="line14"> 14: </a><font color="#B22222">- comm - the MPI communicator for the new <a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> (MPI_COMM_NULL to use the same communicator as dm)</font>
+
+<a name="line16"> 16: </a><font color="#B22222">  Output Parameter:</font>
+<a name="line17"> 17: </a><font color="#B22222">. newdm  - The new <a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> object</font>
+
+<a name="line19"> 19: </a><font color="#B22222">  Developer Notes:</font>
+<a name="line20"> 20: </a><font color="#B22222">  Copies over all of the state for a DMStag object, except that which is</font>
+<a name="line21"> 21: </a><font color="#B22222">  populated during <a href="../../../../docs/manualpages/DM/DMSetUp.html#DMSetUp">DMSetUp</a>().  This function is used within (all) other</font>
+<a name="line22"> 22: </a><font color="#B22222">  functions that require an un-setup clone, which is common when duplicating,</font>
+<a name="line23"> 23: </a><font color="#B22222">  coarsening, refining, or creating compatible DMs with different fields.  For</font>
+<a name="line24"> 24: </a><font color="#B22222">  this reason it also accepts an MPI communicator as an argument (though note</font>
+<a name="line25"> 25: </a><font color="#B22222">  that at the time of this writing, implementations of <a href="../../../../docs/manualpages/DM/DMCoarsen.html#DMCoarsen">DMCoarsen</a> and <a href="../../../../docs/manualpages/DM/DMRefine.html#DMRefine">DMRefine</a></font>
+<a name="line26"> 26: </a><font color="#B22222">  don't usually seem to respect their "comm" arguments). This function could be</font>
+<a name="line27"> 27: </a><font color="#B22222">  pushed up to the general <a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> API (and perhaps given a different name).</font>
+
+<a name="line29"> 29: </a><font color="#B22222">  Level: developer</font>
+
+<a name="line31"> 31: </a><font color="#B22222">  .seealso: <a href="../../../../docs/manualpages/DM/DMClone.html#DMClone">DMClone</a>(), <a href="../../../../docs/manualpages/DMSTAG/DMStagCreateCompatibleDMStag.html#DMStagCreateCompatibleDMStag">DMStagCreateCompatibleDMStag</a>(), <a href="../../../../docs/manualpages/DM/DMCoarsen.html#DMCoarsen">DMCoarsen</a>(), <a href="../../../../docs/manualpages/DM/DMRefine.html#DMRefine">DMRefine</a>()</font>
+<a name="line32"> 32: </a><font color="#B22222">@*/</font>
+<a name="line33"> 33: </a><strong><font color="#4169E1"><a name="DMStagDuplicateWithoutSetup"></a><a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../../docs/manualpages/DMSTAG/DMStagDuplicateWithoutSetup.html#DMStagDuplicateWithoutSetup">DMStagDuplicateWithoutSetup</a>(<a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> dm, <a href="../../../../docs/manualpages/Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</a> comm, <a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> *newdm)</font></strong>
+<a name="line34"> 34: </a>{
+<a name="line35"> 35: </a>  <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  ierr;
+<a name="line36"> 36: </a>  DM_Stag * const stag  = (DM_Stag*)dm-&gt;data;
+<a name="line37"> 37: </a>  DM_Stag         *newstag;
+<a name="line38"> 38: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>        dim;
+<a name="line39"> 39: </a>  <a href="../../../../docs/manualpages/Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</a>        newcomm;
+
+<a name="line42"> 42: </a>  newcomm = (comm == MPI_COMM_NULL) ? <a href="../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)dm) : comm;
+<a name="line43"> 43: </a>  <a href="../../../../docs/manualpages/DM/DMCreate.html#DMCreate">DMCreate</a>(newcomm,newdm);
+<a name="line44"> 44: </a>  <a href="../../../../docs/manualpages/DM/DMGetDimension.html#DMGetDimension">DMGetDimension</a>(dm,&amp;dim);
+<a name="line45"> 45: </a>  <a href="../../../../docs/manualpages/DM/DMSetDimension.html#DMSetDimension">DMSetDimension</a>(*newdm,dim);
+
+<a name="line47"> 47: </a>  <font color="#B22222">/* Call routine to define all data required for setup */</font>
+<a name="line48"> 48: </a>  DMStagInitialize(stag-&gt;boundaryType[0],stag-&gt;boundaryType[1],stag-&gt;boundaryType[2],stag-&gt;N[0],stag-&gt;N[1],stag-&gt;N[2],stag-&gt;nRanks[0],stag-&gt;nRanks[1],stag-&gt;nRanks[2],stag-&gt;dof[0],stag-&gt;dof[1],stag-&gt;dof[2],stag-&gt;dof[3],stag-&gt;stencilType,stag-&gt;stencilWidth,stag-&gt;l[0],stag-&gt;l[1],stag-&gt;l[2],*newdm);
+
+<a name="line50"> 50: </a>  <font color="#B22222">/* Copy all data unrelated to setup */</font>
+<a name="line51"> 51: </a>  newstag = (DM_Stag*)(*newdm)-&gt;data;
+<a name="line52"> 52: </a>  <a href="../../../../docs/manualpages/Sys/PetscStrallocpy.html#PetscStrallocpy">PetscStrallocpy</a>(stag-&gt;coordinateDMType,(char**)&amp;newstag-&gt;coordinateDMType);
+<a name="line53"> 53: </a>  <font color="#4169E1">return</font>(0);
+<a name="line54"> 54: </a>}
+
+<a name="line56"> 56: </a><font color="#B22222">/* Populate data created after DMCreate_Stag() is called, which is used by DMSetUp_Stag(),</font>
+<a name="line57"> 57: </a><font color="#B22222">   such as the grid dimensions and dof information. Arguments are ignored for dimensions</font>
+<a name="line58"> 58: </a><font color="#B22222">   less than three. */</font>
+<a name="line59"> 59: </a><strong><font color="#4169E1"><a name="DMStagInitialize"></a><a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> DMStagInitialize(<a href="../../../../docs/manualpages/DM/DMBoundaryType.html#DMBoundaryType">DMBoundaryType</a> bndx,<a href="../../../../docs/manualpages/DM/DMBoundaryType.html#DMBoundaryType">DMBoundaryType</a> bndy,<a href="../../../../docs/manualpages/DM/DMBoundaryType.html#DMBoundaryType">DMBoundaryType</a> bndz,<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> M,<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> N,<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> P,<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> m,<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> n,<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> p,<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> dof0,<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> dof1,<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> dof2,<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> dof3,<a href="../../../../docs/manualpages/DMSTAG/DMStagStencilType.html#DMStagStencilType">DMStagStencilType</a> stencilType,<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> stencilWidth,const <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> lx[],const <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> ly[],const <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> lz[],<a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> dm)</font></strong>
+<a name="line60"> 60: </a>{
+
+<a name="line64"> 64: </a>  <a href="../../../../docs/manualpages/DM/DMSetType.html#DMSetType">DMSetType</a>(dm,<a href="../../../../docs/manualpages/DMSTAG/DMSTAG.html#DMSTAG">DMSTAG</a>);
+<a name="line65"> 65: </a>  <a href="../../../../docs/manualpages/DMSTAG/DMStagSetBoundaryTypes.html#DMStagSetBoundaryTypes">DMStagSetBoundaryTypes</a>(dm,bndx,bndy,bndz);
+<a name="line66"> 66: </a>  <a href="../../../../docs/manualpages/DMSTAG/DMStagSetGlobalSizes.html#DMStagSetGlobalSizes">DMStagSetGlobalSizes</a>(dm,M,N,P);
+<a name="line67"> 67: </a>  <a href="../../../../docs/manualpages/DMSTAG/DMStagSetNumRanks.html#DMStagSetNumRanks">DMStagSetNumRanks</a>(dm,m,n,p);
+<a name="line68"> 68: </a>  <a href="../../../../docs/manualpages/DMSTAG/DMStagSetStencilType.html#DMStagSetStencilType">DMStagSetStencilType</a>(dm,stencilType);
+<a name="line69"> 69: </a>  <a href="../../../../docs/manualpages/DMSTAG/DMStagSetStencilWidth.html#DMStagSetStencilWidth">DMStagSetStencilWidth</a>(dm,stencilWidth);
+<a name="line70"> 70: </a>  <a href="../../../../docs/manualpages/DMSTAG/DMStagSetDOF.html#DMStagSetDOF">DMStagSetDOF</a>(dm,dof0,dof1,dof2,dof3);
+<a name="line71"> 71: </a>  <a href="../../../../docs/manualpages/DMSTAG/DMStagSetOwnershipRanges.html#DMStagSetOwnershipRanges">DMStagSetOwnershipRanges</a>(dm,lx,ly,lz);
+<a name="line72"> 72: </a>  <font color="#4169E1">return</font>(0);
+<a name="line73"> 73: </a>}
+</pre>
+</body>
+
+</html>

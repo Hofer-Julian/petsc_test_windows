@@ -1,0 +1,500 @@
+<center><a href="extchemfield.c">Actual source code: extchemfield.c</a></center><br>
+
+<html>
+<head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/src/ts/tutorials/extchemfield.c.html" />
+<title></title>
+<meta name="generator" content="c2html 0.9.4">
+<meta name="date" content="2021-03-30T16:51:53+00:00">
+</head>
+
+<body bgcolor="#FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 src/ts/tutorials/extchemfield.c.html "><small>Report Typos and Errors</small></a></div>
+<pre width="80">
+<a name="line1">  1: </a>static const char help[] = <font color="#666666">"Integrate chemistry using TChem.\n"</font>;
+
+<a name="line3">  3: </a>#include <A href="../../../include/petscts.h.html">&lt;petscts.h&gt;</A>
+<a name="line4">  4: </a>#include <A href="../../../include/petscdmda.h.html">&lt;petscdmda.h&gt;</A>
+
+<a name="line6">  6: </a><font color="#A020F0">#if defined(PETSC_HAVE_TCHEM)</font>
+<a name="line7">  7: </a><font color="#A020F0">#if defined(MAX)</font>
+<a name="line8">  8: </a><strong><font color="#228B22">#undef MAX</font></strong>
+<a name="line9">  9: </a><font color="#A020F0">#endif</font>
+<a name="line10"> 10: </a><font color="#A020F0">#if defined(MIN)</font>
+<a name="line11"> 11: </a><strong><font color="#228B22">#undef MIN</font></strong>
+<a name="line12"> 12: </a><font color="#A020F0">#endif</font>
+<a name="line13"> 13: </a><font color="#A020F0">#  include &lt;TC_params.h&gt;</font>
+<a name="line14"> 14: </a><font color="#A020F0">#  include &lt;TC_interface.h&gt;</font>
+<a name="line15"> 15: </a><font color="#A020F0">#else</font>
+<a name="line16"> 16: </a><font color="#A020F0">#  error TChem is required for this example.  Reconfigure PETSc using --download-tchem.</font>
+<a name="line17"> 17: </a><font color="#A020F0">#endif</font>
+<a name="line18"> 18: </a><font color="#B22222">/*</font>
+
+<a name="line20"> 20: </a><font color="#B22222">    This is an extension of extchem.c to solve the reaction equations independently in each cell of a one dimensional field</font>
+
+<a name="line22"> 22: </a><font color="#B22222">    Obtain the three files into this directory</font>
+
+<a name="line24"> 24: </a><font color="#B22222">       curl http://combustion.berkeley.edu/gri_mech/version30/files30/grimech30.dat &gt; chem.inp</font>
+<a name="line25"> 25: </a><font color="#B22222">       curl http://combustion.berkeley.edu/gri_mech/version30/files30/thermo30.dat &gt; therm.dat</font>
+<a name="line26"> 26: </a><font color="#B22222">       cp $PETSC_DIR/$PETSC_ARCH/externalpackages/tchem/data/periodictable.dat .</font>
+
+<a name="line28"> 28: </a><font color="#B22222">    Run with</font>
+<a name="line29"> 29: </a><font color="#B22222">     ./extchemfield  -ts_arkimex_fully_implicit -ts_max_snes_failures -1 -ts_adapt_monitor -ts_adapt_dt_max 1e-4 -ts_arkimex_type 4 -ts_max_time .005</font>
+
+<a name="line31"> 31: </a><font color="#B22222">     Options for visualizing the solution:</font>
+<a name="line32"> 32: </a><font color="#B22222">        Watch certain variables in each cell evolve with time</font>
+<a name="line33"> 33: </a><font color="#B22222">        -draw_solution 1 -ts_monitor_lg_solution_variables Temp,H2,O2,H2O,CH4,CO,CO2,C2H2,N2 -lg_use_markers false  -draw_pause -2</font>
+
+<a name="line35"> 35: </a><font color="#B22222">        Watch certain variables in all cells evolve with time</font>
+<a name="line36"> 36: </a><font color="#B22222">        -da_refine 4 -ts_monitor_draw_solution -draw_fields_by_name Temp,H2 -draw_vec_mark_points  -draw_pause -2</font>
+
+<a name="line38"> 38: </a><font color="#B22222">        Keep the initial temperature distribution as one monitors the current temperature distribution</font>
+<a name="line39"> 39: </a><font color="#B22222">        -ts_monitor_draw_solution_initial -draw_bounds .9,1.7 -draw_fields_by_name Temp</font>
+
+<a name="line41"> 41: </a><font color="#B22222">        Save the images in a .gif (movie) file</font>
+<a name="line42"> 42: </a><font color="#B22222">        -draw_save -draw_save_single_file</font>
+
+<a name="line44"> 44: </a><font color="#B22222">        Compute the sensitivies of the solution of the first tempature on the initial conditions</font>
+<a name="line45"> 45: </a><font color="#B22222">        -ts_adjoint_solve  -ts_dt 1.e-5 -ts_type cn -ts_adjoint_view_solution draw</font>
+
+<a name="line47"> 47: </a><font color="#B22222">        Turn off diffusion</font>
+<a name="line48"> 48: </a><font color="#B22222">        -diffusion no</font>
+
+<a name="line50"> 50: </a><font color="#B22222">        Turn off reactions</font>
+<a name="line51"> 51: </a><font color="#B22222">        -reactions no</font>
+
+
+<a name="line54"> 54: </a><font color="#B22222">    The solution for component i = 0 is the temperature.</font>
+
+<a name="line56"> 56: </a><font color="#B22222">    The solution, i &gt; 0, is the mass fraction, massf[i], of species i, i.e. mass of species i/ total mass of all species</font>
+
+<a name="line58"> 58: </a><font color="#B22222">    The mole fraction molef[i], i &gt; 0, is the number of moles of a species/ total number of moles of all species</font>
+<a name="line59"> 59: </a><font color="#B22222">        Define M[i] = mass per mole of species i then</font>
+<a name="line60"> 60: </a><font color="#B22222">        molef[i] = massf[i]/(M[i]*(sum_j massf[j]/M[j]))</font>
+
+<a name="line62"> 62: </a><font color="#B22222">    FormMoleFraction(User,massf,molef) converts the mass fraction solution of each species to the mole fraction of each species.</font>
+
+<a name="line64"> 64: </a><font color="#B22222">*/</font>
+<a name="line65"> 65: </a><font color="#4169E1">typedef struct _User *User;</font>
+<a name="line66"> 66: </a><font color="#4169E1"><a name="_User"></a>struct _User </font>{
+<a name="line67"> 67: </a>  <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> pressure;
+<a name="line68"> 68: </a>  int       Nspec;
+<a name="line69"> 69: </a>  int       Nreac;
+<a name="line70"> 70: </a>  <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> Tini,dx;
+<a name="line71"> 71: </a>  <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> diffus;
+<a name="line72"> 72: </a>  <a href="../../../docs/manualpages/DM/DM.html#DM">DM</a>        dm;
+<a name="line73"> 73: </a>  <a href="../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> diffusion,reactions;
+<a name="line74"> 74: </a>  double    *tchemwork;
+<a name="line75"> 75: </a>  double    *Jdense;        <font color="#B22222">/* Dense array workspace where Tchem computes the Jacobian */</font>
+<a name="line76"> 76: </a>  <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>  *rows;
+<a name="line77"> 77: </a>};
+
+<a name="line79"> 79: </a><strong><font color="#4169E1">static <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MonitorCell(<a href="../../../docs/manualpages/TS/TS.html#TS">TS</a>,User,<a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>)</font></strong>;
+<a name="line80"> 80: </a><strong><font color="#4169E1">static <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> FormRHSFunction(<a href="../../../docs/manualpages/TS/TS.html#TS">TS</a>,<a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>,<a href="../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a>,<a href="../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a>,void*)</font></strong>;
+<a name="line81"> 81: </a><strong><font color="#4169E1">static <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> FormRHSJacobian(<a href="../../../docs/manualpages/TS/TS.html#TS">TS</a>,<a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>,<a href="../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a>,<a href="../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a>,<a href="../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a>,void*)</font></strong>;
+<a name="line82"> 82: </a><strong><font color="#4169E1">static <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> FormInitialSolution(<a href="../../../docs/manualpages/TS/TS.html#TS">TS</a>,<a href="../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a>,void*)</font></strong>;
+
+<a name="line84"> 84: </a><strong><font color="#228B22">#define TCCHKERRQ(ierr) do {if (ierr) <a href="../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_LIB,</font><font color="#666666">"Error in TChem library, return code %d"</font><font color="#228B22">,ierr);} while (0)</font></strong>
+
+<a name="line86"> 86: </a><strong><font color="#4169E1"><a name="main"></a>int main(int argc,char **argv)</font></strong>
+<a name="line87"> 87: </a>{
+<a name="line88"> 88: </a>  <a href="../../../docs/manualpages/TS/TS.html#TS">TS</a>                ts;         <font color="#B22222">/* time integrator */</font>
+<a name="line89"> 89: </a>  <a href="../../../docs/manualpages/TS/TSAdapt.html#TSAdapt">TSAdapt</a>           adapt;
+<a name="line90"> 90: </a>  <a href="../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a>               X;          <font color="#B22222">/* solution vector */</font>
+<a name="line91"> 91: </a>  <a href="../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a>               J;          <font color="#B22222">/* Jacobian matrix */</font>
+<a name="line92"> 92: </a>  <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>          steps,ncells,xs,xm,i;
+<a name="line93"> 93: </a>  <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>    ierr;
+<a name="line94"> 94: </a>  <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>         ftime,dt;
+<a name="line95"> 95: </a>  char              chemfile[PETSC_MAX_PATH_LEN] = <font color="#666666">"chem.inp"</font>,thermofile[PETSC_MAX_PATH_LEN] = <font color="#666666">"therm.dat"</font>;
+<a name="line96"> 96: </a>  <font color="#4169E1">struct _User</font>      user;
+<a name="line97"> 97: </a>  <a href="../../../docs/manualpages/TS/TSConvergedReason.html#TSConvergedReason">TSConvergedReason</a> reason;
+<a name="line98"> 98: </a>  <a href="../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>         showsolutions = <a href="../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line99"> 99: </a>  char              **snames,*names;
+<a name="line100">100: </a>  <a href="../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a>               lambda;     <font color="#B22222">/* used with TSAdjoint for sensitivities */</font>
+
+<a name="line102">102: </a>  <a href="../../../docs/manualpages/Sys/PetscInitialize.html#PetscInitialize">PetscInitialize</a>(&amp;argc,&amp;argv,(char*)0,help);<font color="#4169E1">if</font> (ierr) <font color="#4169E1">return</font> ierr;
+<a name="line103">103: </a>  <a href="../../../docs/manualpages/Sys/PetscOptionsBegin.html#PetscOptionsBegin">PetscOptionsBegin</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,NULL,<font color="#666666">"Chemistry solver options"</font>,<font color="#666666">""</font>);
+<a name="line104">104: </a>  <a href="../../../docs/manualpages/Sys/PetscOptionsString.html#PetscOptionsString">PetscOptionsString</a>(<font color="#666666">"-chem"</font>,<font color="#666666">"CHEMKIN input file"</font>,<font color="#666666">""</font>,chemfile,chemfile,<font color="#4169E1">sizeof</font>(chemfile),NULL);
+<a name="line105">105: </a>  <a href="../../../docs/manualpages/Sys/PetscOptionsString.html#PetscOptionsString">PetscOptionsString</a>(<font color="#666666">"-thermo"</font>,<font color="#666666">"NASA thermo input file"</font>,<font color="#666666">""</font>,thermofile,thermofile,<font color="#4169E1">sizeof</font>(thermofile),NULL);
+<a name="line106">106: </a>  user.pressure = 1.01325e5;    <font color="#B22222">/* Pascal */</font>
+<a name="line107">107: </a>  <a href="../../../docs/manualpages/Sys/PetscOptionsReal.html#PetscOptionsReal">PetscOptionsReal</a>(<font color="#666666">"-pressure"</font>,<font color="#666666">"Pressure of reaction [Pa]"</font>,<font color="#666666">""</font>,user.pressure,&amp;user.pressure,NULL);
+<a name="line108">108: </a>  user.Tini   = 1550;
+<a name="line109">109: </a>  <a href="../../../docs/manualpages/Sys/PetscOptionsReal.html#PetscOptionsReal">PetscOptionsReal</a>(<font color="#666666">"-Tini"</font>,<font color="#666666">"Initial temperature [K]"</font>,<font color="#666666">""</font>,user.Tini,&amp;user.Tini,NULL);
+<a name="line110">110: </a>  user.diffus = 100;
+<a name="line111">111: </a>  <a href="../../../docs/manualpages/Sys/PetscOptionsReal.html#PetscOptionsReal">PetscOptionsReal</a>(<font color="#666666">"-diffus"</font>,<font color="#666666">"Diffusion constant"</font>,<font color="#666666">""</font>,user.diffus,&amp;user.diffus,NULL);
+<a name="line112">112: </a>  <a href="../../../docs/manualpages/Sys/PetscOptionsBool.html#PetscOptionsBool">PetscOptionsBool</a>(<font color="#666666">"-draw_solution"</font>,<font color="#666666">"Plot the solution for each cell"</font>,<font color="#666666">""</font>,showsolutions,&amp;showsolutions,NULL);
+<a name="line113">113: </a>  user.diffusion = <a href="../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>;
+<a name="line114">114: </a>  <a href="../../../docs/manualpages/Sys/PetscOptionsBool.html#PetscOptionsBool">PetscOptionsBool</a>(<font color="#666666">"-diffusion"</font>,<font color="#666666">"Have diffusion"</font>,<font color="#666666">""</font>,user.diffusion,&amp;user.diffusion,NULL);
+<a name="line115">115: </a>  user.reactions = <a href="../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>;
+<a name="line116">116: </a>  <a href="../../../docs/manualpages/Sys/PetscOptionsBool.html#PetscOptionsBool">PetscOptionsBool</a>(<font color="#666666">"-reactions"</font>,<font color="#666666">"Have reactions"</font>,<font color="#666666">""</font>,user.reactions,&amp;user.reactions,NULL);
+<a name="line117">117: </a>  <a href="../../../docs/manualpages/Sys/PetscOptionsEnd.html#PetscOptionsEnd">PetscOptionsEnd</a>();
+
+<a name="line119">119: </a>  TC_initChem(chemfile, thermofile, 0, 1.0);TC
+<a name="line120">120: </a>  user.Nspec = TC_getNspec();
+<a name="line121">121: </a>  user.Nreac = TC_getNreac();
+
+<a name="line123">123: </a>  <a href="../../../docs/manualpages/DMDA/DMDACreate1d.html#DMDACreate1d">DMDACreate1d</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,<a href="../../../docs/manualpages/DM/DMBoundaryType.html#DMBoundaryType">DM_BOUNDARY_PERIODIC</a>,10,user.Nspec+1,1,NULL,&amp;user.dm);
+<a name="line124">124: </a>  <a href="../../../docs/manualpages/DM/DMSetFromOptions.html#DMSetFromOptions">DMSetFromOptions</a>(user.dm);
+<a name="line125">125: </a>  <a href="../../../docs/manualpages/DM/DMSetUp.html#DMSetUp">DMSetUp</a>(user.dm);
+<a name="line126">126: </a>  <a href="../../../docs/manualpages/DMDA/DMDAGetInfo.html#DMDAGetInfo">DMDAGetInfo</a>(user.dm,NULL,&amp;ncells,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+<a name="line127">127: </a>  user.dx = 1.0/ncells;  <font color="#B22222">/* Set the coordinates of the cell centers; note final ghost cell is at x coordinate 1.0 */</font>
+<a name="line128">128: </a>  <a href="../../../docs/manualpages/DMDA/DMDASetUniformCoordinates.html#DMDASetUniformCoordinates">DMDASetUniformCoordinates</a>(user.dm,0.0,1.0,0.0,1.0,0.0,1.0);
+
+<a name="line130">130: </a>  <font color="#B22222">/* set the names of each field in the <a href="../../../docs/manualpages/DMDA/DMDA.html#DMDA">DMDA</a> based on the species name */</font>
+<a name="line131">131: </a>  <a href="../../../docs/manualpages/Sys/PetscMalloc1.html#PetscMalloc1">PetscMalloc1</a>((user.Nspec+1)*LENGTHOFSPECNAME,&amp;names);
+<a name="line132">132: </a>  <a href="../../../docs/manualpages/Sys/PetscStrcpy.html#PetscStrcpy">PetscStrcpy</a>(names,<font color="#666666">"Temp"</font>);
+<a name="line133">133: </a>  TC_getSnames(user.Nspec,names+LENGTHOFSPECNAME);
+<a name="line134">134: </a>  <a href="../../../docs/manualpages/Sys/PetscMalloc1.html#PetscMalloc1">PetscMalloc1</a>((user.Nspec+2),&amp;snames);
+<a name="line135">135: </a>  <font color="#4169E1">for</font> (i=0; i&lt;user.Nspec+1; i++) snames[i] = names+i*LENGTHOFSPECNAME;
+<a name="line136">136: </a>  snames[user.Nspec+1] = NULL;
+<a name="line137">137: </a>  <a href="../../../docs/manualpages/DMDA/DMDASetFieldNames.html#DMDASetFieldNames">DMDASetFieldNames</a>(user.dm,(const char * const *)snames);
+<a name="line138">138: </a>  <a href="../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(snames);
+<a name="line139">139: </a>  <a href="../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(names);
+
+
+<a name="line142">142: </a>  <a href="../../../docs/manualpages/DM/DMCreateMatrix.html#DMCreateMatrix">DMCreateMatrix</a>(user.dm,&amp;J);
+<a name="line143">143: </a>  <a href="../../../docs/manualpages/DM/DMCreateGlobalVector.html#DMCreateGlobalVector">DMCreateGlobalVector</a>(user.dm,&amp;X);
+
+<a name="line145">145: </a>  <a href="../../../docs/manualpages/Sys/PetscMalloc3.html#PetscMalloc3">PetscMalloc3</a>(user.Nspec+1,&amp;user.tchemwork,<a href="../../../docs/manualpages/Sys/PetscSqr.html#PetscSqr">PetscSqr</a>(user.Nspec+1),&amp;user.Jdense,user.Nspec+1,&amp;user.rows);
+
+<a name="line147">147: </a>  <font color="#B22222">/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -</font>
+<a name="line148">148: </a><font color="#B22222">     Create timestepping solver context</font>
+<a name="line149">149: </a><font color="#B22222">     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */</font>
+<a name="line150">150: </a>  <a href="../../../docs/manualpages/TS/TSCreate.html#TSCreate">TSCreate</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,&amp;ts);
+<a name="line151">151: </a>  <a href="../../../docs/manualpages/TS/TSSetDM.html#TSSetDM">TSSetDM</a>(ts,user.dm);
+<a name="line152">152: </a>  <a href="../../../docs/manualpages/TS/TSSetType.html#TSSetType">TSSetType</a>(ts,<a href="../../../docs/manualpages/TS/TSARKIMEX.html#TSARKIMEX">TSARKIMEX</a>);
+<a name="line153">153: </a>  <a href="../../../docs/manualpages/TS/TSARKIMEXSetFullyImplicit.html#TSARKIMEXSetFullyImplicit">TSARKIMEXSetFullyImplicit</a>(ts,<a href="../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>);
+<a name="line154">154: </a>  <a href="../../../docs/manualpages/TS/TSARKIMEXSetType.html#TSARKIMEXSetType">TSARKIMEXSetType</a>(ts,<a href="../../../docs/manualpages/TS/TSARKIMEX4.html#TSARKIMEX4">TSARKIMEX4</a>);
+<a name="line155">155: </a>  <a href="../../../docs/manualpages/TS/TSSetRHSFunction.html#TSSetRHSFunction">TSSetRHSFunction</a>(ts,NULL,FormRHSFunction,&amp;user);
+<a name="line156">156: </a>  <a href="../../../docs/manualpages/TS/TSSetRHSJacobian.html#TSSetRHSJacobian">TSSetRHSJacobian</a>(ts,J,J,FormRHSJacobian,&amp;user);
+
+<a name="line158">158: </a>  ftime = 1.0;
+<a name="line159">159: </a>  <a href="../../../docs/manualpages/TS/TSSetMaxTime.html#TSSetMaxTime">TSSetMaxTime</a>(ts,ftime);
+<a name="line160">160: </a>  <a href="../../../docs/manualpages/TS/TSSetExactFinalTime.html#TSSetExactFinalTime">TSSetExactFinalTime</a>(ts,<a href="../../../docs/manualpages/TS/TSExactFinalTimeOption.html#TSExactFinalTimeOption">TS_EXACTFINALTIME_STEPOVER</a>);
+
+<a name="line162">162: </a>  <font color="#B22222">/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -</font>
+<a name="line163">163: </a><font color="#B22222">     Set initial conditions</font>
+<a name="line164">164: </a><font color="#B22222">   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */</font>
+<a name="line165">165: </a>  FormInitialSolution(ts,X,&amp;user);
+<a name="line166">166: </a>  <a href="../../../docs/manualpages/TS/TSSetSolution.html#TSSetSolution">TSSetSolution</a>(ts,X);
+<a name="line167">167: </a>  dt   = 1e-10;                 <font color="#B22222">/* Initial time step */</font>
+<a name="line168">168: </a>  <a href="../../../docs/manualpages/TS/TSSetTimeStep.html#TSSetTimeStep">TSSetTimeStep</a>(ts,dt);
+<a name="line169">169: </a>  <a href="../../../docs/manualpages/TS/TSGetAdapt.html#TSGetAdapt">TSGetAdapt</a>(ts,&amp;adapt);
+<a name="line170">170: </a>  <a href="../../../docs/manualpages/TS/TSAdaptSetStepLimits.html#TSAdaptSetStepLimits">TSAdaptSetStepLimits</a>(adapt,1e-12,1e-4); <font color="#B22222">/* Also available with -ts_adapt_dt_min/-ts_adapt_dt_max */</font>
+<a name="line171">171: </a>  <a href="../../../docs/manualpages/TS/TSSetMaxSNESFailures.html#TSSetMaxSNESFailures">TSSetMaxSNESFailures</a>(ts,-1);            <font color="#B22222">/* Retry step an unlimited number of times */</font>
+
+
+<a name="line174">174: </a>  <font color="#B22222">/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -</font>
+<a name="line175">175: </a><font color="#B22222">     Pass information to graphical monitoring routine</font>
+<a name="line176">176: </a><font color="#B22222">   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */</font>
+<a name="line177">177: </a>  <font color="#4169E1">if</font> (showsolutions) {
+<a name="line178">178: </a>    <a href="../../../docs/manualpages/DMDA/DMDAGetCorners.html#DMDAGetCorners">DMDAGetCorners</a>(user.dm,&amp;xs,NULL,NULL,&amp;xm,NULL,NULL);
+<a name="line179">179: </a>    <font color="#4169E1">for</font> (i=xs;i&lt;xs+xm;i++) {
+<a name="line180">180: </a>      MonitorCell(ts,&amp;user,i);
+<a name="line181">181: </a>    }
+<a name="line182">182: </a>  }
+
+<a name="line184">184: </a>  <font color="#B22222">/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -</font>
+<a name="line185">185: </a><font color="#B22222">     Set runtime options</font>
+<a name="line186">186: </a><font color="#B22222">   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */</font>
+<a name="line187">187: </a>  <a href="../../../docs/manualpages/TS/TSSetFromOptions.html#TSSetFromOptions">TSSetFromOptions</a>(ts);
+
+<a name="line189">189: </a>  <font color="#B22222">/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -</font>
+<a name="line190">190: </a><font color="#B22222">     Set final conditions for sensitivities</font>
+<a name="line191">191: </a><font color="#B22222">   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */</font>
+<a name="line192">192: </a>  <a href="../../../docs/manualpages/DM/DMCreateGlobalVector.html#DMCreateGlobalVector">DMCreateGlobalVector</a>(user.dm,&amp;lambda);
+<a name="line193">193: </a>  <a href="../../../docs/manualpages/Sensitivity/TSSetCostGradients.html#TSSetCostGradients">TSSetCostGradients</a>(ts,1,&amp;lambda,NULL);
+<a name="line194">194: </a>  <a href="../../../docs/manualpages/Vec/VecSetValue.html#VecSetValue">VecSetValue</a>(lambda,0,1.0,<a href="../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>);
+<a name="line195">195: </a>  <a href="../../../docs/manualpages/Vec/VecAssemblyBegin.html#VecAssemblyBegin">VecAssemblyBegin</a>(lambda);
+<a name="line196">196: </a>  <a href="../../../docs/manualpages/Vec/VecAssemblyEnd.html#VecAssemblyEnd">VecAssemblyEnd</a>(lambda);
+
+<a name="line198">198: </a>  <font color="#B22222">/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -</font>
+<a name="line199">199: </a><font color="#B22222">     Solve ODE</font>
+<a name="line200">200: </a><font color="#B22222">     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */</font>
+<a name="line201">201: </a>  <a href="../../../docs/manualpages/TS/TSSolve.html#TSSolve">TSSolve</a>(ts,X);
+<a name="line202">202: </a>  <a href="../../../docs/manualpages/TS/TSGetSolveTime.html#TSGetSolveTime">TSGetSolveTime</a>(ts,&amp;ftime);
+<a name="line203">203: </a>  <a href="../../../docs/manualpages/TS/TSGetStepNumber.html#TSGetStepNumber">TSGetStepNumber</a>(ts,&amp;steps);
+<a name="line204">204: </a>  <a href="../../../docs/manualpages/TS/TSGetConvergedReason.html#TSGetConvergedReason">TSGetConvergedReason</a>(ts,&amp;reason);
+<a name="line205">205: </a>  <a href="../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,<font color="#666666">"%s at time %g after %D steps\n"</font>,TSConvergedReasons[reason],(double)ftime,steps);
+
+<a name="line207">207: </a>  {
+<a name="line208">208: </a>    <a href="../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a>                max;
+<a name="line209">209: </a>    const char * const *names;
+<a name="line210">210: </a>    <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>           i;
+<a name="line211">211: </a>    const <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>    *bmax;
+
+<a name="line213">213: </a>    <a href="../../../docs/manualpages/TS/TSMonitorEnvelopeGetBounds.html#TSMonitorEnvelopeGetBounds">TSMonitorEnvelopeGetBounds</a>(ts,&amp;max,NULL);
+<a name="line214">214: </a>    <font color="#4169E1">if</font> (max) {
+<a name="line215">215: </a>      <a href="../../../docs/manualpages/TS/TSMonitorLGGetVariableNames.html#TSMonitorLGGetVariableNames">TSMonitorLGGetVariableNames</a>(ts,&amp;names);
+<a name="line216">216: </a>      <font color="#4169E1">if</font> (names) {
+<a name="line217">217: </a>        <a href="../../../docs/manualpages/Vec/VecGetArrayRead.html#VecGetArrayRead">VecGetArrayRead</a>(max,&amp;bmax);
+<a name="line218">218: </a>        <a href="../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,<font color="#666666">"Species - maximum mass fraction\n"</font>);
+<a name="line219">219: </a>        <font color="#4169E1">for</font> (i=1; i&lt;user.Nspec; i++) {
+<a name="line220">220: </a>          <font color="#4169E1">if</font> (bmax[i] &gt; .01) {<a href="../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,<font color="#666666">"%s %g\n"</font>,names[i],bmax[i]);}
+<a name="line221">221: </a>        }
+<a name="line222">222: </a>        <a href="../../../docs/manualpages/Vec/VecRestoreArrayRead.html#VecRestoreArrayRead">VecRestoreArrayRead</a>(max,&amp;bmax);
+<a name="line223">223: </a>      }
+<a name="line224">224: </a>    }
+<a name="line225">225: </a>  }
+
+<a name="line227">227: </a>  <font color="#B22222">/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -</font>
+<a name="line228">228: </a><font color="#B22222">     Free work space.</font>
+<a name="line229">229: </a><font color="#B22222">   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */</font>
+<a name="line230">230: </a>  TC_reset();
+<a name="line231">231: </a>  <a href="../../../docs/manualpages/DM/DMDestroy.html#DMDestroy">DMDestroy</a>(&amp;user.dm);
+<a name="line232">232: </a>  <a href="../../../docs/manualpages/Mat/MatDestroy.html#MatDestroy">MatDestroy</a>(&amp;J);
+<a name="line233">233: </a>  <a href="../../../docs/manualpages/Vec/VecDestroy.html#VecDestroy">VecDestroy</a>(&amp;X);
+<a name="line234">234: </a>  <a href="../../../docs/manualpages/Vec/VecDestroy.html#VecDestroy">VecDestroy</a>(&amp;lambda);
+<a name="line235">235: </a>  <a href="../../../docs/manualpages/TS/TSDestroy.html#TSDestroy">TSDestroy</a>(&amp;ts);
+<a name="line236">236: </a>  <a href="../../../docs/manualpages/Sys/PetscFree3.html#PetscFree3">PetscFree3</a>(user.tchemwork,user.Jdense,user.rows);
+<a name="line237">237: </a>  <a href="../../../docs/manualpages/Sys/PetscFinalize.html#PetscFinalize">PetscFinalize</a>();
+<a name="line238">238: </a>  <font color="#4169E1">return</font> ierr;
+<a name="line239">239: </a>}
+
+<a name="line241">241: </a><font color="#B22222">/*</font>
+<a name="line242">242: </a><font color="#B22222">   Applies the second order centered difference diffusion operator on a one dimensional periodic domain</font>
+<a name="line243">243: </a><font color="#B22222">*/</font>
+<a name="line244">244: </a><strong><font color="#4169E1"><a name="FormDiffusionFunction"></a>static <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> FormDiffusionFunction(<a href="../../../docs/manualpages/TS/TS.html#TS">TS</a> ts,<a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> t,<a href="../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> X,<a href="../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> F,void *ptr)</font></strong>
+<a name="line245">245: </a>{
+<a name="line246">246: </a>  User              user = (User)ptr;
+<a name="line247">247: </a>  <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>    ierr;
+<a name="line248">248: </a>  <a href="../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>       **f;
+<a name="line249">249: </a>  const <a href="../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> **x;
+<a name="line250">250: </a>  <a href="../../../docs/manualpages/DM/DM.html#DM">DM</a>                dm;
+<a name="line251">251: </a>  <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>          i,xs,xm,j,dof;
+<a name="line252">252: </a>  <a href="../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a>               Xlocal;
+<a name="line253">253: </a>  <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>         idx;
+
+<a name="line256">256: </a>  <a href="../../../docs/manualpages/TS/TSGetDM.html#TSGetDM">TSGetDM</a>(ts,&amp;dm);
+<a name="line257">257: </a>  <a href="../../../docs/manualpages/DMDA/DMDAGetInfo.html#DMDAGetInfo">DMDAGetInfo</a>(dm,NULL,NULL,NULL,NULL,NULL,NULL,NULL,&amp;dof,NULL,NULL,NULL,NULL,NULL);
+<a name="line258">258: </a>  <a href="../../../docs/manualpages/DM/DMGetLocalVector.html#DMGetLocalVector">DMGetLocalVector</a>(dm,&amp;Xlocal);
+<a name="line259">259: </a>  <a href="../../../docs/manualpages/DM/DMGlobalToLocalBegin.html#DMGlobalToLocalBegin">DMGlobalToLocalBegin</a>(dm,X,<a href="../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>,Xlocal);
+<a name="line260">260: </a>  <a href="../../../docs/manualpages/DM/DMGlobalToLocalEnd.html#DMGlobalToLocalEnd">DMGlobalToLocalEnd</a>(dm,X,<a href="../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>,Xlocal);
+<a name="line261">261: </a>  <a href="../../../docs/manualpages/DMDA/DMDAVecGetArrayDOFRead.html#DMDAVecGetArrayDOFRead">DMDAVecGetArrayDOFRead</a>(dm,Xlocal,&amp;x);
+<a name="line262">262: </a>  <a href="../../../docs/manualpages/DMDA/DMDAVecGetArrayDOF.html#DMDAVecGetArrayDOF">DMDAVecGetArrayDOF</a>(dm,F,&amp;f);
+<a name="line263">263: </a>  <a href="../../../docs/manualpages/DMDA/DMDAGetCorners.html#DMDAGetCorners">DMDAGetCorners</a>(dm,&amp;xs,NULL,NULL,&amp;xm,NULL,NULL);
+
+<a name="line265">265: </a>  idx = 1.0*user-&gt;diffus/user-&gt;dx;
+<a name="line266">266: </a>  <font color="#4169E1">for</font> (i=xs; i&lt;xs+xm; i++) {
+<a name="line267">267: </a>    <font color="#4169E1">for</font> (j=0; j&lt;dof; j++) {
+<a name="line268">268: </a>      f[i][j] += idx*(x[i+1][j] - 2.0*x[i][j] + x[i-1][j]);
+<a name="line269">269: </a>    }
+<a name="line270">270: </a>  }
+<a name="line271">271: </a>  <a href="../../../docs/manualpages/DMDA/DMDAVecRestoreArrayDOFRead.html#DMDAVecRestoreArrayDOFRead">DMDAVecRestoreArrayDOFRead</a>(dm,Xlocal,&amp;x);
+<a name="line272">272: </a>  <a href="../../../docs/manualpages/DMDA/DMDAVecRestoreArrayDOF.html#DMDAVecRestoreArrayDOF">DMDAVecRestoreArrayDOF</a>(dm,F,&amp;f);
+<a name="line273">273: </a>  <a href="../../../docs/manualpages/DM/DMRestoreLocalVector.html#DMRestoreLocalVector">DMRestoreLocalVector</a>(dm,&amp;Xlocal);
+<a name="line274">274: </a>  <font color="#4169E1">return</font>(0);
+<a name="line275">275: </a>}
+
+<a name="line277">277: </a><font color="#B22222">/*</font>
+<a name="line278">278: </a><font color="#B22222">   Produces the second order centered difference diffusion operator on a one dimensional periodic domain</font>
+<a name="line279">279: </a><font color="#B22222">*/</font>
+<a name="line280">280: </a><strong><font color="#4169E1"><a name="FormDiffusionJacobian"></a>static <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> FormDiffusionJacobian(<a href="../../../docs/manualpages/TS/TS.html#TS">TS</a> ts,<a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> t,<a href="../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> X,<a href="../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> Amat,<a href="../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> Pmat,void *ptr)</font></strong>
+<a name="line281">281: </a>{
+<a name="line282">282: </a>  User              user = (User)ptr;
+<a name="line283">283: </a>  <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>    ierr;
+<a name="line284">284: </a>  <a href="../../../docs/manualpages/DM/DM.html#DM">DM</a>                dm;
+<a name="line285">285: </a>  <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>          i,xs,xm,j,dof;
+<a name="line286">286: </a>  <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>         idx,values[3];
+<a name="line287">287: </a>  <a href="../../../docs/manualpages/Mat/MatStencil.html#MatStencil">MatStencil</a>        row,col[3];
+
+<a name="line290">290: </a>  <a href="../../../docs/manualpages/TS/TSGetDM.html#TSGetDM">TSGetDM</a>(ts,&amp;dm);
+<a name="line291">291: </a>  <a href="../../../docs/manualpages/DMDA/DMDAGetInfo.html#DMDAGetInfo">DMDAGetInfo</a>(dm,NULL,NULL,NULL,NULL,NULL,NULL,NULL,&amp;dof,NULL,NULL,NULL,NULL,NULL);
+<a name="line292">292: </a>  <a href="../../../docs/manualpages/DMDA/DMDAGetCorners.html#DMDAGetCorners">DMDAGetCorners</a>(dm,&amp;xs,NULL,NULL,&amp;xm,NULL,NULL);
+
+<a name="line294">294: </a>  idx = 1.0*user-&gt;diffus/user-&gt;dx;
+<a name="line295">295: </a>  values[0] = idx;
+<a name="line296">296: </a>  values[1] = -2.0*idx;
+<a name="line297">297: </a>  values[2] = idx;
+<a name="line298">298: </a>  <font color="#4169E1">for</font> (i=xs; i&lt;xs+xm; i++) {
+<a name="line299">299: </a>    <font color="#4169E1">for</font> (j=0; j&lt;dof; j++) {
+<a name="line300">300: </a>      row.i = i;      row.c = j;
+<a name="line301">301: </a>      col[0].i = i-1; col[0].c = j;
+<a name="line302">302: </a>      col[1].i = i;   col[1].c = j;
+<a name="line303">303: </a>      col[2].i = i+1; col[2].c = j;
+<a name="line304">304: </a>      <a href="../../../docs/manualpages/Mat/MatSetValuesStencil.html#MatSetValuesStencil">MatSetValuesStencil</a>(Pmat,1,&amp;row,3,col,values,<a href="../../../docs/manualpages/Sys/ADD_VALUES.html#ADD_VALUES">ADD_VALUES</a>);
+<a name="line305">305: </a>    }
+<a name="line306">306: </a>  }
+<a name="line307">307: </a>  <a href="../../../docs/manualpages/Mat/MatAssemblyBegin.html#MatAssemblyBegin">MatAssemblyBegin</a>(Pmat,<a href="../../../docs/manualpages/Mat/MatAssemblyType.html#MatAssemblyType">MAT_FINAL_ASSEMBLY</a>);
+<a name="line308">308: </a>  <a href="../../../docs/manualpages/Mat/MatAssemblyEnd.html#MatAssemblyEnd">MatAssemblyEnd</a>(Pmat,<a href="../../../docs/manualpages/Mat/MatAssemblyType.html#MatAssemblyType">MAT_FINAL_ASSEMBLY</a>);
+<a name="line309">309: </a>  <font color="#4169E1">return</font>(0);
+<a name="line310">310: </a>}
+
+<a name="line312">312: </a><strong><font color="#4169E1"><a name="FormRHSFunction"></a>static <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> FormRHSFunction(<a href="../../../docs/manualpages/TS/TS.html#TS">TS</a> ts,<a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> t,<a href="../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> X,<a href="../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> F,void *ptr)</font></strong>
+<a name="line313">313: </a>{
+<a name="line314">314: </a>  User              user = (User)ptr;
+<a name="line315">315: </a>  <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>    ierr;
+<a name="line316">316: </a>  <a href="../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>       **f;
+<a name="line317">317: </a>  const <a href="../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> **x;
+<a name="line318">318: </a>  <a href="../../../docs/manualpages/DM/DM.html#DM">DM</a>                dm;
+<a name="line319">319: </a>  <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>          i,xs,xm;
+
+<a name="line322">322: </a>  <font color="#4169E1">if</font> (user-&gt;reactions) {
+<a name="line323">323: </a>    <a href="../../../docs/manualpages/TS/TSGetDM.html#TSGetDM">TSGetDM</a>(ts,&amp;dm);
+<a name="line324">324: </a>    <a href="../../../docs/manualpages/DMDA/DMDAVecGetArrayDOFRead.html#DMDAVecGetArrayDOFRead">DMDAVecGetArrayDOFRead</a>(dm,X,&amp;x);
+<a name="line325">325: </a>    <a href="../../../docs/manualpages/DMDA/DMDAVecGetArrayDOF.html#DMDAVecGetArrayDOF">DMDAVecGetArrayDOF</a>(dm,F,&amp;f);
+<a name="line326">326: </a>    <a href="../../../docs/manualpages/DMDA/DMDAGetCorners.html#DMDAGetCorners">DMDAGetCorners</a>(dm,&amp;xs,NULL,NULL,&amp;xm,NULL,NULL);
+
+<a name="line328">328: </a>    <font color="#4169E1">for</font> (i=xs; i&lt;xs+xm; i++) {
+<a name="line329">329: </a>      <a href="../../../docs/manualpages/Sys/PetscArraycpy.html#PetscArraycpy">PetscArraycpy</a>(user-&gt;tchemwork,x[i],user-&gt;Nspec+1);
+<a name="line330">330: </a>      user-&gt;tchemwork[0] *= user-&gt;Tini; <font color="#B22222">/* Dimensionalize */</font>
+<a name="line331">331: </a>      TC_getSrc(user-&gt;tchemwork,user-&gt;Nspec+1,f[i]);TC
+<a name="line332">332: </a>      f[i][0] /= user-&gt;Tini;           <font color="#B22222">/* Non-dimensionalize */</font>
+<a name="line333">333: </a>    }
+
+<a name="line335">335: </a>    <a href="../../../docs/manualpages/DMDA/DMDAVecRestoreArrayDOFRead.html#DMDAVecRestoreArrayDOFRead">DMDAVecRestoreArrayDOFRead</a>(dm,X,&amp;x);
+<a name="line336">336: </a>    <a href="../../../docs/manualpages/DMDA/DMDAVecRestoreArrayDOF.html#DMDAVecRestoreArrayDOF">DMDAVecRestoreArrayDOF</a>(dm,F,&amp;f);
+<a name="line337">337: </a>  } <font color="#4169E1">else</font> {
+<a name="line338">338: </a>    <a href="../../../docs/manualpages/Vec/VecZeroEntries.html#VecZeroEntries">VecZeroEntries</a>(F);
+<a name="line339">339: </a>  }
+<a name="line340">340: </a>  <font color="#4169E1">if</font> (user-&gt;diffusion) {
+<a name="line341">341: </a>    FormDiffusionFunction(ts,t,X,F,ptr);
+<a name="line342">342: </a>  }
+<a name="line343">343: </a>  <font color="#4169E1">return</font>(0);
+<a name="line344">344: </a>}
+
+<a name="line346">346: </a><strong><font color="#4169E1"><a name="FormRHSJacobian"></a>static <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> FormRHSJacobian(<a href="../../../docs/manualpages/TS/TS.html#TS">TS</a> ts,<a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> t,<a href="../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> X,<a href="../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> Amat,<a href="../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> Pmat,void *ptr)</font></strong>
+<a name="line347">347: </a>{
+<a name="line348">348: </a>  User              user = (User)ptr;
+<a name="line349">349: </a>  <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>    ierr;
+<a name="line350">350: </a>  const <a href="../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> **x;
+<a name="line351">351: </a>  <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>          M = user-&gt;Nspec+1,i,j,xs,xm;
+<a name="line352">352: </a>  <a href="../../../docs/manualpages/DM/DM.html#DM">DM</a>                dm;
+
+<a name="line355">355: </a>  <font color="#4169E1">if</font> (user-&gt;reactions) {
+<a name="line356">356: </a>    <a href="../../../docs/manualpages/TS/TSGetDM.html#TSGetDM">TSGetDM</a>(ts,&amp;dm);
+<a name="line357">357: </a>    <a href="../../../docs/manualpages/Mat/MatZeroEntries.html#MatZeroEntries">MatZeroEntries</a>(Pmat);
+<a name="line358">358: </a>    <a href="../../../docs/manualpages/Mat/MatSetOption.html#MatSetOption">MatSetOption</a>(Pmat,<a href="../../../docs/manualpages/Mat/MatOption.html#MatOption">MAT_ROW_ORIENTED</a>,<a href="../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>);
+<a name="line359">359: </a>    <a href="../../../docs/manualpages/Mat/MatSetOption.html#MatSetOption">MatSetOption</a>(Pmat,<a href="../../../docs/manualpages/Mat/MatOption.html#MatOption">MAT_IGNORE_ZERO_ENTRIES</a>,<a href="../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>);
+<a name="line360">360: </a>    <a href="../../../docs/manualpages/DMDA/DMDAVecGetArrayDOFRead.html#DMDAVecGetArrayDOFRead">DMDAVecGetArrayDOFRead</a>(dm,X,&amp;x);
+<a name="line361">361: </a>    <a href="../../../docs/manualpages/DMDA/DMDAGetCorners.html#DMDAGetCorners">DMDAGetCorners</a>(dm,&amp;xs,NULL,NULL,&amp;xm,NULL,NULL);
+
+<a name="line363">363: </a>    <font color="#4169E1">for</font> (i=xs; i&lt;xs+xm; i++) {
+<a name="line364">364: </a>      <a href="../../../docs/manualpages/Sys/PetscArraycpy.html#PetscArraycpy">PetscArraycpy</a>(user-&gt;tchemwork,x[i],user-&gt;Nspec+1);
+<a name="line365">365: </a>      user-&gt;tchemwork[0] *= user-&gt;Tini;  <font color="#B22222">/* Dimensionalize temperature (first row) because that is what Tchem wants */</font>
+<a name="line366">366: </a>      TC_getJacTYN(user-&gt;tchemwork,user-&gt;Nspec,user-&gt;Jdense,1);
+
+<a name="line368">368: </a>      <font color="#4169E1">for</font> (j=0; j&lt;M; j++) user-&gt;Jdense[j + 0*M] /= user-&gt;Tini; <font color="#B22222">/* Non-dimensionalize first column */</font>
+<a name="line369">369: </a>      <font color="#4169E1">for</font> (j=0; j&lt;M; j++) user-&gt;Jdense[0 + j*M] /= user-&gt;Tini; <font color="#B22222">/* Non-dimensionalize first row */</font>
+<a name="line370">370: </a>      <font color="#4169E1">for</font> (j=0; j&lt;M; j++) user-&gt;rows[j] = i*M+j;
+<a name="line371">371: </a>      <a href="../../../docs/manualpages/Mat/MatSetValues.html#MatSetValues">MatSetValues</a>(Pmat,M,user-&gt;rows,M,user-&gt;rows,user-&gt;Jdense,<a href="../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>);
+<a name="line372">372: </a>    }
+<a name="line373">373: </a>    <a href="../../../docs/manualpages/DMDA/DMDAVecRestoreArrayDOFRead.html#DMDAVecRestoreArrayDOFRead">DMDAVecRestoreArrayDOFRead</a>(dm,X,&amp;x);
+<a name="line374">374: </a>    <a href="../../../docs/manualpages/Mat/MatAssemblyBegin.html#MatAssemblyBegin">MatAssemblyBegin</a>(Pmat,<a href="../../../docs/manualpages/Mat/MatAssemblyType.html#MatAssemblyType">MAT_FINAL_ASSEMBLY</a>);
+<a name="line375">375: </a>    <a href="../../../docs/manualpages/Mat/MatAssemblyEnd.html#MatAssemblyEnd">MatAssemblyEnd</a>(Pmat,<a href="../../../docs/manualpages/Mat/MatAssemblyType.html#MatAssemblyType">MAT_FINAL_ASSEMBLY</a>);
+<a name="line376">376: </a>  } <font color="#4169E1">else</font> {
+<a name="line377">377: </a>    <a href="../../../docs/manualpages/Mat/MatZeroEntries.html#MatZeroEntries">MatZeroEntries</a>(Pmat);
+<a name="line378">378: </a>  }
+<a name="line379">379: </a>  <font color="#4169E1">if</font> (user-&gt;diffusion) {
+<a name="line380">380: </a>    FormDiffusionJacobian(ts,t,X,Amat,Pmat,ptr);
+<a name="line381">381: </a>  }
+<a name="line382">382: </a>  <font color="#4169E1">if</font> (Amat != Pmat) {
+<a name="line383">383: </a>    <a href="../../../docs/manualpages/Mat/MatAssemblyBegin.html#MatAssemblyBegin">MatAssemblyBegin</a>(Amat,<a href="../../../docs/manualpages/Mat/MatAssemblyType.html#MatAssemblyType">MAT_FINAL_ASSEMBLY</a>);
+<a name="line384">384: </a>    <a href="../../../docs/manualpages/Mat/MatAssemblyEnd.html#MatAssemblyEnd">MatAssemblyEnd</a>(Amat,<a href="../../../docs/manualpages/Mat/MatAssemblyType.html#MatAssemblyType">MAT_FINAL_ASSEMBLY</a>);
+<a name="line385">385: </a>  }
+<a name="line386">386: </a>  <font color="#4169E1">return</font>(0);
+<a name="line387">387: </a>}
+
+<a name="line389">389: </a><strong><font color="#4169E1"><a name="FormInitialSolution"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> FormInitialSolution(<a href="../../../docs/manualpages/TS/TS.html#TS">TS</a> ts,<a href="../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> X,void *ctx)</font></strong>
+<a name="line390">390: </a>{
+<a name="line391">391: </a>  <a href="../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>    **x,*xc;
+<a name="line393">393: </a>  <font color="#4169E1">struct</font> {const char *name; <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> massfrac;} initial[] = {
+<a name="line394">394: </a>    {<font color="#666666">"CH4"</font>, 0.0948178320887},
+<a name="line395">395: </a>    {<font color="#666666">"O2"</font>, 0.189635664177},
+<a name="line396">396: </a>    {<font color="#666666">"N2"</font>, 0.706766236705},
+<a name="line397">397: </a>    {<font color="#666666">"AR"</font>, 0.00878026702874}
+<a name="line398">398: </a>  };
+<a name="line399">399: </a>  <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       i,j,xs,xm;
+<a name="line400">400: </a>  <a href="../../../docs/manualpages/DM/DM.html#DM">DM</a>             dm;
+
+<a name="line403">403: </a>  <a href="../../../docs/manualpages/Vec/VecZeroEntries.html#VecZeroEntries">VecZeroEntries</a>(X);
+<a name="line404">404: </a>  <a href="../../../docs/manualpages/TS/TSGetDM.html#TSGetDM">TSGetDM</a>(ts,&amp;dm);
+<a name="line405">405: </a>  <a href="../../../docs/manualpages/DMDA/DMDAGetCorners.html#DMDAGetCorners">DMDAGetCorners</a>(dm,&amp;xs,NULL,NULL,&amp;xm,NULL,NULL);
+
+<a name="line407">407: </a>  <a href="../../../docs/manualpages/DMDA/DMDAGetCoordinateArray.html#DMDAGetCoordinateArray">DMDAGetCoordinateArray</a>(dm,&amp;xc);
+<a name="line408">408: </a>  <a href="../../../docs/manualpages/DMDA/DMDAVecGetArrayDOF.html#DMDAVecGetArrayDOF">DMDAVecGetArrayDOF</a>(dm,X,&amp;x);
+<a name="line409">409: </a>  <font color="#4169E1">for</font> (i=xs; i&lt;xs+xm; i++) {
+<a name="line410">410: </a>    x[i][0] = 1.0 + .05*PetscSinScalar(2.*PETSC_PI*xc[i]);  <font color="#B22222">/* Non-dimensionalized by user-&gt;Tini */</font>
+<a name="line411">411: </a>    <font color="#4169E1">for</font> (j=0; j&lt;<font color="#4169E1">sizeof</font>(initial)/<font color="#4169E1">sizeof</font>(initial[0]); j++) {
+<a name="line412">412: </a>      int ispec = TC_getSpos(initial[j].name, strlen(initial[j].name));
+<a name="line413">413: </a>      <font color="#4169E1">if</font> (ispec &lt; 0) <a href="../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_USER,<font color="#666666">"Could not find species %s"</font>,initial[j].name);
+<a name="line414">414: </a>      <a href="../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,<font color="#666666">"Species %d: %s %g\n"</font>,j,initial[j].name,initial[j].massfrac);
+<a name="line415">415: </a>      x[i][1+ispec] = initial[j].massfrac;
+<a name="line416">416: </a>    }
+<a name="line417">417: </a>  }
+<a name="line418">418: </a>  <a href="../../../docs/manualpages/DMDA/DMDAVecRestoreArrayDOF.html#DMDAVecRestoreArrayDOF">DMDAVecRestoreArrayDOF</a>(dm,X,&amp;x);
+<a name="line419">419: </a>  <a href="../../../docs/manualpages/DMDA/DMDARestoreCoordinateArray.html#DMDARestoreCoordinateArray">DMDARestoreCoordinateArray</a>(dm,&amp;xc);
+<a name="line420">420: </a>  <font color="#4169E1">return</font>(0);
+<a name="line421">421: </a>}
+
+<a name="line423">423: </a><font color="#B22222">/*</font>
+<a name="line424">424: </a><font color="#B22222">    Routines for displaying the solutions</font>
+<a name="line425">425: </a><font color="#B22222">*/</font>
+<a name="line426">426: </a><font color="#4169E1">typedef</font> <font color="#4169E1">struct</font> {
+<a name="line427">427: </a>  <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> cell;
+<a name="line428">428: </a>  User     user;
+<a name="line429">429: </a>} UserLGCtx;
+
+<a name="line431">431: </a><strong><font color="#4169E1"><a name="FormMoleFraction"></a>static <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> FormMoleFraction(UserLGCtx *ctx,<a href="../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> massf,<a href="../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> *molef)</font></strong>
+<a name="line432">432: </a>{
+<a name="line433">433: </a>  User              user = ctx-&gt;user;
+<a name="line434">434: </a>  <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>    ierr;
+<a name="line435">435: </a>  <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>         *M,tM=0;
+<a name="line436">436: </a>  <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>          i,n = user-&gt;Nspec+1;
+<a name="line437">437: </a>  <a href="../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>       *mof;
+<a name="line438">438: </a>  const <a href="../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> **maf;
+
+<a name="line441">441: </a>  <a href="../../../docs/manualpages/Vec/VecCreateSeq.html#VecCreateSeq">VecCreateSeq</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,n,molef);
+<a name="line442">442: </a>  <a href="../../../docs/manualpages/Sys/PetscMalloc1.html#PetscMalloc1">PetscMalloc1</a>(user-&gt;Nspec,&amp;M);
+<a name="line443">443: </a>  TC_getSmass(user-&gt;Nspec, M);
+<a name="line444">444: </a>  <a href="../../../docs/manualpages/DMDA/DMDAVecGetArrayDOFRead.html#DMDAVecGetArrayDOFRead">DMDAVecGetArrayDOFRead</a>(user-&gt;dm,massf,&amp;maf);
+<a name="line445">445: </a>  <a href="../../../docs/manualpages/Vec/VecGetArray.html#VecGetArray">VecGetArray</a>(*molef,&amp;mof);
+<a name="line446">446: </a>  mof[0] = maf[ctx-&gt;cell][0]; <font color="#B22222">/* copy over temperature */</font>
+<a name="line447">447: </a>  <font color="#4169E1">for</font> (i=1; i&lt;n; i++) tM += maf[ctx-&gt;cell][i]/M[i-1];
+<a name="line448">448: </a>  <font color="#4169E1">for</font> (i=1; i&lt;n; i++) {
+<a name="line449">449: </a>    mof[i] = maf[ctx-&gt;cell][i]/(M[i-1]*tM);
+<a name="line450">450: </a>  }
+<a name="line451">451: </a>  <a href="../../../docs/manualpages/DMDA/DMDAVecRestoreArrayDOFRead.html#DMDAVecRestoreArrayDOFRead">DMDAVecRestoreArrayDOFRead</a>(user-&gt;dm,massf,&amp;maf);
+<a name="line452">452: </a>  <a href="../../../docs/manualpages/Vec/VecRestoreArray.html#VecRestoreArray">VecRestoreArray</a>(*molef,&amp;mof);
+<a name="line453">453: </a>  <a href="../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(M);
+<a name="line454">454: </a>  <font color="#4169E1">return</font>(0);
+<a name="line455">455: </a>}
+
+<a name="line457">457: </a><strong><font color="#4169E1"><a name="MonitorCellDestroy"></a>static <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MonitorCellDestroy(UserLGCtx *uctx)</font></strong>
+<a name="line458">458: </a>{
+
+<a name="line462">462: </a>  <a href="../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(uctx);
+<a name="line463">463: </a>  <font color="#4169E1">return</font>(0);
+<a name="line464">464: </a>}
+
+<a name="line466">466: </a><font color="#B22222">/*</font>
+<a name="line467">467: </a><font color="#B22222">   Use TSMonitorLG to monitor the reactions in a particular cell</font>
+<a name="line468">468: </a><font color="#B22222">*/</font>
+<a name="line469">469: </a><strong><font color="#4169E1"><a name="MonitorCell"></a>static <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MonitorCell(<a href="../../../docs/manualpages/TS/TS.html#TS">TS</a> ts,User user,<a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> cell)</font></strong>
+<a name="line470">470: </a>{
+<a name="line472">472: </a>  TSMonitorLGCtx ctx;
+<a name="line473">473: </a>  char           **snames;
+<a name="line474">474: </a>  UserLGCtx      *uctx;
+<a name="line475">475: </a>  char           label[128];
+<a name="line476">476: </a>  <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>      temp,*xc;
+<a name="line477">477: </a>  <a href="../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a>    rank;
+
+<a name="line480">480: </a>  <a href="../../../docs/manualpages/DMDA/DMDAGetCoordinateArray.html#DMDAGetCoordinateArray">DMDAGetCoordinateArray</a>(user-&gt;dm,&amp;xc);
+<a name="line481">481: </a>  temp = 1.0 + .05*PetscSinScalar(2.*PETSC_PI*xc[cell]);  <font color="#B22222">/* Non-dimensionalized by user-&gt;Tini */</font>
+<a name="line482">482: </a>  <a href="../../../docs/manualpages/DMDA/DMDARestoreCoordinateArray.html#DMDARestoreCoordinateArray">DMDARestoreCoordinateArray</a>(user-&gt;dm,&amp;xc);
+<a name="line483">483: </a>  <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_rank.html#MPI_Comm_rank">MPI_Comm_rank</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,&amp;rank);
+<a name="line484">484: </a>  <a href="../../../docs/manualpages/Sys/PetscSNPrintf.html#PetscSNPrintf">PetscSNPrintf</a>(label,<font color="#4169E1">sizeof</font>(label),<font color="#666666">"Initial Temperature %g Cell %d Rank %d"</font>,(double)user-&gt;Tini*temp,(int)cell,rank);
+<a name="line485">485: </a>  <a href="../../../docs/manualpages/TS/TSMonitorLGCtxCreate.html#TSMonitorLGCtxCreate">TSMonitorLGCtxCreate</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,NULL,label,<a href="../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a>,<a href="../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a>,600,400,1,&amp;ctx);
+<a name="line486">486: </a>  <a href="../../../docs/manualpages/DMDA/DMDAGetFieldNames.html#DMDAGetFieldNames">DMDAGetFieldNames</a>(user-&gt;dm,(const char * const **)&amp;snames);
+<a name="line487">487: </a>  <a href="../../../docs/manualpages/TS/TSMonitorLGCtxSetVariableNames.html#TSMonitorLGCtxSetVariableNames">TSMonitorLGCtxSetVariableNames</a>(ctx,(const char * const *)snames);
+<a name="line488">488: </a>  <a href="../../../docs/manualpages/Sys/PetscNew.html#PetscNew">PetscNew</a>(&amp;uctx);
+<a name="line489">489: </a>  uctx-&gt;cell = cell;
+<a name="line490">490: </a>  uctx-&gt;user = user;
+<a name="line491">491: </a>  <a href="../../../docs/manualpages/TS/TSMonitorLGCtxSetTransform.html#TSMonitorLGCtxSetTransform">TSMonitorLGCtxSetTransform</a>(ctx,(<a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> (*)(void*,<a href="../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a>,<a href="../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a>*))FormMoleFraction,(<a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> (*)(void*))MonitorCellDestroy,uctx);
+<a name="line492">492: </a>  <a href="../../../docs/manualpages/TS/TSMonitorSet.html#TSMonitorSet">TSMonitorSet</a>(ts,<a href="../../../docs/manualpages/TS/TSMonitorLGSolution.html#TSMonitorLGSolution">TSMonitorLGSolution</a>,ctx,(<a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> (*)(void**))<a href="../../../docs/manualpages/TS/TSMonitorLGCtxDestroy.html#TSMonitorLGCtxDestroy">TSMonitorLGCtxDestroy</a>);
+<a name="line493">493: </a>  <font color="#4169E1">return</font>(0);
+<a name="line494">494: </a>}
+</pre>
+</body>
+
+</html>

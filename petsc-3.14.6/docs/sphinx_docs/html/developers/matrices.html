@@ -1,0 +1,345 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/sphinx_docs/html/developers/matrices.html" />
+    <meta charset="utf-8" />
+    <title>The Various Matrix Classes &#8212; PETSc 3.14.6 documentation</title>
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/katex-math.css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/contrib/auto-render.min.js"></script>
+    <script src="../_static/katex_autorenderer.js"></script>
+    <link rel="shortcut icon" href="../_static/PETSc_RGB-logo.png"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Articles about PETSc Design" href="articles.html" />
+    <link rel="prev" title="How the Solvers Handle User Provided Callbacks" href="callbacks.html" /> 
+  </head><body>
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/sphinx_docs/html/developers/matrices.html "><small>Report Typos and Errors</small></a></div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="articles.html" title="Articles about PETSc Design"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="callbacks.html" title="How the Solvers Handle User Provided Callbacks"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">PETSc 3.14.6 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >PETSc Developer’s Documentation</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="design.html" accesskey="U">The Design of PETSc</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/PETSc-TAO_RGB.svg" alt="Logo"/>
+            </a></p>
+  <h3><a href="../index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">The Various Matrix Classes</a><ul>
+<li><a class="reference internal" href="#matrix-blocking-strategies">Matrix Blocking Strategies</a></li>
+<li><a class="reference internal" href="#assorted-matrix-types">Assorted Matrix Types</a><ul>
+<li><a class="reference internal" href="#sequential-aij-sparse-matrices">Sequential AIJ Sparse Matrices</a></li>
+<li><a class="reference internal" href="#parallel-aij-sparse-matrices">Parallel AIJ Sparse Matrices</a></li>
+<li><a class="reference internal" href="#sequential-block-aij-sparse-matrices">Sequential Block AIJ Sparse Matrices</a></li>
+<li><a class="reference internal" href="#parallel-block-aij-sparse-matrices">Parallel Block AIJ Sparse Matrices</a></li>
+<li><a class="reference internal" href="#sequential-dense-matrices">Sequential Dense Matrices</a></li>
+<li><a class="reference internal" href="#parallel-dense-matrices">Parallel Dense Matrices</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#references">References</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="callbacks.html"
+                        title="previous chapter">How the Solvers Handle User Provided Callbacks</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="articles.html"
+                        title="next chapter">Articles about PETSc Design</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/developers/matrices.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="the-various-matrix-classes">
+<h1>The Various Matrix Classes<a class="headerlink" href="#the-various-matrix-classes" title="Permalink to this headline">¶</a></h1>
+<p>PETSc provides a variety of matrix implementations, since no single
+matrix format is appropriate for all problems. This section first
+discusses various matrix blocking strategies and then describes the
+assortment of matrix types in PETSc.</p>
+<div class="section" id="matrix-blocking-strategies">
+<h2>Matrix Blocking Strategies<a class="headerlink" href="#matrix-blocking-strategies" title="Permalink to this headline">¶</a></h2>
+<p>In today’s computers, the time to perform an arithmetic operation is
+dominated by the time to move the data into position, not the time to
+compute the arithmetic result. For example, the time to perform a
+multiplication operation may be one clock cycle, while the time to move
+the floating-point number from memory to the arithmetic unit may take 10
+or more cycles. In order to help manage this difference in time scales,
+most processors have at least three levels of memory: registers, cache,
+and random access memory. (In addition, some processors have external
+caches, and the complications of paging introduce another level to the
+hierarchy.)</p>
+<p>Thus, to achieve high performance, a code should first move data into
+cache and from there move it into registers and use it repeatedly while
+it remains in the cache or registers before returning it to main memory.
+If a floating-point number is reused 50 times while it is in registers,
+then the “hit” of 10 clock cycles to bring it into the register is not
+important. But if the floating-point number is used only once, the “hit”
+of 10 clock cycles becomes noticeable, resulting in disappointing flop
+rates.</p>
+<p>Unfortunately, the compiler controls the use of the registers, and the
+hardware controls the use of the cache. Since the user has essentially
+no direct control, code must be written in such a way that the compiler
+and hardware cache system can perform well. Good-quality code is then
+said to respect the memory hierarchy.</p>
+<p>The standard approach to improving the hardware utilization is to use
+blocking. That is, rather than working with individual elements in the
+matrices, you employ blocks of elements. Since the use of implicit
+methods in PDE-based simulations leads to matrices with a naturally
+blocked structure (with a block size equal to the number of degrees of
+freedom per cell), blocking is advantageous. The PETSc sparse matrix
+representations use a variety of techniques for blocking, including the
+following:</p>
+<ul class="simple">
+<li><p>Storing the matrices using a generic sparse matrix format, but
+storing additional information about adjacent rows with identical
+nonzero structure (so-called I-nodes); this I-node information is
+used in the key computational routines to improve performance (the
+default for the <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MATSEQAIJ.html#MATSEQAIJ">MATSEQAIJ</a></span></code> and <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MATMPIAIJ.html#MATMPIAIJ">MATMPIAIJ</a></span></code> formats).</p></li>
+<li><p>Storing the matrices using a fixed (problem dependent) block size
+(via the <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MATSEQBAIJ.html#MATSEQBAIJ">MATSEQBAIJ</a></span></code> and <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MATMPIBAIJ.html#MATMPIBAIJ">MATMPIBAIJ</a></span></code> formats).</p></li>
+</ul>
+<p>The advantage of the first approach is that it is a minimal change from
+a standard sparse matrix format and brings a large percentage of the
+improvement obtained via blocking. Using a fixed block size gives the
+best performance, since the code can be hardwired with that particular
+size (for example, in some problems the size may be 3, in others 5, and
+so on), so that the compiler will then optimize for that size, removing
+the overhead of small loops entirely.</p>
+<p>The following table presents the floating-point performance for a basic
+matrix-vector product using three approaches: a basic compressed row
+storage format (using the PETSc runtime options
+<code class="docutils literal notranslate"><span class="pre">-mat_seqaij</span> <span class="pre">-mat_nounroll)</span></code>; the same compressed row format using
+I-nodes (with the option <code class="docutils literal notranslate"><span class="pre">-mat_seqaij</span></code>); and a fixed block size code,
+with a block size of 3 for these problems (using the option
+<code class="docutils literal notranslate"><span class="pre">-mat_seqbaij</span></code>). The rates were computed on one node of an older IBM
+Power processor based system, using two test matrices. The first matrix
+(ARCO1), courtesy of Rick Dean of Arco, arises in multiphase flow
+simulation; it has 1,501 degrees of freedom, 26,131 matrix nonzeros, a
+natural block size of 3, and a small number of well terms. The second
+matrix (CFD), arises in a three-dimensional Euler flow simulation and
+has 15,360 degrees of freedom, 496,000 nonzeros, and a natural block
+size of 5. In addition to displaying the flop rates for matrix-vector
+products, we display them for triangular solves obtained from an ILU(0)
+factorization.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 18%" />
+<col style="width: 11%" />
+<col style="width: 26%" />
+<col style="width: 27%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Problem</p></th>
+<th class="head"><p>Block size</p></th>
+<th class="head"><p>Basic</p></th>
+<th class="head"><p>I-node version</p></th>
+<th class="head"><p>Fixed block size</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td colspan="5"><p>Matrix-Vector Product (Mflop/sec)</p></td>
+</tr>
+<tr class="row-odd"><td><p>Multiphase</p></td>
+<td><p>3</p></td>
+<td><p>27</p></td>
+<td><p>43</p></td>
+<td><p>70</p></td>
+</tr>
+<tr class="row-even"><td><p>Euler</p></td>
+<td><p>5</p></td>
+<td><p>28</p></td>
+<td><p>58</p></td>
+<td><p>90</p></td>
+</tr>
+<tr class="row-odd"><td colspan="5"><p>Triangular Solves from ILU(0) (Mflop/sec)</p></td>
+</tr>
+<tr class="row-even"><td><p>Multiphase</p></td>
+<td><p>3</p></td>
+<td><p>22</p></td>
+<td><p>31</p></td>
+<td><p>49</p></td>
+</tr>
+<tr class="row-odd"><td><p>Euler</p></td>
+<td><p>5</p></td>
+<td><p>22</p></td>
+<td><p>39</p></td>
+<td><p>65</p></td>
+</tr>
+</tbody>
+</table>
+<p>These examples demonstrate that careful implementations of the basic
+sequential kernels in PETSc can dramatically improve overall floating
+point performance, and users can immediately benefit from such
+enhancements without altering a single line of their application codes.
+Note that the speeds of the I-node and fixed block operations are
+several times that of the basic sparse implementations.</p>
+</div>
+<div class="section" id="assorted-matrix-types">
+<h2>Assorted Matrix Types<a class="headerlink" href="#assorted-matrix-types" title="Permalink to this headline">¶</a></h2>
+<p>PETSc offers a variety of both sparse and dense matrix types.</p>
+<div class="section" id="sequential-aij-sparse-matrices">
+<h3>Sequential AIJ Sparse Matrices<a class="headerlink" href="#sequential-aij-sparse-matrices" title="Permalink to this headline">¶</a></h3>
+<p>The default matrix representation within PETSc is the general sparse AIJ
+format (also called the Yale sparse matrix format or compressed sparse
+row format, CSR).</p>
+</div>
+<div class="section" id="parallel-aij-sparse-matrices">
+<h3>Parallel AIJ Sparse Matrices<a class="headerlink" href="#parallel-aij-sparse-matrices" title="Permalink to this headline">¶</a></h3>
+<p>The AIJ sparse matrix type, is the default parallel matrix format;
+additional implementation details are given in <span id="id1">[<a class="reference internal" href="#id474">BGMS97</a>]</span>.</p>
+</div>
+<div class="section" id="sequential-block-aij-sparse-matrices">
+<h3>Sequential Block AIJ Sparse Matrices<a class="headerlink" href="#sequential-block-aij-sparse-matrices" title="Permalink to this headline">¶</a></h3>
+<p>The sequential and parallel block AIJ formats, which are extensions of
+the AIJ formats described above, are intended especially for use with
+multiclass PDEs. The block variants store matrix elements by fixed-sized
+dense <code class="docutils literal notranslate"><span class="pre">nb</span></code> <span class="math">\(\times\)</span> <code class="docutils literal notranslate"><span class="pre">nb</span></code> blocks. The stored row and column
+indices begin at zero.</p>
+<p>The routine for creating a sequential block AIJ matrix with <code class="docutils literal notranslate"><span class="pre">m</span></code> rows,
+<code class="docutils literal notranslate"><span class="pre">n</span></code> columns, and a block size of <code class="docutils literal notranslate"><span class="pre">nb</span></code> is</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatCreateSeqBAIJ.html#MatCreateSeqBAIJ">MatCreateSeqBAIJ</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</a></span> <span class="n">comm</span><span class="p">,</span><span class="kt">int</span> <span class="n">nb</span><span class="p">,</span><span class="kt">int</span> <span class="n">m</span><span class="p">,</span><span class="kt">int</span> <span class="n">n</span><span class="p">,</span><span class="kt">int</span> <span class="n">nz</span><span class="p">,</span><span class="kt">int</span> <span class="o">*</span><span class="n">nnz</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/Mat.html#Mat">Mat</a></span> <span class="o">*</span><span class="n">A</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The arguments <code class="docutils literal notranslate"><span class="pre">nz</span></code> and <code class="docutils literal notranslate"><span class="pre">nnz</span></code> can be used to preallocate matrix
+memory by indicating the number of <em>block</em> nonzeros per row. For good
+performance during matrix assembly, preallocation is crucial; however,
+you can set <code class="docutils literal notranslate"><span class="pre">nz=0</span></code> and <code class="docutils literal notranslate"><span class="pre">nnz=NULL</span></code> for PETSc to dynamically allocate
+matrix memory as needed. The PETSc users manual discusses preallocation
+for the AIJ format; extension to the block AIJ format is
+straightforward.</p>
+<p>Note that the routine <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatSetValuesBlocked.html#MatSetValuesBlocked">MatSetValuesBlocked</a>()</span></code> can be used for more
+efficient matrix assembly when using the block AIJ format.</p>
+</div>
+<div class="section" id="parallel-block-aij-sparse-matrices">
+<h3>Parallel Block AIJ Sparse Matrices<a class="headerlink" href="#parallel-block-aij-sparse-matrices" title="Permalink to this headline">¶</a></h3>
+<p>Parallel block AIJ matrices with block size nb can be created with the
+command <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatCreateBAIJ.html#MatCreateBAIJ">MatCreateBAIJ</a>()</span></code></p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatCreateBAIJ.html#MatCreateBAIJ">MatCreateBAIJ</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</a></span> <span class="n">comm</span><span class="p">,</span><span class="kt">int</span> <span class="n">nb</span><span class="p">,</span><span class="kt">int</span> <span class="n">m</span><span class="p">,</span><span class="kt">int</span> <span class="n">n</span><span class="p">,</span><span class="kt">int</span> <span class="n">M</span><span class="p">,</span><span class="kt">int</span> <span class="n">N</span><span class="p">,</span><span class="kt">int</span> <span class="n">d_nz</span><span class="p">,</span><span class="kt">int</span> <span class="o">*</span><span class="n">d_nnz</span><span class="p">,</span><span class="kt">int</span> <span class="n">o_nz</span><span class="p">,</span><span class="kt">int</span> <span class="o">*</span><span class="n">o_nnz</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/Mat.html#Mat">Mat</a></span> <span class="o">*</span><span class="n">A</span><span class="p">);</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">A</span></code> is the newly created matrix, while the arguments <code class="docutils literal notranslate"><span class="pre">m</span></code>, <code class="docutils literal notranslate"><span class="pre">n</span></code>,
+<code class="docutils literal notranslate"><span class="pre">M</span></code>, and <code class="docutils literal notranslate"><span class="pre">N</span></code> indicate the number of local rows and columns and the
+number of global rows and columns, respectively. Either the local or
+global parameters can be replaced with <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a></span></code>, so that PETSc
+will determine them. The matrix is stored with a fixed number of rows on
+each processor, given by <code class="docutils literal notranslate"><span class="pre">m</span></code>, or determined by PETSc if <code class="docutils literal notranslate"><span class="pre">m</span></code> is
+<code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a></span></code>.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a></span></code> is not used for <code class="docutils literal notranslate"><span class="pre">m</span></code> and <code class="docutils literal notranslate"><span class="pre">n</span></code> then you must ensure
+that they are chosen to be compatible with the vectors. To do so, you
+first consider the product <span class="math">\(y = A x\)</span>. The <code class="docutils literal notranslate"><span class="pre">m</span></code> that used in
+<code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatCreateBAIJ.html#MatCreateBAIJ">MatCreateBAIJ</a>()</span></code> must match the local size used in the
+<code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/VecCreateMPI.html#VecCreateMPI">VecCreateMPI</a>()</span></code> for <code class="docutils literal notranslate"><span class="pre">y</span></code>. The <code class="docutils literal notranslate"><span class="pre">n</span></code> used must match that used as the
+local size in <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/VecCreateMPI.html#VecCreateMPI">VecCreateMPI</a>()</span></code> for <code class="docutils literal notranslate"><span class="pre">x</span></code>.</p>
+<p>You must set <code class="docutils literal notranslate"><span class="pre">d_nz=0</span></code>, <code class="docutils literal notranslate"><span class="pre">o_nz=0</span></code>, <code class="docutils literal notranslate"><span class="pre">d_nnz=NULL</span></code>, and <code class="docutils literal notranslate"><span class="pre">o_nnz=NULL</span></code> for
+PETSc to control dynamic allocation of matrix memory space. Analogous to
+<code class="docutils literal notranslate"><span class="pre">nz</span></code> and <code class="docutils literal notranslate"><span class="pre">nnz</span></code> for the routine <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatCreateSeqBAIJ.html#MatCreateSeqBAIJ">MatCreateSeqBAIJ</a>()</span></code>, these
+arguments optionally specify block nonzero information for the diagonal
+(<code class="docutils literal notranslate"><span class="pre">d_nz</span></code> and <code class="docutils literal notranslate"><span class="pre">d_nnz</span></code>) and off-diagonal (<code class="docutils literal notranslate"><span class="pre">o_nz</span></code> and <code class="docutils literal notranslate"><span class="pre">o_nnz</span></code>) parts of
+the matrix. For a square global matrix, we define each processor’s
+diagonal portion to be its local rows and the corresponding columns (a
+square submatrix); each processor’s off-diagonal portion encompasses the
+remainder of the local matrix (a rectangular submatrix). The PETSc users
+manual gives an example of preallocation for the parallel AIJ matrix
+format; extension to the block parallel AIJ case is straightforward.</p>
+</div>
+<div class="section" id="sequential-dense-matrices">
+<h3>Sequential Dense Matrices<a class="headerlink" href="#sequential-dense-matrices" title="Permalink to this headline">¶</a></h3>
+<p>PETSc provides both sequential and parallel dense matrix formats, where
+each processor stores its entries in a column-major array in the usual
+Fortran style.</p>
+</div>
+<div class="section" id="parallel-dense-matrices">
+<h3>Parallel Dense Matrices<a class="headerlink" href="#parallel-dense-matrices" title="Permalink to this headline">¶</a></h3>
+<p>The parallel dense matrices are partitioned by rows across the
+processors, so that each local rectangular submatrix is stored in the
+dense format described above.</p>
+</div>
+</div>
+<div class="section" id="references">
+<h2>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
+<p id="id2"><dl class="citation">
+<dt class="label" id="id474"><span class="brackets"><a class="fn-backref" href="#id1">BGMS97</a></span></dt>
+<dd><p>Satish Balay, William D. Gropp, Lois Curfman McInnes, and Barry F. Smith. Efficient management of parallelism in object oriented numerical software libraries. In E. Arge, A. M. Bruaset, and H. P. Langtangen, editors, <em>Modern Software Tools in Scientific Computing</em>, 163–202. Birkhäuser Press, 1997.</p>
+</dd>
+</dl>
+</p>
+<span class="target" id="id1252"></span></div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="articles.html" title="Articles about PETSc Design"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="callbacks.html" title="How the Solvers Handle User Provided Callbacks"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">PETSc 3.14.6 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >PETSc Developer’s Documentation</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="design.html" >The Design of PETSc</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 1991-2021, UChicago Argonne, LLC and the PETSc Development Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.4.
+    </div>
+  </body>
+</html>

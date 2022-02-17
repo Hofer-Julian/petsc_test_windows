@@ -1,0 +1,37 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSPPIPEPRCG.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>KSPPIPEPRCG</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/KSP/KSPPIPEPRCG.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="KSPPIPEPRCG"><H1>KSPPIPEPRCG</H1></A>
+Pipelined predict-and-recompute conjugate gradient method. This method has only a single non-blocking reduction per iteration, compared to 2 blocking for standard CG.
+The non-blocking reduction is overlapped by the matrix-vector product and preconditioner application.
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">Notes</FONT></H3>
+MPI configuration may be necessary for reductions to make asynchronous progress, which is important for performance of pipelined methods.
+See the FAQ on the PETSc website for details.
+<P>
+<H3><FONT COLOR="#CC3333">Contributed by</FONT></H3>
+Tyler Chen, University of Washington, Applied Mathematics Department
+<P>
+<H3><FONT COLOR="#CC3333">Reference</FONT></H3>
+"Predict-and-recompute conjugate gradient variants". Tyler Chen and Erin C. Carson. In preparation.
+<P>
+<H3><FONT COLOR="#CC3333">Acknowledgments</FONT></H3>
+This material is based upon work supported by the National Science Foundation Graduate Research Fellowship Program under Grant No. DGE-1762114. Any opinions, findings, and conclusions or recommendations expressed in this material are those of the author and do not necessarily reflect the views of the National Science Foundation.
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../KSP/KSPCreate.html#KSPCreate">KSPCreate</A>(), <A HREF="../KSP/KSPSetType.html#KSPSetType">KSPSetType</A>(), <A HREF="../KSP/KSPPIPECG.html#KSPPIPECG">KSPPIPECG</A>, <A HREF="../KSP/KSPPIPECR.html#KSPPIPECR">KSPPIPECR</A>, <A HREF="../KSP/KSPGROPPCG.html#KSPGROPPCG">KSPGROPPCG</A>, <A HREF="../KSP/KSPPGMRES.html#KSPPGMRES">KSPPGMRES</A>, <A HREF="../KSP/KSPCG.html#KSPCG">KSPCG</A>, <A HREF="../KSP/KSPCGUseSingleReduction.html#KSPCGUseSingleReduction">KSPCGUseSingleReduction</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>intermediate<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/ksp/ksp/impls/cg/pipeprcg/pipeprcg.c.html#KSPPIPEPRCG">src/ksp/ksp/impls/cg/pipeprcg/pipeprcg.c</A>
+<BR><A HREF="./index.html">Index of all KSP routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

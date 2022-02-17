@@ -1,0 +1,41 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DUALSPACE/PetscDualSpaceGetInteriorData.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>PetscDualSpaceGetInteriorData</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/DUALSPACE/PetscDualSpaceGetInteriorData.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="PetscDualSpaceGetInteriorData"><H1>PetscDualSpaceGetInteriorData</H1></A>
+Get all quadrature points necessary to compute the interior degrees of freedom from this space, as well as the matrix that computes the degrees of freedom from the quadrature values.  Degrees of freedom are interior degrees of freedom if they belong (by <A HREF="../DUALSPACE/PetscDualSpaceGetSection.html#PetscDualSpaceGetSection">PetscDualSpaceGetSection</A>()) to interior points in the reference DMPlex: complementary boundary degrees of freedom are marked as constrained in the section returned by <A HREF="../DUALSPACE/PetscDualSpaceGetSection.html#PetscDualSpaceGetSection">PetscDualSpaceGetSection</A>()). 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscfe.h" 
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../DUALSPACE/PetscDualSpaceGetInteriorData.html#PetscDualSpaceGetInteriorData">PetscDualSpaceGetInteriorData</A>(<A HREF="../FE/PetscDualSpace.html#PetscDualSpace">PetscDualSpace</A> sp, <A HREF="../FE/PetscQuadrature.html#PetscQuadrature">PetscQuadrature</A> *intNodes, <A HREF="../Mat/Mat.html#Mat">Mat</A> *intMat)
+</PRE>
+<H3><FONT COLOR="#CC3333">Input Parameter</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>sp </B></TD><TD>- The dualspace
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Output Parameter</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>intNodes </B></TD><TD>- A <A HREF="../FE/PetscQuadrature.html#PetscQuadrature">PetscQuadrature</A> object containing all evaluation points needed to evaluate interior degrees of freedom
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>intMat   </B></TD><TD>- A matrix that computes dual space values from point values: size [spdim0 x (npoints * nc)], where spdim0 is
+the size of the constrained layout (PetscSectionGetConstrainStorageSize()) of the dual space section,
+npoints is the number of points in intNodes and nc is <A HREF="../DUALSPACE/PetscDualSpaceGetNumComponents.html#PetscDualSpaceGetNumComponents">PetscDualSpaceGetNumComponents</A>().
+</TD></TR></TABLE>
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../DUALSPACE/PetscDualSpaceCreate.html#PetscDualSpaceCreate">PetscDualSpaceCreate</A>(), <A HREF="../DUALSPACE/PetscDualSpaceGetDimension.html#PetscDualSpaceGetDimension">PetscDualSpaceGetDimension</A>(), <A HREF="../DUALSPACE/PetscDualSpaceGetNumComponents.html#PetscDualSpaceGetNumComponents">PetscDualSpaceGetNumComponents</A>(), <A HREF="../DT/PetscQuadratureGetData.html#PetscQuadratureGetData">PetscQuadratureGetData</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>advanced<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/dm/dt/dualspace/interface/dualspace.c.html#PetscDualSpaceGetInteriorData">src/dm/dt/dualspace/interface/dualspace.c</A>
+<BR><A HREF="./index.html">Index of all DUALSPACE routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

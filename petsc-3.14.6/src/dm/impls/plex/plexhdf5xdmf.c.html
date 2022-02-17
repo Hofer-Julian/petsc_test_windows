@@ -1,0 +1,180 @@
+<center><a href="plexhdf5xdmf.c">Actual source code: plexhdf5xdmf.c</a></center><br>
+
+<html>
+<head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/src/dm/impls/plex/plexhdf5xdmf.c.html" />
+<title></title>
+<meta name="generator" content="c2html 0.9.4">
+<meta name="date" content="2021-03-30T16:50:45+00:00">
+</head>
+
+<body bgcolor="#FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 src/dm/impls/plex/plexhdf5xdmf.c.html "><small>Report Typos and Errors</small></a></div>
+<pre width="80">
+<a name="line1">  1: </a>#include <A href="../../../../include/petsc/private/dmpleximpl.h.html">&lt;petsc/private/dmpleximpl.h&gt;</A>
+<a name="line2">  2: </a>#include <A href="../../../../include/petsc/private/isimpl.h.html">&lt;petsc/private/isimpl.h&gt;</A>
+<a name="line3">  3: </a>#include <A href="../../../../include/petsc/private/vecimpl.h.html">&lt;petsc/private/vecimpl.h&gt;</A>
+<a name="line4">  4: </a>#include <A href="../../../../include/petsclayouthdf5.h.html">&lt;petsclayouthdf5.h&gt;</A>
+
+<a name="line6">  6: </a><font color="#A020F0">#if defined(PETSC_HAVE_HDF5)</font>
+<a name="line7">  7: </a><strong><font color="#4169E1"><a name="SplitPath_Private"></a>static <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> SplitPath_Private(char path[], char name[])</font></strong>
+<a name="line8">  8: </a>{
+<a name="line9">  9: </a>  char *tmp;
+
+<a name="line13"> 13: </a>  <a href="../../../../docs/manualpages/Sys/PetscStrrchr.html#PetscStrrchr">PetscStrrchr</a>(path,'/',&amp;tmp);
+<a name="line14"> 14: </a>  <a href="../../../../docs/manualpages/Sys/PetscStrcpy.html#PetscStrcpy">PetscStrcpy</a>(name,tmp);
+<a name="line15"> 15: </a>  <font color="#4169E1">if</font> (tmp != path) {
+<a name="line16"> 16: </a>    <font color="#B22222">/* '/' found, name is substring of path after last occurence of '/'. */</font>
+<a name="line17"> 17: </a>    <font color="#B22222">/* Trim the '/name' part from path just by inserting null character. */</font>
+<a name="line18"> 18: </a>    tmp--;
+<a name="line19"> 19: </a>    *tmp = '\0';
+<a name="line20"> 20: </a>  } <font color="#4169E1">else</font> {
+<a name="line21"> 21: </a>    <font color="#B22222">/* '/' not found, name = path, path = "/". */</font>
+<a name="line22"> 22: </a>    <a href="../../../../docs/manualpages/Sys/PetscStrcpy.html#PetscStrcpy">PetscStrcpy</a>(path,<font color="#666666">"/"</font>);
+<a name="line23"> 23: </a>  }
+<a name="line24"> 24: </a>  <font color="#4169E1">return</font>(0);
+<a name="line25"> 25: </a>}
+
+<a name="line27"> 27: </a><font color="#B22222">/*</font>
+<a name="line28"> 28: </a><font color="#B22222">  - invert (involute) cells of some types according to XDMF/VTK numbering of vertices in a cells</font>
+<a name="line29"> 29: </a><font color="#B22222">  - cell type is identified using the number of vertices</font>
+<a name="line30"> 30: </a><font color="#B22222">*/</font>
+<a name="line31"> 31: </a><strong><font color="#4169E1"><a name="DMPlexInvertCells_XDMF_Private"></a>static <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> DMPlexInvertCells_XDMF_Private(<a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> dm)</font></strong>
+<a name="line32"> 32: </a>{
+<a name="line33"> 33: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       dim, *cones, cHeight, cStart, cEnd, p;
+<a name="line34"> 34: </a>  <a href="../../../../docs/manualpages/PetscSection/PetscSection.html#PetscSection">PetscSection</a>   cs;
+
+<a name="line38"> 38: </a>  <a href="../../../../docs/manualpages/DM/DMGetDimension.html#DMGetDimension">DMGetDimension</a>(dm, &amp;dim);
+<a name="line39"> 39: </a>  <font color="#4169E1">if</font> (dim != 3) <font color="#4169E1">return</font>(0);
+<a name="line40"> 40: </a>  <a href="../../../../docs/manualpages/DMPLEX/DMPlexGetCones.html#DMPlexGetCones">DMPlexGetCones</a>(dm, &amp;cones);
+<a name="line41"> 41: </a>  <a href="../../../../docs/manualpages/DMPLEX/DMPlexGetConeSection.html#DMPlexGetConeSection">DMPlexGetConeSection</a>(dm, &amp;cs);
+<a name="line42"> 42: </a>  <a href="../../../../docs/manualpages/DMPLEX/DMPlexGetVTKCellHeight.html#DMPlexGetVTKCellHeight">DMPlexGetVTKCellHeight</a>(dm, &amp;cHeight);
+<a name="line43"> 43: </a>  <a href="../../../../docs/manualpages/DMPLEX/DMPlexGetHeightStratum.html#DMPlexGetHeightStratum">DMPlexGetHeightStratum</a>(dm, cHeight, &amp;cStart, &amp;cEnd);
+<a name="line44"> 44: </a>  <font color="#4169E1">for</font> (p=cStart; p&lt;cEnd; p++) {
+<a name="line45"> 45: </a>    <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> numCorners, o;
+
+<a name="line47"> 47: </a>    <a href="../../../../docs/manualpages/PetscSection/PetscSectionGetDof.html#PetscSectionGetDof">PetscSectionGetDof</a>(cs, p, &amp;numCorners);
+<a name="line48"> 48: </a>    <a href="../../../../docs/manualpages/PetscSection/PetscSectionGetOffset.html#PetscSectionGetOffset">PetscSectionGetOffset</a>(cs, p, &amp;o);
+<a name="line49"> 49: </a>    <font color="#4169E1">switch</font> (numCorners) {
+<a name="line50"> 50: </a>      <font color="#4169E1">case</font> 4: <a href="../../../../docs/manualpages/DMPLEX/DMPlexInvertCell.html#DMPlexInvertCell">DMPlexInvertCell</a>(<a href="../../../../docs/manualpages/DM/DMPolytopeType.html#DMPolytopeType">DM_POLYTOPE_TETRAHEDRON</a>,&amp;cones[o]); <font color="#4169E1">break</font>;
+<a name="line51"> 51: </a>      <font color="#4169E1">case</font> 6: <a href="../../../../docs/manualpages/DMPLEX/DMPlexInvertCell.html#DMPlexInvertCell">DMPlexInvertCell</a>(<a href="../../../../docs/manualpages/DM/DMPolytopeType.html#DMPolytopeType">DM_POLYTOPE_TRI_PRISM</a>,&amp;cones[o]); <font color="#4169E1">break</font>;
+<a name="line52"> 52: </a>      <font color="#4169E1">case</font> 8: <a href="../../../../docs/manualpages/DMPLEX/DMPlexInvertCell.html#DMPlexInvertCell">DMPlexInvertCell</a>(<a href="../../../../docs/manualpages/DM/DMPolytopeType.html#DMPolytopeType">DM_POLYTOPE_HEXAHEDRON</a>,&amp;cones[o]); <font color="#4169E1">break</font>;
+<a name="line53"> 53: </a>    }
+<a name="line54"> 54: </a>  }
+<a name="line55"> 55: </a>  <font color="#4169E1">return</font>(0);
+<a name="line56"> 56: </a>}
+
+<a name="line58"> 58: </a><strong><font color="#4169E1"><a name="DMPlexLoad_HDF5_Xdmf_Internal"></a><a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> DMPlexLoad_HDF5_Xdmf_Internal(<a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> dm, <a href="../../../../docs/manualpages/Viewer/PetscViewer.html#PetscViewer">PetscViewer</a> viewer)</font></strong>
+<a name="line59"> 59: </a>{
+<a name="line60"> 60: </a>  <a href="../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a>             coordinates;
+<a name="line61"> 61: </a>  <a href="../../../../docs/manualpages/IS/IS.html#IS">IS</a>              cells;
+<a name="line62"> 62: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>        spatialDim, numCells, numVertices, NVertices, numCorners;
+<a name="line63"> 63: </a>  <a href="../../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a>     rank;
+<a name="line64"> 64: </a>  <a href="../../../../docs/manualpages/Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</a>        comm;
+<a name="line65"> 65: </a>  <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  ierr;
+<a name="line66"> 66: </a>  char            topo_path[PETSC_MAX_PATH_LEN]=<font color="#666666">"/viz/topology/cells"</font>, topo_name[PETSC_MAX_PATH_LEN];
+<a name="line67"> 67: </a>  char            geom_path[PETSC_MAX_PATH_LEN]=<font color="#666666">"/geometry/vertices"</font>,  geom_name[PETSC_MAX_PATH_LEN];
+<a name="line68"> 68: </a>  <a href="../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>       seq = <a href="../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+
+<a name="line71"> 71: </a>  <a href="../../../../docs/manualpages/Sys/PetscObjectGetComm.html#PetscObjectGetComm">PetscObjectGetComm</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)dm, &amp;comm);
+<a name="line72"> 72: </a>  <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_rank.html#MPI_Comm_rank">MPI_Comm_rank</a>(comm, &amp;rank);
+
+<a name="line74"> 74: </a>  <a href="../../../../docs/manualpages/Sys/PetscOptionsBegin.html#PetscOptionsBegin">PetscOptionsBegin</a>(<a href="../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)dm),((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)dm)-&gt;prefix,<font color="#666666">"DMPlex HDF5/XDMF Loader Options"</font>,<font color="#666666">"<a href="../../../../docs/manualpages/Viewer/PetscViewer.html#PetscViewer">PetscViewer</a>"</font>);
+<a name="line75"> 75: </a>  <a href="../../../../docs/manualpages/Sys/PetscOptionsString.html#PetscOptionsString">PetscOptionsString</a>(<font color="#666666">"-dm_plex_hdf5_topology_path"</font>,<font color="#666666">"HDF5 path of topology dataset"</font>,NULL,topo_path,topo_path,<font color="#4169E1">sizeof</font>(topo_path),NULL);
+<a name="line76"> 76: </a>  <a href="../../../../docs/manualpages/Sys/PetscOptionsString.html#PetscOptionsString">PetscOptionsString</a>(<font color="#666666">"-dm_plex_hdf5_geometry_path"</font>,<font color="#666666">"HDF5 path to geometry dataset"</font>,NULL,geom_path,geom_path,<font color="#4169E1">sizeof</font>(geom_path),NULL);
+<a name="line77"> 77: </a>  <a href="../../../../docs/manualpages/Sys/PetscOptionsBool.html#PetscOptionsBool">PetscOptionsBool</a>(<font color="#666666">"-dm_plex_hdf5_force_sequential"</font>,<font color="#666666">"force sequential loading"</font>,NULL,seq,&amp;seq,NULL);
+<a name="line78"> 78: </a>  <a href="../../../../docs/manualpages/Sys/PetscOptionsEnd.html#PetscOptionsEnd">PetscOptionsEnd</a>();
+
+<a name="line80"> 80: </a>  SplitPath_Private(topo_path, topo_name);
+<a name="line81"> 81: </a>  SplitPath_Private(geom_path, geom_name);
+<a name="line82"> 82: </a>  PetscInfo2(dm, <font color="#666666">"Topology group %s, name %s\n"</font>, topo_path, topo_name);
+<a name="line83"> 83: </a>  PetscInfo2(dm, <font color="#666666">"Geometry group %s, name %s\n"</font>, geom_path, geom_name);
+
+<a name="line85"> 85: </a>  <font color="#B22222">/* Read topology */</font>
+<a name="line86"> 86: </a>  <a href="../../../../docs/manualpages/Viewer/PetscViewerHDF5PushGroup.html#PetscViewerHDF5PushGroup">PetscViewerHDF5PushGroup</a>(viewer, topo_path);
+<a name="line87"> 87: </a>  <a href="../../../../docs/manualpages/IS/ISCreate.html#ISCreate">ISCreate</a>(comm, &amp;cells);
+<a name="line88"> 88: </a>  <a href="../../../../docs/manualpages/Sys/PetscObjectSetName.html#PetscObjectSetName">PetscObjectSetName</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>) cells, topo_name);
+<a name="line89"> 89: </a>  <font color="#4169E1">if</font> (seq) {
+<a name="line90"> 90: </a>    <a href="../../../../docs/manualpages/IS/PetscViewerHDF5ReadSizes.html#PetscViewerHDF5ReadSizes">PetscViewerHDF5ReadSizes</a>(viewer, topo_name, NULL, &amp;numCells);
+<a name="line91"> 91: </a>    <a href="../../../../docs/manualpages/IS/PetscLayoutSetSize.html#PetscLayoutSetSize">PetscLayoutSetSize</a>(cells-&gt;map, numCells);
+<a name="line92"> 92: </a>    numCells = !rank ? numCells : 0;
+<a name="line93"> 93: </a>    <a href="../../../../docs/manualpages/IS/PetscLayoutSetLocalSize.html#PetscLayoutSetLocalSize">PetscLayoutSetLocalSize</a>(cells-&gt;map, numCells);
+<a name="line94"> 94: </a>  }
+<a name="line95"> 95: </a>  <a href="../../../../docs/manualpages/IS/ISLoad.html#ISLoad">ISLoad</a>(cells, viewer);
+<a name="line96"> 96: </a>  <a href="../../../../docs/manualpages/IS/ISGetLocalSize.html#ISGetLocalSize">ISGetLocalSize</a>(cells, &amp;numCells);
+<a name="line97"> 97: </a>  <a href="../../../../docs/manualpages/IS/ISGetBlockSize.html#ISGetBlockSize">ISGetBlockSize</a>(cells, &amp;numCorners);
+<a name="line98"> 98: </a>  <a href="../../../../docs/manualpages/Viewer/PetscViewerHDF5PopGroup.html#PetscViewerHDF5PopGroup">PetscViewerHDF5PopGroup</a>(viewer);
+<a name="line99"> 99: </a>  numCells /= numCorners;
+
+<a name="line101">101: </a>  <font color="#B22222">/* Read geometry */</font>
+<a name="line102">102: </a>  <a href="../../../../docs/manualpages/Viewer/PetscViewerHDF5PushGroup.html#PetscViewerHDF5PushGroup">PetscViewerHDF5PushGroup</a>(viewer, geom_path);
+<a name="line103">103: </a>  <a href="../../../../docs/manualpages/Vec/VecCreate.html#VecCreate">VecCreate</a>(comm, &amp;coordinates);
+<a name="line104">104: </a>  <a href="../../../../docs/manualpages/Sys/PetscObjectSetName.html#PetscObjectSetName">PetscObjectSetName</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>) coordinates, geom_name);
+<a name="line105">105: </a>  <font color="#4169E1">if</font> (seq) {
+<a name="line106">106: </a>    <a href="../../../../docs/manualpages/IS/PetscViewerHDF5ReadSizes.html#PetscViewerHDF5ReadSizes">PetscViewerHDF5ReadSizes</a>(viewer, geom_name, NULL, &amp;numVertices);
+<a name="line107">107: </a>    <a href="../../../../docs/manualpages/IS/PetscLayoutSetSize.html#PetscLayoutSetSize">PetscLayoutSetSize</a>(coordinates-&gt;map, numVertices);
+<a name="line108">108: </a>    numVertices = !rank ? numVertices : 0;
+<a name="line109">109: </a>    <a href="../../../../docs/manualpages/IS/PetscLayoutSetLocalSize.html#PetscLayoutSetLocalSize">PetscLayoutSetLocalSize</a>(coordinates-&gt;map, numVertices);
+<a name="line110">110: </a>  }
+<a name="line111">111: </a>  <a href="../../../../docs/manualpages/Vec/VecLoad.html#VecLoad">VecLoad</a>(coordinates, viewer);
+<a name="line112">112: </a>  <a href="../../../../docs/manualpages/Vec/VecGetLocalSize.html#VecGetLocalSize">VecGetLocalSize</a>(coordinates, &amp;numVertices);
+<a name="line113">113: </a>  <a href="../../../../docs/manualpages/Vec/VecGetSize.html#VecGetSize">VecGetSize</a>(coordinates, &amp;NVertices);
+<a name="line114">114: </a>  <a href="../../../../docs/manualpages/Vec/VecGetBlockSize.html#VecGetBlockSize">VecGetBlockSize</a>(coordinates, &amp;spatialDim);
+<a name="line115">115: </a>  <a href="../../../../docs/manualpages/Viewer/PetscViewerHDF5PopGroup.html#PetscViewerHDF5PopGroup">PetscViewerHDF5PopGroup</a>(viewer);
+<a name="line116">116: </a>  numVertices /= spatialDim;
+<a name="line117">117: </a>  NVertices /= spatialDim;
+
+<a name="line119">119: </a>  PetscInfo4(NULL, <font color="#666666">"Loaded mesh dimensions: numCells %D numCorners %D numVertices %D spatialDim %D\n"</font>, numCells, numCorners, numVertices, spatialDim);
+<a name="line120">120: </a>  {
+<a name="line121">121: </a>    const <a href="../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> *coordinates_arr;
+<a name="line122">122: </a>    <a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>         *coordinates_arr_real;
+<a name="line123">123: </a>    const <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>    *cells_arr;
+<a name="line124">124: </a>    <a href="../../../../docs/manualpages/PetscSF/PetscSF.html#PetscSF">PetscSF</a>           sfVert = NULL;
+<a name="line125">125: </a>    <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>          i;
+
+<a name="line127">127: </a>    <a href="../../../../docs/manualpages/Vec/VecGetArrayRead.html#VecGetArrayRead">VecGetArrayRead</a>(coordinates, &amp;coordinates_arr);
+<a name="line128">128: </a>    <a href="../../../../docs/manualpages/IS/ISGetIndices.html#ISGetIndices">ISGetIndices</a>(cells, &amp;cells_arr);
+
+<a name="line130">130: </a>    <font color="#4169E1">if</font> (<a href="../../../../docs/manualpages/Sys/PetscDefined.html#PetscDefined">PetscDefined</a>(USE_COMPLEX)) {
+<a name="line131">131: </a>      <font color="#B22222">/* convert to real numbers if <a href="../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> is complex */</font>
+<a name="line132">132: </a>      <font color="#B22222">/*TODO More systematic would be to change all the function arguments to <a href="../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> */</font>
+<a name="line133">133: </a>      <a href="../../../../docs/manualpages/Sys/PetscMalloc1.html#PetscMalloc1">PetscMalloc1</a>(numVertices*spatialDim, &amp;coordinates_arr_real);
+<a name="line134">134: </a>      <font color="#4169E1">for</font> (i = 0; i &lt; numVertices*spatialDim; ++i) {
+<a name="line135">135: </a>        coordinates_arr_real[i] = <a href="../../../../docs/manualpages/Sys/PetscRealPart.html#PetscRealPart">PetscRealPart</a>(coordinates_arr[i]);
+<a name="line136">136: </a>        <font color="#4169E1">if</font> (<a href="../../../../docs/manualpages/Sys/PetscUnlikelyDebug.html#PetscUnlikelyDebug">PetscUnlikelyDebug</a>(<a href="../../../../docs/manualpages/Sys/PetscImaginaryPart.html#PetscImaginaryPart">PetscImaginaryPart</a>(coordinates_arr[i]))) {
+<a name="line137">137: </a>          <a href="../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, PETSC_ERR_ARG_OUTOFRANGE, <font color="#666666">"Vector of coordinates contains complex numbers but only real vectors are currently supported."</font>);
+<a name="line138">138: </a>        }
+<a name="line139">139: </a>      }
+<a name="line140">140: </a>    } <font color="#4169E1">else</font> coordinates_arr_real = (<a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>*)coordinates_arr;
+
+<a name="line142">142: </a>    <a href="../../../../docs/manualpages/DM/DMSetDimension.html#DMSetDimension">DMSetDimension</a>(dm, spatialDim);
+<a name="line143">143: </a>    <a href="../../../../docs/manualpages/DMPLEX/DMPlexBuildFromCellListParallel.html#DMPlexBuildFromCellListParallel">DMPlexBuildFromCellListParallel</a>(dm, numCells, numVertices, NVertices, numCorners, cells_arr, &amp;sfVert);
+<a name="line144">144: </a>    DMPlexInvertCells_XDMF_Private(dm);
+<a name="line145">145: </a>    <a href="../../../../docs/manualpages/DMPLEX/DMPlexBuildCoordinatesFromCellListParallel.html#DMPlexBuildCoordinatesFromCellListParallel">DMPlexBuildCoordinatesFromCellListParallel</a>(dm, spatialDim, sfVert, coordinates_arr_real);
+<a name="line146">146: </a>    <a href="../../../../docs/manualpages/Vec/VecRestoreArrayRead.html#VecRestoreArrayRead">VecRestoreArrayRead</a>(coordinates, &amp;coordinates_arr);
+<a name="line147">147: </a>    <a href="../../../../docs/manualpages/IS/ISRestoreIndices.html#ISRestoreIndices">ISRestoreIndices</a>(cells, &amp;cells_arr);
+<a name="line148">148: </a>    <a href="../../../../docs/manualpages/PetscSF/PetscSFDestroy.html#PetscSFDestroy">PetscSFDestroy</a>(&amp;sfVert);
+<a name="line149">149: </a>    <font color="#4169E1">if</font> (<a href="../../../../docs/manualpages/Sys/PetscDefined.html#PetscDefined">PetscDefined</a>(USE_COMPLEX)) {<a href="../../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(coordinates_arr_real);}
+<a name="line150">150: </a>  }
+<a name="line151">151: </a>  <a href="../../../../docs/manualpages/IS/ISDestroy.html#ISDestroy">ISDestroy</a>(&amp;cells);
+<a name="line152">152: </a>  <a href="../../../../docs/manualpages/Vec/VecDestroy.html#VecDestroy">VecDestroy</a>(&amp;coordinates);
+
+<a name="line154">154: </a>  <font color="#B22222">/* scale coordinates - unlike in DMPlexLoad_HDF5_Internal, this can only be done after <a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> is populated */</font>
+<a name="line155">155: </a>  {
+<a name="line156">156: </a>    <a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> lengthScale;
+
+<a name="line158">158: </a>    <a href="../../../../docs/manualpages/DMPLEX/DMPlexGetScale.html#DMPlexGetScale">DMPlexGetScale</a>(dm, <a href="../../../../docs/manualpages/DM/PetscUnit.html#PetscUnit">PETSC_UNIT_LENGTH</a>, &amp;lengthScale);
+<a name="line159">159: </a>    <a href="../../../../docs/manualpages/DM/DMGetCoordinates.html#DMGetCoordinates">DMGetCoordinates</a>(dm, &amp;coordinates);
+<a name="line160">160: </a>    <a href="../../../../docs/manualpages/Vec/VecScale.html#VecScale">VecScale</a>(coordinates, 1.0/lengthScale);
+<a name="line161">161: </a>  }
+
+<a name="line163">163: </a>  <font color="#B22222">/* Read Labels */</font>
+<a name="line164">164: </a>  <font color="#B22222">/* TODO: this probably does not work as elements get permuted */</font>
+<a name="line165">165: </a>  <font color="#B22222">/* DMPlexLoadLabels_HDF5_Internal(dm, viewer); */</font>
+<a name="line166">166: </a>  <font color="#4169E1">return</font>(0);
+<a name="line167">167: </a>}
+<a name="line168">168: </a><font color="#A020F0">#endif</font>
+</pre>
+</body>
+
+</html>

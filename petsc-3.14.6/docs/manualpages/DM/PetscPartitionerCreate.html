@@ -1,0 +1,46 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DM/PetscPartitionerCreate.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>PetscPartitionerCreate</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/DM/PetscPartitionerCreate.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="PetscPartitionerCreate"><H1>PetscPartitionerCreate</H1></A>
+Creates an empty <A HREF="../DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</A> object. The type can then be set with <A HREF="../DM/PetscPartitionerSetType.html#PetscPartitionerSetType">PetscPartitionerSetType</A>(). 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscpartitioner.h" 
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../DM/PetscPartitionerCreate.html#PetscPartitionerCreate">PetscPartitionerCreate</A>(<A HREF="../Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</A> comm, <A HREF="../DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</A> *part)
+</PRE>
+Collective
+<P>
+<H3><FONT COLOR="#CC3333">Input Parameter</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>comm </B></TD><TD>- The communicator for the <A HREF="../DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</A> object
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Output Parameter</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>part </B></TD><TD>- The <A HREF="../DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</A> object
+</TD></TR></TABLE>
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../DM/PetscPartitionerSetType.html#PetscPartitionerSetType">PetscPartitionerSetType</A>(), <A HREF="../DM/PETSCPARTITIONERCHACO.html#PETSCPARTITIONERCHACO">PETSCPARTITIONERCHACO</A>, <A HREF="../DM/PETSCPARTITIONERPARMETIS.html#PETSCPARTITIONERPARMETIS">PETSCPARTITIONERPARMETIS</A>, <A HREF="../DM/PETSCPARTITIONERSHELL.html#PETSCPARTITIONERSHELL">PETSCPARTITIONERSHELL</A>, <A HREF="../DM/PETSCPARTITIONERSIMPLE.html#PETSCPARTITIONERSIMPLE">PETSCPARTITIONERSIMPLE</A>, <A HREF="../DM/PETSCPARTITIONERGATHER.html#PETSCPARTITIONERGATHER">PETSCPARTITIONERGATHER</A>
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>beginner<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/dm/partitioner/interface/partitioner.c.html#PetscPartitionerCreate">src/dm/partitioner/interface/partitioner.c</A>
+<P><H3><FONT COLOR="CC3333">Implementations</FONT></H3><A HREF="../../../src/dm/partitioner/impls/chaco/partchaco.c.html#PetscPartitionerCreate_Chaco">PetscPartitionerCreate_Chaco in src/dm/partitioner/impls/chaco/partchaco.c</A><BR>
+<A HREF="../../../src/dm/partitioner/impls/gather/partgather.c.html#PetscPartitionerCreate_Gather">PetscPartitionerCreate_Gather in src/dm/partitioner/impls/gather/partgather.c</A><BR>
+<A HREF="../../../src/dm/partitioner/impls/matpart/partmatpart.c.html#PetscPartitionerCreate_MatPartitioning">PetscPartitionerCreate_MatPartitioning in src/dm/partitioner/impls/matpart/partmatpart.c</A><BR>
+<A HREF="../../../src/dm/partitioner/impls/parmetis/partparmetis.c.html#PetscPartitionerCreate_ParMetis">PetscPartitionerCreate_ParMetis in src/dm/partitioner/impls/parmetis/partparmetis.c</A><BR>
+<A HREF="../../../src/dm/partitioner/impls/ptscotch/partptscotch.c.html#PetscPartitionerCreate_PTScotch">PetscPartitionerCreate_PTScotch in src/dm/partitioner/impls/ptscotch/partptscotch.c</A><BR>
+<A HREF="../../../src/dm/partitioner/impls/shell/partshell.c.html#PetscPartitionerCreate_Shell">PetscPartitionerCreate_Shell in src/dm/partitioner/impls/shell/partshell.c</A><BR>
+<A HREF="../../../src/dm/partitioner/impls/simple/partsimple.c.html#PetscPartitionerCreate_Simple">PetscPartitionerCreate_Simple in src/dm/partitioner/impls/simple/partsimple.c</A><BR>
+<BR><A HREF="./index.html">Index of all DM routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

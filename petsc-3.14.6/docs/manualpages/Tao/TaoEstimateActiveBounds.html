@@ -1,0 +1,60 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Tao/TaoEstimateActiveBounds.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>TaoEstimateActiveBounds</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/Tao/TaoEstimateActiveBounds.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="TaoEstimateActiveBounds"><H1>TaoEstimateActiveBounds</H1></A>
+Generates index sets for variables at the lower and upper bounds, as well as fixed variables where lower and upper bounds equal each other. 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petsctao.h" 
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../Tao/TaoEstimateActiveBounds.html#TaoEstimateActiveBounds">TaoEstimateActiveBounds</A>(<A HREF="../Vec/Vec.html#Vec">Vec</A> X, <A HREF="../Vec/Vec.html#Vec">Vec</A> XL, <A HREF="../Vec/Vec.html#Vec">Vec</A> XU, <A HREF="../Vec/Vec.html#Vec">Vec</A> G, <A HREF="../Vec/Vec.html#Vec">Vec</A> S, <A HREF="../Vec/Vec.html#Vec">Vec</A> W, <A HREF="../Sys/PetscReal.html#PetscReal">PetscReal</A> steplen, <A HREF="../Sys/PetscReal.html#PetscReal">PetscReal</A> *bound_tol,
+                                       <A HREF="../IS/IS.html#IS">IS</A> *active_lower, <A HREF="../IS/IS.html#IS">IS</A> *active_upper, <A HREF="../IS/IS.html#IS">IS</A> *active_fixed, <A HREF="../IS/IS.html#IS">IS</A> *active, <A HREF="../IS/IS.html#IS">IS</A> *inactive)
+</PRE>
+<H3><FONT COLOR="#CC3333">Input Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>X </B></TD><TD>- solution vector
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>XL </B></TD><TD>- lower bound vector
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>XU </B></TD><TD>- upper bound vector
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>G </B></TD><TD>- unprojected gradient
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>S </B></TD><TD>- step direction with which the active bounds will be estimated
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>W </B></TD><TD>- work vector of type and size of X
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>steplen </B></TD><TD>- the step length at which the active bounds will be estimated (needs to be conservative)
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Output Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>bound_tol </B></TD><TD>- tolerance for for the bound estimation
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>active_lower </B></TD><TD>- index set for active variables at the lower bound
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>active_upper </B></TD><TD>- index set for active variables at the upper bound
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>active_fixed </B></TD><TD>- index set for fixed variables
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>active </B></TD><TD>- index set for all active variables
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>inactive </B></TD><TD>- complementary index set for inactive variables
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Notes</FONT></H3>
+This estimation is based on Bertsekas' method, with a built in diagonal scaling value of 1.0e-3.
+<P>
+
+<P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>developer<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/tao/bound/utils/isutil.c.html#TaoEstimateActiveBounds">src/tao/bound/utils/isutil.c</A>
+<BR><A HREF="./index.html">Index of all Tao routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

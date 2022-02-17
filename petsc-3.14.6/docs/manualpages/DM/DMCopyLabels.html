@@ -1,0 +1,44 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DM/DMCopyLabels.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>DMCopyLabels</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/DM/DMCopyLabels.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="DMCopyLabels"><H1>DMCopyLabels</H1></A>
+Copy labels from one mesh to another with a superset of the points 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscdm.h"          
+#include "petscdmlabel.h"     
+#include "petscds.h"     
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../DM/DMCopyLabels.html#DMCopyLabels">DMCopyLabels</A>(<A HREF="../DM/DM.html#DM">DM</A> dmA, <A HREF="../DM/DM.html#DM">DM</A> dmB, <A HREF="../Sys/PetscCopyMode.html#PetscCopyMode">PetscCopyMode</A> mode, <A HREF="../Sys/PetscBool.html#PetscBool">PetscBool</A> all)
+</PRE>
+Collective on dmA
+<P>
+<H3><FONT COLOR="#CC3333">Input Parameter</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>dmA </B></TD><TD>- The <A HREF="../DM/DM.html#DM">DM</A> object with initial labels
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>dmB </B></TD><TD>- The <A HREF="../DM/DM.html#DM">DM</A> object with copied labels
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>mode </B></TD><TD>- Copy labels by pointers (<A HREF="../Sys/PetscCopyMode.html#PetscCopyMode">PETSC_OWN_POINTER</A>) or duplicate them (<A HREF="../Sys/PetscCopyMode.html#PetscCopyMode">PETSC_COPY_VALUES</A>)
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>all  </B></TD><TD>- Copy all labels including "depth", "dim", and "celltype" (<A HREF="../Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</A>) which are otherwise ignored (<A HREF="../Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</A>)
+</TD></TR></TABLE>
+<P>
+
+<P>
+Note: This is typically used when interpolating or otherwise adding to a mesh
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../DM/DMGetCoordinates.html#DMGetCoordinates">DMGetCoordinates</A>(), <A HREF="../DM/DMGetCoordinatesLocal.html#DMGetCoordinatesLocal">DMGetCoordinatesLocal</A>(), <A HREF="../DM/DMGetCoordinateDM.html#DMGetCoordinateDM">DMGetCoordinateDM</A>(), <A HREF="../DM/DMGetCoordinateSection.html#DMGetCoordinateSection">DMGetCoordinateSection</A>(), DMShareLabels()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>intermediate<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/dm/interface/dm.c.html#DMCopyLabels">src/dm/interface/dm.c</A>
+<BR><A HREF="./index.html">Index of all DM routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

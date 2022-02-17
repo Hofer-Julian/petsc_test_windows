@@ -1,0 +1,321 @@
+<center><a href="ex114.c">Actual source code: ex114.c</a></center><br>
+
+<html>
+<head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/src/mat/tests/ex114.c.html" />
+<title></title>
+<meta name="generator" content="c2html 0.9.4">
+<meta name="date" content="2021-03-30T16:50:22+00:00">
+</head>
+
+<body bgcolor="#FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 src/mat/tests/ex114.c.html "><small>Report Typos and Errors</small></a></div>
+<pre width="80">
+
+<a name="line2">  2: </a>static char help[] = <font color="#666666">"Tests <a href="../../../docs/manualpages/Mat/MatGetRowMax.html#MatGetRowMax">MatGetRowMax</a>(), <a href="../../../docs/manualpages/Mat/MatGetRowMin.html#MatGetRowMin">MatGetRowMin</a>(), <a href="../../../docs/manualpages/Mat/MatGetRowMaxAbs.html#MatGetRowMaxAbs">MatGetRowMaxAbs</a>()\n"</font>;
+
+<a name="line4">  4: </a>#include <A href="../../../include/petscmat.h.html">&lt;petscmat.h&gt;</A>
+
+<a name="line6">  6: </a><strong><font color="#228B22">#define M 5</font></strong>
+<a name="line7">  7: </a><strong><font color="#228B22">#define N 6</font></strong>
+
+<a name="line9">  9: </a><strong><font color="#4169E1"><a name="main"></a>int main(int argc,char **args)</font></strong>
+<a name="line10"> 10: </a>{
+<a name="line11"> 11: </a>  <a href="../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a>            A;
+<a name="line12"> 12: </a>  <a href="../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a>            min,max,maxabs,e;
+<a name="line13"> 13: </a>  <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       m,n,j,imin[M],imax[M],imaxabs[M],indices[N],row,testcase=0;
+<a name="line14"> 14: </a>  <a href="../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>    values[N];
+<a name="line16"> 16: </a>  <a href="../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a>    size,rank;
+<a name="line17"> 17: </a>  <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>      enorm;
+
+<a name="line19"> 19: </a>  <a href="../../../docs/manualpages/Sys/PetscInitialize.html#PetscInitialize">PetscInitialize</a>(&amp;argc,&amp;args,(char*)0,help);<font color="#4169E1">if</font> (ierr) <font color="#4169E1">return</font> ierr;
+<a name="line20"> 20: </a>  <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_size.html#MPI_Comm_size">MPI_Comm_size</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,&amp;size);
+<a name="line21"> 21: </a>  <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_rank.html#MPI_Comm_rank">MPI_Comm_rank</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,&amp;rank);
+<a name="line22"> 22: </a>  <a href="../../../docs/manualpages/Sys/PetscOptionsGetInt.html#PetscOptionsGetInt">PetscOptionsGetInt</a>(NULL,NULL,<font color="#666666">"-testcase"</font>,&amp;testcase,NULL);
+
+<a name="line24"> 24: </a>  <a href="../../../docs/manualpages/Mat/MatCreate.html#MatCreate">MatCreate</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,&amp;A);
+<a name="line25"> 25: </a>  <font color="#4169E1">if</font> (testcase == 1) { <font color="#B22222">/* proc[0] holds entire A and other processes have no entry */</font>
+<a name="line26"> 26: </a>    <font color="#4169E1">if</font> (!rank) {
+<a name="line27"> 27: </a>      <a href="../../../docs/manualpages/Mat/MatSetSizes.html#MatSetSizes">MatSetSizes</a>(A,M,N,<a href="../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a>,<a href="../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a>);
+<a name="line28"> 28: </a>    } <font color="#4169E1">else</font> {
+<a name="line29"> 29: </a>      <a href="../../../docs/manualpages/Mat/MatSetSizes.html#MatSetSizes">MatSetSizes</a>(A,0,0,<a href="../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a>,<a href="../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a>);
+<a name="line30"> 30: </a>    }
+<a name="line31"> 31: </a>    testcase = 0;
+<a name="line32"> 32: </a>  } <font color="#4169E1">else</font> {
+<a name="line33"> 33: </a>    <a href="../../../docs/manualpages/Mat/MatSetSizes.html#MatSetSizes">MatSetSizes</a>(A,<a href="../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a>,<a href="../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a>,M,N);
+<a name="line34"> 34: </a>  }
+<a name="line35"> 35: </a>  <a href="../../../docs/manualpages/Mat/MatSetFromOptions.html#MatSetFromOptions">MatSetFromOptions</a>(A);
+<a name="line36"> 36: </a>  <a href="../../../docs/manualpages/Mat/MatSetUp.html#MatSetUp">MatSetUp</a>(A);
+
+<a name="line38"> 38: </a>  <font color="#4169E1">if</font> (!rank) { <font color="#B22222">/* proc[0] sets matrix A */</font>
+<a name="line39"> 39: </a>    <font color="#4169E1">for</font> (j=0; j&lt;N; j++) indices[j] = j;
+<a name="line40"> 40: </a>    <font color="#4169E1">switch</font> (testcase) {
+<a name="line41"> 41: </a>    <font color="#4169E1">case</font> 1: <font color="#B22222">/* see testcast 0 */</font>
+<a name="line42"> 42: </a>      <font color="#4169E1">break</font>;
+<a name="line43"> 43: </a>    <font color="#4169E1">case</font> 2:
+<a name="line44"> 44: </a>      row = 0;
+<a name="line45"> 45: </a>      values[0]  = -2.0; values[1] = -2.0; values[2] = -2.0; values[3] = -4.0; values[4] = 1.0; values[5] = 1.0;
+<a name="line46"> 46: </a>      <a href="../../../docs/manualpages/Mat/MatSetValues.html#MatSetValues">MatSetValues</a>(A,1,&amp;row,N,indices,values,<a href="../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>);
+<a name="line47"> 47: </a>      row = 2;
+<a name="line48"> 48: </a>      indices[0] = 0;    indices[1] = 3;    indices[2] = 5;
+<a name="line49"> 49: </a>      values[0]  = -2.0; values[1]  = -2.0; values[2]  = -2.0;
+<a name="line50"> 50: </a>      <a href="../../../docs/manualpages/Mat/MatSetValues.html#MatSetValues">MatSetValues</a>(A,1,&amp;row,3,indices,values,<a href="../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>);
+<a name="line51"> 51: </a>      row = 3;
+<a name="line52"> 52: </a>      indices[0] = 0;    indices[1] = 1;    indices[2] = 4;
+<a name="line53"> 53: </a>      values[0]  = -2.0; values[1]  = -2.0; values[2]  = -2.0;
+<a name="line54"> 54: </a>      <a href="../../../docs/manualpages/Mat/MatSetValues.html#MatSetValues">MatSetValues</a>(A,1,&amp;row,3,indices,values,<a href="../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>);
+<a name="line55"> 55: </a>      row = 4;
+<a name="line56"> 56: </a>      indices[0] = 0;    indices[1] = 1;    indices[2] = 2;
+<a name="line57"> 57: </a>      values[0]  = -2.0; values[1]  = -2.0; values[2]  = -2.0;
+<a name="line58"> 58: </a>      <a href="../../../docs/manualpages/Mat/MatSetValues.html#MatSetValues">MatSetValues</a>(A,1,&amp;row,3,indices,values,<a href="../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>);
+<a name="line59"> 59: </a>      <font color="#4169E1">break</font>;
+<a name="line60"> 60: </a>    <font color="#4169E1">case</font> 3:
+<a name="line61"> 61: </a>      row = 0;
+<a name="line62"> 62: </a>      values[0]  = -2.0; values[1] = -2.0; values[2] = -2.0;
+<a name="line63"> 63: </a>      <a href="../../../docs/manualpages/Mat/MatSetValues.html#MatSetValues">MatSetValues</a>(A,1,&amp;row,3,indices+1,values,<a href="../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>);
+<a name="line64"> 64: </a>      row = 1;
+<a name="line65"> 65: </a>      values[0]  = -2.0; values[1] = -2.0; values[2] = -2.0;
+<a name="line66"> 66: </a>      <a href="../../../docs/manualpages/Mat/MatSetValues.html#MatSetValues">MatSetValues</a>(A,1,&amp;row,3,indices,values,<a href="../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>);
+<a name="line67"> 67: </a>      row = 2;
+<a name="line68"> 68: </a>      values[0]  = -2.0; values[1] = -2.0; values[2]  = -2.0;
+<a name="line69"> 69: </a>      <a href="../../../docs/manualpages/Mat/MatSetValues.html#MatSetValues">MatSetValues</a>(A,1,&amp;row,3,indices,values,<a href="../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>);
+<a name="line70"> 70: </a>      row = 3;
+<a name="line71"> 71: </a>      values[0]  = -2.0; values[1] = -2.0; values[2]  = -2.0; values[3] = -1.0;
+<a name="line72"> 72: </a>      <a href="../../../docs/manualpages/Mat/MatSetValues.html#MatSetValues">MatSetValues</a>(A,1,&amp;row,4,indices,values,<a href="../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>);
+<a name="line73"> 73: </a>      row = 4;
+<a name="line74"> 74: </a>      values[0]  = -2.0; values[1] = -2.0; values[2]  = -2.0; values[3] = -1.0;
+<a name="line75"> 75: </a>      <a href="../../../docs/manualpages/Mat/MatSetValues.html#MatSetValues">MatSetValues</a>(A,1,&amp;row,4,indices,values,<a href="../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>);
+<a name="line76"> 76: </a>      <font color="#4169E1">break</font>;
+
+<a name="line78"> 78: </a><strong><font color="#FF0000">    default:</font></strong>
+<a name="line79"> 79: </a>      row  = 0;
+<a name="line80"> 80: </a>      values[0]  = -1.0; values[1] = 0.0; values[2] = 1.0; values[3] = 3.0; values[4] = 4.0; values[5] = -5.0;
+<a name="line81"> 81: </a>      <a href="../../../docs/manualpages/Mat/MatSetValues.html#MatSetValues">MatSetValues</a>(A,1,&amp;row,N,indices,values,<a href="../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>);
+<a name="line82"> 82: </a>      row  = 1;
+<a name="line83"> 83: </a>      <a href="../../../docs/manualpages/Mat/MatSetValues.html#MatSetValues">MatSetValues</a>(A,1,&amp;row,3,indices,values,<a href="../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>);
+<a name="line84"> 84: </a>      row  = 3;
+<a name="line85"> 85: </a>      <a href="../../../docs/manualpages/Mat/MatSetValues.html#MatSetValues">MatSetValues</a>(A,1,&amp;row,1,indices+4,values+4,<a href="../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>);
+<a name="line86"> 86: </a>      row  = 4;
+<a name="line87"> 87: </a>      <a href="../../../docs/manualpages/Mat/MatSetValues.html#MatSetValues">MatSetValues</a>(A,1,&amp;row,2,indices+4,values+4,<a href="../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>);
+<a name="line88"> 88: </a>    }
+<a name="line89"> 89: </a>  }
+<a name="line90"> 90: </a>  <a href="../../../docs/manualpages/Mat/MatAssemblyBegin.html#MatAssemblyBegin">MatAssemblyBegin</a>(A,<a href="../../../docs/manualpages/Mat/MatAssemblyType.html#MatAssemblyType">MAT_FINAL_ASSEMBLY</a>);
+<a name="line91"> 91: </a>  <a href="../../../docs/manualpages/Mat/MatAssemblyEnd.html#MatAssemblyEnd">MatAssemblyEnd</a>(A,<a href="../../../docs/manualpages/Mat/MatAssemblyType.html#MatAssemblyType">MAT_FINAL_ASSEMBLY</a>);
+<a name="line92"> 92: </a>  <a href="../../../docs/manualpages/Mat/MatView.html#MatView">MatView</a>(A,<a href="../../../docs/manualpages/Viewer/PETSC_VIEWER_STDOUT_WORLD.html#PETSC_VIEWER_STDOUT_WORLD">PETSC_VIEWER_STDOUT_WORLD</a>);
+
+<a name="line94"> 94: </a>  <a href="../../../docs/manualpages/Mat/MatGetLocalSize.html#MatGetLocalSize">MatGetLocalSize</a>(A, &amp;m,&amp;n);
+<a name="line95"> 95: </a>  <a href="../../../docs/manualpages/Vec/VecCreate.html#VecCreate">VecCreate</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,&amp;min);
+<a name="line96"> 96: </a>  <a href="../../../docs/manualpages/Vec/VecSetSizes.html#VecSetSizes">VecSetSizes</a>(min,m,<a href="../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a>);
+<a name="line97"> 97: </a>  <a href="../../../docs/manualpages/Vec/VecSetFromOptions.html#VecSetFromOptions">VecSetFromOptions</a>(min);
+<a name="line98"> 98: </a>  <a href="../../../docs/manualpages/Vec/VecDuplicate.html#VecDuplicate">VecDuplicate</a>(min,&amp;max);
+<a name="line99"> 99: </a>  <a href="../../../docs/manualpages/Vec/VecDuplicate.html#VecDuplicate">VecDuplicate</a>(min,&amp;maxabs);
+<a name="line100">100: </a>  <a href="../../../docs/manualpages/Vec/VecDuplicate.html#VecDuplicate">VecDuplicate</a>(min,&amp;e);
+
+<a name="line102">102: </a>  <font color="#B22222">/* <a href="../../../docs/manualpages/Mat/MatGetRowMax.html#MatGetRowMax">MatGetRowMax</a>() */</font>
+<a name="line103">103: </a>  <a href="../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,<font color="#666666">"\n <a href="../../../docs/manualpages/Mat/MatGetRowMax.html#MatGetRowMax">MatGetRowMax</a>\n"</font>);
+<a name="line104">104: </a>  <a href="../../../docs/manualpages/Mat/MatGetRowMax.html#MatGetRowMax">MatGetRowMax</a>(A,max,NULL);
+<a name="line105">105: </a>  <a href="../../../docs/manualpages/Mat/MatGetRowMax.html#MatGetRowMax">MatGetRowMax</a>(A,max,imax);
+<a name="line106">106: </a>  <a href="../../../docs/manualpages/Vec/VecView.html#VecView">VecView</a>(max,<a href="../../../docs/manualpages/Viewer/PETSC_VIEWER_STDOUT_WORLD.html#PETSC_VIEWER_STDOUT_WORLD">PETSC_VIEWER_STDOUT_WORLD</a>);
+<a name="line107">107: </a>  <a href="../../../docs/manualpages/Vec/VecGetLocalSize.html#VecGetLocalSize">VecGetLocalSize</a>(max,&amp;n);
+<a name="line108">108: </a>  <a href="../../../docs/manualpages/Sys/PetscIntView.html#PetscIntView">PetscIntView</a>(n,imax,<a href="../../../docs/manualpages/Viewer/PETSC_VIEWER_STDOUT_WORLD.html#PETSC_VIEWER_STDOUT_WORLD">PETSC_VIEWER_STDOUT_WORLD</a>);
+
+<a name="line110">110: </a>  <font color="#B22222">/* <a href="../../../docs/manualpages/Mat/MatGetRowMin.html#MatGetRowMin">MatGetRowMin</a>() */</font>
+<a name="line111">111: </a>  <a href="../../../docs/manualpages/Mat/MatScale.html#MatScale">MatScale</a>(A,-1.0);
+<a name="line112">112: </a>  <a href="../../../docs/manualpages/Mat/MatView.html#MatView">MatView</a>(A,<a href="../../../docs/manualpages/Viewer/PETSC_VIEWER_STDOUT_WORLD.html#PETSC_VIEWER_STDOUT_WORLD">PETSC_VIEWER_STDOUT_WORLD</a>);
+<a name="line113">113: </a>  <a href="../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,<font color="#666666">"\n <a href="../../../docs/manualpages/Mat/MatGetRowMin.html#MatGetRowMin">MatGetRowMin</a>\n"</font>);
+<a name="line114">114: </a>  <a href="../../../docs/manualpages/Mat/MatGetRowMin.html#MatGetRowMin">MatGetRowMin</a>(A,min,NULL);
+<a name="line115">115: </a>  <a href="../../../docs/manualpages/Mat/MatGetRowMin.html#MatGetRowMin">MatGetRowMin</a>(A,min,imin);
+
+<a name="line117">117: </a>  <a href="../../../docs/manualpages/Vec/VecWAXPY.html#VecWAXPY">VecWAXPY</a>(e,1.0,max,min); <font color="#B22222">/* e = max + min */</font>
+<a name="line118">118: </a>  <a href="../../../docs/manualpages/Vec/VecNorm.html#VecNorm">VecNorm</a>(e,<a href="../../../docs/manualpages/Vec/NORM_INFINITY.html#NORM_INFINITY">NORM_INFINITY</a>,&amp;enorm);
+<a name="line119">119: </a>  <font color="#4169E1">if</font> (enorm &gt; PETSC_MACHINE_EPSILON) <a href="../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,PETSC_ERR_PLIB,<font color="#666666">"max+min &gt; PETSC_MACHINE_EPSILON "</font>);
+<a name="line120">120: </a>  <font color="#4169E1">for</font> (j = 0; j &lt; n; j++) {
+<a name="line121">121: </a>    <font color="#4169E1">if</font> (imin[j] != imax[j]) <a href="../../../docs/manualpages/Sys/SETERRQ3.html#SETERRQ3">SETERRQ3</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_PLIB,<font color="#666666">"imin[%D] %D != imax %D"</font>,j,imin[j],imax[j]);
+<a name="line122">122: </a>  }
+
+<a name="line124">124: </a>  <font color="#B22222">/* <a href="../../../docs/manualpages/Mat/MatGetRowMaxAbs.html#MatGetRowMaxAbs">MatGetRowMaxAbs</a>() */</font>
+<a name="line125">125: </a>  <a href="../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,<font color="#666666">"\n <a href="../../../docs/manualpages/Mat/MatGetRowMaxAbs.html#MatGetRowMaxAbs">MatGetRowMaxAbs</a>\n"</font>);
+<a name="line126">126: </a>  <a href="../../../docs/manualpages/Mat/MatGetRowMaxAbs.html#MatGetRowMaxAbs">MatGetRowMaxAbs</a>(A,maxabs,NULL);
+<a name="line127">127: </a>  <a href="../../../docs/manualpages/Mat/MatGetRowMaxAbs.html#MatGetRowMaxAbs">MatGetRowMaxAbs</a>(A,maxabs,imaxabs);
+<a name="line128">128: </a>  <a href="../../../docs/manualpages/Vec/VecView.html#VecView">VecView</a>(maxabs,<a href="../../../docs/manualpages/Viewer/PETSC_VIEWER_STDOUT_WORLD.html#PETSC_VIEWER_STDOUT_WORLD">PETSC_VIEWER_STDOUT_WORLD</a>);
+<a name="line129">129: </a>  <a href="../../../docs/manualpages/Sys/PetscIntView.html#PetscIntView">PetscIntView</a>(n,imaxabs,<a href="../../../docs/manualpages/Viewer/PETSC_VIEWER_STDOUT_WORLD.html#PETSC_VIEWER_STDOUT_WORLD">PETSC_VIEWER_STDOUT_WORLD</a>);
+
+<a name="line131">131: </a>  <font color="#B22222">/* <a href="../../../docs/manualpages/Mat/MatGetRowMinAbs.html#MatGetRowMinAbs">MatGetRowMinAbs</a>() */</font>
+<a name="line132">132: </a>  <a href="../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,<font color="#666666">"\n <a href="../../../docs/manualpages/Mat/MatGetRowMinAbs.html#MatGetRowMinAbs">MatGetRowMinAbs</a>\n"</font>);
+<a name="line133">133: </a>  <a href="../../../docs/manualpages/Mat/MatGetRowMinAbs.html#MatGetRowMinAbs">MatGetRowMinAbs</a>(A,min,NULL);
+<a name="line134">134: </a>  <a href="../../../docs/manualpages/Mat/MatGetRowMinAbs.html#MatGetRowMinAbs">MatGetRowMinAbs</a>(A,min,imin);
+<a name="line135">135: </a>  <a href="../../../docs/manualpages/Vec/VecView.html#VecView">VecView</a>(min,<a href="../../../docs/manualpages/Viewer/PETSC_VIEWER_STDOUT_WORLD.html#PETSC_VIEWER_STDOUT_WORLD">PETSC_VIEWER_STDOUT_WORLD</a>);
+<a name="line136">136: </a>  <a href="../../../docs/manualpages/Sys/PetscIntView.html#PetscIntView">PetscIntView</a>(n,imin,<a href="../../../docs/manualpages/Viewer/PETSC_VIEWER_STDOUT_WORLD.html#PETSC_VIEWER_STDOUT_WORLD">PETSC_VIEWER_STDOUT_WORLD</a>);
+
+<a name="line138">138: </a>  <font color="#4169E1">if</font> (size == 1) {
+<a name="line139">139: </a>    <font color="#B22222">/* Test <a href="../../../docs/manualpages/Mat/MatGetRowMax.html#MatGetRowMax">MatGetRowMax</a>, <a href="../../../docs/manualpages/Mat/MatGetRowMin.html#MatGetRowMin">MatGetRowMin</a> and <a href="../../../docs/manualpages/Mat/MatGetRowMaxAbs.html#MatGetRowMaxAbs">MatGetRowMaxAbs</a> for SeqDense and MPIBAIJ matrix */</font>
+<a name="line140">140: </a>    <a href="../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> Adense;
+<a name="line141">141: </a>    <a href="../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> max_d,maxabs_d;
+<a name="line142">142: </a>    <a href="../../../docs/manualpages/Vec/VecDuplicate.html#VecDuplicate">VecDuplicate</a>(min,&amp;max_d);
+<a name="line143">143: </a>    <a href="../../../docs/manualpages/Vec/VecDuplicate.html#VecDuplicate">VecDuplicate</a>(min,&amp;maxabs_d);
+
+<a name="line145">145: </a>    <a href="../../../docs/manualpages/Mat/MatScale.html#MatScale">MatScale</a>(A,-1.0);
+<a name="line146">146: </a>    <a href="../../../docs/manualpages/Mat/MatConvert.html#MatConvert">MatConvert</a>(A,<a href="../../../docs/manualpages/Mat/MATDENSE.html#MATDENSE">MATDENSE</a>,<a href="../../../docs/manualpages/Mat/MatReuse.html#MatReuse">MAT_INITIAL_MATRIX</a>,&amp;Adense);
+<a name="line147">147: </a>    <a href="../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,<font color="#666666">"<a href="../../../docs/manualpages/Mat/MatGetRowMax.html#MatGetRowMax">MatGetRowMax</a> for seqdense matrix\n"</font>);
+<a name="line148">148: </a>    <a href="../../../docs/manualpages/Mat/MatGetRowMax.html#MatGetRowMax">MatGetRowMax</a>(Adense,max_d,imax);
+
+<a name="line150">150: </a>    <a href="../../../docs/manualpages/Vec/VecWAXPY.html#VecWAXPY">VecWAXPY</a>(e,-1.0,max,max_d); <font color="#B22222">/* e = -max + max_d */</font>
+<a name="line151">151: </a>    <a href="../../../docs/manualpages/Vec/VecNorm.html#VecNorm">VecNorm</a>(e,<a href="../../../docs/manualpages/Vec/NORM_INFINITY.html#NORM_INFINITY">NORM_INFINITY</a>,&amp;enorm);
+<a name="line152">152: </a>    <font color="#4169E1">if</font> (enorm &gt; PETSC_MACHINE_EPSILON) <a href="../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,PETSC_ERR_PLIB,<font color="#666666">"norm(-max + max_d) %g &gt; PETSC_MACHINE_EPSILON"</font>,(double)enorm);
+
+<a name="line154">154: </a>    <a href="../../../docs/manualpages/Mat/MatScale.html#MatScale">MatScale</a>(Adense,-1.0);
+<a name="line155">155: </a>    <a href="../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,<font color="#666666">"<a href="../../../docs/manualpages/Mat/MatGetRowMin.html#MatGetRowMin">MatGetRowMin</a> for seqdense matrix\n"</font>);
+<a name="line156">156: </a>    <a href="../../../docs/manualpages/Mat/MatGetRowMin.html#MatGetRowMin">MatGetRowMin</a>(Adense,min,imin);
+
+<a name="line158">158: </a>    <a href="../../../docs/manualpages/Vec/VecWAXPY.html#VecWAXPY">VecWAXPY</a>(e,1.0,max,min); <font color="#B22222">/* e = max + min */</font>
+<a name="line159">159: </a>    <a href="../../../docs/manualpages/Vec/VecNorm.html#VecNorm">VecNorm</a>(e,<a href="../../../docs/manualpages/Vec/NORM_INFINITY.html#NORM_INFINITY">NORM_INFINITY</a>,&amp;enorm);
+<a name="line160">160: </a>    <font color="#4169E1">if</font> (enorm &gt; PETSC_MACHINE_EPSILON) <a href="../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,PETSC_ERR_PLIB,<font color="#666666">"max+min &gt; PETSC_MACHINE_EPSILON "</font>);
+<a name="line161">161: </a>    <font color="#4169E1">for</font> (j = 0; j &lt; n; j++) {
+<a name="line162">162: </a>      <font color="#4169E1">if</font> (imin[j] != imax[j]) {
+<a name="line163">163: </a>        <a href="../../../docs/manualpages/Sys/SETERRQ3.html#SETERRQ3">SETERRQ3</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_PLIB,<font color="#666666">"imin[%D] %D != imax %D for seqdense matrix"</font>,j,imin[j],imax[j]);
+<a name="line164">164: </a>      }
+<a name="line165">165: </a>    }
+
+<a name="line167">167: </a>    <a href="../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,<font color="#666666">"<a href="../../../docs/manualpages/Mat/MatGetRowMaxAbs.html#MatGetRowMaxAbs">MatGetRowMaxAbs</a> for seqdense matrix\n"</font>);
+<a name="line168">168: </a>    <a href="../../../docs/manualpages/Mat/MatGetRowMaxAbs.html#MatGetRowMaxAbs">MatGetRowMaxAbs</a>(Adense,maxabs_d,imaxabs);
+<a name="line169">169: </a>    <a href="../../../docs/manualpages/Vec/VecWAXPY.html#VecWAXPY">VecWAXPY</a>(e,-1.0,maxabs,maxabs_d); <font color="#B22222">/* e = -maxabs + maxabs_d */</font>
+<a name="line170">170: </a>    <a href="../../../docs/manualpages/Vec/VecNorm.html#VecNorm">VecNorm</a>(e,<a href="../../../docs/manualpages/Vec/NORM_INFINITY.html#NORM_INFINITY">NORM_INFINITY</a>,&amp;enorm);
+<a name="line171">171: </a>    <font color="#4169E1">if</font> (enorm &gt; PETSC_MACHINE_EPSILON) <a href="../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,PETSC_ERR_PLIB,<font color="#666666">"norm(-maxabs + maxabs_d) %g &gt; PETSC_MACHINE_EPSILON"</font>,(double)enorm);
+
+<a name="line173">173: </a>    <a href="../../../docs/manualpages/Mat/MatDestroy.html#MatDestroy">MatDestroy</a>(&amp;Adense);
+<a name="line174">174: </a>    <a href="../../../docs/manualpages/Vec/VecDestroy.html#VecDestroy">VecDestroy</a>(&amp;max_d);
+<a name="line175">175: </a>    <a href="../../../docs/manualpages/Vec/VecDestroy.html#VecDestroy">VecDestroy</a>(&amp;maxabs_d);
+<a name="line176">176: </a>  }
+
+<a name="line178">178: </a>  { <font color="#B22222">/* BAIJ matrix */</font>
+<a name="line179">179: </a>    <a href="../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a>               B;
+<a name="line180">180: </a>    <a href="../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a>               maxabsB,maxabsB2;
+<a name="line181">181: </a>    <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>          bs=2,*imaxabsB,*imaxabsB2,rstart,rend,cstart,cend,ncols,col,Brows[2],Bcols[2];
+<a name="line182">182: </a>    const <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>    *cols;
+<a name="line183">183: </a>    const <a href="../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> *vals,*vals2;
+<a name="line184">184: </a>    <a href="../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>       Bvals[4];
+
+<a name="line186">186: </a>    <a href="../../../docs/manualpages/Sys/PetscMalloc2.html#PetscMalloc2">PetscMalloc2</a>(M,&amp;imaxabsB,bs*M,&amp;imaxabsB2);
+
+<a name="line188">188: </a>    <font color="#B22222">/* bs = 1 */</font>
+<a name="line189">189: </a>    <a href="../../../docs/manualpages/Mat/MatConvert.html#MatConvert">MatConvert</a>(A,<a href="../../../docs/manualpages/Mat/MATMPIBAIJ.html#MATMPIBAIJ">MATMPIBAIJ</a>,<a href="../../../docs/manualpages/Mat/MatReuse.html#MatReuse">MAT_INITIAL_MATRIX</a>,&amp;B);
+<a name="line190">190: </a>    <a href="../../../docs/manualpages/Vec/VecDuplicate.html#VecDuplicate">VecDuplicate</a>(min,&amp;maxabsB);
+<a name="line191">191: </a>    <a href="../../../docs/manualpages/Mat/MatGetRowMaxAbs.html#MatGetRowMaxAbs">MatGetRowMaxAbs</a>(B,maxabsB,NULL);
+<a name="line192">192: </a>    <a href="../../../docs/manualpages/Mat/MatGetRowMaxAbs.html#MatGetRowMaxAbs">MatGetRowMaxAbs</a>(B,maxabsB,imaxabsB);
+<a name="line193">193: </a>    <a href="../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,<font color="#666666">"\n <a href="../../../docs/manualpages/Mat/MatGetRowMaxAbs.html#MatGetRowMaxAbs">MatGetRowMaxAbs</a> for BAIJ matrix\n"</font>);
+<a name="line194">194: </a>    <a href="../../../docs/manualpages/Vec/VecWAXPY.html#VecWAXPY">VecWAXPY</a>(e,-1.0,maxabs,maxabsB); <font color="#B22222">/* e = -maxabs + maxabsB */</font>
+<a name="line195">195: </a>    <a href="../../../docs/manualpages/Vec/VecNorm.html#VecNorm">VecNorm</a>(e,<a href="../../../docs/manualpages/Vec/NORM_INFINITY.html#NORM_INFINITY">NORM_INFINITY</a>,&amp;enorm);
+<a name="line196">196: </a>    <font color="#4169E1">if</font> (enorm &gt; PETSC_MACHINE_EPSILON) <a href="../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,PETSC_ERR_PLIB,<font color="#666666">"norm(-maxabs + maxabs_d) %g &gt; PETSC_MACHINE_EPSILON"</font>,(double)enorm);
+
+<a name="line198">198: </a>    <font color="#4169E1">for</font> (j = 0; j &lt; n; j++) {
+<a name="line199">199: </a>      <font color="#4169E1">if</font> (imaxabs[j] != imaxabsB[j]) <a href="../../../docs/manualpages/Sys/SETERRQ3.html#SETERRQ3">SETERRQ3</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_PLIB,<font color="#666666">"imaxabs[%D] %D != imaxabsB %D"</font>,j,imin[j],imax[j]);
+<a name="line200">200: </a>    }
+<a name="line201">201: </a>    <a href="../../../docs/manualpages/Mat/MatDestroy.html#MatDestroy">MatDestroy</a>(&amp;B);
+
+<a name="line203">203: </a>    <font color="#B22222">/* Test bs = 2: Create B with bs*bs block structure of A */</font>
+<a name="line204">204: </a>    <a href="../../../docs/manualpages/Vec/VecCreate.html#VecCreate">VecCreate</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,&amp;maxabsB2);
+<a name="line205">205: </a>    <a href="../../../docs/manualpages/Vec/VecSetSizes.html#VecSetSizes">VecSetSizes</a>(maxabsB2,bs*m,<a href="../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a>);
+<a name="line206">206: </a>    <a href="../../../docs/manualpages/Vec/VecSetFromOptions.html#VecSetFromOptions">VecSetFromOptions</a>(maxabsB2);
+
+<a name="line208">208: </a>    <a href="../../../docs/manualpages/Mat/MatGetOwnershipRange.html#MatGetOwnershipRange">MatGetOwnershipRange</a>(A,&amp;rstart,&amp;rend);
+<a name="line209">209: </a>    <a href="../../../docs/manualpages/Mat/MatGetOwnershipRangeColumn.html#MatGetOwnershipRangeColumn">MatGetOwnershipRangeColumn</a>(A,&amp;cstart,&amp;cend);
+<a name="line210">210: </a>    <a href="../../../docs/manualpages/Mat/MatCreate.html#MatCreate">MatCreate</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,&amp;B);
+<a name="line211">211: </a>    <a href="../../../docs/manualpages/Mat/MatSetSizes.html#MatSetSizes">MatSetSizes</a>(B,bs*(rend-rstart),bs*(cend-cstart),<a href="../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a>,<a href="../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a>);
+<a name="line212">212: </a>    <a href="../../../docs/manualpages/Mat/MatSetFromOptions.html#MatSetFromOptions">MatSetFromOptions</a>(B);
+<a name="line213">213: </a>    <a href="../../../docs/manualpages/Mat/MatSetUp.html#MatSetUp">MatSetUp</a>(B);
+
+<a name="line215">215: </a>    <font color="#4169E1">for</font> (row=rstart; row&lt;rend; row++) {
+<a name="line216">216: </a>      <a href="../../../docs/manualpages/Mat/MatGetRow.html#MatGetRow">MatGetRow</a>(A,row,&amp;ncols,&amp;cols,&amp;vals);
+<a name="line217">217: </a>      <font color="#4169E1">for</font> (col=0; col&lt;ncols; col++) {
+<a name="line218">218: </a>        <font color="#4169E1">for</font> (j=0; j&lt;bs; j++) {
+<a name="line219">219: </a>          Brows[j] = bs*row + j;
+<a name="line220">220: </a>          Bcols[j] = bs*cols[col]+j;
+<a name="line221">221: </a>        }
+<a name="line222">222: </a>        <font color="#4169E1">for</font> (j=0; j&lt;bs*bs; j++) Bvals[j] = vals[col];
+<a name="line223">223: </a>        <a href="../../../docs/manualpages/Mat/MatSetValues.html#MatSetValues">MatSetValues</a>(B,bs,Brows,bs,Bcols,Bvals,<a href="../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>);
+<a name="line224">224: </a>      }
+<a name="line225">225: </a>      <a href="../../../docs/manualpages/Mat/MatRestoreRow.html#MatRestoreRow">MatRestoreRow</a>(A,row,&amp;ncols,&amp;cols,&amp;vals);
+<a name="line226">226: </a>    }
+<a name="line227">227: </a>    <a href="../../../docs/manualpages/Mat/MatAssemblyBegin.html#MatAssemblyBegin">MatAssemblyBegin</a>(B,<a href="../../../docs/manualpages/Mat/MatAssemblyType.html#MatAssemblyType">MAT_FINAL_ASSEMBLY</a>);
+<a name="line228">228: </a>    <a href="../../../docs/manualpages/Mat/MatAssemblyEnd.html#MatAssemblyEnd">MatAssemblyEnd</a>(B,<a href="../../../docs/manualpages/Mat/MatAssemblyType.html#MatAssemblyType">MAT_FINAL_ASSEMBLY</a>);
+
+<a name="line230">230: </a>    <a href="../../../docs/manualpages/Mat/MatGetRowMaxAbs.html#MatGetRowMaxAbs">MatGetRowMaxAbs</a>(B,maxabsB2,imaxabsB2);
+
+<a name="line232">232: </a>    <font color="#B22222">/* Check maxabsB2 and imaxabsB2 */</font>
+<a name="line233">233: </a>    <a href="../../../docs/manualpages/Vec/VecGetArrayRead.html#VecGetArrayRead">VecGetArrayRead</a>(maxabsB,&amp;vals);
+<a name="line234">234: </a>    <a href="../../../docs/manualpages/Vec/VecGetArrayRead.html#VecGetArrayRead">VecGetArrayRead</a>(maxabsB2,&amp;vals2);
+<a name="line235">235: </a>    <font color="#4169E1">for</font> (row=0; row&lt;m; row++) {
+<a name="line236">236: </a>      <font color="#4169E1">if</font> (PetscAbsScalar(vals[row] - vals2[bs*row]) &gt; PETSC_MACHINE_EPSILON)
+<a name="line237">237: </a>        <a href="../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_PLIB,<font color="#666666">"row %D maxabsB != maxabsB2"</font>,row);
+<a name="line238">238: </a>    }
+<a name="line239">239: </a>    <a href="../../../docs/manualpages/Vec/VecRestoreArrayRead.html#VecRestoreArrayRead">VecRestoreArrayRead</a>(maxabsB,&amp;vals);
+<a name="line240">240: </a>    <a href="../../../docs/manualpages/Vec/VecRestoreArrayRead.html#VecRestoreArrayRead">VecRestoreArrayRead</a>(maxabsB2,&amp;vals2);
+
+<a name="line242">242: </a>    <font color="#4169E1">for</font> (col=0; col&lt;n; col++) {
+<a name="line243">243: </a>      <font color="#4169E1">if</font> (imaxabsB[col] != imaxabsB2[bs*col]/bs)
+<a name="line244">244: </a>        <a href="../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_PLIB,<font color="#666666">"col %D imaxabsB != imaxabsB2"</font>,col);
+<a name="line245">245: </a>    }
+<a name="line246">246: </a>    <a href="../../../docs/manualpages/Vec/VecDestroy.html#VecDestroy">VecDestroy</a>(&amp;maxabsB);
+<a name="line247">247: </a>    <a href="../../../docs/manualpages/Mat/MatDestroy.html#MatDestroy">MatDestroy</a>(&amp;B);
+<a name="line248">248: </a>    <a href="../../../docs/manualpages/Vec/VecDestroy.html#VecDestroy">VecDestroy</a>(&amp;maxabsB2);
+<a name="line249">249: </a>    <a href="../../../docs/manualpages/Sys/PetscFree2.html#PetscFree2">PetscFree2</a>(imaxabsB,imaxabsB2);
+<a name="line250">250: </a>  }
+
+<a name="line252">252: </a>  <a href="../../../docs/manualpages/Vec/VecDestroy.html#VecDestroy">VecDestroy</a>(&amp;min);
+<a name="line253">253: </a>  <a href="../../../docs/manualpages/Vec/VecDestroy.html#VecDestroy">VecDestroy</a>(&amp;max);
+<a name="line254">254: </a>  <a href="../../../docs/manualpages/Vec/VecDestroy.html#VecDestroy">VecDestroy</a>(&amp;maxabs);
+<a name="line255">255: </a>  <a href="../../../docs/manualpages/Vec/VecDestroy.html#VecDestroy">VecDestroy</a>(&amp;e);
+<a name="line256">256: </a>  <a href="../../../docs/manualpages/Mat/MatDestroy.html#MatDestroy">MatDestroy</a>(&amp;A);
+<a name="line257">257: </a>  <a href="../../../docs/manualpages/Sys/PetscFinalize.html#PetscFinalize">PetscFinalize</a>();
+<a name="line258">258: </a>  <font color="#4169E1">return</font> ierr;
+<a name="line259">259: </a>}
+
+<a name="line261">261: </a><font color="#B22222">/*TEST</font>
+
+<a name="line263">263: </a><font color="#B22222">   test:</font>
+<a name="line264">264: </a><font color="#B22222">      output_file: output/ex114.out</font>
+
+<a name="line266">266: </a><font color="#B22222">   test:</font>
+<a name="line267">267: </a><font color="#B22222">      suffix: 2</font>
+<a name="line268">268: </a><font color="#B22222">      args: -testcase 1</font>
+<a name="line269">269: </a><font color="#B22222">      output_file: output/ex114.out</font>
+
+<a name="line271">271: </a><font color="#B22222">   test:</font>
+<a name="line272">272: </a><font color="#B22222">      suffix: 3</font>
+<a name="line273">273: </a><font color="#B22222">      args: -testcase 2</font>
+<a name="line274">274: </a><font color="#B22222">      output_file: output/ex114_3.out</font>
+
+<a name="line276">276: </a><font color="#B22222">   test:</font>
+<a name="line277">277: </a><font color="#B22222">      suffix: 4</font>
+<a name="line278">278: </a><font color="#B22222">      args: -testcase 3</font>
+<a name="line279">279: </a><font color="#B22222">      output_file: output/ex114_4.out</font>
+
+<a name="line281">281: </a><font color="#B22222">   test:</font>
+<a name="line282">282: </a><font color="#B22222">      suffix: 5</font>
+<a name="line283">283: </a><font color="#B22222">      nsize: 3</font>
+<a name="line284">284: </a><font color="#B22222">      args: -testcase 0</font>
+<a name="line285">285: </a><font color="#B22222">      output_file: output/ex114_5.out</font>
+
+<a name="line287">287: </a><font color="#B22222">   test:</font>
+<a name="line288">288: </a><font color="#B22222">      suffix: 6</font>
+<a name="line289">289: </a><font color="#B22222">      nsize: 3</font>
+<a name="line290">290: </a><font color="#B22222">      args: -testcase 1</font>
+<a name="line291">291: </a><font color="#B22222">      output_file: output/ex114_6.out</font>
+
+<a name="line293">293: </a><font color="#B22222">   test:</font>
+<a name="line294">294: </a><font color="#B22222">      suffix: 7</font>
+<a name="line295">295: </a><font color="#B22222">      nsize: 3</font>
+<a name="line296">296: </a><font color="#B22222">      args: -testcase 2</font>
+<a name="line297">297: </a><font color="#B22222">      output_file: output/ex114_7.out</font>
+
+<a name="line299">299: </a><font color="#B22222">   test:</font>
+<a name="line300">300: </a><font color="#B22222">      suffix: 8</font>
+<a name="line301">301: </a><font color="#B22222">      nsize: 3</font>
+<a name="line302">302: </a><font color="#B22222">      args: -testcase 3</font>
+<a name="line303">303: </a><font color="#B22222">      output_file: output/ex114_8.out</font>
+
+<a name="line305">305: </a><font color="#B22222">TEST*/</font>
+</pre>
+</body>
+
+</html>

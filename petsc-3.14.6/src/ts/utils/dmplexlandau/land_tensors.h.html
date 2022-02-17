@@ -1,0 +1,226 @@
+<center><a href="land_tensors.h">Actual source code: land_tensors.h</a></center><br>
+
+<html>
+<head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/src/ts/utils/dmplexlandau/land_tensors.h.html" />
+<title></title>
+<meta name="generator" content="c2html 0.9.4">
+<meta name="date" content="2021-03-30T16:52:01+00:00">
+</head>
+
+<body bgcolor="#FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 src/ts/utils/dmplexlandau/land_tensors.h.html "><small>Report Typos and Errors</small></a></div>
+<pre width="80">
+<a name="line1">  1: </a><strong><font color="#228B22">#define LANDAU_INVSQRT(q) (1./PetscSqrtReal(q))</font></strong>
+<a name="line2">  2: </a><strong><font color="#228B22">#define LANDAU_SQRT(q) PetscSqrtReal(q)</font></strong>
+
+<a name="line4">  4: </a><font color="#B22222">/* elliptic functions</font>
+<a name="line5">  5: </a><font color="#B22222"> */</font>
+<a name="line6">  6: </a><strong><font color="#4169E1"><a name="polevl_10"></a>PETSC_DEVICE_FUNC_DECL <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> polevl_10(<a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> x, <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> coef[])</font></strong>
+<a name="line7">  7: </a>{
+<a name="line8">  8: </a>  <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> ans;
+<a name="line9">  9: </a>  <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>  i;
+<a name="line10"> 10: </a>  ans = coef[0];
+<a name="line11"> 11: </a>  <font color="#4169E1">for</font> (i=1; i&lt;11; i++) ans = ans * x + coef[i];
+<a name="line12"> 12: </a>  <font color="#4169E1">return</font>(ans);
+<a name="line13"> 13: </a>}
+<a name="line14"> 14: </a><strong><font color="#4169E1"><a name="polevl_9"></a>PETSC_DEVICE_FUNC_DECL <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> polevl_9(<a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> x, <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> coef[])</font></strong>
+<a name="line15"> 15: </a>{
+<a name="line16"> 16: </a>  <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> ans;
+<a name="line17"> 17: </a>  <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>  i;
+<a name="line18"> 18: </a>  ans = coef[0];
+<a name="line19"> 19: </a>  <font color="#4169E1">for</font> (i=1; i&lt;10; i++) ans = ans * x + coef[i];
+<a name="line20"> 20: </a>  <font color="#4169E1">return</font>(ans);
+<a name="line21"> 21: </a>}
+<a name="line22"> 22: </a><font color="#B22222">/*</font>
+<a name="line23"> 23: </a><font color="#B22222"> *      Complete elliptic integral of the second kind</font>
+<a name="line24"> 24: </a><font color="#B22222"> */</font>
+<a name="line25"> 25: </a><strong><font color="#4169E1"><a name="ellipticE"></a>PETSC_DEVICE_FUNC_DECL void ellipticE(<a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> x,<a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> *ret)</font></strong>
+<a name="line26"> 26: </a>{
+<a name="line27"> 27: </a><font color="#A020F0">#if defined(PETSC_USE_REAL_SINGLE)</font>
+<a name="line28"> 28: </a>  static <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> P2[] = {
+<a name="line29"> 29: </a>    1.53552577301013293365E-4F,
+<a name="line30"> 30: </a>    2.50888492163602060990E-3F,
+<a name="line31"> 31: </a>    8.68786816565889628429E-3F,
+<a name="line32"> 32: </a>    1.07350949056076193403E-2F,
+<a name="line33"> 33: </a>    7.77395492516787092951E-3F,
+<a name="line34"> 34: </a>    7.58395289413514708519E-3F,
+<a name="line35"> 35: </a>    1.15688436810574127319E-2F,
+<a name="line36"> 36: </a>    2.18317996015557253103E-2F,
+<a name="line37"> 37: </a>    5.68051945617860553470E-2F,
+<a name="line38"> 38: </a>    4.43147180560990850618E-1F,
+<a name="line39"> 39: </a>    1.00000000000000000299E0F
+<a name="line40"> 40: </a>  };
+<a name="line41"> 41: </a>  static <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> Q2[] = {
+<a name="line42"> 42: </a>    3.27954898576485872656E-5F,
+<a name="line43"> 43: </a>    1.00962792679356715133E-3F,
+<a name="line44"> 44: </a>    6.50609489976927491433E-3F,
+<a name="line45"> 45: </a>    1.68862163993311317300E-2F,
+<a name="line46"> 46: </a>    2.61769742454493659583E-2F,
+<a name="line47"> 47: </a>    3.34833904888224918614E-2F,
+<a name="line48"> 48: </a>    4.27180926518931511717E-2F,
+<a name="line49"> 49: </a>    5.85936634471101055642E-2F,
+<a name="line50"> 50: </a>    9.37499997197644278445E-2F,
+<a name="line51"> 51: </a>    2.49999999999888314361E-1F
+<a name="line52"> 52: </a>  };
+<a name="line53"> 53: </a><font color="#A020F0">#else</font>
+<a name="line54"> 54: </a>  static <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> P2[] = {
+<a name="line55"> 55: </a>    1.53552577301013293365E-4,
+<a name="line56"> 56: </a>    2.50888492163602060990E-3,
+<a name="line57"> 57: </a>    8.68786816565889628429E-3,
+<a name="line58"> 58: </a>    1.07350949056076193403E-2,
+<a name="line59"> 59: </a>    7.77395492516787092951E-3,
+<a name="line60"> 60: </a>    7.58395289413514708519E-3,
+<a name="line61"> 61: </a>    1.15688436810574127319E-2,
+<a name="line62"> 62: </a>    2.18317996015557253103E-2,
+<a name="line63"> 63: </a>    5.68051945617860553470E-2,
+<a name="line64"> 64: </a>    4.43147180560990850618E-1,
+<a name="line65"> 65: </a>    1.00000000000000000299E0
+<a name="line66"> 66: </a>  };
+<a name="line67"> 67: </a>  static <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> Q2[] = {
+<a name="line68"> 68: </a>    3.27954898576485872656E-5,
+<a name="line69"> 69: </a>    1.00962792679356715133E-3,
+<a name="line70"> 70: </a>    6.50609489976927491433E-3,
+<a name="line71"> 71: </a>    1.68862163993311317300E-2,
+<a name="line72"> 72: </a>    2.61769742454493659583E-2,
+<a name="line73"> 73: </a>    3.34833904888224918614E-2,
+<a name="line74"> 74: </a>    4.27180926518931511717E-2,
+<a name="line75"> 75: </a>    5.85936634471101055642E-2,
+<a name="line76"> 76: </a>    9.37499997197644278445E-2,
+<a name="line77"> 77: </a>    2.49999999999888314361E-1
+<a name="line78"> 78: </a>  };
+<a name="line79"> 79: </a><font color="#A020F0">#endif</font>
+<a name="line80"> 80: </a>  x = 1 - x; <font color="#B22222">/* where m = 1 - m1 */</font>
+<a name="line81"> 81: </a>  *ret = polevl_10(x,P2) - PetscLogReal(x) * (x * polevl_9(x,Q2));
+<a name="line82"> 82: </a>}
+<a name="line83"> 83: </a><font color="#B22222">/*</font>
+<a name="line84"> 84: </a><font color="#B22222"> *      Complete elliptic integral of the first kind</font>
+<a name="line85"> 85: </a><font color="#B22222"> */</font>
+<a name="line86"> 86: </a><strong><font color="#4169E1"><a name="ellipticK"></a>PETSC_DEVICE_FUNC_DECL void ellipticK(<a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> x,<a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> *ret)</font></strong>
+<a name="line87"> 87: </a>{
+<a name="line88"> 88: </a><font color="#A020F0">#if defined(PETSC_USE_REAL_SINGLE)</font>
+<a name="line89"> 89: </a>  static <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> P1[] =
+<a name="line90"> 90: </a>    {
+<a name="line91"> 91: </a>      1.37982864606273237150E-4F,
+<a name="line92"> 92: </a>      2.28025724005875567385E-3F,
+<a name="line93"> 93: </a>      7.97404013220415179367E-3F,
+<a name="line94"> 94: </a>      9.85821379021226008714E-3F,
+<a name="line95"> 95: </a>      6.87489687449949877925E-3F,
+<a name="line96"> 96: </a>      6.18901033637687613229E-3F,
+<a name="line97"> 97: </a>      8.79078273952743772254E-3F,
+<a name="line98"> 98: </a>      1.49380448916805252718E-2F,
+<a name="line99"> 99: </a>      3.08851465246711995998E-2F,
+<a name="line100">100: </a>      9.65735902811690126535E-2F,
+<a name="line101">101: </a>      1.38629436111989062502E0F
+<a name="line102">102: </a>    };
+<a name="line103">103: </a>  static <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> Q1[] =
+<a name="line104">104: </a>    {
+<a name="line105">105: </a>      2.94078955048598507511E-5F,
+<a name="line106">106: </a>      9.14184723865917226571E-4F,
+<a name="line107">107: </a>      5.94058303753167793257E-3F,
+<a name="line108">108: </a>      1.54850516649762399335E-2F,
+<a name="line109">109: </a>      2.39089602715924892727E-2F,
+<a name="line110">110: </a>      3.01204715227604046988E-2F,
+<a name="line111">111: </a>      3.73774314173823228969E-2F,
+<a name="line112">112: </a>      4.88280347570998239232E-2F,
+<a name="line113">113: </a>      7.03124996963957469739E-2F,
+<a name="line114">114: </a>      1.24999999999870820058E-1F,
+<a name="line115">115: </a>      4.99999999999999999821E-1F
+<a name="line116">116: </a>    };
+<a name="line117">117: </a><font color="#A020F0">#else</font>
+<a name="line118">118: </a>  static <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> P1[] =
+<a name="line119">119: </a>    {
+<a name="line120">120: </a>      1.37982864606273237150E-4,
+<a name="line121">121: </a>      2.28025724005875567385E-3,
+<a name="line122">122: </a>      7.97404013220415179367E-3,
+<a name="line123">123: </a>      9.85821379021226008714E-3,
+<a name="line124">124: </a>      6.87489687449949877925E-3,
+<a name="line125">125: </a>      6.18901033637687613229E-3,
+<a name="line126">126: </a>      8.79078273952743772254E-3,
+<a name="line127">127: </a>      1.49380448916805252718E-2,
+<a name="line128">128: </a>      3.08851465246711995998E-2,
+<a name="line129">129: </a>      9.65735902811690126535E-2,
+<a name="line130">130: </a>      1.38629436111989062502E0
+<a name="line131">131: </a>    };
+<a name="line132">132: </a>  static <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> Q1[] =
+<a name="line133">133: </a>    {
+<a name="line134">134: </a>      2.94078955048598507511E-5,
+<a name="line135">135: </a>      9.14184723865917226571E-4,
+<a name="line136">136: </a>      5.94058303753167793257E-3,
+<a name="line137">137: </a>      1.54850516649762399335E-2,
+<a name="line138">138: </a>      2.39089602715924892727E-2,
+<a name="line139">139: </a>      3.01204715227604046988E-2,
+<a name="line140">140: </a>      3.73774314173823228969E-2,
+<a name="line141">141: </a>      4.88280347570998239232E-2,
+<a name="line142">142: </a>      7.03124996963957469739E-2,
+<a name="line143">143: </a>      1.24999999999870820058E-1,
+<a name="line144">144: </a>      4.99999999999999999821E-1
+<a name="line145">145: </a>    };
+<a name="line146">146: </a><font color="#A020F0">#endif</font>
+<a name="line147">147: </a>  x = 1 - x; <font color="#B22222">/* where m = 1 - m1 */</font>
+<a name="line148">148: </a>  *ret = polevl_10(x,P1) - PetscLogReal(x) * polevl_10(x,Q1);
+<a name="line149">149: </a>}
+
+
+<a name="line152">152: </a><font color="#B22222">/* integration point functions */</font>
+<a name="line153">153: </a><font color="#B22222">/* Evaluates the tensor U=(I-(x-y)(x-y)/(x-y)^2)/|x-y| at point x,y */</font>
+<a name="line154">154: </a><font color="#B22222">/* if x==y we will return zero. This is not the correct result */</font>
+<a name="line155">155: </a><font color="#B22222">/* since the tensor diverges for x==y but when integrated */</font>
+<a name="line156">156: </a><font color="#B22222">/* the divergent part is antisymmetric and vanishes. This is not  */</font>
+<a name="line157">157: </a><font color="#B22222">/* trivial, but can be proven. */</font>
+<a name="line158">158: </a><font color="#A020F0">#if LANDAU_DIM==3</font>
+<a name="line159">159: </a>PETSC_DEVICE_FUNC_DECL void LandauTensor3D(const <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> x1[], const <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> xp, const <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> yp, const <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> zp, <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> U[][3], <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> mask)
+<a name="line160">160: </a>{
+<a name="line161">161: </a>  <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> dx[3],inorm3,inorm,inorm2,norm2,x2[] = {xp,yp,zp};
+<a name="line162">162: </a>  <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>  d;
+<a name="line163">163: </a>  <font color="#4169E1">for</font> (d = 0, norm2 = PETSC_MACHINE_EPSILON; d &lt; 3; ++d) {
+<a name="line164">164: </a>    dx[d] = x2[d] - x1[d];
+<a name="line165">165: </a>    norm2 += dx[d] * dx[d];
+<a name="line166">166: </a>  }
+<a name="line167">167: </a>  inorm2 = mask/norm2;
+<a name="line168">168: </a>  inorm = LANDAU_SQRT(inorm2);
+<a name="line169">169: </a>  inorm3 = inorm2*inorm;
+<a name="line170">170: </a>  <font color="#4169E1">for</font> (d = 0; d &lt; 3; ++d) U[d][d] = inorm - inorm3 * dx[d] * dx[d];
+<a name="line171">171: </a>  U[1][0] = U[0][1] = -inorm3 * dx[0] * dx[1];
+<a name="line172">172: </a>  U[1][2] = U[2][1] = -inorm3 * dx[2] * dx[1];
+<a name="line173">173: </a>  U[2][0] = U[0][2] = -inorm3 * dx[0] * dx[2];
+<a name="line174">174: </a>}
+<a name="line175">175: </a><font color="#A020F0">#else</font>
+<a name="line176">176: </a>PETSC_DEVICE_FUNC_DECL void LandauTensor2D(const <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> x[], const <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> rp, const <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> zp, <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> Ud[][2], <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> Uk[][2], const <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> mask)
+<a name="line177">177: </a>{
+<a name="line178">178: </a>  <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> l,s,r=x[0],z=x[1],i1func,i2func,i3func,ks,es,pi4pow,sqrt_1s,r2,rp2,r2prp2,zmzp,zmzp2,tt;
+<a name="line179">179: </a>  //<a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> mask <font color="#B22222">/* = !!(r!=rp || z!=zp) */</font>;
+<a name="line180">180: </a>  <font color="#B22222">/* !!(zmzp2 &gt; 1.e-12 || (r-rp) &gt;  1.e-12 || (r-rp) &lt; -1.e-12); */</font>
+<a name="line181">181: </a>  r2=<a href="../../../docs/manualpages/Sys/PetscSqr.html#PetscSqr">PetscSqr</a>(r);
+<a name="line182">182: </a>  zmzp=z-zp;
+<a name="line183">183: </a>  rp2=<a href="../../../docs/manualpages/Sys/PetscSqr.html#PetscSqr">PetscSqr</a>(rp);
+<a name="line184">184: </a>  zmzp2=<a href="../../../docs/manualpages/Sys/PetscSqr.html#PetscSqr">PetscSqr</a>(zmzp);
+<a name="line185">185: </a>  r2prp2=r2+rp2;
+<a name="line186">186: </a>  l = r2 + rp2 + zmzp2;
+<a name="line187">187: </a>  <font color="#B22222">/* if      (zmzp2 &gt;  PETSC_SMALL) mask = 1; */</font>
+<a name="line188">188: </a>  <font color="#B22222">/* else if ((tt=(r-rp)) &gt;  PETSC_SMALL) mask = 1; */</font>
+<a name="line189">189: </a>  <font color="#B22222">/* else if  (tt         &lt; -PETSC_SMALL) mask = 1; */</font>
+<a name="line190">190: </a>  <font color="#B22222">/* else mask = 0; */</font>
+<a name="line191">191: </a>  s = mask*2*r*rp/l; <font color="#B22222">/* mask for vectorization */</font>
+<a name="line192">192: </a>  tt = 1./(1+s);
+<a name="line193">193: </a>  pi4pow = 4*PETSC_PI*LANDAU_INVSQRT(<a href="../../../docs/manualpages/Sys/PetscSqr.html#PetscSqr">PetscSqr</a>(l)*l);
+<a name="line194">194: </a>  sqrt_1s = LANDAU_SQRT(1.+s);
+<a name="line195">195: </a>  <font color="#B22222">/* sp.ellipe(2.*s/(1.+s)) */</font>
+<a name="line196">196: </a>  ellipticE(2*s*tt,&amp;es); <font color="#B22222">/* 44 flops * 2 + 75 = 163 flops including 2 logs, 1 sqrt, 1 pow, 21 mult */</font>
+<a name="line197">197: </a>  <font color="#B22222">/* sp.ellipk(2.*s/(1.+s)) */</font>
+<a name="line198">198: </a>  ellipticK(2*s*tt,&amp;ks); <font color="#B22222">/* 44 flops + 75 in rest, 21 mult */</font>
+<a name="line199">199: </a>  <font color="#B22222">/* mask is needed here just for single precision */</font>
+<a name="line200">200: </a>  i2func = 2./((1-s)*sqrt_1s) * es;
+<a name="line201">201: </a>  i1func = 4./(<a href="../../../docs/manualpages/Sys/PetscSqr.html#PetscSqr">PetscSqr</a>(s)*sqrt_1s + PETSC_MACHINE_EPSILON) * mask * (ks - (1.+s) * es);
+<a name="line202">202: </a>  i3func = 2./((1-s)*(s)*sqrt_1s + PETSC_MACHINE_EPSILON) * (es - (1-s) * ks);
+<a name="line203">203: </a>  Ud[0][0]=                    pi4pow*(rp2*i1func+<a href="../../../docs/manualpages/Sys/PetscSqr.html#PetscSqr">PetscSqr</a>(zmzp)*i2func);
+<a name="line204">204: </a>  Ud[0][1]=Ud[1][0]=Uk[0][1]= -pi4pow*(zmzp)*(r*i2func-rp*i3func);
+<a name="line205">205: </a>  Uk[1][1]=Ud[1][1]=           pi4pow*((r2prp2)*i2func-2*r*rp*i3func)*mask;
+<a name="line206">206: </a>  Uk[0][0]=                    pi4pow*(zmzp2*i3func+r*rp*i1func);
+<a name="line207">207: </a>  Uk[1][0]=                   -pi4pow*(zmzp)*(r*i3func-rp*i2func); <font color="#B22222">/* 48 mults + 21 + 21 = 90 mults and divs */</font>
+<a name="line208">208: </a>}
+<a name="line209">209: </a><font color="#A020F0">#endif</font>
+</pre>
+</body>
+
+</html>

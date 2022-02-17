@@ -1,0 +1,19 @@
+prefix=/cygdrive/c/checkouts/modflow/petsc-3.14.6/arch-mswin-c-opt
+exec_prefix=${prefix}
+includedir=${prefix}/include
+libdir=${prefix}/lib
+ccompiler=/cygdrive/c/checkouts/modflow/petsc-3.14.6/lib/petsc/bin/win32fe/win32fe cl
+cflags_extra=-O2 -MD
+cflags_dep=
+ldflag_rpath=-R
+cxxcompiler=/cygdrive/c/checkouts/modflow/petsc-3.14.6/lib/petsc/bin/win32fe/win32fe cl
+cxxflags_extra=-O2 -MD  -TP
+fcompiler=/cygdrive/c/checkouts/modflow/petsc-3.14.6/lib/petsc/bin/win32fe/win32fe ifort
+fflags_extra=-MD -O3 -fpp
+
+Name: PETSc
+Description: Library to solve ODEs and algebraic equations
+Version: 3.14.6
+Cflags:   -I${includedir} -I/cygdrive/c/checkouts/modflow/petsc-3.14.6/include
+Libs: -L${libdir} -lpetsc
+Libs.private: /cygdrive/c/Progra~2/Intel/oneAPI/mkl/latest/lib/intel64/mkl_intel_lp64_dll.lib mkl_sequential_dll.lib mkl_core_dll.lib libiomp5md.lib /cygdrive/c/Progra~2/Intel/oneAPI/mpi/latest/lib/release/impi.lib /cygdrive/c/Progra~2/Intel/oneAPI/mpi/latest/lib/release/impicxx.lib Gdi32.lib User32.lib Advapi32.lib Kernel32.lib Ws2_32.lib

@@ -1,0 +1,291 @@
+<center><a href="submat.c">Actual source code: submat.c</a></center><br>
+
+<html>
+<head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/src/mat/impls/submat/submat.c.html" />
+<title></title>
+<meta name="generator" content="c2html 0.9.4">
+<meta name="date" content="2021-03-30T16:50:15+00:00">
+</head>
+
+<body bgcolor="#FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 src/mat/impls/submat/submat.c.html "><small>Report Typos and Errors</small></a></div>
+<pre width="80">
+
+<a name="line2">  2: </a>#include <A href="../../../../include/petsc/private/matimpl.h.html">&lt;petsc/private/matimpl.h&gt;</A>
+
+<a name="line4">  4: </a><font color="#4169E1">typedef</font> <font color="#4169E1">struct</font> {
+<a name="line5">  5: </a>  <a href="../../../../docs/manualpages/IS/IS.html#IS">IS</a>          isrow,iscol;      <font color="#B22222">/* rows and columns in submatrix, only used to check consistency */</font>
+<a name="line6">  6: </a>  <a href="../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a>         lwork,rwork;      <font color="#B22222">/* work vectors inside the scatters */</font>
+<a name="line7">  7: </a>  <a href="../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a>         lwork2,rwork2;    <font color="#B22222">/* work vectors inside the scatters */</font>
+<a name="line8">  8: </a>  <a href="../../../../docs/manualpages/Vec/VecScatter.html#VecScatter">VecScatter</a>  lrestrict,rprolong;
+<a name="line9">  9: </a>  <a href="../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a>         A;
+<a name="line10"> 10: </a>} Mat_SubVirtual;
+
+<a name="line12"> 12: </a><strong><font color="#4169E1"><a name="MatScale_SubMatrix"></a>static <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatScale_SubMatrix(<a href="../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> N,<a href="../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> a)</font></strong>
+<a name="line13"> 13: </a>{
+<a name="line14"> 14: </a>  Mat_SubVirtual *Na = (Mat_SubVirtual*)N-&gt;data;
+
+<a name="line18"> 18: </a>  <a href="../../../../docs/manualpages/Mat/MatScale.html#MatScale">MatScale</a>(Na-&gt;A,a);
+<a name="line19"> 19: </a>  <font color="#4169E1">return</font>(0);
+<a name="line20"> 20: </a>}
+
+<a name="line22"> 22: </a><strong><font color="#4169E1"><a name="MatShift_SubMatrix"></a>static <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatShift_SubMatrix(<a href="../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> N,<a href="../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> a)</font></strong>
+<a name="line23"> 23: </a>{
+<a name="line24"> 24: </a>  Mat_SubVirtual *Na = (Mat_SubVirtual*)N-&gt;data;
+
+<a name="line28"> 28: </a>  <a href="../../../../docs/manualpages/Mat/MatShift.html#MatShift">MatShift</a>(Na-&gt;A,a);
+<a name="line29"> 29: </a>  <font color="#4169E1">return</font>(0);
+<a name="line30"> 30: </a>}
+
+<a name="line32"> 32: </a><strong><font color="#4169E1"><a name="MatDiagonalScale_SubMatrix"></a>static <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatDiagonalScale_SubMatrix(<a href="../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> N,<a href="../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> left,<a href="../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> right)</font></strong>
+<a name="line33"> 33: </a>{
+<a name="line34"> 34: </a>  Mat_SubVirtual *Na = (Mat_SubVirtual*)N-&gt;data;
+
+<a name="line38"> 38: </a>  <font color="#4169E1">if</font> (right) {
+<a name="line39"> 39: </a>    <a href="../../../../docs/manualpages/Vec/VecZeroEntries.html#VecZeroEntries">VecZeroEntries</a>(Na-&gt;rwork);
+<a name="line40"> 40: </a>    <a href="../../../../docs/manualpages/Vec/VecScatterBegin.html#VecScatterBegin">VecScatterBegin</a>(Na-&gt;rprolong,right,Na-&gt;rwork,<a href="../../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>,<a href="../../../../docs/manualpages/Vec/SCATTER_FORWARD.html#SCATTER_FORWARD">SCATTER_FORWARD</a>);
+<a name="line41"> 41: </a>    <a href="../../../../docs/manualpages/Vec/VecScatterEnd.html#VecScatterEnd">VecScatterEnd</a>(Na-&gt;rprolong,right,Na-&gt;rwork,<a href="../../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>,<a href="../../../../docs/manualpages/Vec/SCATTER_FORWARD.html#SCATTER_FORWARD">SCATTER_FORWARD</a>);
+<a name="line42"> 42: </a>  }
+<a name="line43"> 43: </a>  <font color="#4169E1">if</font> (left) {
+<a name="line44"> 44: </a>    <a href="../../../../docs/manualpages/Vec/VecZeroEntries.html#VecZeroEntries">VecZeroEntries</a>(Na-&gt;lwork);
+<a name="line45"> 45: </a>    <a href="../../../../docs/manualpages/Vec/VecScatterBegin.html#VecScatterBegin">VecScatterBegin</a>(Na-&gt;lrestrict,left,Na-&gt;lwork,<a href="../../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>,<a href="../../../../docs/manualpages/Vec/SCATTER_REVERSE.html#SCATTER_REVERSE">SCATTER_REVERSE</a>);
+<a name="line46"> 46: </a>    <a href="../../../../docs/manualpages/Vec/VecScatterEnd.html#VecScatterEnd">VecScatterEnd</a>(Na-&gt;lrestrict,left,Na-&gt;lwork,<a href="../../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>,<a href="../../../../docs/manualpages/Vec/SCATTER_REVERSE.html#SCATTER_REVERSE">SCATTER_REVERSE</a>);
+<a name="line47"> 47: </a>  }
+<a name="line48"> 48: </a>  <a href="../../../../docs/manualpages/Mat/MatDiagonalScale.html#MatDiagonalScale">MatDiagonalScale</a>(Na-&gt;A,left ? Na-&gt;lwork : NULL,right ? Na-&gt;rwork : NULL);
+<a name="line49"> 49: </a>  <font color="#4169E1">return</font>(0);
+<a name="line50"> 50: </a>}
+
+<a name="line52"> 52: </a><strong><font color="#4169E1"><a name="MatGetDiagonal_SubMatrix"></a>static <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatGetDiagonal_SubMatrix(<a href="../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> N,<a href="../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> d)</font></strong>
+<a name="line53"> 53: </a>{
+<a name="line54"> 54: </a>  Mat_SubVirtual *Na = (Mat_SubVirtual*)N-&gt;data;
+
+<a name="line58"> 58: </a>  <a href="../../../../docs/manualpages/Mat/MatGetDiagonal.html#MatGetDiagonal">MatGetDiagonal</a>(Na-&gt;A,Na-&gt;rwork);
+<a name="line59"> 59: </a>  <a href="../../../../docs/manualpages/Vec/VecScatterBegin.html#VecScatterBegin">VecScatterBegin</a>(Na-&gt;rprolong,Na-&gt;rwork,d,<a href="../../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>,<a href="../../../../docs/manualpages/Vec/SCATTER_REVERSE.html#SCATTER_REVERSE">SCATTER_REVERSE</a>);
+<a name="line60"> 60: </a>  <a href="../../../../docs/manualpages/Vec/VecScatterEnd.html#VecScatterEnd">VecScatterEnd</a>(Na-&gt;rprolong,Na-&gt;rwork,d,<a href="../../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>,<a href="../../../../docs/manualpages/Vec/SCATTER_REVERSE.html#SCATTER_REVERSE">SCATTER_REVERSE</a>);
+<a name="line61"> 61: </a>  <font color="#4169E1">return</font>(0);
+<a name="line62"> 62: </a>}
+
+<a name="line64"> 64: </a><strong><font color="#4169E1"><a name="MatMult_SubMatrix"></a>static <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatMult_SubMatrix(<a href="../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> N,<a href="../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> x,<a href="../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> y)</font></strong>
+<a name="line65"> 65: </a>{
+<a name="line66"> 66: </a>  Mat_SubVirtual *Na = (Mat_SubVirtual*)N-&gt;data;
+
+<a name="line70"> 70: </a>  <a href="../../../../docs/manualpages/Vec/VecZeroEntries.html#VecZeroEntries">VecZeroEntries</a>(Na-&gt;rwork);
+<a name="line71"> 71: </a>  <a href="../../../../docs/manualpages/Vec/VecScatterBegin.html#VecScatterBegin">VecScatterBegin</a>(Na-&gt;rprolong,x,Na-&gt;rwork,<a href="../../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>,<a href="../../../../docs/manualpages/Vec/SCATTER_FORWARD.html#SCATTER_FORWARD">SCATTER_FORWARD</a>);
+<a name="line72"> 72: </a>  <a href="../../../../docs/manualpages/Vec/VecScatterEnd.html#VecScatterEnd">VecScatterEnd</a>(Na-&gt;rprolong,x,Na-&gt;rwork,<a href="../../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>,<a href="../../../../docs/manualpages/Vec/SCATTER_FORWARD.html#SCATTER_FORWARD">SCATTER_FORWARD</a>);
+<a name="line73"> 73: </a>  <a href="../../../../docs/manualpages/Mat/MatMult.html#MatMult">MatMult</a>(Na-&gt;A,Na-&gt;rwork,Na-&gt;lwork);
+<a name="line74"> 74: </a>  <a href="../../../../docs/manualpages/Vec/VecScatterBegin.html#VecScatterBegin">VecScatterBegin</a>(Na-&gt;lrestrict,Na-&gt;lwork,y,<a href="../../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>,<a href="../../../../docs/manualpages/Vec/SCATTER_FORWARD.html#SCATTER_FORWARD">SCATTER_FORWARD</a>);
+<a name="line75"> 75: </a>  <a href="../../../../docs/manualpages/Vec/VecScatterEnd.html#VecScatterEnd">VecScatterEnd</a>(Na-&gt;lrestrict,Na-&gt;lwork,y,<a href="../../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>,<a href="../../../../docs/manualpages/Vec/SCATTER_FORWARD.html#SCATTER_FORWARD">SCATTER_FORWARD</a>);
+<a name="line76"> 76: </a>  <font color="#4169E1">return</font>(0);
+<a name="line77"> 77: </a>}
+
+<a name="line79"> 79: </a><strong><font color="#4169E1"><a name="MatMultAdd_SubMatrix"></a>static <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatMultAdd_SubMatrix(<a href="../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> N,<a href="../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> v1,<a href="../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> v2,<a href="../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> v3)</font></strong>
+<a name="line80"> 80: </a>{
+<a name="line81"> 81: </a>  Mat_SubVirtual *Na = (Mat_SubVirtual*)N-&gt;data;
+
+<a name="line85"> 85: </a>  <a href="../../../../docs/manualpages/Vec/VecZeroEntries.html#VecZeroEntries">VecZeroEntries</a>(Na-&gt;rwork);
+<a name="line86"> 86: </a>  <a href="../../../../docs/manualpages/Vec/VecScatterBegin.html#VecScatterBegin">VecScatterBegin</a>(Na-&gt;rprolong,v1,Na-&gt;rwork,<a href="../../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>,<a href="../../../../docs/manualpages/Vec/SCATTER_FORWARD.html#SCATTER_FORWARD">SCATTER_FORWARD</a>);
+<a name="line87"> 87: </a>  <a href="../../../../docs/manualpages/Vec/VecScatterEnd.html#VecScatterEnd">VecScatterEnd</a>(Na-&gt;rprolong,v1,Na-&gt;rwork,<a href="../../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>,<a href="../../../../docs/manualpages/Vec/SCATTER_FORWARD.html#SCATTER_FORWARD">SCATTER_FORWARD</a>);
+<a name="line88"> 88: </a>  <font color="#4169E1">if</font> (v1 == v2) {
+<a name="line89"> 89: </a>    <a href="../../../../docs/manualpages/Mat/MatMultAdd.html#MatMultAdd">MatMultAdd</a>(Na-&gt;A,Na-&gt;rwork,Na-&gt;rwork,Na-&gt;lwork);
+<a name="line90"> 90: </a>  } <font color="#4169E1">else</font> <font color="#4169E1">if</font> (v2 == v3) {
+<a name="line91"> 91: </a>    <a href="../../../../docs/manualpages/Vec/VecZeroEntries.html#VecZeroEntries">VecZeroEntries</a>(Na-&gt;lwork);
+<a name="line92"> 92: </a>    <a href="../../../../docs/manualpages/Vec/VecScatterBegin.html#VecScatterBegin">VecScatterBegin</a>(Na-&gt;lrestrict,v2,Na-&gt;lwork,<a href="../../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>,<a href="../../../../docs/manualpages/Vec/SCATTER_REVERSE.html#SCATTER_REVERSE">SCATTER_REVERSE</a>);
+<a name="line93"> 93: </a>    <a href="../../../../docs/manualpages/Vec/VecScatterEnd.html#VecScatterEnd">VecScatterEnd</a>(Na-&gt;lrestrict,v2,Na-&gt;lwork,<a href="../../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>,<a href="../../../../docs/manualpages/Vec/SCATTER_REVERSE.html#SCATTER_REVERSE">SCATTER_REVERSE</a>);
+<a name="line94"> 94: </a>    <a href="../../../../docs/manualpages/Mat/MatMultAdd.html#MatMultAdd">MatMultAdd</a>(Na-&gt;A,Na-&gt;rwork,Na-&gt;lwork,Na-&gt;lwork);
+<a name="line95"> 95: </a>  } <font color="#4169E1">else</font> {
+<a name="line96"> 96: </a>    <font color="#4169E1">if</font> (!Na-&gt;lwork2) {
+<a name="line97"> 97: </a>      <a href="../../../../docs/manualpages/Vec/VecDuplicate.html#VecDuplicate">VecDuplicate</a>(Na-&gt;lwork,&amp;Na-&gt;lwork2);
+<a name="line98"> 98: </a>    } <font color="#4169E1">else</font> {
+<a name="line99"> 99: </a>      <a href="../../../../docs/manualpages/Vec/VecZeroEntries.html#VecZeroEntries">VecZeroEntries</a>(Na-&gt;lwork2);
+<a name="line100">100: </a>    }
+<a name="line101">101: </a>    <a href="../../../../docs/manualpages/Vec/VecScatterBegin.html#VecScatterBegin">VecScatterBegin</a>(Na-&gt;lrestrict,v2,Na-&gt;lwork2,<a href="../../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>,<a href="../../../../docs/manualpages/Vec/SCATTER_REVERSE.html#SCATTER_REVERSE">SCATTER_REVERSE</a>);
+<a name="line102">102: </a>    <a href="../../../../docs/manualpages/Vec/VecScatterEnd.html#VecScatterEnd">VecScatterEnd</a>(Na-&gt;lrestrict,v2,Na-&gt;lwork2,<a href="../../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>,<a href="../../../../docs/manualpages/Vec/SCATTER_REVERSE.html#SCATTER_REVERSE">SCATTER_REVERSE</a>);
+<a name="line103">103: </a>    <a href="../../../../docs/manualpages/Mat/MatMultAdd.html#MatMultAdd">MatMultAdd</a>(Na-&gt;A,Na-&gt;rwork,Na-&gt;lwork2,Na-&gt;lwork);
+<a name="line104">104: </a>  }
+<a name="line105">105: </a>  <a href="../../../../docs/manualpages/Vec/VecScatterBegin.html#VecScatterBegin">VecScatterBegin</a>(Na-&gt;lrestrict,Na-&gt;lwork,v3,<a href="../../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>,<a href="../../../../docs/manualpages/Vec/SCATTER_FORWARD.html#SCATTER_FORWARD">SCATTER_FORWARD</a>);
+<a name="line106">106: </a>  <a href="../../../../docs/manualpages/Vec/VecScatterEnd.html#VecScatterEnd">VecScatterEnd</a>(Na-&gt;lrestrict,Na-&gt;lwork,v3,<a href="../../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>,<a href="../../../../docs/manualpages/Vec/SCATTER_FORWARD.html#SCATTER_FORWARD">SCATTER_FORWARD</a>);
+<a name="line107">107: </a>  <font color="#4169E1">return</font>(0);
+<a name="line108">108: </a>}
+
+<a name="line110">110: </a><strong><font color="#4169E1"><a name="MatMultTranspose_SubMatrix"></a>static <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatMultTranspose_SubMatrix(<a href="../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> N,<a href="../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> x,<a href="../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> y)</font></strong>
+<a name="line111">111: </a>{
+<a name="line112">112: </a>  Mat_SubVirtual *Na = (Mat_SubVirtual*)N-&gt;data;
+
+<a name="line116">116: </a>  <a href="../../../../docs/manualpages/Vec/VecZeroEntries.html#VecZeroEntries">VecZeroEntries</a>(Na-&gt;lwork);
+<a name="line117">117: </a>  <a href="../../../../docs/manualpages/Vec/VecScatterBegin.html#VecScatterBegin">VecScatterBegin</a>(Na-&gt;lrestrict,x,Na-&gt;lwork,<a href="../../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>,<a href="../../../../docs/manualpages/Vec/SCATTER_REVERSE.html#SCATTER_REVERSE">SCATTER_REVERSE</a>);
+<a name="line118">118: </a>  <a href="../../../../docs/manualpages/Vec/VecScatterEnd.html#VecScatterEnd">VecScatterEnd</a>(Na-&gt;lrestrict,x,Na-&gt;lwork,<a href="../../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>,<a href="../../../../docs/manualpages/Vec/SCATTER_REVERSE.html#SCATTER_REVERSE">SCATTER_REVERSE</a>);
+<a name="line119">119: </a>  <a href="../../../../docs/manualpages/Mat/MatMultTranspose.html#MatMultTranspose">MatMultTranspose</a>(Na-&gt;A,Na-&gt;lwork,Na-&gt;rwork);
+<a name="line120">120: </a>  <a href="../../../../docs/manualpages/Vec/VecScatterBegin.html#VecScatterBegin">VecScatterBegin</a>(Na-&gt;rprolong,Na-&gt;rwork,y,<a href="../../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>,<a href="../../../../docs/manualpages/Vec/SCATTER_REVERSE.html#SCATTER_REVERSE">SCATTER_REVERSE</a>);
+<a name="line121">121: </a>  <a href="../../../../docs/manualpages/Vec/VecScatterEnd.html#VecScatterEnd">VecScatterEnd</a>(Na-&gt;rprolong,Na-&gt;rwork,y,<a href="../../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>,<a href="../../../../docs/manualpages/Vec/SCATTER_REVERSE.html#SCATTER_REVERSE">SCATTER_REVERSE</a>);
+<a name="line122">122: </a>  <font color="#4169E1">return</font>(0);
+<a name="line123">123: </a>}
+
+<a name="line125">125: </a><strong><font color="#4169E1"><a name="MatMultTransposeAdd_SubMatrix"></a>static <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatMultTransposeAdd_SubMatrix(<a href="../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> N,<a href="../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> v1,<a href="../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> v2,<a href="../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> v3)</font></strong>
+<a name="line126">126: </a>{
+<a name="line127">127: </a>  Mat_SubVirtual *Na = (Mat_SubVirtual*)N-&gt;data;
+
+<a name="line131">131: </a>  <a href="../../../../docs/manualpages/Vec/VecZeroEntries.html#VecZeroEntries">VecZeroEntries</a>(Na-&gt;lwork);
+<a name="line132">132: </a>  <a href="../../../../docs/manualpages/Vec/VecScatterBegin.html#VecScatterBegin">VecScatterBegin</a>(Na-&gt;lrestrict,v1,Na-&gt;lwork,<a href="../../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>,<a href="../../../../docs/manualpages/Vec/SCATTER_REVERSE.html#SCATTER_REVERSE">SCATTER_REVERSE</a>);
+<a name="line133">133: </a>  <a href="../../../../docs/manualpages/Vec/VecScatterEnd.html#VecScatterEnd">VecScatterEnd</a>(Na-&gt;lrestrict,v1,Na-&gt;lwork,<a href="../../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>,<a href="../../../../docs/manualpages/Vec/SCATTER_REVERSE.html#SCATTER_REVERSE">SCATTER_REVERSE</a>);
+<a name="line134">134: </a>  <font color="#4169E1">if</font> (v1 == v2) {
+<a name="line135">135: </a>    <a href="../../../../docs/manualpages/Mat/MatMultTransposeAdd.html#MatMultTransposeAdd">MatMultTransposeAdd</a>(Na-&gt;A,Na-&gt;lwork,Na-&gt;lwork,Na-&gt;rwork);
+<a name="line136">136: </a>  } <font color="#4169E1">else</font> <font color="#4169E1">if</font> (v2 == v3) {
+<a name="line137">137: </a>    <a href="../../../../docs/manualpages/Vec/VecZeroEntries.html#VecZeroEntries">VecZeroEntries</a>(Na-&gt;rwork);
+<a name="line138">138: </a>    <a href="../../../../docs/manualpages/Vec/VecScatterBegin.html#VecScatterBegin">VecScatterBegin</a>(Na-&gt;rprolong,v2,Na-&gt;rwork,<a href="../../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>,<a href="../../../../docs/manualpages/Vec/SCATTER_FORWARD.html#SCATTER_FORWARD">SCATTER_FORWARD</a>);
+<a name="line139">139: </a>    <a href="../../../../docs/manualpages/Vec/VecScatterEnd.html#VecScatterEnd">VecScatterEnd</a>(Na-&gt;rprolong,v2,Na-&gt;rwork,<a href="../../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>,<a href="../../../../docs/manualpages/Vec/SCATTER_FORWARD.html#SCATTER_FORWARD">SCATTER_FORWARD</a>);
+<a name="line140">140: </a>    <a href="../../../../docs/manualpages/Mat/MatMultTransposeAdd.html#MatMultTransposeAdd">MatMultTransposeAdd</a>(Na-&gt;A,Na-&gt;lwork,Na-&gt;rwork,Na-&gt;rwork);
+<a name="line141">141: </a>  } <font color="#4169E1">else</font> {
+<a name="line142">142: </a>    <font color="#4169E1">if</font> (!Na-&gt;rwork2) {
+<a name="line143">143: </a>      <a href="../../../../docs/manualpages/Vec/VecDuplicate.html#VecDuplicate">VecDuplicate</a>(Na-&gt;rwork,&amp;Na-&gt;rwork2);
+<a name="line144">144: </a>    } <font color="#4169E1">else</font> {
+<a name="line145">145: </a>      <a href="../../../../docs/manualpages/Vec/VecZeroEntries.html#VecZeroEntries">VecZeroEntries</a>(Na-&gt;rwork2);
+<a name="line146">146: </a>    }
+<a name="line147">147: </a>    <a href="../../../../docs/manualpages/Vec/VecScatterBegin.html#VecScatterBegin">VecScatterBegin</a>(Na-&gt;rprolong,v2,Na-&gt;rwork2,<a href="../../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>,<a href="../../../../docs/manualpages/Vec/SCATTER_FORWARD.html#SCATTER_FORWARD">SCATTER_FORWARD</a>);
+<a name="line148">148: </a>    <a href="../../../../docs/manualpages/Vec/VecScatterEnd.html#VecScatterEnd">VecScatterEnd</a>(Na-&gt;rprolong,v2,Na-&gt;rwork2,<a href="../../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>,<a href="../../../../docs/manualpages/Vec/SCATTER_FORWARD.html#SCATTER_FORWARD">SCATTER_FORWARD</a>);
+<a name="line149">149: </a>    <a href="../../../../docs/manualpages/Mat/MatMultTransposeAdd.html#MatMultTransposeAdd">MatMultTransposeAdd</a>(Na-&gt;A,Na-&gt;lwork,Na-&gt;rwork2,Na-&gt;rwork);
+<a name="line150">150: </a>  }
+<a name="line151">151: </a>  <a href="../../../../docs/manualpages/Vec/VecScatterBegin.html#VecScatterBegin">VecScatterBegin</a>(Na-&gt;rprolong,Na-&gt;rwork,v3,<a href="../../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>,<a href="../../../../docs/manualpages/Vec/SCATTER_REVERSE.html#SCATTER_REVERSE">SCATTER_REVERSE</a>);
+<a name="line152">152: </a>  <a href="../../../../docs/manualpages/Vec/VecScatterEnd.html#VecScatterEnd">VecScatterEnd</a>(Na-&gt;rprolong,Na-&gt;rwork,v3,<a href="../../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>,<a href="../../../../docs/manualpages/Vec/SCATTER_REVERSE.html#SCATTER_REVERSE">SCATTER_REVERSE</a>);
+<a name="line153">153: </a>  <font color="#4169E1">return</font>(0);
+<a name="line154">154: </a>}
+
+<a name="line156">156: </a><strong><font color="#4169E1"><a name="MatDestroy_SubMatrix"></a>static <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatDestroy_SubMatrix(<a href="../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> N)</font></strong>
+<a name="line157">157: </a>{
+<a name="line158">158: </a>  Mat_SubVirtual *Na = (Mat_SubVirtual*)N-&gt;data;
+
+<a name="line162">162: </a>  <a href="../../../../docs/manualpages/IS/ISDestroy.html#ISDestroy">ISDestroy</a>(&amp;Na-&gt;isrow);
+<a name="line163">163: </a>  <a href="../../../../docs/manualpages/IS/ISDestroy.html#ISDestroy">ISDestroy</a>(&amp;Na-&gt;iscol);
+<a name="line164">164: </a>  <a href="../../../../docs/manualpages/Vec/VecDestroy.html#VecDestroy">VecDestroy</a>(&amp;Na-&gt;lwork);
+<a name="line165">165: </a>  <a href="../../../../docs/manualpages/Vec/VecDestroy.html#VecDestroy">VecDestroy</a>(&amp;Na-&gt;rwork);
+<a name="line166">166: </a>  <a href="../../../../docs/manualpages/Vec/VecDestroy.html#VecDestroy">VecDestroy</a>(&amp;Na-&gt;lwork2);
+<a name="line167">167: </a>  <a href="../../../../docs/manualpages/Vec/VecDestroy.html#VecDestroy">VecDestroy</a>(&amp;Na-&gt;rwork2);
+<a name="line168">168: </a>  <a href="../../../../docs/manualpages/Vec/VecScatterDestroy.html#VecScatterDestroy">VecScatterDestroy</a>(&amp;Na-&gt;lrestrict);
+<a name="line169">169: </a>  <a href="../../../../docs/manualpages/Vec/VecScatterDestroy.html#VecScatterDestroy">VecScatterDestroy</a>(&amp;Na-&gt;rprolong);
+<a name="line170">170: </a>  <a href="../../../../docs/manualpages/Mat/MatDestroy.html#MatDestroy">MatDestroy</a>(&amp;Na-&gt;A);
+<a name="line171">171: </a>  <a href="../../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(N-&gt;data);
+<a name="line172">172: </a>  <font color="#4169E1">return</font>(0);
+<a name="line173">173: </a>}
+
+<a name="line175">175: </a><font color="#B22222">/*@</font>
+<a name="line176">176: </a><font color="#B22222">   <a href="../../../../docs/manualpages/Mat/MatCreateSubMatrixVirtual.html#MatCreateSubMatrixVirtual">MatCreateSubMatrixVirtual</a> - Creates a virtual matrix that acts as a submatrix</font>
+
+<a name="line178">178: </a><font color="#B22222">   Collective on <a href="../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a></font>
+
+<a name="line180">180: </a><font color="#B22222">   Input Parameters:</font>
+<a name="line181">181: </a><font color="#B22222">+  A - matrix that we will extract a submatrix of</font>
+<a name="line182">182: </a><font color="#B22222">.  isrow - rows to be present in the submatrix</font>
+<a name="line183">183: </a><font color="#B22222">-  iscol - columns to be present in the submatrix</font>
+
+<a name="line185">185: </a><font color="#B22222">   Output Parameters:</font>
+<a name="line186">186: </a><font color="#B22222">.  newmat - new matrix</font>
+
+<a name="line188">188: </a><font color="#B22222">   Level: developer</font>
+
+<a name="line190">190: </a><font color="#B22222">   Notes:</font>
+<a name="line191">191: </a><font color="#B22222">   Most will use <a href="../../../../docs/manualpages/Mat/MatCreateSubMatrix.html#MatCreateSubMatrix">MatCreateSubMatrix</a> which provides a more efficient representation if it is available.</font>
+
+<a name="line193">193: </a><font color="#B22222">.seealso: <a href="../../../../docs/manualpages/Mat/MatCreateSubMatrix.html#MatCreateSubMatrix">MatCreateSubMatrix</a>(), <a href="../../../../docs/manualpages/Mat/MatSubMatrixVirtualUpdate.html#MatSubMatrixVirtualUpdate">MatSubMatrixVirtualUpdate</a>()</font>
+<a name="line194">194: </a><font color="#B22222">@*/</font>
+<a name="line195">195: </a><strong><font color="#4169E1"><a name="MatCreateSubMatrixVirtual"></a><a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../../docs/manualpages/Mat/MatCreateSubMatrixVirtual.html#MatCreateSubMatrixVirtual">MatCreateSubMatrixVirtual</a>(<a href="../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> A,<a href="../../../../docs/manualpages/IS/IS.html#IS">IS</a> isrow,<a href="../../../../docs/manualpages/IS/IS.html#IS">IS</a> iscol,<a href="../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> *newmat)</font></strong>
+<a name="line196">196: </a>{
+<a name="line197">197: </a>  <a href="../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a>            left,right;
+<a name="line198">198: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       m,n;
+<a name="line199">199: </a>  <a href="../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a>            N;
+<a name="line200">200: </a>  Mat_SubVirtual *Na;
+
+<a name="line208">208: </a>  *newmat = NULL;
+
+<a name="line210">210: </a>  <a href="../../../../docs/manualpages/Mat/MatCreate.html#MatCreate">MatCreate</a>(<a href="../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)A),&amp;N);
+<a name="line211">211: </a>  <a href="../../../../docs/manualpages/IS/ISGetLocalSize.html#ISGetLocalSize">ISGetLocalSize</a>(isrow,&amp;m);
+<a name="line212">212: </a>  <a href="../../../../docs/manualpages/IS/ISGetLocalSize.html#ISGetLocalSize">ISGetLocalSize</a>(iscol,&amp;n);
+<a name="line213">213: </a>  <a href="../../../../docs/manualpages/Mat/MatSetSizes.html#MatSetSizes">MatSetSizes</a>(N,m,n,<a href="../../../../docs/manualpages/Sys/PETSC_DETERMINE.html#PETSC_DETERMINE">PETSC_DETERMINE</a>,<a href="../../../../docs/manualpages/Sys/PETSC_DETERMINE.html#PETSC_DETERMINE">PETSC_DETERMINE</a>);
+<a name="line214">214: </a>  PetscObjectChangeTypeName((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)N,MATSUBMATRIX);
+
+<a name="line216">216: </a>  <a href="../../../../docs/manualpages/Sys/PetscNewLog.html#PetscNewLog">PetscNewLog</a>(N,&amp;Na);
+<a name="line217">217: </a>  N-&gt;data   = (void*)Na;
+
+<a name="line219">219: </a>  <a href="../../../../docs/manualpages/Sys/PetscObjectReference.html#PetscObjectReference">PetscObjectReference</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)isrow);
+<a name="line220">220: </a>  <a href="../../../../docs/manualpages/Sys/PetscObjectReference.html#PetscObjectReference">PetscObjectReference</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)iscol);
+<a name="line221">221: </a>  Na-&gt;isrow = isrow;
+<a name="line222">222: </a>  Na-&gt;iscol = iscol;
+
+<a name="line224">224: </a>  <a href="../../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(N-&gt;defaultvectype);
+<a name="line225">225: </a>  <a href="../../../../docs/manualpages/Sys/PetscStrallocpy.html#PetscStrallocpy">PetscStrallocpy</a>(A-&gt;defaultvectype,&amp;N-&gt;defaultvectype);
+<a name="line226">226: </a>  <font color="#B22222">/* Do not use <a href="../../../../docs/manualpages/Mat/MatConvert.html#MatConvert">MatConvert</a> directly since MatShell has a duplicate operation which does not increase</font>
+<a name="line227">227: </a><font color="#B22222">     the reference count of the context. This is a problem if A is already of type <a href="../../../../docs/manualpages/Mat/MATSHELL.html#MATSHELL">MATSHELL</a> */</font>
+<a name="line228">228: </a>  MatConvertFrom_Shell(A,<a href="../../../../docs/manualpages/Mat/MATSHELL.html#MATSHELL">MATSHELL</a>,<a href="../../../../docs/manualpages/Mat/MatReuse.html#MatReuse">MAT_INITIAL_MATRIX</a>,&amp;Na-&gt;A);
+
+<a name="line230">230: </a>  N-&gt;ops-&gt;destroy          = MatDestroy_SubMatrix;
+<a name="line231">231: </a>  N-&gt;ops-&gt;mult             = MatMult_SubMatrix;
+<a name="line232">232: </a>  N-&gt;ops-&gt;multadd          = MatMultAdd_SubMatrix;
+<a name="line233">233: </a>  N-&gt;ops-&gt;multtranspose    = MatMultTranspose_SubMatrix;
+<a name="line234">234: </a>  N-&gt;ops-&gt;multtransposeadd = MatMultTransposeAdd_SubMatrix;
+<a name="line235">235: </a>  N-&gt;ops-&gt;scale            = MatScale_SubMatrix;
+<a name="line236">236: </a>  N-&gt;ops-&gt;diagonalscale    = MatDiagonalScale_SubMatrix;
+<a name="line237">237: </a>  N-&gt;ops-&gt;shift            = MatShift_SubMatrix;
+<a name="line238">238: </a>  N-&gt;ops-&gt;convert          = MatConvert_Shell;
+<a name="line239">239: </a>  N-&gt;ops-&gt;getdiagonal      = MatGetDiagonal_SubMatrix;
+
+<a name="line241">241: </a>  <a href="../../../../docs/manualpages/Mat/MatSetBlockSizesFromMats.html#MatSetBlockSizesFromMats">MatSetBlockSizesFromMats</a>(N,A,A);
+<a name="line242">242: </a>  <a href="../../../../docs/manualpages/IS/PetscLayoutSetUp.html#PetscLayoutSetUp">PetscLayoutSetUp</a>(N-&gt;rmap);
+<a name="line243">243: </a>  <a href="../../../../docs/manualpages/IS/PetscLayoutSetUp.html#PetscLayoutSetUp">PetscLayoutSetUp</a>(N-&gt;cmap);
+
+<a name="line245">245: </a>  <a href="../../../../docs/manualpages/Mat/MatCreateVecs.html#MatCreateVecs">MatCreateVecs</a>(A,&amp;Na-&gt;rwork,&amp;Na-&gt;lwork);
+<a name="line246">246: </a>  <a href="../../../../docs/manualpages/Mat/MatCreateVecs.html#MatCreateVecs">MatCreateVecs</a>(N,&amp;right,&amp;left);
+<a name="line247">247: </a>  <a href="../../../../docs/manualpages/Vec/VecScatterCreate.html#VecScatterCreate">VecScatterCreate</a>(Na-&gt;lwork,isrow,left,NULL,&amp;Na-&gt;lrestrict);
+<a name="line248">248: </a>  <a href="../../../../docs/manualpages/Vec/VecScatterCreate.html#VecScatterCreate">VecScatterCreate</a>(right,NULL,Na-&gt;rwork,iscol,&amp;Na-&gt;rprolong);
+<a name="line249">249: </a>  <a href="../../../../docs/manualpages/Vec/VecDestroy.html#VecDestroy">VecDestroy</a>(&amp;left);
+<a name="line250">250: </a>  <a href="../../../../docs/manualpages/Vec/VecDestroy.html#VecDestroy">VecDestroy</a>(&amp;right);
+<a name="line251">251: </a>  <a href="../../../../docs/manualpages/Mat/MatSetUp.html#MatSetUp">MatSetUp</a>(N);
+
+<a name="line253">253: </a>  N-&gt;assembled = <a href="../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>;
+<a name="line254">254: </a>  *newmat      = N;
+<a name="line255">255: </a>  <font color="#4169E1">return</font>(0);
+<a name="line256">256: </a>}
+
+
+<a name="line259">259: </a><font color="#B22222">/*@</font>
+<a name="line260">260: </a><font color="#B22222">   <a href="../../../../docs/manualpages/Mat/MatSubMatrixVirtualUpdate.html#MatSubMatrixVirtualUpdate">MatSubMatrixVirtualUpdate</a> - Updates a submatrix</font>
+
+<a name="line262">262: </a><font color="#B22222">   Collective on <a href="../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a></font>
+
+<a name="line264">264: </a><font color="#B22222">   Input Parameters:</font>
+<a name="line265">265: </a><font color="#B22222">+  N - submatrix to update</font>
+<a name="line266">266: </a><font color="#B22222">.  A - full matrix in the submatrix</font>
+<a name="line267">267: </a><font color="#B22222">.  isrow - rows in the update (same as the first time the submatrix was created)</font>
+<a name="line268">268: </a><font color="#B22222">-  iscol - columns in the update (same as the first time the submatrix was created)</font>
+
+<a name="line270">270: </a><font color="#B22222">   Level: developer</font>
+
+<a name="line272">272: </a><font color="#B22222">   Notes:</font>
+<a name="line273">273: </a><font color="#B22222">   Most will use <a href="../../../../docs/manualpages/Mat/MatCreateSubMatrix.html#MatCreateSubMatrix">MatCreateSubMatrix</a> which provides a more efficient representation if it is available.</font>
+
+<a name="line275">275: </a><font color="#B22222">.seealso: <a href="../../../../docs/manualpages/Mat/MatCreateSubMatrixVirtual.html#MatCreateSubMatrixVirtual">MatCreateSubMatrixVirtual</a>()</font>
+<a name="line276">276: </a><font color="#B22222">@*/</font>
+<a name="line277">277: </a><strong><font color="#4169E1"><a name="MatSubMatrixVirtualUpdate"></a><a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  <a href="../../../../docs/manualpages/Mat/MatSubMatrixVirtualUpdate.html#MatSubMatrixVirtualUpdate">MatSubMatrixVirtualUpdate</a>(<a href="../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> N,<a href="../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> A,<a href="../../../../docs/manualpages/IS/IS.html#IS">IS</a> isrow,<a href="../../../../docs/manualpages/IS/IS.html#IS">IS</a> iscol)</font></strong>
+<a name="line278">278: </a>{
+<a name="line280">280: </a>  <a href="../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>      flg;
+<a name="line281">281: </a>  Mat_SubVirtual *Na;
+
+<a name="line288">288: </a>  <a href="../../../../docs/manualpages/Sys/PetscObjectTypeCompare.html#PetscObjectTypeCompare">PetscObjectTypeCompare</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)N,MATSUBMATRIX,&amp;flg);
+<a name="line289">289: </a>  <font color="#4169E1">if</font> (!flg) <a href="../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)A),PETSC_ERR_ARG_WRONG,<font color="#666666">"Matrix has wrong type"</font>);
+
+<a name="line291">291: </a>  Na   = (Mat_SubVirtual*)N-&gt;data;
+<a name="line292">292: </a>  <a href="../../../../docs/manualpages/IS/ISEqual.html#ISEqual">ISEqual</a>(isrow,Na-&gt;isrow,&amp;flg);
+<a name="line293">293: </a>  <font color="#4169E1">if</font> (!flg) <a href="../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_ARG_INCOMP,<font color="#666666">"Cannot update submatrix with different row indices"</font>);
+<a name="line294">294: </a>  <a href="../../../../docs/manualpages/IS/ISEqual.html#ISEqual">ISEqual</a>(iscol,Na-&gt;iscol,&amp;flg);
+<a name="line295">295: </a>  <font color="#4169E1">if</font> (!flg) <a href="../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_ARG_INCOMP,<font color="#666666">"Cannot update submatrix with different column indices"</font>);
+
+<a name="line297">297: </a>  <a href="../../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(N-&gt;defaultvectype);
+<a name="line298">298: </a>  <a href="../../../../docs/manualpages/Sys/PetscStrallocpy.html#PetscStrallocpy">PetscStrallocpy</a>(A-&gt;defaultvectype,&amp;N-&gt;defaultvectype);
+<a name="line299">299: </a>  <a href="../../../../docs/manualpages/Mat/MatDestroy.html#MatDestroy">MatDestroy</a>(&amp;Na-&gt;A);
+<a name="line300">300: </a>  <font color="#B22222">/* Do not use <a href="../../../../docs/manualpages/Mat/MatConvert.html#MatConvert">MatConvert</a> directly since MatShell has a duplicate operation which does not increase</font>
+<a name="line301">301: </a><font color="#B22222">     the reference count of the context. This is a problem if A is already of type <a href="../../../../docs/manualpages/Mat/MATSHELL.html#MATSHELL">MATSHELL</a> */</font>
+<a name="line302">302: </a>  MatConvertFrom_Shell(A,<a href="../../../../docs/manualpages/Mat/MATSHELL.html#MATSHELL">MATSHELL</a>,<a href="../../../../docs/manualpages/Mat/MatReuse.html#MatReuse">MAT_INITIAL_MATRIX</a>,&amp;Na-&gt;A);
+<a name="line303">303: </a>  <font color="#4169E1">return</font>(0);
+<a name="line304">304: </a>}
+</pre>
+</body>
+
+</html>

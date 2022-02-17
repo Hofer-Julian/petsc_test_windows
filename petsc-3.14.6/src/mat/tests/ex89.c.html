@@ -1,0 +1,164 @@
+<center><a href="ex89.c">Actual source code: ex89.c</a></center><br>
+
+<html>
+<head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/src/mat/tests/ex89.c.html" />
+<title></title>
+<meta name="generator" content="c2html 0.9.4">
+<meta name="date" content="2021-03-30T16:50:21+00:00">
+</head>
+
+<body bgcolor="#FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 src/mat/tests/ex89.c.html "><small>Report Typos and Errors</small></a></div>
+<pre width="80">
+<a name="line1">  1: </a>static char help[] =<font color="#666666">"Tests <a href="../../../docs/manualpages/Mat/MatPtAP.html#MatPtAP">MatPtAP</a>() for MPIMAIJ and MPIAIJ \n "</font>;
+
+<a name="line3">  3: </a>#include <A href="../../../include/petscdmda.h.html">&lt;petscdmda.h&gt;</A>
+
+<a name="line5">  5: </a><strong><font color="#4169E1"><a name="main"></a>int main(int argc,char **argv)</font></strong>
+<a name="line6">  6: </a>{
+<a name="line8">  8: </a>  <a href="../../../docs/manualpages/DM/DM.html#DM">DM</a>             coarsedm,finedm;
+<a name="line9">  9: </a>  <a href="../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a>    size,rank;
+<a name="line10"> 10: </a>  <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       M,N,Z,i,nrows;
+<a name="line11"> 11: </a>  <a href="../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>    one = 1.0;
+<a name="line12"> 12: </a>  <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>      fill=2.0;
+<a name="line13"> 13: </a>  <a href="../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a>            A,P,C;
+<a name="line14"> 14: </a>  <a href="../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>    *array,alpha;
+<a name="line15"> 15: </a>  <a href="../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>      Test_3D=<a href="../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>,flg;
+<a name="line16"> 16: </a>  const <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *ia,*ja;
+<a name="line17"> 17: </a>  <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       dof;
+<a name="line18"> 18: </a>  <a href="../../../docs/manualpages/Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</a>       comm;
+
+<a name="line20"> 20: </a>  <a href="../../../docs/manualpages/Sys/PetscInitialize.html#PetscInitialize">PetscInitialize</a>(&amp;argc,&amp;argv,NULL,help);<font color="#4169E1">if</font> (ierr) <font color="#4169E1">return</font> ierr;
+<a name="line21"> 21: </a>  comm = <a href="../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>;
+<a name="line22"> 22: </a>  <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_rank.html#MPI_Comm_rank">MPI_Comm_rank</a>(comm,&amp;rank);
+<a name="line23"> 23: </a>  <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_size.html#MPI_Comm_size">MPI_Comm_size</a>(comm,&amp;size);
+<a name="line24"> 24: </a>  M = 10; N = 10; Z = 10;
+<a name="line25"> 25: </a>  dof  = 10;
+
+<a name="line27"> 27: </a>  <a href="../../../docs/manualpages/Sys/PetscOptionsGetBool.html#PetscOptionsGetBool">PetscOptionsGetBool</a>(NULL,NULL,<font color="#666666">"-test_3D"</font>,&amp;Test_3D,NULL);
+<a name="line28"> 28: </a>  <a href="../../../docs/manualpages/Sys/PetscOptionsGetInt.html#PetscOptionsGetInt">PetscOptionsGetInt</a>(NULL,NULL,<font color="#666666">"-M"</font>,&amp;M,NULL);
+<a name="line29"> 29: </a>  <a href="../../../docs/manualpages/Sys/PetscOptionsGetInt.html#PetscOptionsGetInt">PetscOptionsGetInt</a>(NULL,NULL,<font color="#666666">"-N"</font>,&amp;N,NULL);
+<a name="line30"> 30: </a>  <a href="../../../docs/manualpages/Sys/PetscOptionsGetInt.html#PetscOptionsGetInt">PetscOptionsGetInt</a>(NULL,NULL,<font color="#666666">"-Z"</font>,&amp;Z,NULL);
+<a name="line31"> 31: </a>  <font color="#B22222">/* Set up distributed array for fine grid */</font>
+<a name="line32"> 32: </a>  <font color="#4169E1">if</font> (!Test_3D) {
+<a name="line33"> 33: </a>    <a href="../../../docs/manualpages/DMDA/DMDACreate2d.html#DMDACreate2d">DMDACreate2d</a>(comm,<a href="../../../docs/manualpages/DM/DMBoundaryType.html#DMBoundaryType">DM_BOUNDARY_NONE</a>,<a href="../../../docs/manualpages/DM/DMBoundaryType.html#DMBoundaryType">DM_BOUNDARY_NONE</a>,<a href="../../../docs/manualpages/DMDA/DMDAStencilType.html#DMDAStencilType">DMDA_STENCIL_STAR</a>,M,N,<a href="../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a>,<a href="../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a>,dof,1,NULL,NULL,&amp;coarsedm);
+<a name="line34"> 34: </a>  } <font color="#4169E1">else</font> {
+<a name="line35"> 35: </a>    <a href="../../../docs/manualpages/DMDA/DMDACreate3d.html#DMDACreate3d">DMDACreate3d</a>(comm,<a href="../../../docs/manualpages/DM/DMBoundaryType.html#DMBoundaryType">DM_BOUNDARY_NONE</a>,<a href="../../../docs/manualpages/DM/DMBoundaryType.html#DMBoundaryType">DM_BOUNDARY_NONE</a>,<a href="../../../docs/manualpages/DM/DMBoundaryType.html#DMBoundaryType">DM_BOUNDARY_NONE</a>,<a href="../../../docs/manualpages/DMDA/DMDAStencilType.html#DMDAStencilType">DMDA_STENCIL_STAR</a>,M,N,Z,<a href="../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a>,<a href="../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a>,<a href="../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a>,dof,1,NULL,NULL,NULL,&amp;coarsedm);
+<a name="line36"> 36: </a>  }
+<a name="line37"> 37: </a>  <a href="../../../docs/manualpages/DM/DMSetFromOptions.html#DMSetFromOptions">DMSetFromOptions</a>(coarsedm);
+<a name="line38"> 38: </a>  <a href="../../../docs/manualpages/DM/DMSetUp.html#DMSetUp">DMSetUp</a>(coarsedm);
+
+<a name="line40"> 40: </a>  <font color="#B22222">/* This makes sure the coarse <a href="../../../docs/manualpages/DMDA/DMDA.html#DMDA">DMDA</a> has the same partition as the fine <a href="../../../docs/manualpages/DMDA/DMDA.html#DMDA">DMDA</a> */</font>
+<a name="line41"> 41: </a>  <a href="../../../docs/manualpages/DM/DMRefine.html#DMRefine">DMRefine</a>(coarsedm,<a href="../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)coarsedm),&amp;finedm);
+
+<a name="line43"> 43: </a>  <font color="#B22222">/*------------------------------------------------------------*/</font>
+<a name="line44"> 44: </a>  <a href="../../../docs/manualpages/DM/DMSetMatType.html#DMSetMatType">DMSetMatType</a>(finedm,<a href="../../../docs/manualpages/Mat/MATAIJ.html#MATAIJ">MATAIJ</a>);
+<a name="line45"> 45: </a>  <a href="../../../docs/manualpages/DM/DMCreateMatrix.html#DMCreateMatrix">DMCreateMatrix</a>(finedm,&amp;A);
+
+<a name="line47"> 47: </a>  <font color="#B22222">/* set val=one to A */</font>
+<a name="line48"> 48: </a>  <font color="#4169E1">if</font> (size == 1) {
+<a name="line49"> 49: </a>    <a href="../../../docs/manualpages/Mat/MatGetRowIJ.html#MatGetRowIJ">MatGetRowIJ</a>(A,0,<a href="../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>,<a href="../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>,&amp;nrows,&amp;ia,&amp;ja,&amp;flg);
+<a name="line50"> 50: </a>    <font color="#4169E1">if</font> (flg) {
+<a name="line51"> 51: </a>      <a href="../../../docs/manualpages/Mat/MatSeqAIJGetArray.html#MatSeqAIJGetArray">MatSeqAIJGetArray</a>(A,&amp;array);
+<a name="line52"> 52: </a>      <font color="#4169E1">for</font> (i=0; i&lt;ia[nrows]; i++) array[i] = one;
+<a name="line53"> 53: </a>      <a href="../../../docs/manualpages/Mat/MatSeqAIJRestoreArray.html#MatSeqAIJRestoreArray">MatSeqAIJRestoreArray</a>(A,&amp;array);
+<a name="line54"> 54: </a>    }
+<a name="line55"> 55: </a>    <a href="../../../docs/manualpages/Mat/MatRestoreRowIJ.html#MatRestoreRowIJ">MatRestoreRowIJ</a>(A,0,<a href="../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>,<a href="../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>,&amp;nrows,&amp;ia,&amp;ja,&amp;flg);
+<a name="line56"> 56: </a>  } <font color="#4169E1">else</font> {
+<a name="line57"> 57: </a>    <a href="../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> AA,AB;
+<a name="line58"> 58: </a>    <a href="../../../docs/manualpages/Mat/MatMPIAIJGetSeqAIJ.html#MatMPIAIJGetSeqAIJ">MatMPIAIJGetSeqAIJ</a>(A,&amp;AA,&amp;AB,NULL);
+<a name="line59"> 59: </a>    <a href="../../../docs/manualpages/Mat/MatGetRowIJ.html#MatGetRowIJ">MatGetRowIJ</a>(AA,0,<a href="../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>,<a href="../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>,&amp;nrows,&amp;ia,&amp;ja,&amp;flg);
+<a name="line60"> 60: </a>    <font color="#4169E1">if</font> (flg) {
+<a name="line61"> 61: </a>      <a href="../../../docs/manualpages/Mat/MatSeqAIJGetArray.html#MatSeqAIJGetArray">MatSeqAIJGetArray</a>(AA,&amp;array);
+<a name="line62"> 62: </a>      <font color="#4169E1">for</font> (i=0; i&lt;ia[nrows]; i++) array[i] = one;
+<a name="line63"> 63: </a>      <a href="../../../docs/manualpages/Mat/MatSeqAIJRestoreArray.html#MatSeqAIJRestoreArray">MatSeqAIJRestoreArray</a>(AA,&amp;array);
+<a name="line64"> 64: </a>    }
+<a name="line65"> 65: </a>    <a href="../../../docs/manualpages/Mat/MatRestoreRowIJ.html#MatRestoreRowIJ">MatRestoreRowIJ</a>(AA,0,<a href="../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>,<a href="../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>,&amp;nrows,&amp;ia,&amp;ja,&amp;flg);
+<a name="line66"> 66: </a>    <a href="../../../docs/manualpages/Mat/MatGetRowIJ.html#MatGetRowIJ">MatGetRowIJ</a>(AB,0,<a href="../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>,<a href="../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>,&amp;nrows,&amp;ia,&amp;ja,&amp;flg);
+<a name="line67"> 67: </a>    <font color="#4169E1">if</font> (flg) {
+<a name="line68"> 68: </a>      <a href="../../../docs/manualpages/Mat/MatSeqAIJGetArray.html#MatSeqAIJGetArray">MatSeqAIJGetArray</a>(AB,&amp;array);
+<a name="line69"> 69: </a>      <font color="#4169E1">for</font> (i=0; i&lt;ia[nrows]; i++) array[i] = one;
+<a name="line70"> 70: </a>      <a href="../../../docs/manualpages/Mat/MatSeqAIJRestoreArray.html#MatSeqAIJRestoreArray">MatSeqAIJRestoreArray</a>(AB,&amp;array);
+<a name="line71"> 71: </a>    }
+<a name="line72"> 72: </a>    <a href="../../../docs/manualpages/Mat/MatRestoreRowIJ.html#MatRestoreRowIJ">MatRestoreRowIJ</a>(AB,0,<a href="../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>,<a href="../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>,&amp;nrows,&amp;ia,&amp;ja,&amp;flg);
+<a name="line73"> 73: </a>  }
+<a name="line74"> 74: </a>  <font color="#B22222">/* Create interpolation between the fine and coarse grids */</font>
+<a name="line75"> 75: </a>  <a href="../../../docs/manualpages/DM/DMCreateInterpolation.html#DMCreateInterpolation">DMCreateInterpolation</a>(coarsedm,finedm,&amp;P,NULL);
+
+<a name="line77"> 77: </a>  <font color="#B22222">/* Test P^T * A * P - <a href="../../../docs/manualpages/Mat/MatPtAP.html#MatPtAP">MatPtAP</a>() */</font>
+<a name="line78"> 78: </a>  <font color="#B22222">/*------------------------------*/</font>
+<a name="line79"> 79: </a>  <font color="#B22222">/* (1) Developer API */</font>
+<a name="line80"> 80: </a>  <a href="../../../docs/manualpages/Mat/MatProductCreate.html#MatProductCreate">MatProductCreate</a>(A,P,NULL,&amp;C);
+<a name="line81"> 81: </a>  <a href="../../../docs/manualpages/Mat/MatProductSetType.html#MatProductSetType">MatProductSetType</a>(C,<a href="../../../docs/manualpages/Mat/MatProductType.html#MatProductType">MATPRODUCT_PtAP</a>);
+<a name="line82"> 82: </a>  <a href="../../../docs/manualpages/Mat/MatProductSetAlgorithm.html#MatProductSetAlgorithm">MatProductSetAlgorithm</a>(C,<font color="#666666">"</font><font color="#4169E1">default</font>");
+<a name="line83"> 83: </a>  <a href="../../../docs/manualpages/Mat/MatProductSetFill.html#MatProductSetFill">MatProductSetFill</a>(C,<a href="../../../docs/manualpages/Sys/PETSC_DEFAULT.html#PETSC_DEFAULT">PETSC_DEFAULT</a>);
+<a name="line84"> 84: </a>  <a href="../../../docs/manualpages/Mat/MatProductSetFromOptions.html#MatProductSetFromOptions">MatProductSetFromOptions</a>(C);
+<a name="line85"> 85: </a>  <a href="../../../docs/manualpages/Mat/MatProductSymbolic.html#MatProductSymbolic">MatProductSymbolic</a>(C);
+<a name="line86"> 86: </a>  <a href="../../../docs/manualpages/Mat/MatProductNumeric.html#MatProductNumeric">MatProductNumeric</a>(C);
+<a name="line87"> 87: </a>  <a href="../../../docs/manualpages/Mat/MatProductNumeric.html#MatProductNumeric">MatProductNumeric</a>(C); <font color="#B22222">/* Test reuse of symbolic C */</font>
+
+<a name="line89"> 89: </a>  <a href="../../../docs/manualpages/Mat/MatPtAPMultEqual.html#MatPtAPMultEqual">MatPtAPMultEqual</a>(A,P,C,10,&amp;flg);
+<a name="line90"> 90: </a>  <font color="#4169E1">if</font> (!flg) <a href="../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,PETSC_ERR_PLIB,<font color="#666666">"Error in MatProduct_PtAP"</font>);
+<a name="line91"> 91: </a>  <a href="../../../docs/manualpages/Mat/MatDestroy.html#MatDestroy">MatDestroy</a>(&amp;C);
+
+<a name="line93"> 93: </a>  <font color="#B22222">/* (2) User API */</font>
+<a name="line94"> 94: </a>  <a href="../../../docs/manualpages/Mat/MatPtAP.html#MatPtAP">MatPtAP</a>(A,P,<a href="../../../docs/manualpages/Mat/MatReuse.html#MatReuse">MAT_INITIAL_MATRIX</a>,fill,&amp;C);
+<a name="line95"> 95: </a>  <font color="#B22222">/* Test <a href="../../../docs/manualpages/Mat/MatReuse.html#MatReuse">MAT_REUSE_MATRIX</a> - reuse symbolic C */</font>
+<a name="line96"> 96: </a>  alpha=1.0;
+<a name="line97"> 97: </a>  <font color="#4169E1">for</font> (i=0; i&lt;1; i++) {
+<a name="line98"> 98: </a>    alpha -= 0.1;
+<a name="line99"> 99: </a>    <a href="../../../docs/manualpages/Mat/MatScale.html#MatScale">MatScale</a>(A,alpha);
+<a name="line100">100: </a>    <a href="../../../docs/manualpages/Mat/MatPtAP.html#MatPtAP">MatPtAP</a>(A,P,<a href="../../../docs/manualpages/Mat/MatReuse.html#MatReuse">MAT_REUSE_MATRIX</a>,fill,&amp;C);
+<a name="line101">101: </a>  }
+
+<a name="line103">103: </a>  <font color="#B22222">/* Free intermediate data structures created for reuse of C=Pt*A*P */</font>
+<a name="line104">104: </a>  <a href="../../../docs/manualpages/Mat/MatProductClear.html#MatProductClear">MatProductClear</a>(C);
+
+<a name="line106">106: </a>  <a href="../../../docs/manualpages/Mat/MatPtAPMultEqual.html#MatPtAPMultEqual">MatPtAPMultEqual</a>(A,P,C,10,&amp;flg);
+<a name="line107">107: </a>  <font color="#4169E1">if</font> (!flg) <a href="../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,PETSC_ERR_PLIB,<font color="#666666">"Error in <a href="../../../docs/manualpages/Mat/MatPtAP.html#MatPtAP">MatPtAP</a>"</font>);
+
+<a name="line109">109: </a>  <a href="../../../docs/manualpages/Mat/MatDestroy.html#MatDestroy">MatDestroy</a>(&amp;C);
+<a name="line110">110: </a>  <a href="../../../docs/manualpages/Mat/MatDestroy.html#MatDestroy">MatDestroy</a>(&amp;A);
+<a name="line111">111: </a>  <a href="../../../docs/manualpages/Mat/MatDestroy.html#MatDestroy">MatDestroy</a>(&amp;P);
+<a name="line112">112: </a>  <a href="../../../docs/manualpages/DM/DMDestroy.html#DMDestroy">DMDestroy</a>(&amp;finedm);
+<a name="line113">113: </a>  <a href="../../../docs/manualpages/DM/DMDestroy.html#DMDestroy">DMDestroy</a>(&amp;coarsedm);
+<a name="line114">114: </a>  <a href="../../../docs/manualpages/Sys/PetscFinalize.html#PetscFinalize">PetscFinalize</a>();
+<a name="line115">115: </a>  <font color="#4169E1">return</font> ierr;
+<a name="line116">116: </a>}
+
+<a name="line118">118: </a><font color="#B22222">/*TEST</font>
+
+<a name="line120">120: </a><font color="#B22222">   test:</font>
+<a name="line121">121: </a><font color="#B22222">      args: -M 10 -N 10 -Z 10</font>
+<a name="line122">122: </a><font color="#B22222">      output_file: output/ex89_1.out</font>
+
+<a name="line124">124: </a><font color="#B22222">   test:</font>
+<a name="line125">125: </a><font color="#B22222">      suffix: allatonce</font>
+<a name="line126">126: </a><font color="#B22222">      nsize: 4</font>
+<a name="line127">127: </a><font color="#B22222">      args: -M 10 -N 10 -Z 10 -matptap_via allatonce</font>
+<a name="line128">128: </a><font color="#B22222">      output_file: output/ex89_1.out</font>
+
+<a name="line130">130: </a><font color="#B22222">   test:</font>
+<a name="line131">131: </a><font color="#B22222">      suffix: allatonce_merged</font>
+<a name="line132">132: </a><font color="#B22222">      nsize: 4</font>
+<a name="line133">133: </a><font color="#B22222">      args: -M 10 -M 5 -M 10 -matptap_via allatonce_merged</font>
+<a name="line134">134: </a><font color="#B22222">      output_file: output/ex96_1.out</font>
+
+<a name="line136">136: </a><font color="#B22222">   test:</font>
+<a name="line137">137: </a><font color="#B22222">      suffix: allatonce_3D</font>
+<a name="line138">138: </a><font color="#B22222">      nsize: 4</font>
+<a name="line139">139: </a><font color="#B22222">      args: -M 10 -M 5 -M 10 -test_3D 1 -matptap_via allatonce</font>
+<a name="line140">140: </a><font color="#B22222">      output_file: output/ex96_1.out</font>
+
+<a name="line142">142: </a><font color="#B22222">   test:</font>
+<a name="line143">143: </a><font color="#B22222">      suffix: allatonce_merged_3D</font>
+<a name="line144">144: </a><font color="#B22222">      nsize: 4</font>
+<a name="line145">145: </a><font color="#B22222">      args: -M 10 -M 5 -M 10 -test_3D 1 -matptap_via allatonce_merged</font>
+<a name="line146">146: </a><font color="#B22222">      output_file: output/ex96_1.out</font>
+
+<a name="line148">148: </a><font color="#B22222">TEST*/</font>
+</pre>
+</body>
+
+</html>

@@ -1,0 +1,60 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscCUDAInitialize.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>PetscCUDAInitialize</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/Sys/PetscCUDAInitialize.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="PetscCUDAInitialize"><H1>PetscCUDAInitialize</H1></A>
+Initializes CUDA (eagerly in <A HREF="../Sys/PetscInitialize.html#PetscInitialize">PetscInitialize</A>() or soon after <A HREF="../Sys/PetscInitialize.html#PetscInitialize">PetscInitialize</A>()) and cuBLAS/cuSPARSE libraries on the device 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+PETSC_EXTERN <A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../Sys/PetscCUDAInitialize.html#PetscCUDAInitialize">PetscCUDAInitialize</A>(<A HREF="../Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</A> comm,<A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> device)
+</PRE>
+Logically collective
+<P>
+<H3><FONT COLOR="#CC3333">Input Parameter</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>comm   </B></TD><TD>- the MPI communicator that will utilize the devices
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>device </B></TD><TD>- the device assigned to current MPI process. Special values like <A HREF="../Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</A> or <A HREF="../Sys/PETSC_DEFAULT.html#PETSC_DEFAULT">PETSC_DEFAULT</A> have special meanings (see details below)
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Options Database</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>-cuda_device &lt;device&gt; </B></TD><TD>- the device assigned to current MPI rank. &lt;device&gt; is case-insensitive and can be:
+NONE (or none, or -3) : the code will not use any device, otherwise it will error out;
+<A HREF="../Sys/PETSC_DEFAULT.html#PETSC_DEFAULT">PETSC_DEFAULT</A>(or DEFAULT, or -2) : do not explicitly set device, i.e., use whatever device already set by user (probably before <A HREF="../Sys/PetscInitialize.html#PetscInitialize">PetscInitialize</A>()). Init device runtime etc;
+<A HREF="../Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</A> (or DECIDE, or -1) : assign MPI ranks in comm to available devices in round-robin, and init device runtime etc on the selected device;
+&gt;= 0 integer  : assign the device with this id to current MPI process. Error out if &lt;device&gt; is invalid. Init device runtime etc on this device;
+With PETSC_{DECIDE, DEFAULT}, if there are actually no devices, the code can still run, but it will error out when trying to create device objects.
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>-cuda_view              </B></TD><TD>- view information about the devices.
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>-cuda_synchronize       </B></TD><TD>- wait at the end of asynchronize device calls so that their time gets credited to the current event. With -log_view, the default is true, otherwise false.
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>-log_view               </B></TD><TD>- logging, however if alone or combined with `-cuda_set_device DEFAULT | DECIDE | &gt;=0 int`, will init device; if combined with `-cuda_set_device none`, won't init device.
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>-use_gpu_aware_mpi      </B></TD><TD>- assume the MPI is device/GPU-aware when communicating data on devices. Default true.
+</TD></TR></TABLE>
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">Notes</FONT></H3>
+Unless the input parameter &lt;device&gt; = -3, this routine initializes the CUDA device. It also initializes the cuBLAS/cuSPARSE libraries, which
+takes a lot of time. Initializing them early helps avoid skewing timings in -log_view.
+<P>
+If this routine is triggered by command line options, it is called in <A HREF="../Sys/PetscInitialize.html#PetscInitialize">PetscInitialize</A>(). If users want to directly call it, they should call it immediately after <A HREF="../Sys/PetscInitialize.html#PetscInitialize">PetscInitialize</A>().
+<P>
+If this is not called then the CUDA initialization is delayed until first creation of a CUDA object and this can affect the timing since they happen asynchronously on different nodes and take a lot of time.
+<P>
+.seealso: <A HREF="../Sys/PetscCUDAInitializeCheck.html#PetscCUDAInitializeCheck">PetscCUDAInitializeCheck</A>(), <A HREF="../Sys/PetscHIPInitialize.html#PetscHIPInitialize">PetscHIPInitialize</A>(), <A HREF="../Sys/PetscHIPInitializeCheck.html#PetscHIPInitializeCheck">PetscHIPInitializeCheck</A>()
+<P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>beginner<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/sys/objects/cupminit.i.c.html#PetscCUDAInitialize">src/sys/objects/cupminit.inc</A>
+<BR><A HREF="./index.html">Index of all Sys routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

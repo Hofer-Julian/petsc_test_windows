@@ -1,0 +1,1510 @@
+<center><a href="stagutils.c">Actual source code: stagutils.c</a></center><br>
+
+<html>
+<head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/src/dm/impls/stag/stagutils.c.html" />
+<title></title>
+<meta name="generator" content="c2html 0.9.4">
+<meta name="date" content="2021-03-30T16:50:53+00:00">
+</head>
+
+<body bgcolor="#FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 src/dm/impls/stag/stagutils.c.html "><small>Report Typos and Errors</small></a></div>
+<pre width="80">
+<a name="line1">  1: </a><font color="#B22222">/* Additional functions in the DMStag API, which are not part of the general <a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> API. */</font>
+<a name="line2">  2: </a>#include <A href="../../../../include/petsc/private/dmstagimpl.h.html">&lt;petsc/private/dmstagimpl.h&gt;</A>
+<a name="line3">  3: </a>#include <A href="../../../../include/petscdmproduct.h.html">&lt;petscdmproduct.h&gt;</A>
+<a name="line4">  4: </a><font color="#B22222">/*@C</font>
+<a name="line5">  5: </a><font color="#B22222">  <a href="../../../../docs/manualpages/DMSTAG/DMStagGetBoundaryTypes.html#DMStagGetBoundaryTypes">DMStagGetBoundaryTypes</a> - get boundary types</font>
+
+<a name="line7">  7: </a><font color="#B22222">  Not Collective</font>
+
+<a name="line9">  9: </a><font color="#B22222">  Input Parameter:</font>
+<a name="line10"> 10: </a><font color="#B22222">. dm - the DMStag object</font>
+
+<a name="line12"> 12: </a><font color="#B22222">  Output Parameters:</font>
+<a name="line13"> 13: </a><font color="#B22222">. boundaryTypeX,boundaryTypeY,boundaryTypeZ - boundary types</font>
+
+<a name="line15"> 15: </a><font color="#B22222">  Level: intermediate</font>
+
+<a name="line17"> 17: </a><font color="#B22222">.seealso: <a href="../../../../docs/manualpages/DMSTAG/DMSTAG.html#DMSTAG">DMSTAG</a>, DMDAGetBoundaryTypes()</font>
+<a name="line18"> 18: </a><font color="#B22222">@*/</font>
+<a name="line19"> 19: </a><strong><font color="#4169E1"><a name="DMStagGetBoundaryTypes"></a><a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../../docs/manualpages/DMSTAG/DMStagGetBoundaryTypes.html#DMStagGetBoundaryTypes">DMStagGetBoundaryTypes</a>(<a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> dm,<a href="../../../../docs/manualpages/DM/DMBoundaryType.html#DMBoundaryType">DMBoundaryType</a> *boundaryTypeX,<a href="../../../../docs/manualpages/DM/DMBoundaryType.html#DMBoundaryType">DMBoundaryType</a> *boundaryTypeY,<a href="../../../../docs/manualpages/DM/DMBoundaryType.html#DMBoundaryType">DMBoundaryType</a> *boundaryTypeZ)</font></strong>
+<a name="line20"> 20: </a>{
+<a name="line21"> 21: </a>  <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>        ierr;
+<a name="line22"> 22: </a>  const DM_Stag * const stag  = (DM_Stag*)dm-&gt;data;
+<a name="line23"> 23: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>              dim;
+
+<a name="line27"> 27: </a>  <a href="../../../../docs/manualpages/DM/DMGetDimension.html#DMGetDimension">DMGetDimension</a>(dm,&amp;dim);
+<a name="line28"> 28: </a>  <font color="#4169E1">if</font> (boundaryTypeX) *boundaryTypeX = stag-&gt;boundaryType[0];
+<a name="line29"> 29: </a>  <font color="#4169E1">if</font> (boundaryTypeY &amp;&amp; dim &gt; 1) *boundaryTypeY = stag-&gt;boundaryType[1];
+<a name="line30"> 30: </a>  <font color="#4169E1">if</font> (boundaryTypeZ &amp;&amp; dim &gt; 2) *boundaryTypeZ = stag-&gt;boundaryType[2];
+<a name="line31"> 31: </a>  <font color="#4169E1">return</font>(0);
+<a name="line32"> 32: </a>}
+
+<a name="line34"> 34: </a><strong><font color="#4169E1"><a name="DMStagGetProductCoordinateArrays_Private"></a>static <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> DMStagGetProductCoordinateArrays_Private(<a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> dm,void* arrX,void* arrY,void* arrZ,<a href="../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> read)</font></strong>
+<a name="line35"> 35: </a>{
+<a name="line37"> 37: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       dim,d,dofCheck[DMSTAG_MAX_STRATA],s;
+<a name="line38"> 38: </a>  <a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a>             dmCoord;
+<a name="line39"> 39: </a>  void*          arr[DMSTAG_MAX_DIM];
+<a name="line40"> 40: </a>  <a href="../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>      checkDof;
+
+<a name="line44"> 44: </a>  <a href="../../../../docs/manualpages/DM/DMGetDimension.html#DMGetDimension">DMGetDimension</a>(dm,&amp;dim);
+<a name="line45"> 45: </a>  <font color="#4169E1">if</font> (dim &gt; DMSTAG_MAX_DIM) <a href="../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)dm),PETSC_ERR_SUP,<font color="#666666">"Not implemented for %D dimensions"</font>,dim);
+<a name="line46"> 46: </a>  arr[0] = arrX; arr[1] = arrY; arr[2] = arrZ;
+<a name="line47"> 47: </a>  <a href="../../../../docs/manualpages/DM/DMGetCoordinateDM.html#DMGetCoordinateDM">DMGetCoordinateDM</a>(dm,&amp;dmCoord);
+<a name="line48"> 48: </a>  <font color="#4169E1">if</font> (!dmCoord) <a href="../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)dm),PETSC_ERR_ARG_WRONGSTATE,<font color="#666666">"<a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> does not have a coordinate <a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a>"</font>);
+<a name="line49"> 49: </a>  {
+<a name="line50"> 50: </a>    <a href="../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> isProduct;
+<a name="line51"> 51: </a>    <a href="../../../../docs/manualpages/DM/DMType.html#DMType">DMType</a>    dmType;
+<a name="line52"> 52: </a>    <a href="../../../../docs/manualpages/DM/DMGetType.html#DMGetType">DMGetType</a>(dmCoord,&amp;dmType);
+<a name="line53"> 53: </a>    <a href="../../../../docs/manualpages/Sys/PetscStrcmp.html#PetscStrcmp">PetscStrcmp</a>(<a href="../../../../docs/manualpages/DMPRODUCT/DMPRODUCT.html#DMPRODUCT">DMPRODUCT</a>,dmType,&amp;isProduct);
+<a name="line54"> 54: </a>    <font color="#4169E1">if</font> (!isProduct) <a href="../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)dm),PETSC_ERR_ARG_WRONGSTATE,<font color="#666666">"Coordinate <a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> is not of type <a href="../../../../docs/manualpages/DMPRODUCT/DMPRODUCT.html#DMPRODUCT">DMPRODUCT</a>"</font>);
+<a name="line55"> 55: </a>  }
+<a name="line56"> 56: </a>  <font color="#4169E1">for</font> (s=0; s&lt;DMSTAG_MAX_STRATA; ++s) dofCheck[s] = 0;
+<a name="line57"> 57: </a>  checkDof = <a href="../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line58"> 58: </a>  <font color="#4169E1">for</font> (d=0; d&lt;dim; ++d) {
+<a name="line59"> 59: </a>    <a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a>        subDM;
+<a name="line60"> 60: </a>    <a href="../../../../docs/manualpages/DM/DMType.html#DMType">DMType</a>    dmType;
+<a name="line61"> 61: </a>    <a href="../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> isStag;
+<a name="line62"> 62: </a>    <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>  dof[DMSTAG_MAX_STRATA],subDim;
+<a name="line63"> 63: </a>    <a href="../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a>       coord1d_local;
+
+<a name="line65"> 65: </a>    <font color="#B22222">/* Ignore unrequested arrays */</font>
+<a name="line66"> 66: </a>    <font color="#4169E1">if</font> (!arr[d]) <font color="#4169E1">continue</font>;
+
+<a name="line68"> 68: </a>    <a href="../../../../docs/manualpages/DMPRODUCT/DMProductGetDM.html#DMProductGetDM">DMProductGetDM</a>(dmCoord,d,&amp;subDM);
+<a name="line69"> 69: </a>    <font color="#4169E1">if</font> (!subDM) <a href="../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)dm),PETSC_ERR_ARG_WRONGSTATE,<font color="#666666">"Coordinate <a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> is missing sub <a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> %D"</font>,d);
+<a name="line70"> 70: </a>    <a href="../../../../docs/manualpages/DM/DMGetDimension.html#DMGetDimension">DMGetDimension</a>(subDM,&amp;subDim);
+<a name="line71"> 71: </a>    <font color="#4169E1">if</font> (subDim != 1) <a href="../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)dm),PETSC_ERR_ARG_WRONGSTATE,<font color="#666666">"Coordinate sub-<a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> is not of dimension 1"</font>);
+<a name="line72"> 72: </a>    <a href="../../../../docs/manualpages/DM/DMGetType.html#DMGetType">DMGetType</a>(subDM,&amp;dmType);
+<a name="line73"> 73: </a>    <a href="../../../../docs/manualpages/Sys/PetscStrcmp.html#PetscStrcmp">PetscStrcmp</a>(<a href="../../../../docs/manualpages/DMSTAG/DMSTAG.html#DMSTAG">DMSTAG</a>,dmType,&amp;isStag);
+<a name="line74"> 74: </a>    <font color="#4169E1">if</font> (!isStag) <a href="../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)dm),PETSC_ERR_ARG_WRONGSTATE,<font color="#666666">"Coordinate sub-<a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> is not of type <a href="../../../../docs/manualpages/DMSTAG/DMSTAG.html#DMSTAG">DMSTAG</a>"</font>);
+<a name="line75"> 75: </a>    <a href="../../../../docs/manualpages/DMSTAG/DMStagGetDOF.html#DMStagGetDOF">DMStagGetDOF</a>(subDM,&amp;dof[0],&amp;dof[1],&amp;dof[2],&amp;dof[3]);
+<a name="line76"> 76: </a>    <font color="#4169E1">if</font> (!checkDof) {
+<a name="line77"> 77: </a>      <font color="#4169E1">for</font> (s=0; s&lt;DMSTAG_MAX_STRATA; ++s) dofCheck[s] = dof[s];
+<a name="line78"> 78: </a>      checkDof = <a href="../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>;
+<a name="line79"> 79: </a>    } <font color="#4169E1">else</font> {
+<a name="line80"> 80: </a>      <font color="#4169E1">for</font> (s=0; s&lt;DMSTAG_MAX_STRATA; ++s) {
+<a name="line81"> 81: </a>        <font color="#4169E1">if</font> (dofCheck[s] != dof[s]) <a href="../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)dm),PETSC_ERR_ARG_WRONGSTATE,<font color="#666666">"Coordinate sub-DMs have different dofs"</font>);
+<a name="line82"> 82: </a>      }
+<a name="line83"> 83: </a>    }
+<a name="line84"> 84: </a>    <a href="../../../../docs/manualpages/DM/DMGetCoordinatesLocal.html#DMGetCoordinatesLocal">DMGetCoordinatesLocal</a>(subDM,&amp;coord1d_local);
+<a name="line85"> 85: </a>    <font color="#4169E1">if</font> (read) {
+<a name="line86"> 86: </a>      <a href="../../../../docs/manualpages/DMSTAG/DMStagVecGetArrayRead.html#DMStagVecGetArrayRead">DMStagVecGetArrayRead</a>(subDM,coord1d_local,arr[d]);
+<a name="line87"> 87: </a>    } <font color="#4169E1">else</font> {
+<a name="line88"> 88: </a>      <a href="../../../../docs/manualpages/DMSTAG/DMStagVecGetArray.html#DMStagVecGetArray">DMStagVecGetArray</a>(subDM,coord1d_local,arr[d]);
+<a name="line89"> 89: </a>    }
+<a name="line90"> 90: </a>  }
+<a name="line91"> 91: </a>  <font color="#4169E1">return</font>(0);
+<a name="line92"> 92: </a>}
+
+<a name="line94"> 94: </a><font color="#B22222">/*@C</font>
+<a name="line95"> 95: </a><font color="#B22222">  <a href="../../../../docs/manualpages/DMSTAG/DMStagGetProductCoordinateArrays.html#DMStagGetProductCoordinateArrays">DMStagGetProductCoordinateArrays</a> - extract local product coordinate arrays, one per dimension</font>
+
+<a name="line97"> 97: </a><font color="#B22222">  Logically Collective</font>
+
+<a name="line99"> 99: </a><font color="#B22222">  A high-level helper function to quickly extract local coordinate arrays.</font>
+
+<a name="line101">101: </a><font color="#B22222">  Note that 2-dimensional arrays are returned. See</font>
+<a name="line102">102: </a><font color="#B22222">  <a href="../../../../docs/manualpages/DMSTAG/DMStagVecGetArray.html#DMStagVecGetArray">DMStagVecGetArray</a>(), which is called internally to produce these arrays</font>
+<a name="line103">103: </a><font color="#B22222">  representing coordinates on elements and vertices (element boundaries)</font>
+<a name="line104">104: </a><font color="#B22222">  for a 1-dimensional DMStag in each coordinate direction.</font>
+
+<a name="line106">106: </a><font color="#B22222">  One should use DMStagGetProductCoordinateSlot() to determine appropriate</font>
+<a name="line107">107: </a><font color="#B22222">  indices for the second dimension in these returned arrays. This function</font>
+<a name="line108">108: </a><font color="#B22222">  checks that the coordinate array is a suitable product of 1-dimensional</font>
+<a name="line109">109: </a><font color="#B22222">  DMStag objects.</font>
+
+<a name="line111">111: </a><font color="#B22222">  Input Parameter:</font>
+<a name="line112">112: </a><font color="#B22222">. dm - the DMStag object</font>
+
+<a name="line114">114: </a><font color="#B22222">  Output Parameters:</font>
+<a name="line115">115: </a><font color="#B22222">. arrX,arrY,arrZ - local 1D coordinate arrays</font>
+
+<a name="line117">117: </a><font color="#B22222">  Level: intermediate</font>
+
+<a name="line119">119: </a><font color="#B22222">.seealso: <a href="../../../../docs/manualpages/DMSTAG/DMSTAG.html#DMSTAG">DMSTAG</a>, <a href="../../../../docs/manualpages/DMPRODUCT/DMPRODUCT.html#DMPRODUCT">DMPRODUCT</a>, <a href="../../../../docs/manualpages/DMSTAG/DMStagGetProductCoordinateArraysRead.html#DMStagGetProductCoordinateArraysRead">DMStagGetProductCoordinateArraysRead</a>(), <a href="../../../../docs/manualpages/DMSTAG/DMStagSetUniformCoordinates.html#DMStagSetUniformCoordinates">DMStagSetUniformCoordinates</a>(), <a href="../../../../docs/manualpages/DMSTAG/DMStagSetUniformCoordinatesProduct.html#DMStagSetUniformCoordinatesProduct">DMStagSetUniformCoordinatesProduct</a>(), <a href="../../../../docs/manualpages/DMSTAG/DMStagGetProductCoordinateLocationSlot.html#DMStagGetProductCoordinateLocationSlot">DMStagGetProductCoordinateLocationSlot</a>()</font>
+<a name="line120">120: </a><font color="#B22222">@*/</font>
+<a name="line121">121: </a><strong><font color="#4169E1"><a name="DMStagGetProductCoordinateArrays"></a><a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../../docs/manualpages/DMSTAG/DMStagGetProductCoordinateArrays.html#DMStagGetProductCoordinateArrays">DMStagGetProductCoordinateArrays</a>(<a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> dm,void* arrX,void* arrY,void* arrZ)</font></strong>
+<a name="line122">122: </a>{
+
+<a name="line126">126: </a>  DMStagGetProductCoordinateArrays_Private(dm,arrX,arrY,arrZ,<a href="../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>);
+<a name="line127">127: </a>  <font color="#4169E1">return</font>(0);
+<a name="line128">128: </a>}
+
+<a name="line130">130: </a><font color="#B22222">/*@C</font>
+<a name="line131">131: </a><font color="#B22222">  <a href="../../../../docs/manualpages/DMSTAG/DMStagGetProductCoordinateArraysRead.html#DMStagGetProductCoordinateArraysRead">DMStagGetProductCoordinateArraysRead</a> - extract product coordinate arrays, read-only</font>
+
+<a name="line133">133: </a><font color="#B22222">  Logically Collective</font>
+
+<a name="line135">135: </a><font color="#B22222">  See the man page for <a href="../../../../docs/manualpages/DMSTAG/DMStagGetProductCoordinateArrays.html#DMStagGetProductCoordinateArrays">DMStagGetProductCoordinateArrays</a>() for more information.</font>
+
+<a name="line137">137: </a><font color="#B22222">  Input Parameter:</font>
+<a name="line138">138: </a><font color="#B22222">. dm - the DMStag object</font>
+
+<a name="line140">140: </a><font color="#B22222">  Output Parameters:</font>
+<a name="line141">141: </a><font color="#B22222">. arrX,arrY,arrZ - local 1D coordinate arrays</font>
+
+<a name="line143">143: </a><font color="#B22222">  Level: intermediate</font>
+
+<a name="line145">145: </a><font color="#B22222">.seealso: <a href="../../../../docs/manualpages/DMSTAG/DMSTAG.html#DMSTAG">DMSTAG</a>, <a href="../../../../docs/manualpages/DMPRODUCT/DMPRODUCT.html#DMPRODUCT">DMPRODUCT</a>, <a href="../../../../docs/manualpages/DMSTAG/DMStagGetProductCoordinateArrays.html#DMStagGetProductCoordinateArrays">DMStagGetProductCoordinateArrays</a>(), <a href="../../../../docs/manualpages/DMSTAG/DMStagSetUniformCoordinates.html#DMStagSetUniformCoordinates">DMStagSetUniformCoordinates</a>(), <a href="../../../../docs/manualpages/DMSTAG/DMStagSetUniformCoordinatesProduct.html#DMStagSetUniformCoordinatesProduct">DMStagSetUniformCoordinatesProduct</a>(), <a href="../../../../docs/manualpages/DMSTAG/DMStagGetProductCoordinateLocationSlot.html#DMStagGetProductCoordinateLocationSlot">DMStagGetProductCoordinateLocationSlot</a>()</font>
+<a name="line146">146: </a><font color="#B22222">@*/</font>
+<a name="line147">147: </a><strong><font color="#4169E1"><a name="DMStagGetProductCoordinateArraysRead"></a><a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../../docs/manualpages/DMSTAG/DMStagGetProductCoordinateArraysRead.html#DMStagGetProductCoordinateArraysRead">DMStagGetProductCoordinateArraysRead</a>(<a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> dm,void* arrX,void* arrY,void* arrZ)</font></strong>
+<a name="line148">148: </a>{
+
+<a name="line152">152: </a>  DMStagGetProductCoordinateArrays_Private(dm,arrX,arrY,arrZ,<a href="../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>);
+<a name="line153">153: </a>  <font color="#4169E1">return</font>(0);
+<a name="line154">154: </a>}
+
+<a name="line156">156: </a><font color="#B22222">/*@C</font>
+<a name="line157">157: </a><font color="#B22222">  <a href="../../../../docs/manualpages/DMSTAG/DMStagGetProductCoordinateLocationSlot.html#DMStagGetProductCoordinateLocationSlot">DMStagGetProductCoordinateLocationSlot</a> - get slot for use with local product coordinate arrays</font>
+
+<a name="line159">159: </a><font color="#B22222">  Not Collective</font>
+
+<a name="line161">161: </a><font color="#B22222">  High-level helper function to get slot indices for 1D coordinate DMs,</font>
+<a name="line162">162: </a><font color="#B22222">  for use with <a href="../../../../docs/manualpages/DMSTAG/DMStagGetProductCoordinateArrays.html#DMStagGetProductCoordinateArrays">DMStagGetProductCoordinateArrays</a>() and related functions.</font>
+
+<a name="line164">164: </a><font color="#B22222">  Input Parameters:</font>
+<a name="line165">165: </a><font color="#B22222">+ dm - the DMStag object</font>
+<a name="line166">166: </a><font color="#B22222">- loc - the grid location</font>
+
+<a name="line168">168: </a><font color="#B22222">  Output Parameter:</font>
+<a name="line169">169: </a><font color="#B22222">. slot - the index to use in local arrays</font>
+
+<a name="line171">171: </a><font color="#B22222">  Notes:</font>
+<a name="line172">172: </a><font color="#B22222">  Checks that the coordinates are actually set up so that using the</font>
+<a name="line173">173: </a><font color="#B22222">  slots from the first 1d coordinate sub-<a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> is valid for all the 1D coordinate sub-DMs.</font>
+
+<a name="line175">175: </a><font color="#B22222">  Level: intermediate</font>
+
+<a name="line177">177: </a><font color="#B22222">.seealso: <a href="../../../../docs/manualpages/DMSTAG/DMSTAG.html#DMSTAG">DMSTAG</a>, <a href="../../../../docs/manualpages/DMPRODUCT/DMPRODUCT.html#DMPRODUCT">DMPRODUCT</a>, <a href="../../../../docs/manualpages/DMSTAG/DMStagGetProductCoordinateArrays.html#DMStagGetProductCoordinateArrays">DMStagGetProductCoordinateArrays</a>(), <a href="../../../../docs/manualpages/DMSTAG/DMStagGetProductCoordinateArraysRead.html#DMStagGetProductCoordinateArraysRead">DMStagGetProductCoordinateArraysRead</a>(), <a href="../../../../docs/manualpages/DMSTAG/DMStagSetUniformCoordinates.html#DMStagSetUniformCoordinates">DMStagSetUniformCoordinates</a>()</font>
+<a name="line178">178: </a><font color="#B22222">@*/</font>
+<a name="line179">179: </a><strong><font color="#4169E1"><a name="DMStagGetProductCoordinateLocationSlot"></a>PETSC_EXTERN <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../../docs/manualpages/DMSTAG/DMStagGetProductCoordinateLocationSlot.html#DMStagGetProductCoordinateLocationSlot">DMStagGetProductCoordinateLocationSlot</a>(<a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> dm,<a href="../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMStagStencilLocation</a> loc,<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *slot)</font></strong>
+<a name="line180">180: </a>{
+<a name="line182">182: </a>  <a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a>             dmCoord;
+<a name="line183">183: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       dim,dofCheck[DMSTAG_MAX_STRATA],s,d;
+
+<a name="line187">187: </a>  <a href="../../../../docs/manualpages/DM/DMGetDimension.html#DMGetDimension">DMGetDimension</a>(dm,&amp;dim);
+<a name="line188">188: </a>  <a href="../../../../docs/manualpages/DM/DMGetCoordinateDM.html#DMGetCoordinateDM">DMGetCoordinateDM</a>(dm,&amp;dmCoord);
+<a name="line189">189: </a>  <font color="#4169E1">if</font> (!dmCoord) <a href="../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)dm),PETSC_ERR_ARG_WRONGSTATE,<font color="#666666">"<a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> does not have a coordinate <a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a>"</font>);
+<a name="line190">190: </a>  {
+<a name="line191">191: </a>    <a href="../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> isProduct;
+<a name="line192">192: </a>    <a href="../../../../docs/manualpages/DM/DMType.html#DMType">DMType</a>    dmType;
+<a name="line193">193: </a>    <a href="../../../../docs/manualpages/DM/DMGetType.html#DMGetType">DMGetType</a>(dmCoord,&amp;dmType);
+<a name="line194">194: </a>    <a href="../../../../docs/manualpages/Sys/PetscStrcmp.html#PetscStrcmp">PetscStrcmp</a>(<a href="../../../../docs/manualpages/DMPRODUCT/DMPRODUCT.html#DMPRODUCT">DMPRODUCT</a>,dmType,&amp;isProduct);
+<a name="line195">195: </a>    <font color="#4169E1">if</font> (!isProduct) <a href="../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)dm),PETSC_ERR_ARG_WRONGSTATE,<font color="#666666">"Coordinate <a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> is not of type <a href="../../../../docs/manualpages/DMPRODUCT/DMPRODUCT.html#DMPRODUCT">DMPRODUCT</a>"</font>);
+<a name="line196">196: </a>  }
+<a name="line197">197: </a>  <font color="#4169E1">for</font> (s=0; s&lt;DMSTAG_MAX_STRATA; ++s) dofCheck[s] = 0;
+<a name="line198">198: </a>  <font color="#4169E1">for</font> (d=0; d&lt;dim; ++d) {
+<a name="line199">199: </a>    <a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a>        subDM;
+<a name="line200">200: </a>    <a href="../../../../docs/manualpages/DM/DMType.html#DMType">DMType</a>    dmType;
+<a name="line201">201: </a>    <a href="../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> isStag;
+<a name="line202">202: </a>    <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>  dof[DMSTAG_MAX_STRATA],subDim;
+<a name="line203">203: </a>    <a href="../../../../docs/manualpages/DMPRODUCT/DMProductGetDM.html#DMProductGetDM">DMProductGetDM</a>(dmCoord,d,&amp;subDM);
+<a name="line204">204: </a>    <font color="#4169E1">if</font> (!subDM) <a href="../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)dm),PETSC_ERR_ARG_WRONGSTATE,<font color="#666666">"Coordinate <a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> is missing sub <a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> %D"</font>,d);
+<a name="line205">205: </a>    <a href="../../../../docs/manualpages/DM/DMGetDimension.html#DMGetDimension">DMGetDimension</a>(subDM,&amp;subDim);
+<a name="line206">206: </a>    <font color="#4169E1">if</font> (subDim != 1) <a href="../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)dm),PETSC_ERR_ARG_WRONGSTATE,<font color="#666666">"Coordinate sub-<a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> is not of dimension 1"</font>);
+<a name="line207">207: </a>    <a href="../../../../docs/manualpages/DM/DMGetType.html#DMGetType">DMGetType</a>(subDM,&amp;dmType);
+<a name="line208">208: </a>    <a href="../../../../docs/manualpages/Sys/PetscStrcmp.html#PetscStrcmp">PetscStrcmp</a>(<a href="../../../../docs/manualpages/DMSTAG/DMSTAG.html#DMSTAG">DMSTAG</a>,dmType,&amp;isStag);
+<a name="line209">209: </a>    <font color="#4169E1">if</font> (!isStag) <a href="../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)dm),PETSC_ERR_ARG_WRONGSTATE,<font color="#666666">"Coordinate sub-<a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> is not of type <a href="../../../../docs/manualpages/DMSTAG/DMSTAG.html#DMSTAG">DMSTAG</a>"</font>);
+<a name="line210">210: </a>    <a href="../../../../docs/manualpages/DMSTAG/DMStagGetDOF.html#DMStagGetDOF">DMStagGetDOF</a>(subDM,&amp;dof[0],&amp;dof[1],&amp;dof[2],&amp;dof[3]);
+<a name="line211">211: </a>    <font color="#4169E1">if</font> (d == 0) {
+<a name="line212">212: </a>      const <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> component = 0;
+<a name="line213">213: </a>      <font color="#4169E1">for</font> (s=0; s&lt;DMSTAG_MAX_STRATA; ++s) dofCheck[s] = dof[s];
+<a name="line214">214: </a>      <a href="../../../../docs/manualpages/DMSTAG/DMStagGetLocationSlot.html#DMStagGetLocationSlot">DMStagGetLocationSlot</a>(subDM,loc,component,slot);
+<a name="line215">215: </a>    } <font color="#4169E1">else</font> {
+<a name="line216">216: </a>      <font color="#4169E1">for</font> (s=0; s&lt;DMSTAG_MAX_STRATA; ++s) {
+<a name="line217">217: </a>        <font color="#4169E1">if</font> (dofCheck[s] != dof[s]) <a href="../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)dm),PETSC_ERR_ARG_WRONGSTATE,<font color="#666666">"Coordinate sub-DMs have different dofs"</font>);
+<a name="line218">218: </a>      }
+<a name="line219">219: </a>    }
+<a name="line220">220: </a>  }
+<a name="line221">221: </a>  <font color="#4169E1">return</font>(0);
+<a name="line222">222: </a>}
+
+<a name="line224">224: </a><font color="#B22222">/*@C</font>
+<a name="line225">225: </a><font color="#B22222">  <a href="../../../../docs/manualpages/DMSTAG/DMStagGetCorners.html#DMStagGetCorners">DMStagGetCorners</a> - return global element indices of the local region (excluding ghost points)</font>
+
+<a name="line227">227: </a><font color="#B22222">  Not Collective</font>
+
+<a name="line229">229: </a><font color="#B22222">  Input Parameter:</font>
+<a name="line230">230: </a><font color="#B22222">. dm - the DMStag object</font>
+
+<a name="line232">232: </a><font color="#B22222">  Output Parameters:</font>
+<a name="line233">233: </a><font color="#B22222">+ x,y,z - starting element indices in each direction</font>
+<a name="line234">234: </a><font color="#B22222">. m,n,p - element widths in each direction</font>
+<a name="line235">235: </a><font color="#B22222">- nExtrax,nExtray,nExtraz - number of extra partial elements in each direction.</font>
+
+<a name="line237">237: </a><font color="#B22222">  Notes:</font>
+<a name="line238">238: </a><font color="#B22222">  Arguments corresponding to higher dimensions are ignored for 1D and 2D grids. These arguments may be set to NULL in this case.</font>
+
+<a name="line240">240: </a><font color="#B22222">  The number of extra partial elements is either 1 or 0.</font>
+<a name="line241">241: </a><font color="#B22222">  The value is 1 on right, top, and front non-periodic domain ("physical") boundaries,</font>
+<a name="line242">242: </a><font color="#B22222">  in the x, y, and z directions respectively, and otherwise 0.</font>
+
+<a name="line244">244: </a><font color="#B22222">  Level: beginner</font>
+
+<a name="line246">246: </a><font color="#B22222">.seealso: <a href="../../../../docs/manualpages/DMSTAG/DMSTAG.html#DMSTAG">DMSTAG</a>, <a href="../../../../docs/manualpages/DMSTAG/DMStagGetGhostCorners.html#DMStagGetGhostCorners">DMStagGetGhostCorners</a>(), <a href="../../../../docs/manualpages/DMDA/DMDAGetCorners.html#DMDAGetCorners">DMDAGetCorners</a>()</font>
+<a name="line247">247: </a><font color="#B22222">@*/</font>
+<a name="line248">248: </a><strong><font color="#4169E1"><a name="DMStagGetCorners"></a><a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../../docs/manualpages/DMSTAG/DMStagGetCorners.html#DMStagGetCorners">DMStagGetCorners</a>(<a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> dm,<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *x,<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *y,<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *z,<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *m,<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *n,<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *p,<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *nExtrax,<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *nExtray,<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *nExtraz)</font></strong>
+<a name="line249">249: </a>{
+<a name="line250">250: </a>  const DM_Stag * const stag = (DM_Stag*)dm-&gt;data;
+
+<a name="line254">254: </a>  <font color="#4169E1">if</font> (x) *x = stag-&gt;start[0];
+<a name="line255">255: </a>  <font color="#4169E1">if</font> (y) *y = stag-&gt;start[1];
+<a name="line256">256: </a>  <font color="#4169E1">if</font> (z) *z = stag-&gt;start[2];
+<a name="line257">257: </a>  <font color="#4169E1">if</font> (m) *m = stag-&gt;n[0];
+<a name="line258">258: </a>  <font color="#4169E1">if</font> (n) *n = stag-&gt;n[1];
+<a name="line259">259: </a>  <font color="#4169E1">if</font> (p) *p = stag-&gt;n[2];
+<a name="line260">260: </a>  <font color="#4169E1">if</font> (nExtrax) *nExtrax = stag-&gt;boundaryType[0] != <a href="../../../../docs/manualpages/DM/DMBoundaryType.html#DMBoundaryType">DM_BOUNDARY_PERIODIC</a> &amp;&amp; stag-&gt;lastRank[0] ? 1 : 0;
+<a name="line261">261: </a>  <font color="#4169E1">if</font> (nExtray) *nExtray = stag-&gt;boundaryType[1] != <a href="../../../../docs/manualpages/DM/DMBoundaryType.html#DMBoundaryType">DM_BOUNDARY_PERIODIC</a> &amp;&amp; stag-&gt;lastRank[1] ? 1 : 0;
+<a name="line262">262: </a>  <font color="#4169E1">if</font> (nExtraz) *nExtraz = stag-&gt;boundaryType[2] != <a href="../../../../docs/manualpages/DM/DMBoundaryType.html#DMBoundaryType">DM_BOUNDARY_PERIODIC</a> &amp;&amp; stag-&gt;lastRank[2] ? 1 : 0;
+<a name="line263">263: </a>  <font color="#4169E1">return</font>(0);
+<a name="line264">264: </a>}
+
+<a name="line266">266: </a><font color="#B22222">/*@C</font>
+<a name="line267">267: </a><font color="#B22222">  <a href="../../../../docs/manualpages/DMSTAG/DMStagGetDOF.html#DMStagGetDOF">DMStagGetDOF</a> - get number of DOF associated with each stratum of the grid</font>
+
+<a name="line269">269: </a><font color="#B22222">  Not Collective</font>
+
+<a name="line271">271: </a><font color="#B22222">  Input Parameter:</font>
+<a name="line272">272: </a><font color="#B22222">. dm - the DMStag object</font>
+
+<a name="line274">274: </a><font color="#B22222">  Output Parameters:</font>
+<a name="line275">275: </a><font color="#B22222">+ dof0 - the number of points per 0-cell (vertex/node)</font>
+<a name="line276">276: </a><font color="#B22222">. dof1 - the number of points per 1-cell (element in 1D, edge in 2D and 3D)</font>
+<a name="line277">277: </a><font color="#B22222">. dof2 - the number of points per 2-cell (element in 2D, face in 3D)</font>
+<a name="line278">278: </a><font color="#B22222">- dof3 - the number of points per 3-cell (element in 3D)</font>
+
+<a name="line280">280: </a><font color="#B22222">  Level: beginner</font>
+
+<a name="line282">282: </a><font color="#B22222">.seealso: <a href="../../../../docs/manualpages/DMSTAG/DMSTAG.html#DMSTAG">DMSTAG</a>, <a href="../../../../docs/manualpages/DMSTAG/DMStagGetCorners.html#DMStagGetCorners">DMStagGetCorners</a>(), <a href="../../../../docs/manualpages/DMSTAG/DMStagGetGhostCorners.html#DMStagGetGhostCorners">DMStagGetGhostCorners</a>(), <a href="../../../../docs/manualpages/DMSTAG/DMStagGetGlobalSizes.html#DMStagGetGlobalSizes">DMStagGetGlobalSizes</a>(), <a href="../../../../docs/manualpages/DMSTAG/DMStagGetStencilWidth.html#DMStagGetStencilWidth">DMStagGetStencilWidth</a>(), <a href="../../../../docs/manualpages/DMSTAG/DMStagGetBoundaryTypes.html#DMStagGetBoundaryTypes">DMStagGetBoundaryTypes</a>(), DMStagGetLocationDof(), <a href="../../../../docs/manualpages/DMDA/DMDAGetDof.html#DMDAGetDof">DMDAGetDof</a>()</font>
+<a name="line283">283: </a><font color="#B22222">@*/</font>
+<a name="line284">284: </a><strong><font color="#4169E1"><a name="DMStagGetDOF"></a><a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../../docs/manualpages/DMSTAG/DMStagGetDOF.html#DMStagGetDOF">DMStagGetDOF</a>(<a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> dm,<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *dof0,<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *dof1,<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *dof2,<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *dof3)</font></strong>
+<a name="line285">285: </a>{
+<a name="line286">286: </a>  const DM_Stag * const stag = (DM_Stag*)dm-&gt;data;
+
+<a name="line290">290: </a>  <font color="#4169E1">if</font> (dof0) *dof0 = stag-&gt;dof[0];
+<a name="line291">291: </a>  <font color="#4169E1">if</font> (dof1) *dof1 = stag-&gt;dof[1];
+<a name="line292">292: </a>  <font color="#4169E1">if</font> (dof2) *dof2 = stag-&gt;dof[2];
+<a name="line293">293: </a>  <font color="#4169E1">if</font> (dof3) *dof3 = stag-&gt;dof[3];
+<a name="line294">294: </a>  <font color="#4169E1">return</font>(0);
+<a name="line295">295: </a>}
+
+<a name="line297">297: </a><font color="#B22222">/*@C</font>
+<a name="line298">298: </a><font color="#B22222">  <a href="../../../../docs/manualpages/DMSTAG/DMStagGetGhostCorners.html#DMStagGetGhostCorners">DMStagGetGhostCorners</a> - return global element indices of the local region, including ghost points</font>
+
+<a name="line300">300: </a><font color="#B22222">  Not Collective</font>
+
+<a name="line302">302: </a><font color="#B22222">  Input Argument:</font>
+<a name="line303">303: </a><font color="#B22222">. dm - the DMStag object</font>
+
+<a name="line305">305: </a><font color="#B22222">  Output Arguments:</font>
+<a name="line306">306: </a><font color="#B22222">+ x,y,z - starting element indices in each direction</font>
+<a name="line307">307: </a><font color="#B22222">- m,n,p - element widths in each direction</font>
+
+<a name="line309">309: </a><font color="#B22222">  Notes:</font>
+<a name="line310">310: </a><font color="#B22222">  Arguments corresponding to higher dimensions are ignored for 1D and 2D grids. These arguments may be set to NULL in this case.</font>
+
+<a name="line312">312: </a><font color="#B22222">  Level: beginner</font>
+
+<a name="line314">314: </a><font color="#B22222">.seealso: <a href="../../../../docs/manualpages/DMSTAG/DMSTAG.html#DMSTAG">DMSTAG</a>, <a href="../../../../docs/manualpages/DMSTAG/DMStagGetCorners.html#DMStagGetCorners">DMStagGetCorners</a>(), <a href="../../../../docs/manualpages/DMDA/DMDAGetGhostCorners.html#DMDAGetGhostCorners">DMDAGetGhostCorners</a>()</font>
+<a name="line315">315: </a><font color="#B22222">@*/</font>
+<a name="line316">316: </a><strong><font color="#4169E1"><a name="DMStagGetGhostCorners"></a><a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../../docs/manualpages/DMSTAG/DMStagGetGhostCorners.html#DMStagGetGhostCorners">DMStagGetGhostCorners</a>(<a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> dm,<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *x,<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *y,<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *z,<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *m,<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *n,<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *p)</font></strong>
+<a name="line317">317: </a>{
+<a name="line318">318: </a>  const DM_Stag * const stag = (DM_Stag*)dm-&gt;data;
+
+<a name="line322">322: </a>  <font color="#4169E1">if</font> (x) *x = stag-&gt;startGhost[0];
+<a name="line323">323: </a>  <font color="#4169E1">if</font> (y) *y = stag-&gt;startGhost[1];
+<a name="line324">324: </a>  <font color="#4169E1">if</font> (z) *z = stag-&gt;startGhost[2];
+<a name="line325">325: </a>  <font color="#4169E1">if</font> (m) *m = stag-&gt;nGhost[0];
+<a name="line326">326: </a>  <font color="#4169E1">if</font> (n) *n = stag-&gt;nGhost[1];
+<a name="line327">327: </a>  <font color="#4169E1">if</font> (p) *p = stag-&gt;nGhost[2];
+<a name="line328">328: </a>  <font color="#4169E1">return</font>(0);
+<a name="line329">329: </a>}
+
+<a name="line331">331: </a><font color="#B22222">/*@C</font>
+<a name="line332">332: </a><font color="#B22222">  <a href="../../../../docs/manualpages/DMSTAG/DMStagGetGlobalSizes.html#DMStagGetGlobalSizes">DMStagGetGlobalSizes</a> - get global element counts</font>
+
+<a name="line334">334: </a><font color="#B22222">  Not Collective</font>
+
+<a name="line336">336: </a><font color="#B22222">  Input Parameter:</font>
+<a name="line337">337: </a><font color="#B22222">. dm - the DMStag object</font>
+
+<a name="line339">339: </a><font color="#B22222">  Output Parameters:</font>
+<a name="line340">340: </a><font color="#B22222">. M,N,P - global element counts in each direction</font>
+
+<a name="line342">342: </a><font color="#B22222">  Notes:</font>
+<a name="line343">343: </a><font color="#B22222">  Arguments corresponding to higher dimensions are ignored for 1D and 2D grids. These arguments may be set to NULL in this case.</font>
+
+<a name="line345">345: </a><font color="#B22222">  Level: beginner</font>
+
+<a name="line347">347: </a><font color="#B22222">.seealso: <a href="../../../../docs/manualpages/DMSTAG/DMSTAG.html#DMSTAG">DMSTAG</a>, <a href="../../../../docs/manualpages/DMSTAG/DMStagGetLocalSizes.html#DMStagGetLocalSizes">DMStagGetLocalSizes</a>(), <a href="../../../../docs/manualpages/DMDA/DMDAGetInfo.html#DMDAGetInfo">DMDAGetInfo</a>()</font>
+<a name="line348">348: </a><font color="#B22222">@*/</font>
+<a name="line349">349: </a><strong><font color="#4169E1"><a name="DMStagGetGlobalSizes"></a><a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../../docs/manualpages/DMSTAG/DMStagGetGlobalSizes.html#DMStagGetGlobalSizes">DMStagGetGlobalSizes</a>(<a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> dm,<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>* M,<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>* N,<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>* P)</font></strong>
+<a name="line350">350: </a>{
+<a name="line351">351: </a>  const DM_Stag * const stag = (DM_Stag*)dm-&gt;data;
+
+<a name="line355">355: </a>  <font color="#4169E1">if</font> (M) *M = stag-&gt;N[0];
+<a name="line356">356: </a>  <font color="#4169E1">if</font> (N) *N = stag-&gt;N[1];
+<a name="line357">357: </a>  <font color="#4169E1">if</font> (P) *P = stag-&gt;N[2];
+<a name="line358">358: </a>  <font color="#4169E1">return</font>(0);
+<a name="line359">359: </a>}
+
+<a name="line361">361: </a><font color="#B22222">/*@C</font>
+<a name="line362">362: </a><font color="#B22222">  <a href="../../../../docs/manualpages/DMSTAG/DMStagGetIsFirstRank.html#DMStagGetIsFirstRank">DMStagGetIsFirstRank</a> - get boolean value for whether this rank is first in each direction in the rank grid</font>
+
+<a name="line364">364: </a><font color="#B22222">  Not Collective</font>
+
+<a name="line366">366: </a><font color="#B22222">  Input Parameter:</font>
+<a name="line367">367: </a><font color="#B22222">. dm - the DMStag object</font>
+
+<a name="line369">369: </a><font color="#B22222">  Output Parameters:</font>
+<a name="line370">370: </a><font color="#B22222">. isFirstRank0,isFirstRank1,isFirstRank2 - whether this rank is first in each direction</font>
+
+<a name="line372">372: </a><font color="#B22222">  Level: intermediate</font>
+
+<a name="line374">374: </a><font color="#B22222">  Notes:</font>
+<a name="line375">375: </a><font color="#B22222">  Arguments corresponding to higher dimensions are ignored for 1D and 2D grids. These arguments may be set to NULL in this case.</font>
+
+<a name="line377">377: </a><font color="#B22222">.seealso: <a href="../../../../docs/manualpages/DMSTAG/DMSTAG.html#DMSTAG">DMSTAG</a>, <a href="../../../../docs/manualpages/DMSTAG/DMStagGetIsLastRank.html#DMStagGetIsLastRank">DMStagGetIsLastRank</a>()</font>
+<a name="line378">378: </a><font color="#B22222">@*/</font>
+<a name="line379">379: </a><strong><font color="#4169E1"><a name="DMStagGetIsFirstRank"></a><a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../../docs/manualpages/DMSTAG/DMStagGetIsFirstRank.html#DMStagGetIsFirstRank">DMStagGetIsFirstRank</a>(<a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> dm,<a href="../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> *isFirstRank0,<a href="../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> *isFirstRank1,<a href="../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> *isFirstRank2)</font></strong>
+<a name="line380">380: </a>{
+<a name="line381">381: </a>  const DM_Stag * const stag = (DM_Stag*)dm-&gt;data;
+
+<a name="line385">385: </a>  <font color="#4169E1">if</font> (isFirstRank0) *isFirstRank0 = stag-&gt;firstRank[0];
+<a name="line386">386: </a>  <font color="#4169E1">if</font> (isFirstRank1) *isFirstRank1 = stag-&gt;firstRank[1];
+<a name="line387">387: </a>  <font color="#4169E1">if</font> (isFirstRank2) *isFirstRank2 = stag-&gt;firstRank[2];
+<a name="line388">388: </a>  <font color="#4169E1">return</font>(0);
+<a name="line389">389: </a>}
+
+<a name="line391">391: </a><font color="#B22222">/*@C</font>
+<a name="line392">392: </a><font color="#B22222">  <a href="../../../../docs/manualpages/DMSTAG/DMStagGetIsLastRank.html#DMStagGetIsLastRank">DMStagGetIsLastRank</a> - get boolean value for whether this rank is last in each direction in the rank grid</font>
+
+<a name="line394">394: </a><font color="#B22222">  Not Collective</font>
+
+<a name="line396">396: </a><font color="#B22222">  Input Parameter:</font>
+<a name="line397">397: </a><font color="#B22222">. dm - the DMStag object</font>
+
+<a name="line399">399: </a><font color="#B22222">  Output Parameters:</font>
+<a name="line400">400: </a><font color="#B22222">. isLastRank0,isLastRank1,isLastRank2 - whether this rank is last in each direction</font>
+
+<a name="line402">402: </a><font color="#B22222">  Level: intermediate</font>
+
+<a name="line404">404: </a><font color="#B22222">  Notes:</font>
+<a name="line405">405: </a><font color="#B22222">  Arguments corresponding to higher dimensions are ignored for 1D and 2D grids. These arguments may be set to NULL in this case.</font>
+<a name="line406">406: </a><font color="#B22222">  Level: intermediate</font>
+
+<a name="line408">408: </a><font color="#B22222">.seealso: <a href="../../../../docs/manualpages/DMSTAG/DMSTAG.html#DMSTAG">DMSTAG</a>, <a href="../../../../docs/manualpages/DMSTAG/DMStagGetIsFirstRank.html#DMStagGetIsFirstRank">DMStagGetIsFirstRank</a>()</font>
+<a name="line409">409: </a><font color="#B22222">@*/</font>
+<a name="line410">410: </a><strong><font color="#4169E1"><a name="DMStagGetIsLastRank"></a><a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../../docs/manualpages/DMSTAG/DMStagGetIsLastRank.html#DMStagGetIsLastRank">DMStagGetIsLastRank</a>(<a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> dm,<a href="../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> *isLastRank0,<a href="../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> *isLastRank1,<a href="../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> *isLastRank2)</font></strong>
+<a name="line411">411: </a>{
+<a name="line412">412: </a>  const DM_Stag * const stag = (DM_Stag*)dm-&gt;data;
+
+<a name="line416">416: </a>  <font color="#4169E1">if</font> (isLastRank0) *isLastRank0 = stag-&gt;lastRank[0];
+<a name="line417">417: </a>  <font color="#4169E1">if</font> (isLastRank1) *isLastRank1 = stag-&gt;lastRank[1];
+<a name="line418">418: </a>  <font color="#4169E1">if</font> (isLastRank2) *isLastRank2 = stag-&gt;lastRank[2];
+<a name="line419">419: </a>  <font color="#4169E1">return</font>(0);
+<a name="line420">420: </a>}
+
+<a name="line422">422: </a><font color="#B22222">/*@C</font>
+<a name="line423">423: </a><font color="#B22222">  <a href="../../../../docs/manualpages/DMSTAG/DMStagGetLocalSizes.html#DMStagGetLocalSizes">DMStagGetLocalSizes</a> - get local elementwise sizes</font>
+
+<a name="line425">425: </a><font color="#B22222">  Not Collective</font>
+
+<a name="line427">427: </a><font color="#B22222">  Input Parameter:</font>
+<a name="line428">428: </a><font color="#B22222">. dm - the DMStag object</font>
+
+<a name="line430">430: </a><font color="#B22222">  Output Parameters:</font>
+<a name="line431">431: </a><font color="#B22222">. m,n,p - local element counts (excluding ghosts) in each direction</font>
+
+<a name="line433">433: </a><font color="#B22222">  Notes:</font>
+<a name="line434">434: </a><font color="#B22222">  Arguments corresponding to higher dimensions are ignored for 1D and 2D grids. These arguments may be set to NULL in this case.</font>
+<a name="line435">435: </a><font color="#B22222">  Level: intermediate</font>
+
+<a name="line437">437: </a><font color="#B22222">  Level: beginner</font>
+
+<a name="line439">439: </a><font color="#B22222">.seealso: <a href="../../../../docs/manualpages/DMSTAG/DMSTAG.html#DMSTAG">DMSTAG</a>, <a href="../../../../docs/manualpages/DMSTAG/DMStagGetGlobalSizes.html#DMStagGetGlobalSizes">DMStagGetGlobalSizes</a>(), <a href="../../../../docs/manualpages/DMSTAG/DMStagGetDOF.html#DMStagGetDOF">DMStagGetDOF</a>(), <a href="../../../../docs/manualpages/DMSTAG/DMStagGetNumRanks.html#DMStagGetNumRanks">DMStagGetNumRanks</a>(), <a href="../../../../docs/manualpages/DMDA/DMDAGetLocalInfo.html#DMDAGetLocalInfo">DMDAGetLocalInfo</a>()</font>
+<a name="line440">440: </a><font color="#B22222">@*/</font>
+<a name="line441">441: </a><strong><font color="#4169E1"><a name="DMStagGetLocalSizes"></a><a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../../docs/manualpages/DMSTAG/DMStagGetLocalSizes.html#DMStagGetLocalSizes">DMStagGetLocalSizes</a>(<a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> dm,<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>* m,<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>* n,<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>* p)</font></strong>
+<a name="line442">442: </a>{
+<a name="line443">443: </a>  const DM_Stag * const stag = (DM_Stag*)dm-&gt;data;
+
+<a name="line447">447: </a>  <font color="#4169E1">if</font> (m) *m = stag-&gt;n[0];
+<a name="line448">448: </a>  <font color="#4169E1">if</font> (n) *n = stag-&gt;n[1];
+<a name="line449">449: </a>  <font color="#4169E1">if</font> (p) *p = stag-&gt;n[2];
+<a name="line450">450: </a>  <font color="#4169E1">return</font>(0);
+<a name="line451">451: </a>}
+
+<a name="line453">453: </a><font color="#B22222">/*@C</font>
+<a name="line454">454: </a><font color="#B22222">  <a href="../../../../docs/manualpages/DMSTAG/DMStagGetNumRanks.html#DMStagGetNumRanks">DMStagGetNumRanks</a> - get number of ranks in each direction in the global grid decomposition</font>
+
+<a name="line456">456: </a><font color="#B22222">  Not Collective</font>
+
+<a name="line458">458: </a><font color="#B22222">  Input Parameter:</font>
+<a name="line459">459: </a><font color="#B22222">. dm - the DMStag object</font>
+
+<a name="line461">461: </a><font color="#B22222">  Output Parameters:</font>
+<a name="line462">462: </a><font color="#B22222">. nRanks0,nRanks1,nRanks2 - number of ranks in each direction in the grid decomposition</font>
+
+<a name="line464">464: </a><font color="#B22222">  Notes:</font>
+<a name="line465">465: </a><font color="#B22222">  Arguments corresponding to higher dimensions are ignored for 1D and 2D grids. These arguments may be set to NULL in this case.</font>
+<a name="line466">466: </a><font color="#B22222">  Level: intermediate</font>
+
+<a name="line468">468: </a><font color="#B22222">  Level: beginner</font>
+
+<a name="line470">470: </a><font color="#B22222">.seealso: <a href="../../../../docs/manualpages/DMSTAG/DMSTAG.html#DMSTAG">DMSTAG</a>, <a href="../../../../docs/manualpages/DMSTAG/DMStagGetGlobalSizes.html#DMStagGetGlobalSizes">DMStagGetGlobalSizes</a>(), DMStagGetLocalSize(), <a href="../../../../docs/manualpages/DMSTAG/DMStagSetNumRanks.html#DMStagSetNumRanks">DMStagSetNumRanks</a>(), <a href="../../../../docs/manualpages/DMDA/DMDAGetInfo.html#DMDAGetInfo">DMDAGetInfo</a>()</font>
+<a name="line471">471: </a><font color="#B22222">@*/</font>
+<a name="line472">472: </a><strong><font color="#4169E1"><a name="DMStagGetNumRanks"></a><a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../../docs/manualpages/DMSTAG/DMStagGetNumRanks.html#DMStagGetNumRanks">DMStagGetNumRanks</a>(<a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> dm,<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *nRanks0,<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *nRanks1,<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *nRanks2)</font></strong>
+<a name="line473">473: </a>{
+<a name="line474">474: </a>  const DM_Stag * const stag = (DM_Stag*)dm-&gt;data;
+
+<a name="line478">478: </a>  <font color="#4169E1">if</font> (nRanks0) *nRanks0 = stag-&gt;nRanks[0];
+<a name="line479">479: </a>  <font color="#4169E1">if</font> (nRanks1) *nRanks1 = stag-&gt;nRanks[1];
+<a name="line480">480: </a>  <font color="#4169E1">if</font> (nRanks2) *nRanks2 = stag-&gt;nRanks[2];
+<a name="line481">481: </a>  <font color="#4169E1">return</font>(0);
+<a name="line482">482: </a>}
+
+<a name="line484">484: </a><font color="#B22222">/*@C</font>
+<a name="line485">485: </a><font color="#B22222">  <a href="../../../../docs/manualpages/DMSTAG/DMStagGetEntries.html#DMStagGetEntries">DMStagGetEntries</a> - get number of native entries in the global representation</font>
+
+<a name="line487">487: </a><font color="#B22222">  Not Collective</font>
+
+<a name="line489">489: </a><font color="#B22222">  Input Parameter:</font>
+<a name="line490">490: </a><font color="#B22222">. dm - the DMStag object</font>
+
+<a name="line492">492: </a><font color="#B22222">  Output Parameters:</font>
+<a name="line493">493: </a><font color="#B22222">. entries - number of rank-native entries in the global representation</font>
+
+<a name="line495">495: </a><font color="#B22222">  Note:</font>
+<a name="line496">496: </a><font color="#B22222">  This is the number of entries on this rank for a global vector associated with dm.</font>
+
+<a name="line498">498: </a><font color="#B22222">  Level: developer</font>
+
+<a name="line500">500: </a><font color="#B22222">.seealso: <a href="../../../../docs/manualpages/DMSTAG/DMSTAG.html#DMSTAG">DMSTAG</a>, <a href="../../../../docs/manualpages/DMSTAG/DMStagGetDOF.html#DMStagGetDOF">DMStagGetDOF</a>(), <a href="../../../../docs/manualpages/DMSTAG/DMStagGetEntriesPerElement.html#DMStagGetEntriesPerElement">DMStagGetEntriesPerElement</a>(), <a href="../../../../docs/manualpages/DM/DMCreateLocalVector.html#DMCreateLocalVector">DMCreateLocalVector</a>()</font>
+<a name="line501">501: </a><font color="#B22222">@*/</font>
+<a name="line502">502: </a><strong><font color="#4169E1"><a name="DMStagGetEntries"></a><a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../../docs/manualpages/DMSTAG/DMStagGetEntries.html#DMStagGetEntries">DMStagGetEntries</a>(<a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> dm,<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *entries)</font></strong>
+<a name="line503">503: </a>{
+<a name="line504">504: </a>  const DM_Stag * const stag = (DM_Stag*)dm-&gt;data;
+
+<a name="line508">508: </a>  <font color="#4169E1">if</font> (entries) *entries = stag-&gt;entries;
+<a name="line509">509: </a>  <font color="#4169E1">return</font>(0);
+<a name="line510">510: </a>}
+
+<a name="line512">512: </a><font color="#B22222">/*@C</font>
+<a name="line513">513: </a><font color="#B22222">  <a href="../../../../docs/manualpages/DMSTAG/DMStagGetEntriesPerElement.html#DMStagGetEntriesPerElement">DMStagGetEntriesPerElement</a> - get number of entries per element in the local representation</font>
+
+<a name="line515">515: </a><font color="#B22222">  Not Collective</font>
+
+<a name="line517">517: </a><font color="#B22222">  Input Parameter:</font>
+<a name="line518">518: </a><font color="#B22222">. dm - the DMStag object</font>
+
+<a name="line520">520: </a><font color="#B22222">  Output Parameters:</font>
+<a name="line521">521: </a><font color="#B22222">. entriesPerElement - number of entries associated with each element in the local representation</font>
+
+<a name="line523">523: </a><font color="#B22222">  Notes:</font>
+<a name="line524">524: </a><font color="#B22222">  This is the natural block size for most local operations. In 1D it is equal to dof0 + dof1,</font>
+<a name="line525">525: </a><font color="#B22222">  in 2D it is equal to dof0 + 2*dof1 + dof2, and in 3D it is equal to dof0 + 3*dof1 + 3*dof2 + dof3</font>
+
+<a name="line527">527: </a><font color="#B22222">  Level: developer</font>
+
+<a name="line529">529: </a><font color="#B22222">.seealso: <a href="../../../../docs/manualpages/DMSTAG/DMSTAG.html#DMSTAG">DMSTAG</a>, <a href="../../../../docs/manualpages/DMSTAG/DMStagGetDOF.html#DMStagGetDOF">DMStagGetDOF</a>()</font>
+<a name="line530">530: </a><font color="#B22222">@*/</font>
+<a name="line531">531: </a><strong><font color="#4169E1"><a name="DMStagGetEntriesPerElement"></a><a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../../docs/manualpages/DMSTAG/DMStagGetEntriesPerElement.html#DMStagGetEntriesPerElement">DMStagGetEntriesPerElement</a>(<a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> dm,<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *entriesPerElement)</font></strong>
+<a name="line532">532: </a>{
+<a name="line533">533: </a>  const DM_Stag * const stag = (DM_Stag*)dm-&gt;data;
+
+<a name="line537">537: </a>  <font color="#4169E1">if</font> (entriesPerElement) *entriesPerElement = stag-&gt;entriesPerElement;
+<a name="line538">538: </a>  <font color="#4169E1">return</font>(0);
+<a name="line539">539: </a>}
+
+<a name="line541">541: </a><font color="#B22222">/*@C</font>
+<a name="line542">542: </a><font color="#B22222">  <a href="../../../../docs/manualpages/DMSTAG/DMStagGetStencilType.html#DMStagGetStencilType">DMStagGetStencilType</a> - get elementwise ghost/halo stencil type</font>
+
+<a name="line544">544: </a><font color="#B22222">  Not Collective</font>
+
+<a name="line546">546: </a><font color="#B22222">  Input Parameter:</font>
+<a name="line547">547: </a><font color="#B22222">. dm - the DMStag object</font>
+
+<a name="line549">549: </a><font color="#B22222">  Output Parameter:</font>
+<a name="line550">550: </a><font color="#B22222">. stencilType - the elementwise ghost stencil type: <a href="../../../../docs/manualpages/DMSTAG/DMStagStencilType.html#DMStagStencilType">DMSTAG_STENCIL_BOX</a>, <a href="../../../../docs/manualpages/DMSTAG/DMStagStencilType.html#DMStagStencilType">DMSTAG_STENCIL_STAR</a>, or <a href="../../../../docs/manualpages/DMSTAG/DMStagStencilType.html#DMStagStencilType">DMSTAG_STENCIL_NONE</a></font>
+
+<a name="line552">552: </a><font color="#B22222">  Level: beginner</font>
+
+<a name="line554">554: </a><font color="#B22222">.seealso: <a href="../../../../docs/manualpages/DMSTAG/DMSTAG.html#DMSTAG">DMSTAG</a>, <a href="../../../../docs/manualpages/DMSTAG/DMStagSetStencilType.html#DMStagSetStencilType">DMStagSetStencilType</a>(), <a href="../../../../docs/manualpages/DMSTAG/DMStagStencilType.html#DMStagStencilType">DMStagStencilType</a>, <a href="../../../../docs/manualpages/DMDA/DMDAGetInfo.html#DMDAGetInfo">DMDAGetInfo</a>()</font>
+<a name="line555">555: </a><font color="#B22222">@*/</font>
+<a name="line556">556: </a><strong><font color="#4169E1"><a name="DMStagGetStencilType"></a><a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../../docs/manualpages/DMSTAG/DMStagGetStencilType.html#DMStagGetStencilType">DMStagGetStencilType</a>(<a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> dm,<a href="../../../../docs/manualpages/DMSTAG/DMStagStencilType.html#DMStagStencilType">DMStagStencilType</a> *stencilType)</font></strong>
+<a name="line557">557: </a>{
+<a name="line558">558: </a>  DM_Stag * const stag = (DM_Stag*)dm-&gt;data;
+
+<a name="line562">562: </a>  *stencilType = stag-&gt;stencilType;
+<a name="line563">563: </a>  <font color="#4169E1">return</font>(0);
+<a name="line564">564: </a>}
+
+<a name="line566">566: </a><font color="#B22222">/*@C</font>
+<a name="line567">567: </a><font color="#B22222">  <a href="../../../../docs/manualpages/DMSTAG/DMStagGetStencilWidth.html#DMStagGetStencilWidth">DMStagGetStencilWidth</a> - get elementwise stencil width</font>
+
+<a name="line569">569: </a><font color="#B22222">  Not Collective</font>
+
+<a name="line571">571: </a><font color="#B22222">  Input Parameter:</font>
+<a name="line572">572: </a><font color="#B22222">. dm - the DMStag object</font>
+
+<a name="line574">574: </a><font color="#B22222">  Output Parameters:</font>
+<a name="line575">575: </a><font color="#B22222">. stencilWidth - stencil/halo/ghost width in elements</font>
+
+<a name="line577">577: </a><font color="#B22222">  Level: beginner</font>
+
+<a name="line579">579: </a><font color="#B22222">.seealso: <a href="../../../../docs/manualpages/DMSTAG/DMSTAG.html#DMSTAG">DMSTAG</a>, <a href="../../../../docs/manualpages/DMDA/DMDAGetStencilWidth.html#DMDAGetStencilWidth">DMDAGetStencilWidth</a>(), <a href="../../../../docs/manualpages/DMDA/DMDAGetInfo.html#DMDAGetInfo">DMDAGetInfo</a>()</font>
+<a name="line580">580: </a><font color="#B22222">@*/</font>
+<a name="line581">581: </a><strong><font color="#4169E1"><a name="DMStagGetStencilWidth"></a><a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../../docs/manualpages/DMSTAG/DMStagGetStencilWidth.html#DMStagGetStencilWidth">DMStagGetStencilWidth</a>(<a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> dm,<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *stencilWidth)</font></strong>
+<a name="line582">582: </a>{
+<a name="line583">583: </a>  const DM_Stag * const stag = (DM_Stag*)dm-&gt;data;
+
+<a name="line587">587: </a>  <font color="#4169E1">if</font> (stencilWidth) *stencilWidth = stag-&gt;stencilWidth;
+<a name="line588">588: </a>  <font color="#4169E1">return</font>(0);
+<a name="line589">589: </a>}
+
+<a name="line591">591: </a><font color="#B22222">/*@C</font>
+<a name="line592">592: </a><font color="#B22222">  <a href="../../../../docs/manualpages/DMSTAG/DMStagGetOwnershipRanges.html#DMStagGetOwnershipRanges">DMStagGetOwnershipRanges</a> - get elements per rank in each direction</font>
+
+<a name="line594">594: </a><font color="#B22222">  Not Collective</font>
+
+<a name="line596">596: </a><font color="#B22222">  Input Parameter:</font>
+<a name="line597">597: </a><font color="#B22222">.     dm - the DMStag object</font>
+
+<a name="line599">599: </a><font color="#B22222">  Output Parameters:</font>
+<a name="line600">600: </a><font color="#B22222">+     lx - ownership along x direction (optional)</font>
+<a name="line601">601: </a><font color="#B22222">.     ly - ownership along y direction (optional)</font>
+<a name="line602">602: </a><font color="#B22222">-     lz - ownership along z direction (optional)</font>
+
+<a name="line604">604: </a><font color="#B22222">  Notes:</font>
+<a name="line605">605: </a><font color="#B22222">  These correspond to the optional final arguments passed to <a href="../../../../docs/manualpages/DMSTAG/DMStagCreate1d.html#DMStagCreate1d">DMStagCreate1d</a>(), <a href="../../../../docs/manualpages/DMSTAG/DMStagCreate2d.html#DMStagCreate2d">DMStagCreate2d</a>(), and <a href="../../../../docs/manualpages/DMSTAG/DMStagCreate3d.html#DMStagCreate3d">DMStagCreate3d</a>().</font>
+
+<a name="line607">607: </a><font color="#B22222">  Arguments corresponding to higher dimensions are ignored for 1D and 2D grids. These arguments may be set to NULL in this case.</font>
+
+<a name="line609">609: </a><font color="#B22222">  In C you should not free these arrays, nor change the values in them.</font>
+<a name="line610">610: </a><font color="#B22222">  They will only have valid values while the DMStag they came from still exists (has not been destroyed).</font>
+
+<a name="line612">612: </a><font color="#B22222">  Level: intermediate</font>
+
+<a name="line614">614: </a><font color="#B22222">.seealso: <a href="../../../../docs/manualpages/DMSTAG/DMSTAG.html#DMSTAG">DMSTAG</a>, <a href="../../../../docs/manualpages/DMSTAG/DMStagSetGlobalSizes.html#DMStagSetGlobalSizes">DMStagSetGlobalSizes</a>(), <a href="../../../../docs/manualpages/DMSTAG/DMStagSetOwnershipRanges.html#DMStagSetOwnershipRanges">DMStagSetOwnershipRanges</a>(), <a href="../../../../docs/manualpages/DMSTAG/DMStagCreate1d.html#DMStagCreate1d">DMStagCreate1d</a>(), <a href="../../../../docs/manualpages/DMSTAG/DMStagCreate2d.html#DMStagCreate2d">DMStagCreate2d</a>(), <a href="../../../../docs/manualpages/DMSTAG/DMStagCreate3d.html#DMStagCreate3d">DMStagCreate3d</a>(), <a href="../../../../docs/manualpages/DMDA/DMDAGetOwnershipRanges.html#DMDAGetOwnershipRanges">DMDAGetOwnershipRanges</a>()</font>
+<a name="line615">615: </a><font color="#B22222">@*/</font>
+<a name="line616">616: </a><strong><font color="#4169E1"><a name="DMStagGetOwnershipRanges"></a><a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../../docs/manualpages/DMSTAG/DMStagGetOwnershipRanges.html#DMStagGetOwnershipRanges">DMStagGetOwnershipRanges</a>(<a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> dm,const <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *lx[],const <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *ly[],const <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *lz[])</font></strong>
+<a name="line617">617: </a>{
+<a name="line618">618: </a>  const DM_Stag * const stag = (DM_Stag*)dm-&gt;data;
+
+<a name="line622">622: </a>  <font color="#4169E1">if</font> (lx) *lx = stag-&gt;l[0];
+<a name="line623">623: </a>  <font color="#4169E1">if</font> (ly) *ly = stag-&gt;l[1];
+<a name="line624">624: </a>  <font color="#4169E1">if</font> (lz) *lz = stag-&gt;l[2];
+<a name="line625">625: </a>  <font color="#4169E1">return</font>(0);
+<a name="line626">626: </a>}
+
+<a name="line628">628: </a><font color="#B22222">/*@C</font>
+<a name="line629">629: </a><font color="#B22222">  <a href="../../../../docs/manualpages/DMSTAG/DMStagCreateCompatibleDMStag.html#DMStagCreateCompatibleDMStag">DMStagCreateCompatibleDMStag</a> - create a compatible DMStag with different dof/stratum</font>
+
+<a name="line631">631: </a><font color="#B22222">  Collective</font>
+
+<a name="line633">633: </a><font color="#B22222">  Input Parameters:</font>
+<a name="line634">634: </a><font color="#B22222">+ dm - the DMStag object</font>
+<a name="line635">635: </a><font color="#B22222">- dof0,dof1,dof2,dof3 - number of dof on each stratum in the new DMStag</font>
+
+<a name="line637">637: </a><font color="#B22222">  Output Parameters:</font>
+<a name="line638">638: </a><font color="#B22222">. newdm - the new, compatible DMStag</font>
+
+<a name="line640">640: </a><font color="#B22222">  Notes:</font>
+<a name="line641">641: </a><font color="#B22222">  Dof supplied for strata too big for the dimension are ignored; these may be set to 0.</font>
+<a name="line642">642: </a><font color="#B22222">  For example, for a 2-dimensional DMStag, dof2 sets the number of dof per element,</font>
+<a name="line643">643: </a><font color="#B22222">  and dof3 is unused. For a 3-dimensional DMStag, dof3 sets the number of dof per element.</font>
+
+<a name="line645">645: </a><font color="#B22222">  In contrast to <a href="../../../../docs/manualpages/DMDA/DMDACreateCompatibleDMDA.html#DMDACreateCompatibleDMDA">DMDACreateCompatibleDMDA</a>(), coordinates are not reused.</font>
+
+<a name="line647">647: </a><font color="#B22222">  Level: intermediate</font>
+
+<a name="line649">649: </a><font color="#B22222">.seealso: <a href="../../../../docs/manualpages/DMSTAG/DMSTAG.html#DMSTAG">DMSTAG</a>, <a href="../../../../docs/manualpages/DMDA/DMDACreateCompatibleDMDA.html#DMDACreateCompatibleDMDA">DMDACreateCompatibleDMDA</a>(), <a href="../../../../docs/manualpages/DM/DMGetCompatibility.html#DMGetCompatibility">DMGetCompatibility</a>(), <a href="../../../../docs/manualpages/DMSTAG/DMStagMigrateVec.html#DMStagMigrateVec">DMStagMigrateVec</a>()</font>
+<a name="line650">650: </a><font color="#B22222">@*/</font>
+<a name="line651">651: </a><strong><font color="#4169E1"><a name="DMStagCreateCompatibleDMStag"></a><a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../../docs/manualpages/DMSTAG/DMStagCreateCompatibleDMStag.html#DMStagCreateCompatibleDMStag">DMStagCreateCompatibleDMStag</a>(<a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> dm,<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> dof0,<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> dof1,<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> dof2,<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> dof3,<a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> *newdm)</font></strong>
+<a name="line652">652: </a>{
+<a name="line653">653: </a>  <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  ierr;
+
+<a name="line657">657: </a>  <a href="../../../../docs/manualpages/DMSTAG/DMStagDuplicateWithoutSetup.html#DMStagDuplicateWithoutSetup">DMStagDuplicateWithoutSetup</a>(dm,<a href="../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)dm),newdm);
+<a name="line658">658: </a>  <a href="../../../../docs/manualpages/DMSTAG/DMStagSetDOF.html#DMStagSetDOF">DMStagSetDOF</a>(*newdm,dof0,dof1,dof2,dof3);
+<a name="line659">659: </a>  <a href="../../../../docs/manualpages/DM/DMSetUp.html#DMSetUp">DMSetUp</a>(*newdm);
+<a name="line660">660: </a>  <font color="#4169E1">return</font>(0);
+<a name="line661">661: </a>}
+
+<a name="line663">663: </a><font color="#B22222">/*@C</font>
+<a name="line664">664: </a><font color="#B22222">  <a href="../../../../docs/manualpages/DMSTAG/DMStagGetLocationSlot.html#DMStagGetLocationSlot">DMStagGetLocationSlot</a> - get index to use in accessing raw local arrays</font>
+
+<a name="line666">666: </a><font color="#B22222">  Not Collective</font>
+
+<a name="line668">668: </a><font color="#B22222">  Input Parameters:</font>
+<a name="line669">669: </a><font color="#B22222">+ dm - the DMStag object</font>
+<a name="line670">670: </a><font color="#B22222">. loc - location relative to an element</font>
+<a name="line671">671: </a><font color="#B22222">- c - component</font>
+
+<a name="line673">673: </a><font color="#B22222">  Output Parameter:</font>
+<a name="line674">674: </a><font color="#B22222">. slot - index to use</font>
+
+<a name="line676">676: </a><font color="#B22222">  Notes:</font>
+<a name="line677">677: </a><font color="#B22222">  Provides an appropriate index to use with <a href="../../../../docs/manualpages/DMSTAG/DMStagVecGetArray.html#DMStagVecGetArray">DMStagVecGetArray</a>() and friends.</font>
+<a name="line678">678: </a><font color="#B22222">  This is required so that the user doesn't need to know about the ordering of</font>
+<a name="line679">679: </a><font color="#B22222">  dof associated with each local element.</font>
+
+<a name="line681">681: </a><font color="#B22222">  Level: beginner</font>
+
+<a name="line683">683: </a><font color="#B22222">.seealso: <a href="../../../../docs/manualpages/DMSTAG/DMSTAG.html#DMSTAG">DMSTAG</a>, <a href="../../../../docs/manualpages/DMSTAG/DMStagVecGetArray.html#DMStagVecGetArray">DMStagVecGetArray</a>(), <a href="../../../../docs/manualpages/DMSTAG/DMStagVecGetArrayRead.html#DMStagVecGetArrayRead">DMStagVecGetArrayRead</a>(), <a href="../../../../docs/manualpages/DMSTAG/DMStagGetDOF.html#DMStagGetDOF">DMStagGetDOF</a>(), <a href="../../../../docs/manualpages/DMSTAG/DMStagGetEntriesPerElement.html#DMStagGetEntriesPerElement">DMStagGetEntriesPerElement</a>()</font>
+<a name="line684">684: </a><font color="#B22222">@*/</font>
+<a name="line685">685: </a><strong><font color="#4169E1"><a name="DMStagGetLocationSlot"></a><a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../../docs/manualpages/DMSTAG/DMStagGetLocationSlot.html#DMStagGetLocationSlot">DMStagGetLocationSlot</a>(<a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> dm,<a href="../../../../docs/manualpages/DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMStagStencilLocation</a> loc,<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> c,<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *slot)</font></strong>
+<a name="line686">686: </a>{
+<a name="line687">687: </a>  DM_Stag * const stag = (DM_Stag*)dm-&gt;data;
+
+<a name="line691">691: </a>  <font color="#4169E1">if</font> (<a href="../../../../docs/manualpages/Sys/PetscDefined.html#PetscDefined">PetscDefined</a>(USE_DEBUG)) {
+<a name="line693">693: </a>    <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       dof;
+<a name="line694">694: </a>    <a href="../../../../docs/manualpages/DMSTAG/DMStagGetLocationDOF.html#DMStagGetLocationDOF">DMStagGetLocationDOF</a>(dm,loc,&amp;dof);
+<a name="line695">695: </a>    <font color="#4169E1">if</font> (dof &lt; 1) <a href="../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)dm),PETSC_ERR_ARG_OUTOFRANGE,<font color="#666666">"Location %s has no dof attached"</font>,DMStagStencilLocations[loc]);
+<a name="line696">696: </a>    <font color="#4169E1">if</font> (c &gt; dof-1) <a href="../../../../docs/manualpages/Sys/SETERRQ3.html#SETERRQ3">SETERRQ3</a>(<a href="../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)dm),PETSC_ERR_ARG_OUTOFRANGE,<font color="#666666">"Supplied component number (%D) for location %s is too big (maximum %D)"</font>,c,DMStagStencilLocations[loc],dof-1);
+<a name="line697">697: </a>  }
+<a name="line698">698: </a>  *slot = stag-&gt;locationOffsets[loc] + c;
+<a name="line699">699: </a>  <font color="#4169E1">return</font>(0);
+<a name="line700">700: </a>}
+
+<a name="line702">702: </a><font color="#B22222">/*@C</font>
+<a name="line703">703: </a><font color="#B22222">  <a href="../../../../docs/manualpages/DMSTAG/DMStagMigrateVec.html#DMStagMigrateVec">DMStagMigrateVec</a> - transfer a vector associated with a DMStag to a vector associated with a compatible DMStag</font>
+
+<a name="line705">705: </a><font color="#B22222">  Collective</font>
+
+<a name="line707">707: </a><font color="#B22222">  Input Parameters:</font>
+<a name="line708">708: </a><font color="#B22222">+ dm - the source DMStag object</font>
+<a name="line709">709: </a><font color="#B22222">. vec - the source vector, compatible with dm</font>
+<a name="line710">710: </a><font color="#B22222">. dmTo - the compatible destination DMStag object</font>
+<a name="line711">711: </a><font color="#B22222">- vecTo - the destination vector, compatible with dmTo</font>
+
+<a name="line713">713: </a><font color="#B22222">  Notes:</font>
+<a name="line714">714: </a><font color="#B22222">  Extra dof are ignored, and unfilled dof are zeroed.</font>
+<a name="line715">715: </a><font color="#B22222">  Currently only implemented to migrate global vectors to global vectors.</font>
+
+<a name="line717">717: </a><font color="#B22222">  Level: advanced</font>
+
+<a name="line719">719: </a><font color="#B22222">.seealso: <a href="../../../../docs/manualpages/DMSTAG/DMSTAG.html#DMSTAG">DMSTAG</a>, <a href="../../../../docs/manualpages/DMSTAG/DMStagCreateCompatibleDMStag.html#DMStagCreateCompatibleDMStag">DMStagCreateCompatibleDMStag</a>(), <a href="../../../../docs/manualpages/DM/DMGetCompatibility.html#DMGetCompatibility">DMGetCompatibility</a>(), <a href="../../../../docs/manualpages/DMSTAG/DMStagVecSplitToDMDA.html#DMStagVecSplitToDMDA">DMStagVecSplitToDMDA</a>()</font>
+<a name="line720">720: </a><font color="#B22222">@*/</font>
+<a name="line721">721: </a><strong><font color="#4169E1"><a name="DMStagMigrateVec"></a><a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../../docs/manualpages/DMSTAG/DMStagMigrateVec.html#DMStagMigrateVec">DMStagMigrateVec</a>(<a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> dm,<a href="../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> vec,<a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> dmTo,<a href="../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> vecTo)</font></strong>
+<a name="line722">722: </a>{
+<a name="line723">723: </a>  <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>    ierr;
+<a name="line724">724: </a>  DM_Stag * const   stag = (DM_Stag*)dm-&gt;data;
+<a name="line725">725: </a>  DM_Stag * const   stagTo = (DM_Stag*)dmTo-&gt;data;
+<a name="line726">726: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>          nLocalTo,nLocal,dim,i,j,k;
+<a name="line727">727: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>          start[DMSTAG_MAX_DIM],startGhost[DMSTAG_MAX_DIM],n[DMSTAG_MAX_DIM],nExtra[DMSTAG_MAX_DIM],offset[DMSTAG_MAX_DIM];
+<a name="line728">728: </a>  <a href="../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a>               vecToLocal,vecLocal;
+<a name="line729">729: </a>  <a href="../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>         compatible,compatibleSet;
+<a name="line730">730: </a>  const <a href="../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> *arr;
+<a name="line731">731: </a>  <a href="../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>       *arrTo;
+<a name="line732">732: </a>  const <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>    epe   = stag-&gt;entriesPerElement;
+<a name="line733">733: </a>  const <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>    epeTo = stagTo-&gt;entriesPerElement;
+
+<a name="line740">740: </a>  <a href="../../../../docs/manualpages/DM/DMGetCompatibility.html#DMGetCompatibility">DMGetCompatibility</a>(dm,dmTo,&amp;compatible,&amp;compatibleSet);
+<a name="line741">741: </a>  <font color="#4169E1">if</font> (!compatibleSet || !compatible) <a href="../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)dm),PETSC_ERR_ARG_INCOMP,<font color="#666666">"DMStag objects must be shown to be compatible"</font>);
+<a name="line742">742: </a>  <a href="../../../../docs/manualpages/DM/DMGetDimension.html#DMGetDimension">DMGetDimension</a>(dm,&amp;dim);
+<a name="line743">743: </a>  <a href="../../../../docs/manualpages/Vec/VecGetLocalSize.html#VecGetLocalSize">VecGetLocalSize</a>(vec,&amp;nLocal);
+<a name="line744">744: </a>  <a href="../../../../docs/manualpages/Vec/VecGetLocalSize.html#VecGetLocalSize">VecGetLocalSize</a>(vecTo,&amp;nLocalTo);
+<a name="line745">745: </a>  <font color="#4169E1">if</font> (nLocal != stag-&gt;entries|| nLocalTo !=stagTo-&gt;entries) <a href="../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)dm),PETSC_ERR_SUP,<font color="#666666">"Vector migration only implemented for global vector to global vector."</font>);
+<a name="line746">746: </a>  <a href="../../../../docs/manualpages/DMSTAG/DMStagGetCorners.html#DMStagGetCorners">DMStagGetCorners</a>(dm,&amp;start[0],&amp;start[1],&amp;start[2],&amp;n[0],&amp;n[1],&amp;n[2],&amp;nExtra[0],&amp;nExtra[1],&amp;nExtra[2]);
+<a name="line747">747: </a>  <a href="../../../../docs/manualpages/DMSTAG/DMStagGetGhostCorners.html#DMStagGetGhostCorners">DMStagGetGhostCorners</a>(dm,&amp;startGhost[0],&amp;startGhost[1],&amp;startGhost[2],NULL,NULL,NULL);
+<a name="line748">748: </a>  <font color="#4169E1">for</font> (i=0; i&lt;DMSTAG_MAX_DIM; ++i) offset[i] = start[i]-startGhost[i];
+
+<a name="line750">750: </a>  <font color="#B22222">/* Proceed by transferring to a local vector, copying, and transferring back to a global vector */</font>
+<a name="line751">751: </a>  <a href="../../../../docs/manualpages/DM/DMGetLocalVector.html#DMGetLocalVector">DMGetLocalVector</a>(dm,&amp;vecLocal);
+<a name="line752">752: </a>  <a href="../../../../docs/manualpages/DM/DMGetLocalVector.html#DMGetLocalVector">DMGetLocalVector</a>(dmTo,&amp;vecToLocal);
+<a name="line753">753: </a>  <a href="../../../../docs/manualpages/DM/DMGlobalToLocalBegin.html#DMGlobalToLocalBegin">DMGlobalToLocalBegin</a>(dm,vec,<a href="../../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>,vecLocal);
+<a name="line754">754: </a>  <a href="../../../../docs/manualpages/DM/DMGlobalToLocalEnd.html#DMGlobalToLocalEnd">DMGlobalToLocalEnd</a>(dm,vec,<a href="../../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>,vecLocal);
+<a name="line755">755: </a>  <a href="../../../../docs/manualpages/Vec/VecGetArrayRead.html#VecGetArrayRead">VecGetArrayRead</a>(vecLocal,&amp;arr);
+<a name="line756">756: </a>  <a href="../../../../docs/manualpages/Vec/VecGetArray.html#VecGetArray">VecGetArray</a>(vecToLocal,&amp;arrTo);
+<a name="line757">757: </a>  <font color="#B22222">/* Note that some superfluous copying of entries on partial dummy elements is done */</font>
+<a name="line758">758: </a>  <font color="#4169E1">if</font> (dim == 1) {
+<a name="line759">759: </a>    <font color="#4169E1">for</font> (i=offset[0]; i&lt;offset[0] + n[0] + nExtra[0]; ++i) {
+<a name="line760">760: </a>      <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> d = 0,dTo = 0,b = 0,bTo = 0;
+<a name="line761">761: </a>      <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> si;
+<a name="line762">762: </a>      <font color="#4169E1">for</font> (si=0; si&lt;2; ++si) {
+<a name="line763">763: </a>        b   += stag-&gt;dof[si];
+<a name="line764">764: </a>        bTo += stagTo-&gt;dof[si];
+<a name="line765">765: </a>        <font color="#4169E1">for</font> (; d &lt; b &amp;&amp; dTo &lt; bTo; ++d,++dTo) arrTo[i*epeTo + dTo] = arr[i*epe + d];
+<a name="line766">766: </a>        <font color="#4169E1">for</font> (; dTo &lt; bTo         ;     ++dTo) arrTo[i*epeTo + dTo] = 0.0;
+<a name="line767">767: </a>        d = b;
+<a name="line768">768: </a>      }
+<a name="line769">769: </a>    }
+<a name="line770">770: </a>  } <font color="#4169E1">else</font> <font color="#4169E1">if</font> (dim == 2) {
+<a name="line771">771: </a>    const <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> epr   = stag-&gt;nGhost[0] * epe;
+<a name="line772">772: </a>    const <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> eprTo = stagTo-&gt;nGhost[0] * epeTo;
+<a name="line773">773: </a>    <font color="#4169E1">for</font> (j=offset[1]; j&lt;offset[1] + n[1] + nExtra[1]; ++j) {
+<a name="line774">774: </a>      <font color="#4169E1">for</font> (i=offset[0]; i&lt;offset[0] + n[0] + nExtra[0]; ++i) {
+<a name="line775">775: </a>        const <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> base   = j*epr   + i*epe;
+<a name="line776">776: </a>        const <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> baseTo = j*eprTo + i*epeTo;
+<a name="line777">777: </a>        <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> d = 0,dTo = 0,b = 0,bTo = 0;
+<a name="line778">778: </a>        const <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> s[4] = {0,1,1,2}; <font color="#B22222">/* Dimensions of points, in order */</font>
+<a name="line779">779: </a>        <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> si;
+<a name="line780">780: </a>        <font color="#4169E1">for</font> (si=0; si&lt;4; ++si) {
+<a name="line781">781: </a>            b   += stag-&gt;dof[s[si]];
+<a name="line782">782: </a>            bTo += stagTo-&gt;dof[s[si]];
+<a name="line783">783: </a>            <font color="#4169E1">for</font> (; d &lt; b &amp;&amp; dTo &lt; bTo; ++d,++dTo) arrTo[baseTo + dTo] = arr[base + d];
+<a name="line784">784: </a>            <font color="#4169E1">for</font> (;          dTo &lt; bTo;     ++dTo) arrTo[baseTo + dTo] = 0.0;
+<a name="line785">785: </a>            d = b;
+<a name="line786">786: </a>        }
+<a name="line787">787: </a>      }
+<a name="line788">788: </a>    }
+<a name="line789">789: </a>  } <font color="#4169E1">else</font> <font color="#4169E1">if</font> (dim == 3) {
+<a name="line790">790: </a>    const <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> epr   = stag-&gt;nGhost[0]   * epe;
+<a name="line791">791: </a>    const <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> eprTo = stagTo-&gt;nGhost[0] * epeTo;
+<a name="line792">792: </a>    const <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> epl   = stag-&gt;nGhost[1]   * epr;
+<a name="line793">793: </a>    const <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> eplTo = stagTo-&gt;nGhost[1] * eprTo;
+<a name="line794">794: </a>    <font color="#4169E1">for</font> (k=offset[2]; k&lt;offset[2] + n[2] + nExtra[2]; ++k) {
+<a name="line795">795: </a>      <font color="#4169E1">for</font> (j=offset[1]; j&lt;offset[1] + n[1] + nExtra[1]; ++j) {
+<a name="line796">796: </a>        <font color="#4169E1">for</font> (i=offset[0]; i&lt;offset[0] + n[0] + nExtra[0]; ++i) {
+<a name="line797">797: </a>          <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> d = 0,dTo = 0,b = 0,bTo = 0;
+<a name="line798">798: </a>          const <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> base   = k*epl   + j*epr   + i*epe;
+<a name="line799">799: </a>          const <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> baseTo = k*eplTo + j*eprTo + i*epeTo;
+<a name="line800">800: </a>          const <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> s[8] = {0,1,1,2,1,2,2,3}; <font color="#B22222">/* dimensions of points, in order */</font>
+<a name="line801">801: </a>          <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> is;
+<a name="line802">802: </a>          <font color="#4169E1">for</font> (is=0; is&lt;8; ++is) {
+<a name="line803">803: </a>            b   += stag-&gt;dof[s[is]];
+<a name="line804">804: </a>            bTo += stagTo-&gt;dof[s[is]];
+<a name="line805">805: </a>            <font color="#4169E1">for</font> (; d &lt; b &amp;&amp; dTo &lt; bTo; ++d,++dTo) arrTo[baseTo + dTo] = arr[base + d];
+<a name="line806">806: </a>            <font color="#4169E1">for</font> (;          dTo &lt; bTo;     ++dTo) arrTo[baseTo + dTo] = 0.0;
+<a name="line807">807: </a>            d = b;
+<a name="line808">808: </a>          }
+<a name="line809">809: </a>        }
+<a name="line810">810: </a>      }
+<a name="line811">811: </a>    }
+<a name="line812">812: </a>  } <font color="#4169E1">else</font> <a href="../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)dm),PETSC_ERR_ARG_OUTOFRANGE,<font color="#666666">"Unsupported dimension %D"</font>,dim);
+<a name="line813">813: </a>  <a href="../../../../docs/manualpages/Vec/VecRestoreArrayRead.html#VecRestoreArrayRead">VecRestoreArrayRead</a>(vecLocal,&amp;arr);
+<a name="line814">814: </a>  <a href="../../../../docs/manualpages/Vec/VecRestoreArray.html#VecRestoreArray">VecRestoreArray</a>(vecToLocal,&amp;arrTo);
+<a name="line815">815: </a>  <a href="../../../../docs/manualpages/DM/DMRestoreLocalVector.html#DMRestoreLocalVector">DMRestoreLocalVector</a>(dm,&amp;vecLocal);
+<a name="line816">816: </a>  <a href="../../../../docs/manualpages/DM/DMLocalToGlobalBegin.html#DMLocalToGlobalBegin">DMLocalToGlobalBegin</a>(dmTo,vecToLocal,<a href="../../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>,vecTo);
+<a name="line817">817: </a>  <a href="../../../../docs/manualpages/DM/DMLocalToGlobalEnd.html#DMLocalToGlobalEnd">DMLocalToGlobalEnd</a>(dmTo,vecToLocal,<a href="../../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>,vecTo);
+<a name="line818">818: </a>  <a href="../../../../docs/manualpages/DM/DMRestoreLocalVector.html#DMRestoreLocalVector">DMRestoreLocalVector</a>(dmTo,&amp;vecToLocal);
+<a name="line819">819: </a>  <font color="#4169E1">return</font>(0);
+<a name="line820">820: </a>}
+
+<a name="line822">822: </a><font color="#B22222">/*@C</font>
+<a name="line823">823: </a><font color="#B22222">  <a href="../../../../docs/manualpages/DMSTAG/DMStagPopulateLocalToGlobalInjective.html#DMStagPopulateLocalToGlobalInjective">DMStagPopulateLocalToGlobalInjective</a> - populate an internal 1-to-1 local-to-global map</font>
+
+<a name="line825">825: </a><font color="#B22222">  Collective</font>
+
+<a name="line827">827: </a><font color="#B22222">  Creates an internal object which explicitly maps a single local degree of</font>
+<a name="line828">828: </a><font color="#B22222">  freedom to each global degree of freedom. This is used, if populated,</font>
+<a name="line829">829: </a><font color="#B22222">  instead of <a href="../../../../docs/manualpages/Vec/SCATTER_REVERSE_LOCAL.html#SCATTER_REVERSE_LOCAL">SCATTER_REVERSE_LOCAL</a> with the (1-to-many, in general)</font>
+<a name="line830">830: </a><font color="#B22222">  global-to-local map, when <a href="../../../../docs/manualpages/DM/DMLocalToGlobal.html#DMLocalToGlobal">DMLocalToGlobal</a>() is called with <a href="../../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>.</font>
+<a name="line831">831: </a><font color="#B22222">  This allows usage, for example, even in the periodic, 1-rank case, where</font>
+<a name="line832">832: </a><font color="#B22222">  the inverse of the global-to-local map, even when restricted to on-rank</font>
+<a name="line833">833: </a><font color="#B22222">  communication, is non-injective. This is at the cost of storing an additional</font>
+<a name="line834">834: </a><font color="#B22222">  <a href="../../../../docs/manualpages/Vec/VecScatter.html#VecScatter">VecScatter</a> object inside each DMStag object.</font>
+
+<a name="line836">836: </a><font color="#B22222">  Input Parameter:</font>
+<a name="line837">837: </a><font color="#B22222">. dm - the DMStag object</font>
+
+<a name="line839">839: </a><font color="#B22222">  Notes:</font>
+<a name="line840">840: </a><font color="#B22222">  In normal usage, library users shouldn't be concerned with this function,</font>
+<a name="line841">841: </a><font color="#B22222">  as it is called during <a href="../../../../docs/manualpages/DM/DMSetUp.html#DMSetUp">DMSetUp</a>(), when required.</font>
+
+<a name="line843">843: </a><font color="#B22222">  Returns immediately if the internal map is already populated.</font>
+
+<a name="line845">845: </a><font color="#B22222">  Developer Notes:</font>
+<a name="line846">846: </a><font color="#B22222">  This could, if desired, be moved up to a general <a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> routine. It would allow,</font>
+<a name="line847">847: </a><font color="#B22222">  for example, <a href="../../../../docs/manualpages/DMDA/DMDA.html#DMDA">DMDA</a> to support <a href="../../../../docs/manualpages/DM/DMLocalToGlobal.html#DMLocalToGlobal">DMLocalToGlobal</a>() with <a href="../../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>,</font>
+<a name="line848">848: </a><font color="#B22222">  even in the single-rank periodic case.</font>
+
+<a name="line850">850: </a><font color="#B22222">  Level: developer</font>
+
+<a name="line852">852: </a><font color="#B22222">.seealso: <a href="../../../../docs/manualpages/DMSTAG/DMSTAG.html#DMSTAG">DMSTAG</a>, <a href="../../../../docs/manualpages/DM/DMLocalToGlobal.html#DMLocalToGlobal">DMLocalToGlobal</a>(), <a href="../../../../docs/manualpages/Vec/VecScatter.html#VecScatter">VecScatter</a></font>
+<a name="line853">853: </a><font color="#B22222">@*/</font>
+<a name="line854">854: </a><strong><font color="#4169E1"><a name="DMStagPopulateLocalToGlobalInjective"></a><a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../../docs/manualpages/DMSTAG/DMStagPopulateLocalToGlobalInjective.html#DMStagPopulateLocalToGlobalInjective">DMStagPopulateLocalToGlobalInjective</a>(<a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> dm)</font></strong>
+<a name="line855">855: </a>{
+<a name="line856">856: </a>  <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  ierr;
+<a name="line857">857: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>        dim;
+<a name="line858">858: </a>  DM_Stag * const stag  = (DM_Stag*)dm-&gt;data;
+
+<a name="line862">862: </a>  <font color="#4169E1">if</font> (stag-&gt;ltog_injective) <font color="#4169E1">return</font>(0); <font color="#B22222">/* Don't re-populate */</font>
+<a name="line863">863: </a>  <a href="../../../../docs/manualpages/DM/DMGetDimension.html#DMGetDimension">DMGetDimension</a>(dm,&amp;dim);
+<a name="line864">864: </a>  <font color="#4169E1">switch</font> (dim) {
+<a name="line865">865: </a>    <font color="#4169E1">case</font> 1: DMStagPopulateLocalToGlobalInjective_1d(dm); <font color="#4169E1">break</font>;
+<a name="line866">866: </a>    <font color="#4169E1">case</font> 2: DMStagPopulateLocalToGlobalInjective_2d(dm); <font color="#4169E1">break</font>;
+<a name="line867">867: </a>    <font color="#4169E1">case</font> 3: DMStagPopulateLocalToGlobalInjective_3d(dm); <font color="#4169E1">break</font>;
+<a name="line868">868: </a><strong><font color="#FF0000">    default:</font></strong> <a href="../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)dm),PETSC_ERR_ARG_OUTOFRANGE,<font color="#666666">"Unsupported dimension %D"</font>,dim);
+<a name="line869">869: </a>  }
+<a name="line870">870: </a>  <font color="#4169E1">return</font>(0);
+<a name="line871">871: </a>}
+
+<a name="line873">873: </a><strong><font color="#4169E1"><a name="DMStagRestoreProductCoordinateArrays_Private"></a>static <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> DMStagRestoreProductCoordinateArrays_Private(<a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> dm,void *arrX,void *arrY,void *arrZ,<a href="../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> read)</font></strong>
+<a name="line874">874: </a>{
+<a name="line875">875: </a>  <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  ierr;
+<a name="line876">876: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>        dim,d;
+<a name="line877">877: </a>  void*           arr[DMSTAG_MAX_DIM];
+<a name="line878">878: </a>  <a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a>              dmCoord;
+
+<a name="line882">882: </a>  <a href="../../../../docs/manualpages/DM/DMGetDimension.html#DMGetDimension">DMGetDimension</a>(dm,&amp;dim);
+<a name="line883">883: </a>  <font color="#4169E1">if</font> (dim &gt; DMSTAG_MAX_DIM) <a href="../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)dm),PETSC_ERR_SUP,<font color="#666666">"Not implemented for %D dimensions"</font>,dim);
+<a name="line884">884: </a>  arr[0] = arrX; arr[1] = arrY; arr[2] = arrZ;
+<a name="line885">885: </a>  <a href="../../../../docs/manualpages/DM/DMGetCoordinateDM.html#DMGetCoordinateDM">DMGetCoordinateDM</a>(dm,&amp;dmCoord);
+<a name="line886">886: </a>  <font color="#4169E1">for</font> (d=0; d&lt;dim; ++d) {
+<a name="line887">887: </a>    <a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a>  subDM;
+<a name="line888">888: </a>    <a href="../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> coord1d_local;
+
+<a name="line890">890: </a>    <font color="#B22222">/* Ignore unrequested arrays */</font>
+<a name="line891">891: </a>    <font color="#4169E1">if</font> (!arr[d]) <font color="#4169E1">continue</font>;
+
+<a name="line893">893: </a>    <a href="../../../../docs/manualpages/DMPRODUCT/DMProductGetDM.html#DMProductGetDM">DMProductGetDM</a>(dmCoord,d,&amp;subDM);
+<a name="line894">894: </a>    <a href="../../../../docs/manualpages/DM/DMGetCoordinatesLocal.html#DMGetCoordinatesLocal">DMGetCoordinatesLocal</a>(subDM,&amp;coord1d_local);
+<a name="line895">895: </a>    <font color="#4169E1">if</font> (read) {
+<a name="line896">896: </a>      <a href="../../../../docs/manualpages/DMSTAG/DMStagVecRestoreArrayRead.html#DMStagVecRestoreArrayRead">DMStagVecRestoreArrayRead</a>(subDM,coord1d_local,arr[d]);
+<a name="line897">897: </a>    } <font color="#4169E1">else</font> {
+<a name="line898">898: </a>      <a href="../../../../docs/manualpages/DMSTAG/DMStagVecRestoreArray.html#DMStagVecRestoreArray">DMStagVecRestoreArray</a>(subDM,coord1d_local,arr[d]);
+<a name="line899">899: </a>    }
+<a name="line900">900: </a>  }
+<a name="line901">901: </a>  <font color="#4169E1">return</font>(0);
+<a name="line902">902: </a>}
+
+<a name="line904">904: </a><font color="#B22222">/*@C</font>
+<a name="line905">905: </a><font color="#B22222">  <a href="../../../../docs/manualpages/DMSTAG/DMStagRestoreProductCoordinateArrays.html#DMStagRestoreProductCoordinateArrays">DMStagRestoreProductCoordinateArrays</a> - restore local array access</font>
+
+<a name="line907">907: </a><font color="#B22222">  Logically Collective</font>
+
+<a name="line909">909: </a><font color="#B22222">  Input Parameter:</font>
+<a name="line910">910: </a><font color="#B22222">. dm - the DMStag object</font>
+
+<a name="line912">912: </a><font color="#B22222">  Output Parameters:</font>
+<a name="line913">913: </a><font color="#B22222">. arrX,arrY,arrZ - local 1D coordinate arrays</font>
+
+<a name="line915">915: </a><font color="#B22222">  Level: intermediate</font>
+
+<a name="line917">917: </a><font color="#B22222">  Notes:</font>
+<a name="line918">918: </a><font color="#B22222">  This function does not automatically perform a local-&gt;global scatter to populate global coordinates from the local coordinates. Thus, it may be required to explicitly perform these operations in some situations, as in the following partial example:</font>
+
+<a name="line920">920: </a><font color="#B22222">$   <a href="../../../../docs/manualpages/DM/DMGetCoordinateDM.html#DMGetCoordinateDM">DMGetCoordinateDM</a>(dm,&amp;cdm);</font>
+<a name="line921">921: </a><font color="#B22222">$   for (d=0; d&lt;3; ++d) {</font>
+<a name="line922">922: </a><font color="#B22222">$     <a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a>  subdm;</font>
+<a name="line923">923: </a><font color="#B22222">$     <a href="../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> coor,coor_local;</font>
+
+<a name="line925">925: </a><font color="#B22222">$     <a href="../../../../docs/manualpages/DMPRODUCT/DMProductGetDM.html#DMProductGetDM">DMProductGetDM</a>(cdm,d,&amp;subdm);</font>
+<a name="line926">926: </a><font color="#B22222">$     <a href="../../../../docs/manualpages/DM/DMGetCoordinates.html#DMGetCoordinates">DMGetCoordinates</a>(subdm,&amp;coor);</font>
+<a name="line927">927: </a><font color="#B22222">$     <a href="../../../../docs/manualpages/DM/DMGetCoordinatesLocal.html#DMGetCoordinatesLocal">DMGetCoordinatesLocal</a>(subdm,&amp;coor_local);</font>
+<a name="line928">928: </a><font color="#B22222">$     <a href="../../../../docs/manualpages/DM/DMLocalToGlobal.html#DMLocalToGlobal">DMLocalToGlobal</a>(subdm,coor_local,<a href="../../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>,coor);</font>
+<a name="line929">929: </a><font color="#B22222">$     <a href="../../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,"Coordinates dim %D:\n",d);</font>
+<a name="line930">930: </a><font color="#B22222">$     <a href="../../../../docs/manualpages/Vec/VecView.html#VecView">VecView</a>(coor,<a href="../../../../docs/manualpages/Viewer/PETSC_VIEWER_STDOUT_WORLD.html#PETSC_VIEWER_STDOUT_WORLD">PETSC_VIEWER_STDOUT_WORLD</a>);</font>
+<a name="line931">931: </a><font color="#B22222">$   }</font>
+
+<a name="line933">933: </a><font color="#B22222">.seealso: <a href="../../../../docs/manualpages/DMSTAG/DMSTAG.html#DMSTAG">DMSTAG</a>, <a href="../../../../docs/manualpages/DMSTAG/DMStagGetProductCoordinateArrays.html#DMStagGetProductCoordinateArrays">DMStagGetProductCoordinateArrays</a>(), <a href="../../../../docs/manualpages/DMSTAG/DMStagGetProductCoordinateArraysRead.html#DMStagGetProductCoordinateArraysRead">DMStagGetProductCoordinateArraysRead</a>()</font>
+<a name="line934">934: </a><font color="#B22222">@*/</font>
+<a name="line935">935: </a><strong><font color="#4169E1"><a name="DMStagRestoreProductCoordinateArrays"></a><a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../../docs/manualpages/DMSTAG/DMStagRestoreProductCoordinateArrays.html#DMStagRestoreProductCoordinateArrays">DMStagRestoreProductCoordinateArrays</a>(<a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> dm,void *arrX,void *arrY,void *arrZ)</font></strong>
+<a name="line936">936: </a>{
+<a name="line937">937: </a>  <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  ierr;
+
+<a name="line940">940: </a>  DMStagRestoreProductCoordinateArrays_Private(dm,arrX,arrY,arrZ,<a href="../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>);
+<a name="line941">941: </a>  <font color="#4169E1">return</font>(0);
+<a name="line942">942: </a>}
+
+<a name="line944">944: </a><font color="#B22222">/*@C</font>
+<a name="line945">945: </a><font color="#B22222">  <a href="../../../../docs/manualpages/DMSTAG/DMStagRestoreProductCoordinateArraysRead.html#DMStagRestoreProductCoordinateArraysRead">DMStagRestoreProductCoordinateArraysRead</a> - restore local product array access, read-only</font>
+
+<a name="line947">947: </a><font color="#B22222">  Logically Collective</font>
+
+<a name="line949">949: </a><font color="#B22222">  Input Parameter:</font>
+<a name="line950">950: </a><font color="#B22222">. dm - the DMStag object</font>
+
+<a name="line952">952: </a><font color="#B22222">  Output Parameters:</font>
+<a name="line953">953: </a><font color="#B22222">. arrX,arrY,arrZ - local 1D coordinate arrays</font>
+
+<a name="line955">955: </a><font color="#B22222">  Level: intermediate</font>
+
+<a name="line957">957: </a><font color="#B22222">.seealso: <a href="../../../../docs/manualpages/DMSTAG/DMSTAG.html#DMSTAG">DMSTAG</a>, <a href="../../../../docs/manualpages/DMSTAG/DMStagGetProductCoordinateArrays.html#DMStagGetProductCoordinateArrays">DMStagGetProductCoordinateArrays</a>(), <a href="../../../../docs/manualpages/DMSTAG/DMStagGetProductCoordinateArraysRead.html#DMStagGetProductCoordinateArraysRead">DMStagGetProductCoordinateArraysRead</a>()</font>
+<a name="line958">958: </a><font color="#B22222">@*/</font>
+<a name="line959">959: </a><strong><font color="#4169E1"><a name="DMStagRestoreProductCoordinateArraysRead"></a><a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../../docs/manualpages/DMSTAG/DMStagRestoreProductCoordinateArraysRead.html#DMStagRestoreProductCoordinateArraysRead">DMStagRestoreProductCoordinateArraysRead</a>(<a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> dm,void *arrX,void *arrY,void *arrZ)</font></strong>
+<a name="line960">960: </a>{
+<a name="line961">961: </a>  <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  ierr;
+
+<a name="line964">964: </a>  DMStagRestoreProductCoordinateArrays_Private(dm,arrX,arrY,arrZ,<a href="../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>);
+<a name="line965">965: </a>  <font color="#4169E1">return</font>(0);
+<a name="line966">966: </a>}
+
+<a name="line968">968: </a><font color="#B22222">/*@C</font>
+<a name="line969">969: </a><font color="#B22222">  <a href="../../../../docs/manualpages/DMSTAG/DMStagSetBoundaryTypes.html#DMStagSetBoundaryTypes">DMStagSetBoundaryTypes</a> - set DMStag boundary types</font>
+
+<a name="line971">971: </a><font color="#B22222">  Logically Collective; boundaryType0, boundaryType1, and boundaryType2 must contain common values</font>
+
+<a name="line973">973: </a><font color="#B22222">  Input Parameters:</font>
+<a name="line974">974: </a><font color="#B22222">+ dm - the DMStag object</font>
+<a name="line975">975: </a><font color="#B22222">- boundaryType0,boundaryType1,boundaryType2 - boundary types in each direction</font>
+
+<a name="line977">977: </a><font color="#B22222">  Notes:</font>
+<a name="line978">978: </a><font color="#B22222">  Arguments corresponding to higher dimensions are ignored for 1D and 2D grids.</font>
+
+<a name="line980">980: </a><font color="#B22222">  Level: advanced</font>
+
+<a name="line982">982: </a><font color="#B22222">.seealso: <a href="../../../../docs/manualpages/DMSTAG/DMSTAG.html#DMSTAG">DMSTAG</a>, <a href="../../../../docs/manualpages/DM/DMBoundaryType.html#DMBoundaryType">DMBoundaryType</a>, <a href="../../../../docs/manualpages/DMSTAG/DMStagCreate1d.html#DMStagCreate1d">DMStagCreate1d</a>(), <a href="../../../../docs/manualpages/DMSTAG/DMStagCreate2d.html#DMStagCreate2d">DMStagCreate2d</a>(), <a href="../../../../docs/manualpages/DMSTAG/DMStagCreate3d.html#DMStagCreate3d">DMStagCreate3d</a>(), <a href="../../../../docs/manualpages/DMDA/DMDASetBoundaryType.html#DMDASetBoundaryType">DMDASetBoundaryType</a>()</font>
+<a name="line983">983: </a><font color="#B22222">@*/</font>
+<a name="line984">984: </a><strong><font color="#4169E1"><a name="DMStagSetBoundaryTypes"></a><a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../../docs/manualpages/DMSTAG/DMStagSetBoundaryTypes.html#DMStagSetBoundaryTypes">DMStagSetBoundaryTypes</a>(<a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> dm,<a href="../../../../docs/manualpages/DM/DMBoundaryType.html#DMBoundaryType">DMBoundaryType</a> boundaryType0,<a href="../../../../docs/manualpages/DM/DMBoundaryType.html#DMBoundaryType">DMBoundaryType</a> boundaryType1,<a href="../../../../docs/manualpages/DM/DMBoundaryType.html#DMBoundaryType">DMBoundaryType</a> boundaryType2)</font></strong>
+<a name="line985">985: </a>{
+<a name="line986">986: </a>  <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  ierr;
+<a name="line987">987: </a>  DM_Stag * const stag  = (DM_Stag*)dm-&gt;data;
+<a name="line988">988: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>        dim;
+
+<a name="line991">991: </a>  <a href="../../../../docs/manualpages/DM/DMGetDimension.html#DMGetDimension">DMGetDimension</a>(dm,&amp;dim);
+<a name="line996">996: </a>  <font color="#4169E1">if</font> (dm-&gt;setupcalled) <a href="../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)dm),PETSC_ERR_ARG_WRONGSTATE,<font color="#666666">"This function must be called before <a href="../../../../docs/manualpages/DM/DMSetUp.html#DMSetUp">DMSetUp</a>()"</font>);
+<a name="line997">997: </a>               stag-&gt;boundaryType[0] = boundaryType0;
+<a name="line998">998: </a>  <font color="#4169E1">if</font> (dim &gt; 1) stag-&gt;boundaryType[1] = boundaryType1;
+<a name="line999">999: </a>  <font color="#4169E1">if</font> (dim &gt; 2) stag-&gt;boundaryType[2] = boundaryType2;
+<a name="line1000">1000: </a>  <font color="#4169E1">return</font>(0);
+<a name="line1001">1001: </a>}
+
+<a name="line1003">1003: </a><font color="#B22222">/*@C</font>
+<a name="line1004">1004: </a><font color="#B22222">  <a href="../../../../docs/manualpages/DMSTAG/DMStagSetCoordinateDMType.html#DMStagSetCoordinateDMType">DMStagSetCoordinateDMType</a> - set <a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> type to store coordinates</font>
+
+<a name="line1006">1006: </a><font color="#B22222">  Logically Collective; dmtype must contain common value</font>
+
+<a name="line1008">1008: </a><font color="#B22222">  Input Parameters:</font>
+<a name="line1009">1009: </a><font color="#B22222">+ dm - the DMStag object</font>
+<a name="line1010">1010: </a><font color="#B22222">- dmtype - DMtype for coordinates, either <a href="../../../../docs/manualpages/DMSTAG/DMSTAG.html#DMSTAG">DMSTAG</a> or <a href="../../../../docs/manualpages/DMPRODUCT/DMPRODUCT.html#DMPRODUCT">DMPRODUCT</a></font>
+
+<a name="line1012">1012: </a><font color="#B22222">  Level: advanced</font>
+
+<a name="line1014">1014: </a><font color="#B22222">.seealso: <a href="../../../../docs/manualpages/DMSTAG/DMSTAG.html#DMSTAG">DMSTAG</a>, <a href="../../../../docs/manualpages/DMPRODUCT/DMPRODUCT.html#DMPRODUCT">DMPRODUCT</a>, <a href="../../../../docs/manualpages/DM/DMGetCoordinateDM.html#DMGetCoordinateDM">DMGetCoordinateDM</a>(), <a href="../../../../docs/manualpages/DMSTAG/DMStagSetUniformCoordinates.html#DMStagSetUniformCoordinates">DMStagSetUniformCoordinates</a>(), <a href="../../../../docs/manualpages/DMSTAG/DMStagSetUniformCoordinatesExplicit.html#DMStagSetUniformCoordinatesExplicit">DMStagSetUniformCoordinatesExplicit</a>(), <a href="../../../../docs/manualpages/DMSTAG/DMStagSetUniformCoordinatesProduct.html#DMStagSetUniformCoordinatesProduct">DMStagSetUniformCoordinatesProduct</a>(), <a href="../../../../docs/manualpages/DM/DMType.html#DMType">DMType</a></font>
+<a name="line1015">1015: </a><font color="#B22222">@*/</font>
+<a name="line1016">1016: </a><strong><font color="#4169E1"><a name="DMStagSetCoordinateDMType"></a><a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../../docs/manualpages/DMSTAG/DMStagSetCoordinateDMType.html#DMStagSetCoordinateDMType">DMStagSetCoordinateDMType</a>(<a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> dm,<a href="../../../../docs/manualpages/DM/DMType.html#DMType">DMType</a> dmtype)</font></strong>
+<a name="line1017">1017: </a>{
+<a name="line1018">1018: </a>  <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  ierr;
+<a name="line1019">1019: </a>  DM_Stag * const stag = (DM_Stag*)dm-&gt;data;
+
+<a name="line1023">1023: </a>  <a href="../../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(stag-&gt;coordinateDMType);
+<a name="line1024">1024: </a>  <a href="../../../../docs/manualpages/Sys/PetscStrallocpy.html#PetscStrallocpy">PetscStrallocpy</a>(dmtype,(char**)&amp;stag-&gt;coordinateDMType);
+<a name="line1025">1025: </a>  <font color="#4169E1">return</font>(0);
+<a name="line1026">1026: </a>}
+
+<a name="line1028">1028: </a><font color="#B22222">/*@C</font>
+<a name="line1029">1029: </a><font color="#B22222">  <a href="../../../../docs/manualpages/DMSTAG/DMStagSetDOF.html#DMStagSetDOF">DMStagSetDOF</a> - set dof/stratum</font>
+
+<a name="line1031">1031: </a><font color="#B22222">  Logically Collective; dof0, dof1, dof2, and dof3 must contain common values</font>
+
+<a name="line1033">1033: </a><font color="#B22222">  Input Parameters:</font>
+<a name="line1034">1034: </a><font color="#B22222">+ dm - the DMStag object</font>
+<a name="line1035">1035: </a><font color="#B22222">- dof0,dof1,dof2,dof3 - dof per stratum</font>
+
+<a name="line1037">1037: </a><font color="#B22222">  Notes:</font>
+<a name="line1038">1038: </a><font color="#B22222">  Arguments corresponding to higher dimensions are ignored for 1D and 2D grids.</font>
+
+<a name="line1040">1040: </a><font color="#B22222">  Level: advanced</font>
+
+<a name="line1042">1042: </a><font color="#B22222">.seealso: <a href="../../../../docs/manualpages/DMSTAG/DMSTAG.html#DMSTAG">DMSTAG</a>, <a href="../../../../docs/manualpages/DMDA/DMDASetDof.html#DMDASetDof">DMDASetDof</a>()</font>
+<a name="line1043">1043: </a><font color="#B22222">@*/</font>
+<a name="line1044">1044: </a><strong><font color="#4169E1"><a name="DMStagSetDOF"></a><a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../../docs/manualpages/DMSTAG/DMStagSetDOF.html#DMStagSetDOF">DMStagSetDOF</a>(<a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> dm,<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> dof0, <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> dof1,<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> dof2,<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> dof3)</font></strong>
+<a name="line1045">1045: </a>{
+<a name="line1046">1046: </a>  <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  ierr;
+<a name="line1047">1047: </a>  DM_Stag * const stag = (DM_Stag*)dm-&gt;data;
+<a name="line1048">1048: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>        dim;
+
+<a name="line1056">1056: </a>  <font color="#4169E1">if</font> (dm-&gt;setupcalled) <a href="../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)dm),PETSC_ERR_ARG_WRONGSTATE,<font color="#666666">"This function must be called before <a href="../../../../docs/manualpages/DM/DMSetUp.html#DMSetUp">DMSetUp</a>()"</font>);
+<a name="line1057">1057: </a>  <a href="../../../../docs/manualpages/DM/DMGetDimension.html#DMGetDimension">DMGetDimension</a>(dm,&amp;dim);
+<a name="line1058">1058: </a>  <font color="#4169E1">if</font> (dof0 &lt; 0)            <a href="../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)dm),PETSC_ERR_ARG_OUTOFRANGE,<font color="#666666">"dof0 cannot be negative"</font>);
+<a name="line1059">1059: </a>  <font color="#4169E1">if</font> (dof1 &lt; 0)            <a href="../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)dm),PETSC_ERR_ARG_OUTOFRANGE,<font color="#666666">"dof1 cannot be negative"</font>);
+<a name="line1060">1060: </a>  <font color="#4169E1">if</font> (dim &gt; 1 &amp;&amp; dof2 &lt; 0) <a href="../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)dm),PETSC_ERR_ARG_OUTOFRANGE,<font color="#666666">"dof2 cannot be negative"</font>);
+<a name="line1061">1061: </a>  <font color="#4169E1">if</font> (dim &gt; 2 &amp;&amp; dof3 &lt; 0) <a href="../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)dm),PETSC_ERR_ARG_OUTOFRANGE,<font color="#666666">"dof3 cannot be negative"</font>);
+<a name="line1062">1062: </a>               stag-&gt;dof[0] = dof0;
+<a name="line1063">1063: </a>               stag-&gt;dof[1] = dof1;
+<a name="line1064">1064: </a>  <font color="#4169E1">if</font> (dim &gt; 1) stag-&gt;dof[2] = dof2;
+<a name="line1065">1065: </a>  <font color="#4169E1">if</font> (dim &gt; 2) stag-&gt;dof[3] = dof3;
+<a name="line1066">1066: </a>  <font color="#4169E1">return</font>(0);
+<a name="line1067">1067: </a>}
+
+<a name="line1069">1069: </a><font color="#B22222">/*@C</font>
+<a name="line1070">1070: </a><font color="#B22222">  <a href="../../../../docs/manualpages/DMSTAG/DMStagSetNumRanks.html#DMStagSetNumRanks">DMStagSetNumRanks</a> - set ranks in each direction in the global rank grid</font>
+
+<a name="line1072">1072: </a><font color="#B22222">  Logically Collective; nRanks0, nRanks1, and nRanks2 must contain common values</font>
+
+<a name="line1074">1074: </a><font color="#B22222">  Input Parameters:</font>
+<a name="line1075">1075: </a><font color="#B22222">+ dm - the DMStag object</font>
+<a name="line1076">1076: </a><font color="#B22222">- nRanks0,nRanks1,nRanks2 - number of ranks in each direction</font>
+
+<a name="line1078">1078: </a><font color="#B22222">  Notes:</font>
+<a name="line1079">1079: </a><font color="#B22222">  Arguments corresponding to higher dimensions are ignored for 1D and 2D grids.</font>
+
+<a name="line1081">1081: </a><font color="#B22222">  Level: developer</font>
+
+<a name="line1083">1083: </a><font color="#B22222">.seealso: <a href="../../../../docs/manualpages/DMSTAG/DMSTAG.html#DMSTAG">DMSTAG</a>, <a href="../../../../docs/manualpages/DMDA/DMDASetNumProcs.html#DMDASetNumProcs">DMDASetNumProcs</a>()</font>
+<a name="line1084">1084: </a><font color="#B22222">@*/</font>
+<a name="line1085">1085: </a><strong><font color="#4169E1"><a name="DMStagSetNumRanks"></a><a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../../docs/manualpages/DMSTAG/DMStagSetNumRanks.html#DMStagSetNumRanks">DMStagSetNumRanks</a>(<a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> dm,<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> nRanks0,<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> nRanks1,<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> nRanks2)</font></strong>
+<a name="line1086">1086: </a>{
+<a name="line1087">1087: </a>  <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  ierr;
+<a name="line1088">1088: </a>  DM_Stag * const stag = (DM_Stag*)dm-&gt;data;
+<a name="line1089">1089: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>        dim;
+
+<a name="line1096">1096: </a>  <font color="#4169E1">if</font> (dm-&gt;setupcalled) <a href="../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)dm),PETSC_ERR_ARG_WRONGSTATE,<font color="#666666">"This function must be called before <a href="../../../../docs/manualpages/DM/DMSetUp.html#DMSetUp">DMSetUp</a>()"</font>);
+<a name="line1097">1097: </a>  <a href="../../../../docs/manualpages/DM/DMGetDimension.html#DMGetDimension">DMGetDimension</a>(dm,&amp;dim);
+<a name="line1098">1098: </a>  <font color="#4169E1">if</font> (nRanks0 != <a href="../../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a> &amp;&amp; nRanks0 &lt; 1) <a href="../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)dm),PETSC_ERR_ARG_OUTOFRANGE,<font color="#666666">"number of ranks in X direction cannot be less than 1"</font>);
+<a name="line1099">1099: </a>  <font color="#4169E1">if</font> (dim &gt; 1 &amp;&amp; nRanks1 != <a href="../../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a> &amp;&amp; nRanks1 &lt; 1) <a href="../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)dm),PETSC_ERR_ARG_OUTOFRANGE,<font color="#666666">"number of ranks in Y direction cannot be less than 1"</font>);
+<a name="line1100">1100: </a>  <font color="#4169E1">if</font> (dim &gt; 2 &amp;&amp; nRanks2 != <a href="../../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a> &amp;&amp; nRanks2 &lt; 1) <a href="../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)dm),PETSC_ERR_ARG_OUTOFRANGE,<font color="#666666">"number of ranks in Z direction cannot be less than 1"</font>);
+<a name="line1101">1101: </a>  <font color="#4169E1">if</font> (nRanks0) stag-&gt;nRanks[0] = nRanks0;
+<a name="line1102">1102: </a>  <font color="#4169E1">if</font> (dim &gt; 1 &amp;&amp; nRanks1) stag-&gt;nRanks[1] = nRanks1;
+<a name="line1103">1103: </a>  <font color="#4169E1">if</font> (dim &gt; 2 &amp;&amp; nRanks2) stag-&gt;nRanks[2] = nRanks2;
+<a name="line1104">1104: </a>  <font color="#4169E1">return</font>(0);
+<a name="line1105">1105: </a>}
+
+<a name="line1107">1107: </a><font color="#B22222">/*@C</font>
+<a name="line1108">1108: </a><font color="#B22222">  <a href="../../../../docs/manualpages/DMSTAG/DMStagSetStencilType.html#DMStagSetStencilType">DMStagSetStencilType</a> - set elementwise ghost/halo stencil type</font>
+
+<a name="line1110">1110: </a><font color="#B22222">  Logically Collective; stencilType must contain common value</font>
+
+<a name="line1112">1112: </a><font color="#B22222">  Input Parameters:</font>
+<a name="line1113">1113: </a><font color="#B22222">+ dm - the DMStag object</font>
+<a name="line1114">1114: </a><font color="#B22222">- stencilType - the elementwise ghost stencil type: <a href="../../../../docs/manualpages/DMSTAG/DMStagStencilType.html#DMStagStencilType">DMSTAG_STENCIL_BOX</a>, <a href="../../../../docs/manualpages/DMSTAG/DMStagStencilType.html#DMStagStencilType">DMSTAG_STENCIL_STAR</a>, or <a href="../../../../docs/manualpages/DMSTAG/DMStagStencilType.html#DMStagStencilType">DMSTAG_STENCIL_NONE</a></font>
+
+<a name="line1116">1116: </a><font color="#B22222">  Level: beginner</font>
+
+<a name="line1118">1118: </a><font color="#B22222">.seealso: <a href="../../../../docs/manualpages/DMSTAG/DMSTAG.html#DMSTAG">DMSTAG</a>, <a href="../../../../docs/manualpages/DMSTAG/DMStagGetStencilType.html#DMStagGetStencilType">DMStagGetStencilType</a>(), <a href="../../../../docs/manualpages/DMSTAG/DMStagStencilType.html#DMStagStencilType">DMStagStencilType</a>, <a href="../../../../docs/manualpages/DMDA/DMDASetStencilType.html#DMDASetStencilType">DMDASetStencilType</a>()</font>
+<a name="line1119">1119: </a><font color="#B22222">@*/</font>
+<a name="line1120">1120: </a><strong><font color="#4169E1"><a name="DMStagSetStencilType"></a><a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../../docs/manualpages/DMSTAG/DMStagSetStencilType.html#DMStagSetStencilType">DMStagSetStencilType</a>(<a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> dm,<a href="../../../../docs/manualpages/DMSTAG/DMStagStencilType.html#DMStagStencilType">DMStagStencilType</a> stencilType)</font></strong>
+<a name="line1121">1121: </a>{
+<a name="line1122">1122: </a>  DM_Stag * const stag = (DM_Stag*)dm-&gt;data;
+
+<a name="line1127">1127: </a>  <font color="#4169E1">if</font> (dm-&gt;setupcalled) <a href="../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)dm),PETSC_ERR_ARG_WRONGSTATE,<font color="#666666">"This function must be called before <a href="../../../../docs/manualpages/DM/DMSetUp.html#DMSetUp">DMSetUp</a>()"</font>);
+<a name="line1128">1128: </a>  stag-&gt;stencilType = stencilType;
+<a name="line1129">1129: </a>  <font color="#4169E1">return</font>(0);
+<a name="line1130">1130: </a>}
+
+<a name="line1132">1132: </a><font color="#B22222">/*@C</font>
+<a name="line1133">1133: </a><font color="#B22222">  <a href="../../../../docs/manualpages/DMSTAG/DMStagSetStencilWidth.html#DMStagSetStencilWidth">DMStagSetStencilWidth</a> - set elementwise stencil width</font>
+
+<a name="line1135">1135: </a><font color="#B22222">  Logically Collective; stencilWidth must contain common value</font>
+
+<a name="line1137">1137: </a><font color="#B22222">  Input Parameters:</font>
+<a name="line1138">1138: </a><font color="#B22222">+ dm - the DMStag object</font>
+<a name="line1139">1139: </a><font color="#B22222">- stencilWidth - stencil/halo/ghost width in elements</font>
+
+<a name="line1141">1141: </a><font color="#B22222">  Level: beginner</font>
+
+<a name="line1143">1143: </a><font color="#B22222">.seealso: <a href="../../../../docs/manualpages/DMSTAG/DMSTAG.html#DMSTAG">DMSTAG</a>, <a href="../../../../docs/manualpages/DMDA/DMDASetStencilWidth.html#DMDASetStencilWidth">DMDASetStencilWidth</a>()</font>
+<a name="line1144">1144: </a><font color="#B22222">@*/</font>
+<a name="line1145">1145: </a><strong><font color="#4169E1"><a name="DMStagSetStencilWidth"></a><a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../../docs/manualpages/DMSTAG/DMStagSetStencilWidth.html#DMStagSetStencilWidth">DMStagSetStencilWidth</a>(<a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> dm,<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> stencilWidth)</font></strong>
+<a name="line1146">1146: </a>{
+<a name="line1147">1147: </a>  DM_Stag * const stag = (DM_Stag*)dm-&gt;data;
+
+<a name="line1152">1152: </a>  <font color="#4169E1">if</font> (dm-&gt;setupcalled) <a href="../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)dm),PETSC_ERR_ARG_WRONGSTATE,<font color="#666666">"This function must be called before <a href="../../../../docs/manualpages/DM/DMSetUp.html#DMSetUp">DMSetUp</a>()"</font>);
+<a name="line1153">1153: </a>  <font color="#4169E1">if</font> (stencilWidth &lt; 0) <a href="../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)dm),PETSC_ERR_ARG_OUTOFRANGE,<font color="#666666">"Stencil width must be non-negative"</font>);
+<a name="line1154">1154: </a>  stag-&gt;stencilWidth = stencilWidth;
+<a name="line1155">1155: </a>  <font color="#4169E1">return</font>(0);
+<a name="line1156">1156: </a>}
+
+<a name="line1158">1158: </a><font color="#B22222">/*@C</font>
+<a name="line1159">1159: </a><font color="#B22222">  <a href="../../../../docs/manualpages/DMSTAG/DMStagSetGlobalSizes.html#DMStagSetGlobalSizes">DMStagSetGlobalSizes</a> - set global element counts in each direction</font>
+
+<a name="line1161">1161: </a><font color="#B22222">  Logically Collective; N0, N1, and N2 must contain common values</font>
+
+<a name="line1163">1163: </a><font color="#B22222">  Input Parameters:</font>
+<a name="line1164">1164: </a><font color="#B22222">+ dm - the DMStag object</font>
+<a name="line1165">1165: </a><font color="#B22222">- N0,N1,N2 - global elementwise sizes</font>
+
+<a name="line1167">1167: </a><font color="#B22222">  Notes:</font>
+<a name="line1168">1168: </a><font color="#B22222">  Arguments corresponding to higher dimensions are ignored for 1D and 2D grids.</font>
+
+<a name="line1170">1170: </a><font color="#B22222">  Level: advanced</font>
+
+<a name="line1172">1172: </a><font color="#B22222">.seealso: <a href="../../../../docs/manualpages/DMSTAG/DMSTAG.html#DMSTAG">DMSTAG</a>, <a href="../../../../docs/manualpages/DMSTAG/DMStagGetGlobalSizes.html#DMStagGetGlobalSizes">DMStagGetGlobalSizes</a>(), <a href="../../../../docs/manualpages/DMDA/DMDASetSizes.html#DMDASetSizes">DMDASetSizes</a>()</font>
+<a name="line1173">1173: </a><font color="#B22222">@*/</font>
+<a name="line1174">1174: </a><strong><font color="#4169E1"><a name="DMStagSetGlobalSizes"></a><a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../../docs/manualpages/DMSTAG/DMStagSetGlobalSizes.html#DMStagSetGlobalSizes">DMStagSetGlobalSizes</a>(<a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> dm,<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> N0,<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> N1,<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> N2)</font></strong>
+<a name="line1175">1175: </a>{
+<a name="line1176">1176: </a>  <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  ierr;
+<a name="line1177">1177: </a>  DM_Stag * const stag = (DM_Stag*)dm-&gt;data;
+<a name="line1178">1178: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>        dim;
+
+<a name="line1182">1182: </a>  <font color="#4169E1">if</font> (dm-&gt;setupcalled) <a href="../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)dm),PETSC_ERR_ARG_WRONGSTATE,<font color="#666666">"This function must be called before <a href="../../../../docs/manualpages/DM/DMSetUp.html#DMSetUp">DMSetUp</a>()"</font>);
+<a name="line1183">1183: </a>  <a href="../../../../docs/manualpages/DM/DMGetDimension.html#DMGetDimension">DMGetDimension</a>(dm,&amp;dim);
+<a name="line1184">1184: </a>  <font color="#4169E1">if</font> (N0 &lt; 1) <a href="../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)dm),PETSC_ERR_ARG_SIZ,<font color="#666666">"Number of elements in X direction must be positive"</font>);
+<a name="line1185">1185: </a>  <font color="#4169E1">if</font> (dim &gt; 1 &amp;&amp; N1 &lt; 0) <a href="../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)dm),PETSC_ERR_ARG_SIZ,<font color="#666666">"Number of elements in Y direction must be positive"</font>);
+<a name="line1186">1186: </a>  <font color="#4169E1">if</font> (dim &gt; 2 &amp;&amp; N2 &lt; 0) <a href="../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)dm),PETSC_ERR_ARG_SIZ,<font color="#666666">"Number of elements in Z direction must be positive"</font>);
+<a name="line1187">1187: </a>  <font color="#4169E1">if</font> (N0) stag-&gt;N[0] = N0;
+<a name="line1188">1188: </a>  <font color="#4169E1">if</font> (N1) stag-&gt;N[1] = N1;
+<a name="line1189">1189: </a>  <font color="#4169E1">if</font> (N2) stag-&gt;N[2] = N2;
+<a name="line1190">1190: </a>  <font color="#4169E1">return</font>(0);
+<a name="line1191">1191: </a>}
+
+<a name="line1193">1193: </a><font color="#B22222">/*@C</font>
+<a name="line1194">1194: </a><font color="#B22222">  <a href="../../../../docs/manualpages/DMSTAG/DMStagSetOwnershipRanges.html#DMStagSetOwnershipRanges">DMStagSetOwnershipRanges</a> - set elements per rank in each direction</font>
+
+<a name="line1196">1196: </a><font color="#B22222">  Logically Collective; lx, ly, and lz must contain common values</font>
+
+<a name="line1198">1198: </a><font color="#B22222">  Input Parameters:</font>
+<a name="line1199">1199: </a><font color="#B22222">+ dm - the DMStag object</font>
+<a name="line1200">1200: </a><font color="#B22222">- lx,ly,lz - element counts for each rank in each direction</font>
+
+<a name="line1202">1202: </a><font color="#B22222">  Notes:</font>
+<a name="line1203">1203: </a><font color="#B22222">  Arguments corresponding to higher dimensions are ignored for 1D and 2D grids. These arguments may be set to NULL in this case.</font>
+
+<a name="line1205">1205: </a><font color="#B22222">  Level: developer</font>
+
+<a name="line1207">1207: </a><font color="#B22222">.seealso: <a href="../../../../docs/manualpages/DMSTAG/DMSTAG.html#DMSTAG">DMSTAG</a>, <a href="../../../../docs/manualpages/DMSTAG/DMStagSetGlobalSizes.html#DMStagSetGlobalSizes">DMStagSetGlobalSizes</a>(), <a href="../../../../docs/manualpages/DMSTAG/DMStagGetOwnershipRanges.html#DMStagGetOwnershipRanges">DMStagGetOwnershipRanges</a>(), <a href="../../../../docs/manualpages/DMDA/DMDASetOwnershipRanges.html#DMDASetOwnershipRanges">DMDASetOwnershipRanges</a>()</font>
+<a name="line1208">1208: </a><font color="#B22222">@*/</font>
+<a name="line1209">1209: </a><strong><font color="#4169E1"><a name="DMStagSetOwnershipRanges"></a><a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../../docs/manualpages/DMSTAG/DMStagSetOwnershipRanges.html#DMStagSetOwnershipRanges">DMStagSetOwnershipRanges</a>(<a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> dm,<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> const *lx,<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> const *ly,<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> const *lz)</font></strong>
+<a name="line1210">1210: </a>{
+<a name="line1211">1211: </a>  <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  ierr;
+<a name="line1212">1212: </a>  DM_Stag * const stag = (DM_Stag*)dm-&gt;data;
+<a name="line1213">1213: </a>  const <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>  *lin[3];
+<a name="line1214">1214: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>        d,dim;
+
+<a name="line1218">1218: </a>  <font color="#4169E1">if</font> (dm-&gt;setupcalled) <a href="../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)dm),PETSC_ERR_ARG_WRONGSTATE,<font color="#666666">"This function must be called before <a href="../../../../docs/manualpages/DM/DMSetUp.html#DMSetUp">DMSetUp</a>()"</font>);
+<a name="line1219">1219: </a>  lin[0] = lx; lin[1] = ly; lin[2] = lz;
+<a name="line1220">1220: </a>  <a href="../../../../docs/manualpages/DM/DMGetDimension.html#DMGetDimension">DMGetDimension</a>(dm,&amp;dim);
+<a name="line1221">1221: </a>  <font color="#4169E1">for</font> (d=0; d&lt;dim; ++d) {
+<a name="line1222">1222: </a>    <font color="#4169E1">if</font> (lin[d]) {
+<a name="line1223">1223: </a>      <font color="#4169E1">if</font> (stag-&gt;nRanks[d] &lt; 0) <a href="../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)dm),PETSC_ERR_ARG_WRONGSTATE,<font color="#666666">"Cannot set ownership ranges before setting number of ranks"</font>);
+<a name="line1224">1224: </a>      <font color="#4169E1">if</font> (!stag-&gt;l[d]) {
+<a name="line1225">1225: </a>        <a href="../../../../docs/manualpages/Sys/PetscMalloc1.html#PetscMalloc1">PetscMalloc1</a>(stag-&gt;nRanks[d], &amp;stag-&gt;l[d]);
+<a name="line1226">1226: </a>      }
+<a name="line1227">1227: </a>      <a href="../../../../docs/manualpages/Sys/PetscArraycpy.html#PetscArraycpy">PetscArraycpy</a>(stag-&gt;l[d], lin[d], stag-&gt;nRanks[d]);
+<a name="line1228">1228: </a>    }
+<a name="line1229">1229: </a>  }
+<a name="line1230">1230: </a>  <font color="#4169E1">return</font>(0);
+<a name="line1231">1231: </a>}
+
+<a name="line1233">1233: </a><font color="#B22222">/*@C</font>
+<a name="line1234">1234: </a><font color="#B22222">  <a href="../../../../docs/manualpages/DMSTAG/DMStagSetUniformCoordinates.html#DMStagSetUniformCoordinates">DMStagSetUniformCoordinates</a> - set DMStag coordinates to be a uniform grid</font>
+
+<a name="line1236">1236: </a><font color="#B22222">  Collective</font>
+
+<a name="line1238">1238: </a><font color="#B22222">  Input Parameters:</font>
+<a name="line1239">1239: </a><font color="#B22222">+ dm - the DMStag object</font>
+<a name="line1240">1240: </a><font color="#B22222">- xmin,xmax,ymin,ymax,zmin,zmax - maximum and minimum global coordinate values</font>
+
+<a name="line1242">1242: </a><font color="#B22222">  Notes:</font>
+<a name="line1243">1243: </a><font color="#B22222">  DMStag supports 2 different types of coordinate <a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a>: <a href="../../../../docs/manualpages/DMSTAG/DMSTAG.html#DMSTAG">DMSTAG</a> and <a href="../../../../docs/manualpages/DMPRODUCT/DMPRODUCT.html#DMPRODUCT">DMPRODUCT</a>.</font>
+<a name="line1244">1244: </a><font color="#B22222">  Arguments corresponding to higher dimensions are ignored for 1D and 2D grids.</font>
+
+<a name="line1246">1246: </a><font color="#B22222">  Level: advanced</font>
+
+<a name="line1248">1248: </a><font color="#B22222">.seealso: <a href="../../../../docs/manualpages/DMSTAG/DMSTAG.html#DMSTAG">DMSTAG</a>, <a href="../../../../docs/manualpages/DMPRODUCT/DMPRODUCT.html#DMPRODUCT">DMPRODUCT</a>, <a href="../../../../docs/manualpages/DMSTAG/DMStagSetUniformCoordinatesExplicit.html#DMStagSetUniformCoordinatesExplicit">DMStagSetUniformCoordinatesExplicit</a>(), <a href="../../../../docs/manualpages/DMSTAG/DMStagSetUniformCoordinatesProduct.html#DMStagSetUniformCoordinatesProduct">DMStagSetUniformCoordinatesProduct</a>(), <a href="../../../../docs/manualpages/DMSTAG/DMStagSetCoordinateDMType.html#DMStagSetCoordinateDMType">DMStagSetCoordinateDMType</a>(), <a href="../../../../docs/manualpages/DM/DMGetCoordinateDM.html#DMGetCoordinateDM">DMGetCoordinateDM</a>(), <a href="../../../../docs/manualpages/DM/DMGetCoordinates.html#DMGetCoordinates">DMGetCoordinates</a>(), <a href="../../../../docs/manualpages/DMDA/DMDASetUniformCoordinates.html#DMDASetUniformCoordinates">DMDASetUniformCoordinates</a>()</font>
+<a name="line1249">1249: </a><font color="#B22222">@*/</font>
+<a name="line1250">1250: </a><strong><font color="#4169E1"><a name="DMStagSetUniformCoordinates"></a><a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../../docs/manualpages/DMSTAG/DMStagSetUniformCoordinates.html#DMStagSetUniformCoordinates">DMStagSetUniformCoordinates</a>(<a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> dm,<a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> xmin,<a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> xmax,<a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> ymin,<a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> ymax,<a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> zmin,<a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> zmax)</font></strong>
+<a name="line1251">1251: </a>{
+<a name="line1252">1252: </a>  <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  ierr;
+<a name="line1253">1253: </a>  DM_Stag * const stag = (DM_Stag*)dm-&gt;data;
+<a name="line1254">1254: </a>  <a href="../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>       flg_stag,flg_product;
+
+<a name="line1258">1258: </a>  <font color="#4169E1">if</font> (!dm-&gt;setupcalled) <a href="../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)dm),PETSC_ERR_ARG_WRONGSTATE,<font color="#666666">"This function must be called after <a href="../../../../docs/manualpages/DM/DMSetUp.html#DMSetUp">DMSetUp</a>()"</font>);
+<a name="line1259">1259: </a>  <font color="#4169E1">if</font> (!stag-&gt;coordinateDMType) <a href="../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)dm),PETSC_ERR_ARG_OUTOFRANGE,<font color="#666666">"You must first call <a href="../../../../docs/manualpages/DMSTAG/DMStagSetCoordinateDMType.html#DMStagSetCoordinateDMType">DMStagSetCoordinateDMType</a>()"</font>);
+<a name="line1260">1260: </a>  <a href="../../../../docs/manualpages/Sys/PetscStrcmp.html#PetscStrcmp">PetscStrcmp</a>(stag-&gt;coordinateDMType,<a href="../../../../docs/manualpages/DMSTAG/DMSTAG.html#DMSTAG">DMSTAG</a>,&amp;flg_stag);
+<a name="line1261">1261: </a>  <a href="../../../../docs/manualpages/Sys/PetscStrcmp.html#PetscStrcmp">PetscStrcmp</a>(stag-&gt;coordinateDMType,<a href="../../../../docs/manualpages/DMPRODUCT/DMPRODUCT.html#DMPRODUCT">DMPRODUCT</a>,&amp;flg_product);
+<a name="line1262">1262: </a>  <font color="#4169E1">if</font> (flg_stag) {
+<a name="line1263">1263: </a>    <a href="../../../../docs/manualpages/DMSTAG/DMStagSetUniformCoordinatesExplicit.html#DMStagSetUniformCoordinatesExplicit">DMStagSetUniformCoordinatesExplicit</a>(dm,xmin,xmax,ymin,ymax,zmin,zmax);
+<a name="line1264">1264: </a>  } <font color="#4169E1">else</font> <font color="#4169E1">if</font> (flg_product) {
+<a name="line1265">1265: </a>    <a href="../../../../docs/manualpages/DMSTAG/DMStagSetUniformCoordinatesProduct.html#DMStagSetUniformCoordinatesProduct">DMStagSetUniformCoordinatesProduct</a>(dm,xmin,xmax,ymin,ymax,zmin,zmax);
+<a name="line1266">1266: </a>  } <font color="#4169E1">else</font> <a href="../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)dm),PETSC_ERR_SUP,<font color="#666666">"Unsupported <a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> Type %s"</font>,stag-&gt;coordinateDMType);
+<a name="line1267">1267: </a>  <font color="#4169E1">return</font>(0);
+<a name="line1268">1268: </a>}
+
+<a name="line1270">1270: </a><font color="#B22222">/*@C</font>
+<a name="line1271">1271: </a><font color="#B22222">  <a href="../../../../docs/manualpages/DMSTAG/DMStagSetUniformCoordinatesExplicit.html#DMStagSetUniformCoordinatesExplicit">DMStagSetUniformCoordinatesExplicit</a> - set DMStag coordinates to be a uniform grid, storing all values</font>
+
+<a name="line1273">1273: </a><font color="#B22222">  Collective</font>
+
+<a name="line1275">1275: </a><font color="#B22222">  Input Parameters:</font>
+<a name="line1276">1276: </a><font color="#B22222">+ dm - the DMStag object</font>
+<a name="line1277">1277: </a><font color="#B22222">- xmin,xmax,ymin,ymax,zmin,zmax - maximum and minimum global coordinate values</font>
+
+<a name="line1279">1279: </a><font color="#B22222">  Notes:</font>
+<a name="line1280">1280: </a><font color="#B22222">  DMStag supports 2 different types of coordinate <a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a>: either another DMStag, or a DMProduct.</font>
+<a name="line1281">1281: </a><font color="#B22222">  If the grid is orthogonal, using DMProduct should be more efficient.</font>
+<a name="line1282">1282: </a><font color="#B22222">  Arguments corresponding to higher dimensions are ignored for 1D and 2D grids.</font>
+
+<a name="line1284">1284: </a><font color="#B22222">  Level: beginner</font>
+
+<a name="line1286">1286: </a><font color="#B22222">.seealso: <a href="../../../../docs/manualpages/DMSTAG/DMSTAG.html#DMSTAG">DMSTAG</a>, <a href="../../../../docs/manualpages/DMSTAG/DMStagSetUniformCoordinates.html#DMStagSetUniformCoordinates">DMStagSetUniformCoordinates</a>(), <a href="../../../../docs/manualpages/DMSTAG/DMStagSetUniformCoordinatesProduct.html#DMStagSetUniformCoordinatesProduct">DMStagSetUniformCoordinatesProduct</a>(), <a href="../../../../docs/manualpages/DMSTAG/DMStagSetCoordinateDMType.html#DMStagSetCoordinateDMType">DMStagSetCoordinateDMType</a>()</font>
+<a name="line1287">1287: </a><font color="#B22222">@*/</font>
+<a name="line1288">1288: </a><strong><font color="#4169E1"><a name="DMStagSetUniformCoordinatesExplicit"></a><a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../../docs/manualpages/DMSTAG/DMStagSetUniformCoordinatesExplicit.html#DMStagSetUniformCoordinatesExplicit">DMStagSetUniformCoordinatesExplicit</a>(<a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> dm,<a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> xmin,<a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> xmax,<a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> ymin,<a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> ymax,<a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> zmin,<a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> zmax)</font></strong>
+<a name="line1289">1289: </a>{
+<a name="line1290">1290: </a>  <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  ierr;
+<a name="line1291">1291: </a>  DM_Stag * const stag = (DM_Stag*)dm-&gt;data;
+<a name="line1292">1292: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>        dim;
+<a name="line1293">1293: </a>  <a href="../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>       flg;
+
+<a name="line1297">1297: </a>  <font color="#4169E1">if</font> (!dm-&gt;setupcalled) <a href="../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)dm),PETSC_ERR_ARG_WRONGSTATE,<font color="#666666">"This function must be called after <a href="../../../../docs/manualpages/DM/DMSetUp.html#DMSetUp">DMSetUp</a>()"</font>);
+<a name="line1298">1298: </a>  <a href="../../../../docs/manualpages/Sys/PetscStrcmp.html#PetscStrcmp">PetscStrcmp</a>(stag-&gt;coordinateDMType,<a href="../../../../docs/manualpages/DMSTAG/DMSTAG.html#DMSTAG">DMSTAG</a>,&amp;flg);
+<a name="line1299">1299: </a>  <font color="#4169E1">if</font> (stag-&gt;coordinateDMType &amp;&amp; !flg) <a href="../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)dm),PETSC_ERR_PLIB,<font color="#666666">"Refusing to change an already-set <a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> coordinate type"</font>);
+<a name="line1300">1300: </a>  <a href="../../../../docs/manualpages/DMSTAG/DMStagSetCoordinateDMType.html#DMStagSetCoordinateDMType">DMStagSetCoordinateDMType</a>(dm,<a href="../../../../docs/manualpages/DMSTAG/DMSTAG.html#DMSTAG">DMSTAG</a>);
+<a name="line1301">1301: </a>  <a href="../../../../docs/manualpages/DM/DMGetDimension.html#DMGetDimension">DMGetDimension</a>(dm,&amp;dim);
+<a name="line1302">1302: </a>  <font color="#4169E1">switch</font> (dim) {
+<a name="line1303">1303: </a>    <font color="#4169E1">case</font> 1: DMStagSetUniformCoordinatesExplicit_1d(dm,xmin,xmax);                     <font color="#4169E1">break</font>;
+<a name="line1304">1304: </a>    <font color="#4169E1">case</font> 2: DMStagSetUniformCoordinatesExplicit_2d(dm,xmin,xmax,ymin,ymax);           <font color="#4169E1">break</font>;
+<a name="line1305">1305: </a>    <font color="#4169E1">case</font> 3: DMStagSetUniformCoordinatesExplicit_3d(dm,xmin,xmax,ymin,ymax,zmin,zmax); <font color="#4169E1">break</font>;
+<a name="line1306">1306: </a><strong><font color="#FF0000">    default:</font></strong> <a href="../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)dm),PETSC_ERR_ARG_OUTOFRANGE,<font color="#666666">"Unsupported dimension %D"</font>,dim);
+<a name="line1307">1307: </a>  }
+<a name="line1308">1308: </a>  <font color="#4169E1">return</font>(0);
+<a name="line1309">1309: </a>}
+
+<a name="line1311">1311: </a><font color="#B22222">/*@C</font>
+<a name="line1312">1312: </a><font color="#B22222">  <a href="../../../../docs/manualpages/DMSTAG/DMStagSetUniformCoordinatesProduct.html#DMStagSetUniformCoordinatesProduct">DMStagSetUniformCoordinatesProduct</a> - create uniform coordinates, as a product of 1D arrays</font>
+
+<a name="line1314">1314: </a><font color="#B22222">  Set the coordinate <a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> to be a DMProduct of 1D DMStag objects, each of which have a coordinate <a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> (also a 1d DMStag) holding uniform coordinates.</font>
+
+<a name="line1316">1316: </a><font color="#B22222">  Collective</font>
+
+<a name="line1318">1318: </a><font color="#B22222">  Input Parameters:</font>
+<a name="line1319">1319: </a><font color="#B22222">+ dm - the DMStag object</font>
+<a name="line1320">1320: </a><font color="#B22222">- xmin,xmax,ymin,ymax,zmin,zmax - maximum and minimum global coordinate values</font>
+
+<a name="line1322">1322: </a><font color="#B22222">  Notes:</font>
+<a name="line1323">1323: </a><font color="#B22222">  Arguments corresponding to higher dimensions are ignored for 1D and 2D grids.</font>
+
+<a name="line1325">1325: </a><font color="#B22222">  The per-dimension 1-dimensional DMStag objects that comprise the product</font>
+<a name="line1326">1326: </a><font color="#B22222">  always have active 0-cells (vertices, element boundaries) and 1-cells</font>
+<a name="line1327">1327: </a><font color="#B22222">  (element centers).</font>
+
+<a name="line1329">1329: </a><font color="#B22222">  Level: intermediate</font>
+
+<a name="line1331">1331: </a><font color="#B22222">.seealso: <a href="../../../../docs/manualpages/DMSTAG/DMSTAG.html#DMSTAG">DMSTAG</a>, <a href="../../../../docs/manualpages/DMPRODUCT/DMPRODUCT.html#DMPRODUCT">DMPRODUCT</a>, <a href="../../../../docs/manualpages/DMSTAG/DMStagSetUniformCoordinates.html#DMStagSetUniformCoordinates">DMStagSetUniformCoordinates</a>(), <a href="../../../../docs/manualpages/DMSTAG/DMStagSetUniformCoordinatesExplicit.html#DMStagSetUniformCoordinatesExplicit">DMStagSetUniformCoordinatesExplicit</a>(), <a href="../../../../docs/manualpages/DMSTAG/DMStagSetCoordinateDMType.html#DMStagSetCoordinateDMType">DMStagSetCoordinateDMType</a>()</font>
+<a name="line1332">1332: </a><font color="#B22222">@*/</font>
+<a name="line1333">1333: </a><strong><font color="#4169E1"><a name="DMStagSetUniformCoordinatesProduct"></a><a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../../docs/manualpages/DMSTAG/DMStagSetUniformCoordinatesProduct.html#DMStagSetUniformCoordinatesProduct">DMStagSetUniformCoordinatesProduct</a>(<a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> dm,<a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> xmin,<a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> xmax,<a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> ymin,<a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> ymax,<a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> zmin,<a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> zmax)</font></strong>
+<a name="line1334">1334: </a>{
+<a name="line1335">1335: </a>  <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  ierr;
+<a name="line1336">1336: </a>  DM_Stag * const stag = (DM_Stag*)dm-&gt;data;
+<a name="line1337">1337: </a>  <a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a>              dmc;
+<a name="line1338">1338: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>        dim,d,dof0,dof1;
+<a name="line1339">1339: </a>  <a href="../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>       flg;
+
+<a name="line1343">1343: </a>  <font color="#4169E1">if</font> (!dm-&gt;setupcalled) <a href="../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)dm),PETSC_ERR_ARG_WRONGSTATE,<font color="#666666">"This function must be called after <a href="../../../../docs/manualpages/DM/DMSetUp.html#DMSetUp">DMSetUp</a>()"</font>);
+<a name="line1344">1344: </a>  <a href="../../../../docs/manualpages/Sys/PetscStrcmp.html#PetscStrcmp">PetscStrcmp</a>(stag-&gt;coordinateDMType,<a href="../../../../docs/manualpages/DMPRODUCT/DMPRODUCT.html#DMPRODUCT">DMPRODUCT</a>,&amp;flg);
+<a name="line1345">1345: </a>  <font color="#4169E1">if</font> (stag-&gt;coordinateDMType &amp;&amp; !flg) <a href="../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)dm),PETSC_ERR_PLIB,<font color="#666666">"Refusing to change an already-set <a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> coordinate type"</font>);
+<a name="line1346">1346: </a>  <a href="../../../../docs/manualpages/DMSTAG/DMStagSetCoordinateDMType.html#DMStagSetCoordinateDMType">DMStagSetCoordinateDMType</a>(dm,<a href="../../../../docs/manualpages/DMPRODUCT/DMPRODUCT.html#DMPRODUCT">DMPRODUCT</a>);
+<a name="line1347">1347: </a>  <a href="../../../../docs/manualpages/DM/DMGetCoordinateDM.html#DMGetCoordinateDM">DMGetCoordinateDM</a>(dm,&amp;dmc);
+<a name="line1348">1348: </a>  <a href="../../../../docs/manualpages/DM/DMGetDimension.html#DMGetDimension">DMGetDimension</a>(dm,&amp;dim);
+
+<a name="line1350">1350: </a>  <font color="#B22222">/* Create 1D sub-DMs, living on subcommunicators.</font>
+<a name="line1351">1351: </a><font color="#B22222">     Always include both vertex and element dof, regardless of the active strata of the DMStag */</font>
+<a name="line1352">1352: </a>  dof0 = 1;
+<a name="line1353">1353: </a>  dof1 = 1;
+
+<a name="line1355">1355: </a>  <font color="#4169E1">for</font> (d=0; d&lt;dim; ++d) {
+<a name="line1356">1356: </a>    <a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a>                subdm;
+<a name="line1357">1357: </a>    <a href="../../../../docs/manualpages/Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</a>          subcomm;
+<a name="line1358">1358: </a>    <a href="../../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a>       color;
+<a name="line1359">1359: </a>    const <a href="../../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a> key = 0; <font color="#B22222">/* let existing rank break ties */</font>
+
+<a name="line1361">1361: </a>    <font color="#B22222">/* Choose colors based on position in the plane orthogonal to this dim, and split */</font>
+<a name="line1362">1362: </a>    <font color="#4169E1">switch</font> (d) {
+<a name="line1363">1363: </a>      <font color="#4169E1">case</font> 0: color = (dim &gt; 1 ? stag-&gt;rank[1] : 0)  + (dim &gt; 2 ? stag-&gt;nRanks[1]*stag-&gt;rank[2] : 0); <font color="#4169E1">break</font>;
+<a name="line1364">1364: </a>      <font color="#4169E1">case</font> 1: color =            stag-&gt;rank[0]       + (dim &gt; 2 ? stag-&gt;nRanks[0]*stag-&gt;rank[2] : 0); <font color="#4169E1">break</font>;
+<a name="line1365">1365: </a>      <font color="#4169E1">case</font> 2: color =            stag-&gt;rank[0]       +            stag-&gt;nRanks[0]*stag-&gt;rank[1]     ; <font color="#4169E1">break</font>;
+<a name="line1366">1366: </a><strong><font color="#FF0000">      default:</font></strong> <a href="../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)dm), PETSC_ERR_SUP,<font color="#666666">"Unsupported dimension index %D"</font>,d);
+<a name="line1367">1367: </a>    }
+<a name="line1368">1368: </a>    <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_split.html#MPI_Comm_split">MPI_Comm_split</a>(<a href="../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)dm),color,key,&amp;subcomm);
+
+<a name="line1370">1370: </a>    <font color="#B22222">/* Create sub-DMs living on these new communicators (which are destroyed by DMProduct) */</font>
+<a name="line1371">1371: </a>    <a href="../../../../docs/manualpages/DMSTAG/DMStagCreate1d.html#DMStagCreate1d">DMStagCreate1d</a>(subcomm,stag-&gt;boundaryType[d],stag-&gt;N[d],dof0,dof1,stag-&gt;stencilType,stag-&gt;stencilWidth,stag-&gt;l[d],&amp;subdm);
+<a name="line1372">1372: </a>    <a href="../../../../docs/manualpages/DM/DMSetUp.html#DMSetUp">DMSetUp</a>(subdm);
+<a name="line1373">1373: </a>    <font color="#4169E1">switch</font> (d) {
+<a name="line1374">1374: </a>      <font color="#4169E1">case</font> 0:
+<a name="line1375">1375: </a>        <a href="../../../../docs/manualpages/DMSTAG/DMStagSetUniformCoordinatesExplicit.html#DMStagSetUniformCoordinatesExplicit">DMStagSetUniformCoordinatesExplicit</a>(subdm,xmin,xmax,0,0,0,0);
+<a name="line1376">1376: </a>        <font color="#4169E1">break</font>;
+<a name="line1377">1377: </a>      <font color="#4169E1">case</font> 1:
+<a name="line1378">1378: </a>        <a href="../../../../docs/manualpages/DMSTAG/DMStagSetUniformCoordinatesExplicit.html#DMStagSetUniformCoordinatesExplicit">DMStagSetUniformCoordinatesExplicit</a>(subdm,ymin,ymax,0,0,0,0);
+<a name="line1379">1379: </a>        <font color="#4169E1">break</font>;
+<a name="line1380">1380: </a>      <font color="#4169E1">case</font> 2:
+<a name="line1381">1381: </a>        <a href="../../../../docs/manualpages/DMSTAG/DMStagSetUniformCoordinatesExplicit.html#DMStagSetUniformCoordinatesExplicit">DMStagSetUniformCoordinatesExplicit</a>(subdm,zmin,zmax,0,0,0,0);
+<a name="line1382">1382: </a>        <font color="#4169E1">break</font>;
+<a name="line1383">1383: </a><strong><font color="#FF0000">      default:</font></strong> <a href="../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)dm), PETSC_ERR_SUP,<font color="#666666">"Unsupported dimension index %D"</font>,d);
+<a name="line1384">1384: </a>    }
+<a name="line1385">1385: </a>    <a href="../../../../docs/manualpages/DMPRODUCT/DMProductSetDM.html#DMProductSetDM">DMProductSetDM</a>(dmc,d,subdm);
+<a name="line1386">1386: </a>    <a href="../../../../docs/manualpages/DMPRODUCT/DMProductSetDimensionIndex.html#DMProductSetDimensionIndex">DMProductSetDimensionIndex</a>(dmc,d,0);
+<a name="line1387">1387: </a>    <a href="../../../../docs/manualpages/DM/DMDestroy.html#DMDestroy">DMDestroy</a>(&amp;subdm);
+<a name="line1388">1388: </a>    <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_free.html#MPI_Comm_free">MPI_Comm_free</a>(&amp;subcomm);
+<a name="line1389">1389: </a>  }
+<a name="line1390">1390: </a>  <font color="#4169E1">return</font>(0);
+<a name="line1391">1391: </a>}
+
+<a name="line1393">1393: </a><font color="#B22222">/*@C</font>
+<a name="line1394">1394: </a><font color="#B22222">  <a href="../../../../docs/manualpages/DMSTAG/DMStagVecGetArray.html#DMStagVecGetArray">DMStagVecGetArray</a> - get access to local array</font>
+
+<a name="line1396">1396: </a><font color="#B22222">  Logically Collective</font>
+
+<a name="line1398">1398: </a><font color="#B22222">  This function returns a (dim+1)-dimensional array for a dim-dimensional</font>
+<a name="line1399">1399: </a><font color="#B22222">  DMStag.</font>
+
+<a name="line1401">1401: </a><font color="#B22222">  The first 1-3 dimensions indicate an element in the global</font>
+<a name="line1402">1402: </a><font color="#B22222">  numbering, using the standard C ordering.</font>
+
+<a name="line1404">1404: </a><font color="#B22222">  The final dimension in this array corresponds to a degree</font>
+<a name="line1405">1405: </a><font color="#B22222">  of freedom with respect to this element, for example corresponding to</font>
+<a name="line1406">1406: </a><font color="#B22222">  the element or one of its neighboring faces, edges, or vertices.</font>
+
+<a name="line1408">1408: </a><font color="#B22222">  For example, for a 3D DMStag, indexing is array[k][j][i][idx], where k is the</font>
+<a name="line1409">1409: </a><font color="#B22222">  index in the z-direction, j is the index in the y-direction, and i is the</font>
+<a name="line1410">1410: </a><font color="#B22222">  index in the x-direction.</font>
+
+<a name="line1412">1412: </a><font color="#B22222">  "idx" is obtained with <a href="../../../../docs/manualpages/DMSTAG/DMStagGetLocationSlot.html#DMStagGetLocationSlot">DMStagGetLocationSlot</a>(), since the correct offset</font>
+<a name="line1413">1413: </a><font color="#B22222">  into the (dim+1)-dimensional C array depends on the grid size and the number</font>
+<a name="line1414">1414: </a><font color="#B22222">  of dof stored at each location.</font>
+
+<a name="line1416">1416: </a><font color="#B22222">  Input Parameters:</font>
+<a name="line1417">1417: </a><font color="#B22222">+ dm - the DMStag object</font>
+<a name="line1418">1418: </a><font color="#B22222">- vec - the <a href="../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> object</font>
+
+<a name="line1420">1420: </a><font color="#B22222">  Output Parameters:</font>
+<a name="line1421">1421: </a><font color="#B22222">. array - the array</font>
+
+<a name="line1423">1423: </a><font color="#B22222">  Notes:</font>
+<a name="line1424">1424: </a><font color="#B22222">  <a href="../../../../docs/manualpages/DMSTAG/DMStagVecRestoreArray.html#DMStagVecRestoreArray">DMStagVecRestoreArray</a>() must be called, once finished with the array</font>
+
+<a name="line1426">1426: </a><font color="#B22222">  Level: beginner</font>
+
+<a name="line1428">1428: </a><font color="#B22222">.seealso: <a href="../../../../docs/manualpages/DMSTAG/DMSTAG.html#DMSTAG">DMSTAG</a>, <a href="../../../../docs/manualpages/DMSTAG/DMStagVecGetArrayRead.html#DMStagVecGetArrayRead">DMStagVecGetArrayRead</a>(), <a href="../../../../docs/manualpages/DMSTAG/DMStagGetLocationSlot.html#DMStagGetLocationSlot">DMStagGetLocationSlot</a>(), <a href="../../../../docs/manualpages/DM/DMGetLocalVector.html#DMGetLocalVector">DMGetLocalVector</a>(), <a href="../../../../docs/manualpages/DM/DMCreateLocalVector.html#DMCreateLocalVector">DMCreateLocalVector</a>(), <a href="../../../../docs/manualpages/DM/DMGetGlobalVector.html#DMGetGlobalVector">DMGetGlobalVector</a>(), <a href="../../../../docs/manualpages/DM/DMCreateGlobalVector.html#DMCreateGlobalVector">DMCreateGlobalVector</a>(), <a href="../../../../docs/manualpages/DMDA/DMDAVecGetArray.html#DMDAVecGetArray">DMDAVecGetArray</a>(), <a href="../../../../docs/manualpages/DMDA/DMDAVecGetArrayDOF.html#DMDAVecGetArrayDOF">DMDAVecGetArrayDOF</a>()</font>
+<a name="line1429">1429: </a><font color="#B22222">@*/</font>
+<a name="line1430">1430: </a><strong><font color="#4169E1"><a name="DMStagVecGetArray"></a><a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../../docs/manualpages/DMSTAG/DMStagVecGetArray.html#DMStagVecGetArray">DMStagVecGetArray</a>(<a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> dm,<a href="../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> vec,void *array)</font></strong>
+<a name="line1431">1431: </a>{
+<a name="line1432">1432: </a>  <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  ierr;
+<a name="line1433">1433: </a>  DM_Stag * const stag = (DM_Stag*)dm-&gt;data;
+<a name="line1434">1434: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>        dim;
+<a name="line1435">1435: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>        nLocal;
+
+<a name="line1440">1440: </a>  <a href="../../../../docs/manualpages/DM/DMGetDimension.html#DMGetDimension">DMGetDimension</a>(dm,&amp;dim);
+<a name="line1441">1441: </a>  <a href="../../../../docs/manualpages/Vec/VecGetLocalSize.html#VecGetLocalSize">VecGetLocalSize</a>(vec,&amp;nLocal);
+<a name="line1442">1442: </a>  <font color="#4169E1">if</font> (nLocal != stag-&gt;entriesGhost) <a href="../../../../docs/manualpages/Sys/SETERRQ2.html#SETERRQ2">SETERRQ2</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_ARG_INCOMP,<font color="#666666">"Vector local size %D is not compatible with DMStag local size %D\n"</font>,nLocal,stag-&gt;entriesGhost);
+<a name="line1443">1443: </a>  <font color="#4169E1">switch</font> (dim) {
+<a name="line1444">1444: </a>    <font color="#4169E1">case</font> 1:
+<a name="line1445">1445: </a>      <a href="../../../../docs/manualpages/Vec/VecGetArray2d.html#VecGetArray2d">VecGetArray2d</a>(vec,stag-&gt;nGhost[0],stag-&gt;entriesPerElement,stag-&gt;startGhost[0],0,(<a href="../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>***)array);
+<a name="line1446">1446: </a>      <font color="#4169E1">break</font>;
+<a name="line1447">1447: </a>    <font color="#4169E1">case</font> 2:
+<a name="line1448">1448: </a>      <a href="../../../../docs/manualpages/Vec/VecGetArray3d.html#VecGetArray3d">VecGetArray3d</a>(vec,stag-&gt;nGhost[1],stag-&gt;nGhost[0],stag-&gt;entriesPerElement,stag-&gt;startGhost[1],stag-&gt;startGhost[0],0,(<a href="../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>****)array);
+<a name="line1449">1449: </a>      <font color="#4169E1">break</font>;
+<a name="line1450">1450: </a>    <font color="#4169E1">case</font> 3:
+<a name="line1451">1451: </a>      <a href="../../../../docs/manualpages/Vec/VecGetArray4d.html#VecGetArray4d">VecGetArray4d</a>(vec,stag-&gt;nGhost[2],stag-&gt;nGhost[1],stag-&gt;nGhost[0],stag-&gt;entriesPerElement,stag-&gt;startGhost[2],stag-&gt;startGhost[1],stag-&gt;startGhost[0],0,(<a href="../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>*****)array);
+<a name="line1452">1452: </a>      <font color="#4169E1">break</font>;
+<a name="line1453">1453: </a><strong><font color="#FF0000">    default:</font></strong> <a href="../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)dm),PETSC_ERR_ARG_OUTOFRANGE,<font color="#666666">"Unsupported dimension %D"</font>,dim);
+<a name="line1454">1454: </a>  }
+<a name="line1455">1455: </a>  <font color="#4169E1">return</font>(0);
+<a name="line1456">1456: </a>}
+
+<a name="line1458">1458: </a><font color="#B22222">/*@C</font>
+<a name="line1459">1459: </a><font color="#B22222">  <a href="../../../../docs/manualpages/DMSTAG/DMStagVecGetArrayRead.html#DMStagVecGetArrayRead">DMStagVecGetArrayRead</a> - get read-only access to a local array</font>
+
+<a name="line1461">1461: </a><font color="#B22222">  Logically Collective</font>
+
+<a name="line1463">1463: </a><font color="#B22222">  See the man page for <a href="../../../../docs/manualpages/DMSTAG/DMStagVecGetArray.html#DMStagVecGetArray">DMStagVecGetArray</a>() for more information.</font>
+
+<a name="line1465">1465: </a><font color="#B22222">  Input Parameters:</font>
+<a name="line1466">1466: </a><font color="#B22222">+ dm - the DMStag object</font>
+<a name="line1467">1467: </a><font color="#B22222">- vec - the <a href="../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> object</font>
+
+<a name="line1469">1469: </a><font color="#B22222">  Output Parameters:</font>
+<a name="line1470">1470: </a><font color="#B22222">. array - the read-only array</font>
+
+<a name="line1472">1472: </a><font color="#B22222">  Notes:</font>
+<a name="line1473">1473: </a><font color="#B22222">  <a href="../../../../docs/manualpages/DMSTAG/DMStagVecRestoreArrayRead.html#DMStagVecRestoreArrayRead">DMStagVecRestoreArrayRead</a>() must be called, once finished with the array</font>
+
+<a name="line1475">1475: </a><font color="#B22222">  Level: beginner</font>
+
+<a name="line1477">1477: </a><font color="#B22222">.seealso: <a href="../../../../docs/manualpages/DMSTAG/DMSTAG.html#DMSTAG">DMSTAG</a>, <a href="../../../../docs/manualpages/DMSTAG/DMStagVecGetArrayRead.html#DMStagVecGetArrayRead">DMStagVecGetArrayRead</a>(), <a href="../../../../docs/manualpages/DMSTAG/DMStagGetLocationSlot.html#DMStagGetLocationSlot">DMStagGetLocationSlot</a>(), <a href="../../../../docs/manualpages/DM/DMGetLocalVector.html#DMGetLocalVector">DMGetLocalVector</a>(), <a href="../../../../docs/manualpages/DM/DMCreateLocalVector.html#DMCreateLocalVector">DMCreateLocalVector</a>(), <a href="../../../../docs/manualpages/DM/DMGetGlobalVector.html#DMGetGlobalVector">DMGetGlobalVector</a>(), <a href="../../../../docs/manualpages/DM/DMCreateGlobalVector.html#DMCreateGlobalVector">DMCreateGlobalVector</a>(), <a href="../../../../docs/manualpages/DMDA/DMDAVecGetArrayRead.html#DMDAVecGetArrayRead">DMDAVecGetArrayRead</a>(), <a href="../../../../docs/manualpages/DMDA/DMDAVecGetArrayDOFRead.html#DMDAVecGetArrayDOFRead">DMDAVecGetArrayDOFRead</a>()</font>
+<a name="line1478">1478: </a><font color="#B22222">@*/</font>
+<a name="line1479">1479: </a><strong><font color="#4169E1"><a name="DMStagVecGetArrayRead"></a><a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../../docs/manualpages/DMSTAG/DMStagVecGetArrayRead.html#DMStagVecGetArrayRead">DMStagVecGetArrayRead</a>(<a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> dm,<a href="../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> vec,void *array)</font></strong>
+<a name="line1480">1480: </a>{
+<a name="line1481">1481: </a>  <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  ierr;
+<a name="line1482">1482: </a>  DM_Stag * const stag = (DM_Stag*)dm-&gt;data;
+<a name="line1483">1483: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>        dim;
+<a name="line1484">1484: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>        nLocal;
+
+<a name="line1489">1489: </a>  <a href="../../../../docs/manualpages/DM/DMGetDimension.html#DMGetDimension">DMGetDimension</a>(dm,&amp;dim);
+<a name="line1490">1490: </a>  <a href="../../../../docs/manualpages/Vec/VecGetLocalSize.html#VecGetLocalSize">VecGetLocalSize</a>(vec,&amp;nLocal);
+<a name="line1491">1491: </a>  <font color="#4169E1">if</font> (nLocal != stag-&gt;entriesGhost) <a href="../../../../docs/manualpages/Sys/SETERRQ2.html#SETERRQ2">SETERRQ2</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_ARG_INCOMP,<font color="#666666">"Vector local size %D is not compatible with DMStag local size %D\n"</font>,nLocal,stag-&gt;entriesGhost);
+<a name="line1492">1492: </a>  <font color="#4169E1">switch</font> (dim) {
+<a name="line1493">1493: </a>    <font color="#4169E1">case</font> 1:
+<a name="line1494">1494: </a>      <a href="../../../../docs/manualpages/Vec/VecGetArray2dRead.html#VecGetArray2dRead">VecGetArray2dRead</a>(vec,stag-&gt;nGhost[0],stag-&gt;entriesPerElement,stag-&gt;startGhost[0],0,(<a href="../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>***)array);
+<a name="line1495">1495: </a>      <font color="#4169E1">break</font>;
+<a name="line1496">1496: </a>    <font color="#4169E1">case</font> 2:
+<a name="line1497">1497: </a>      <a href="../../../../docs/manualpages/Vec/VecGetArray3dRead.html#VecGetArray3dRead">VecGetArray3dRead</a>(vec,stag-&gt;nGhost[1],stag-&gt;nGhost[0],stag-&gt;entriesPerElement,stag-&gt;startGhost[1],stag-&gt;startGhost[0],0,(<a href="../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>****)array);
+<a name="line1498">1498: </a>      <font color="#4169E1">break</font>;
+<a name="line1499">1499: </a>    <font color="#4169E1">case</font> 3:
+<a name="line1500">1500: </a>      <a href="../../../../docs/manualpages/Vec/VecGetArray4dRead.html#VecGetArray4dRead">VecGetArray4dRead</a>(vec,stag-&gt;nGhost[2],stag-&gt;nGhost[1],stag-&gt;nGhost[0],stag-&gt;entriesPerElement,stag-&gt;startGhost[2],stag-&gt;startGhost[1],stag-&gt;startGhost[0],0,(<a href="../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>*****)array);
+<a name="line1501">1501: </a>      <font color="#4169E1">break</font>;
+<a name="line1502">1502: </a><strong><font color="#FF0000">    default:</font></strong> <a href="../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)dm),PETSC_ERR_ARG_OUTOFRANGE,<font color="#666666">"Unsupported dimension %D"</font>,dim);
+<a name="line1503">1503: </a>  }
+<a name="line1504">1504: </a>  <font color="#4169E1">return</font>(0);
+<a name="line1505">1505: </a>}
+
+<a name="line1507">1507: </a><font color="#B22222">/*@C</font>
+<a name="line1508">1508: </a><font color="#B22222">  <a href="../../../../docs/manualpages/DMSTAG/DMStagVecRestoreArray.html#DMStagVecRestoreArray">DMStagVecRestoreArray</a> - restore access to a raw array</font>
+
+<a name="line1510">1510: </a><font color="#B22222">  Logically Collective</font>
+
+<a name="line1512">1512: </a><font color="#B22222">  Input Parameters:</font>
+<a name="line1513">1513: </a><font color="#B22222">+ dm - the DMStag object</font>
+<a name="line1514">1514: </a><font color="#B22222">- vec - the <a href="../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> object</font>
+
+<a name="line1516">1516: </a><font color="#B22222">  Output Parameters:</font>
+<a name="line1517">1517: </a><font color="#B22222">. array - the array</font>
+
+<a name="line1519">1519: </a><font color="#B22222">  Level: beginner</font>
+
+<a name="line1521">1521: </a><font color="#B22222">.seealso: <a href="../../../../docs/manualpages/DMSTAG/DMSTAG.html#DMSTAG">DMSTAG</a>, <a href="../../../../docs/manualpages/DMSTAG/DMStagVecGetArray.html#DMStagVecGetArray">DMStagVecGetArray</a>(), <a href="../../../../docs/manualpages/DMDA/DMDAVecRestoreArray.html#DMDAVecRestoreArray">DMDAVecRestoreArray</a>(), <a href="../../../../docs/manualpages/DMDA/DMDAVecRestoreArrayDOF.html#DMDAVecRestoreArrayDOF">DMDAVecRestoreArrayDOF</a>()</font>
+<a name="line1522">1522: </a><font color="#B22222">@*/</font>
+<a name="line1523">1523: </a><strong><font color="#4169E1"><a name="DMStagVecRestoreArray"></a><a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../../docs/manualpages/DMSTAG/DMStagVecRestoreArray.html#DMStagVecRestoreArray">DMStagVecRestoreArray</a>(<a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> dm,<a href="../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> vec,void *array)</font></strong>
+<a name="line1524">1524: </a>{
+<a name="line1525">1525: </a>  <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  ierr;
+<a name="line1526">1526: </a>  DM_Stag * const stag = (DM_Stag*)dm-&gt;data;
+<a name="line1527">1527: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>        dim;
+<a name="line1528">1528: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>        nLocal;
+
+<a name="line1533">1533: </a>  <a href="../../../../docs/manualpages/DM/DMGetDimension.html#DMGetDimension">DMGetDimension</a>(dm,&amp;dim);
+<a name="line1534">1534: </a>  <a href="../../../../docs/manualpages/Vec/VecGetLocalSize.html#VecGetLocalSize">VecGetLocalSize</a>(vec,&amp;nLocal);
+<a name="line1535">1535: </a>  <font color="#4169E1">if</font> (nLocal != stag-&gt;entriesGhost) <a href="../../../../docs/manualpages/Sys/SETERRQ2.html#SETERRQ2">SETERRQ2</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_ARG_INCOMP,<font color="#666666">"Vector local size %D is not compatible with DMStag local size %D\n"</font>,nLocal,stag-&gt;entriesGhost);
+<a name="line1536">1536: </a>  <font color="#4169E1">switch</font> (dim) {
+<a name="line1537">1537: </a>    <font color="#4169E1">case</font> 1:
+<a name="line1538">1538: </a>      <a href="../../../../docs/manualpages/Vec/VecRestoreArray2d.html#VecRestoreArray2d">VecRestoreArray2d</a>(vec,stag-&gt;nGhost[0],stag-&gt;entriesPerElement,stag-&gt;startGhost[0],0,(<a href="../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>***)array);
+<a name="line1539">1539: </a>      <font color="#4169E1">break</font>;
+<a name="line1540">1540: </a>    <font color="#4169E1">case</font> 2:
+<a name="line1541">1541: </a>      <a href="../../../../docs/manualpages/Vec/VecRestoreArray3d.html#VecRestoreArray3d">VecRestoreArray3d</a>(vec,stag-&gt;nGhost[1],stag-&gt;nGhost[0],stag-&gt;entriesPerElement,stag-&gt;startGhost[1],stag-&gt;startGhost[0],0,(<a href="../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>****)array);
+<a name="line1542">1542: </a>      <font color="#4169E1">break</font>;
+<a name="line1543">1543: </a>    <font color="#4169E1">case</font> 3:
+<a name="line1544">1544: </a>      <a href="../../../../docs/manualpages/Vec/VecRestoreArray4d.html#VecRestoreArray4d">VecRestoreArray4d</a>(vec,stag-&gt;nGhost[2],stag-&gt;nGhost[1],stag-&gt;nGhost[0],stag-&gt;entriesPerElement,stag-&gt;startGhost[2],stag-&gt;startGhost[1],stag-&gt;startGhost[0],0,(<a href="../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>*****)array);
+<a name="line1545">1545: </a>      <font color="#4169E1">break</font>;
+<a name="line1546">1546: </a><strong><font color="#FF0000">    default:</font></strong> <a href="../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)dm),PETSC_ERR_ARG_OUTOFRANGE,<font color="#666666">"Unsupported dimension %D"</font>,dim);
+<a name="line1547">1547: </a>  }
+<a name="line1548">1548: </a>  <font color="#4169E1">return</font>(0);
+<a name="line1549">1549: </a>}
+
+<a name="line1551">1551: </a><font color="#B22222">/*@C</font>
+<a name="line1552">1552: </a><font color="#B22222">  <a href="../../../../docs/manualpages/DMSTAG/DMStagVecRestoreArrayRead.html#DMStagVecRestoreArrayRead">DMStagVecRestoreArrayRead</a> - restore read-only access to a raw array</font>
+
+<a name="line1554">1554: </a><font color="#B22222">  Logically Collective</font>
+
+<a name="line1556">1556: </a><font color="#B22222">  Input Parameters:</font>
+<a name="line1557">1557: </a><font color="#B22222">+ dm - the DMStag object</font>
+<a name="line1558">1558: </a><font color="#B22222">- vec - the <a href="../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> object</font>
+
+<a name="line1560">1560: </a><font color="#B22222">  Output Parameters:</font>
+<a name="line1561">1561: </a><font color="#B22222">. array - the read-only array</font>
+
+<a name="line1563">1563: </a><font color="#B22222">  Level: beginner</font>
+
+<a name="line1565">1565: </a><font color="#B22222">.seealso: <a href="../../../../docs/manualpages/DMSTAG/DMSTAG.html#DMSTAG">DMSTAG</a>, <a href="../../../../docs/manualpages/DMSTAG/DMStagVecGetArrayRead.html#DMStagVecGetArrayRead">DMStagVecGetArrayRead</a>(), <a href="../../../../docs/manualpages/DMDA/DMDAVecRestoreArrayRead.html#DMDAVecRestoreArrayRead">DMDAVecRestoreArrayRead</a>(), <a href="../../../../docs/manualpages/DMDA/DMDAVecRestoreArrayDOFRead.html#DMDAVecRestoreArrayDOFRead">DMDAVecRestoreArrayDOFRead</a>()</font>
+<a name="line1566">1566: </a><font color="#B22222">@*/</font>
+<a name="line1567">1567: </a><strong><font color="#4169E1"><a name="DMStagVecRestoreArrayRead"></a><a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../../docs/manualpages/DMSTAG/DMStagVecRestoreArrayRead.html#DMStagVecRestoreArrayRead">DMStagVecRestoreArrayRead</a>(<a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> dm,<a href="../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> vec,void *array)</font></strong>
+<a name="line1568">1568: </a>{
+<a name="line1569">1569: </a>  <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  ierr;
+<a name="line1570">1570: </a>  DM_Stag * const stag = (DM_Stag*)dm-&gt;data;
+<a name="line1571">1571: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>        dim;
+<a name="line1572">1572: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>        nLocal;
+
+<a name="line1577">1577: </a>  <a href="../../../../docs/manualpages/DM/DMGetDimension.html#DMGetDimension">DMGetDimension</a>(dm,&amp;dim);
+<a name="line1578">1578: </a>  <a href="../../../../docs/manualpages/Vec/VecGetLocalSize.html#VecGetLocalSize">VecGetLocalSize</a>(vec,&amp;nLocal);
+<a name="line1579">1579: </a>  <font color="#4169E1">if</font> (nLocal != stag-&gt;entriesGhost) <a href="../../../../docs/manualpages/Sys/SETERRQ2.html#SETERRQ2">SETERRQ2</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_ARG_INCOMP,<font color="#666666">"Vector local size %D is not compatible with DMStag local size %D\n"</font>,nLocal,stag-&gt;entriesGhost);
+<a name="line1580">1580: </a>  <font color="#4169E1">switch</font> (dim) {
+<a name="line1581">1581: </a>    <font color="#4169E1">case</font> 1:
+<a name="line1582">1582: </a>      <a href="../../../../docs/manualpages/Vec/VecRestoreArray2dRead.html#VecRestoreArray2dRead">VecRestoreArray2dRead</a>(vec,stag-&gt;nGhost[0],stag-&gt;entriesPerElement,stag-&gt;startGhost[0],0,(<a href="../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>***)array);
+<a name="line1583">1583: </a>      <font color="#4169E1">break</font>;
+<a name="line1584">1584: </a>    <font color="#4169E1">case</font> 2:
+<a name="line1585">1585: </a>      <a href="../../../../docs/manualpages/Vec/VecRestoreArray3dRead.html#VecRestoreArray3dRead">VecRestoreArray3dRead</a>(vec,stag-&gt;nGhost[1],stag-&gt;nGhost[0],stag-&gt;entriesPerElement,stag-&gt;startGhost[1],stag-&gt;startGhost[0],0,(<a href="../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>****)array);
+<a name="line1586">1586: </a>      <font color="#4169E1">break</font>;
+<a name="line1587">1587: </a>    <font color="#4169E1">case</font> 3:
+<a name="line1588">1588: </a>      <a href="../../../../docs/manualpages/Vec/VecRestoreArray4dRead.html#VecRestoreArray4dRead">VecRestoreArray4dRead</a>(vec,stag-&gt;nGhost[2],stag-&gt;nGhost[1],stag-&gt;nGhost[0],stag-&gt;entriesPerElement,stag-&gt;startGhost[2],stag-&gt;startGhost[1],stag-&gt;startGhost[0],0,(<a href="../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>*****)array);
+<a name="line1589">1589: </a>      <font color="#4169E1">break</font>;
+<a name="line1590">1590: </a><strong><font color="#FF0000">    default:</font></strong> <a href="../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)dm),PETSC_ERR_ARG_OUTOFRANGE,<font color="#666666">"Unsupported dimension %D"</font>,dim);
+<a name="line1591">1591: </a>  }
+<a name="line1592">1592: </a>  <font color="#4169E1">return</font>(0);
+<a name="line1593">1593: </a>}
+</pre>
+</body>
+
+</html>

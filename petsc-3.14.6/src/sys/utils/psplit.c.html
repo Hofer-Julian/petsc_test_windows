@@ -1,0 +1,183 @@
+<center><a href="psplit.c">Actual source code: psplit.c</a></center><br>
+
+<html>
+<head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/src/sys/utils/psplit.c.html" />
+<title></title>
+<meta name="generator" content="c2html 0.9.4">
+<meta name="date" content="2021-03-30T16:49:30+00:00">
+</head>
+
+<body bgcolor="#FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 src/sys/utils/psplit.c.html "><small>Report Typos and Errors</small></a></div>
+<pre width="80">
+
+<a name="line2">  2: </a>#include <A href="../../../include/petscsys.h.html">&lt;petscsys.h&gt;</A>
+
+<a name="line4">  4: </a><font color="#B22222">/*@</font>
+<a name="line5">  5: </a><font color="#B22222">    <a href="../../../docs/manualpages/Sys/PetscSplitOwnershipBlock.html#PetscSplitOwnershipBlock">PetscSplitOwnershipBlock</a> - Given a global (or local) length determines a local</font>
+<a name="line6">  6: </a><font color="#B22222">        (or global) length via a simple formula. Splits so each processors local size</font>
+<a name="line7">  7: </a><font color="#B22222">        is divisible by the block size.</font>
+
+<a name="line9">  9: </a><font color="#B22222">   Collective (if N is <a href="../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a>)</font>
+
+<a name="line11"> 11: </a><font color="#B22222">   Input Parameters:</font>
+<a name="line12"> 12: </a><font color="#B22222">+    comm - MPI communicator that shares the object being divided</font>
+<a name="line13"> 13: </a><font color="#B22222">.    bs - block size</font>
+<a name="line14"> 14: </a><font color="#B22222">.    n - local length (or <a href="../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a> to have it set)</font>
+<a name="line15"> 15: </a><font color="#B22222">-    N - global length (or <a href="../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a>)</font>
+
+<a name="line17"> 17: </a><font color="#B22222">  Level: developer</font>
+
+<a name="line19"> 19: </a><font color="#B22222">   Notes:</font>
+<a name="line20"> 20: </a><font color="#B22222">     n and N cannot be both <a href="../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a></font>
+
+<a name="line22"> 22: </a><font color="#B22222">     If one processor calls this with N of <a href="../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a> then all processors</font>
+<a name="line23"> 23: </a><font color="#B22222">     must, otherwise the program will hang.</font>
+
+<a name="line25"> 25: </a><font color="#B22222">.seealso: <a href="../../../docs/manualpages/Sys/PetscSplitOwnership.html#PetscSplitOwnership">PetscSplitOwnership</a>()</font>
+
+<a name="line27"> 27: </a><font color="#B22222">@*/</font>
+<a name="line28"> 28: </a><strong><font color="#4169E1"><a name="PetscSplitOwnershipBlock"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  <a href="../../../docs/manualpages/Sys/PetscSplitOwnershipBlock.html#PetscSplitOwnershipBlock">PetscSplitOwnershipBlock</a>(<a href="../../../docs/manualpages/Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</a> comm,<a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> bs,<a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *n,<a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *N)</font></strong>
+<a name="line29"> 29: </a>{
+<a name="line31"> 31: </a>  <a href="../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a>    size,rank;
+
+<a name="line34"> 34: </a>  <font color="#4169E1">if</font> (*N == <a href="../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a> &amp;&amp; *n == <a href="../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a>) <a href="../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_ARG_INCOMP,<font color="#666666">"Both n and N cannot be <a href="../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a>"</font>);
+
+<a name="line36"> 36: </a>  <font color="#4169E1">if</font> (*N == <a href="../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a>) {
+<a name="line37"> 37: </a>    <font color="#4169E1">if</font> (*n % bs != 0) <a href="../../../docs/manualpages/Sys/SETERRQ2.html#SETERRQ2">SETERRQ2</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_ARG_INCOMP,<font color="#666666">"local size %D not divisible by block size %D"</font>,*n,bs);
+<a name="line38"> 38: </a>    <a href="../../../docs/manualpages/Sys/MPIU_Allreduce.html#MPIU_Allreduce">MPIU_Allreduce</a>(n,N,1,<a href="../../../docs/manualpages/Sys/MPIU_INT.html#MPIU_INT">MPIU_INT</a>,MPI_SUM,comm);
+<a name="line39"> 39: </a>  } <font color="#4169E1">else</font> <font color="#4169E1">if</font> (*n == <a href="../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a>) {
+<a name="line40"> 40: </a>    <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> Nbs = *N/bs;
+<a name="line41"> 41: </a>    <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_size.html#MPI_Comm_size">MPI_Comm_size</a>(comm,&amp;size);
+<a name="line42"> 42: </a>    <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_rank.html#MPI_Comm_rank">MPI_Comm_rank</a>(comm,&amp;rank);
+<a name="line43"> 43: </a>    *n   = bs*(Nbs/size + ((Nbs % size) &gt; rank));
+<a name="line44"> 44: </a>  }
+<a name="line45"> 45: </a>  <font color="#4169E1">return</font>(0);
+<a name="line46"> 46: </a>}
+
+
+<a name="line49"> 49: </a><font color="#B22222">/*@</font>
+<a name="line50"> 50: </a><font color="#B22222">    <a href="../../../docs/manualpages/Sys/PetscSplitOwnership.html#PetscSplitOwnership">PetscSplitOwnership</a> - Given a global (or local) length determines a local</font>
+<a name="line51"> 51: </a><font color="#B22222">        (or global) length via a simple formula</font>
+
+<a name="line53"> 53: </a><font color="#B22222">   Collective (if n or N is <a href="../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a>)</font>
+
+<a name="line55"> 55: </a><font color="#B22222">   Input Parameters:</font>
+<a name="line56"> 56: </a><font color="#B22222">+    comm - MPI communicator that shares the object being divided</font>
+<a name="line57"> 57: </a><font color="#B22222">.    n - local length (or <a href="../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a> to have it set)</font>
+<a name="line58"> 58: </a><font color="#B22222">-    N - global length (or <a href="../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a>)</font>
+
+<a name="line60"> 60: </a><font color="#B22222">  Level: developer</font>
+
+<a name="line62"> 62: </a><font color="#B22222">   Notes:</font>
+<a name="line63"> 63: </a><font color="#B22222">     n and N cannot be both <a href="../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a></font>
+
+<a name="line65"> 65: </a><font color="#B22222">     If one processor calls this with n or N of <a href="../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a> then all processors</font>
+<a name="line66"> 66: </a><font color="#B22222">     must. Otherwise, an error is thrown in debug mode while the program will hang</font>
+<a name="line67"> 67: </a><font color="#B22222">     in optimized (i.e. configured --with-debugging=0) mode.</font>
+
+<a name="line69"> 69: </a><font color="#B22222">.seealso: <a href="../../../docs/manualpages/Sys/PetscSplitOwnershipBlock.html#PetscSplitOwnershipBlock">PetscSplitOwnershipBlock</a>()</font>
+
+<a name="line71"> 71: </a><font color="#B22222">@*/</font>
+<a name="line72"> 72: </a><strong><font color="#4169E1"><a name="PetscSplitOwnership"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  <a href="../../../docs/manualpages/Sys/PetscSplitOwnership.html#PetscSplitOwnership">PetscSplitOwnership</a>(<a href="../../../docs/manualpages/Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</a> comm,<a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *n,<a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *N)</font></strong>
+<a name="line73"> 73: </a>{
+<a name="line75"> 75: </a>  <a href="../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a>    size,rank;
+
+<a name="line78"> 78: </a>  <font color="#4169E1">if</font> (*N == <a href="../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a> &amp;&amp; *n == <a href="../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a>) <a href="../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_ARG_INCOMP,<font color="#666666">"Both n and N cannot be <a href="../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a>\n  likely a call to <a href="../../../docs/manualpages/Vec/VecSetSizes.html#VecSetSizes">VecSetSizes</a>() or <a href="../../../docs/manualpages/Mat/MatSetSizes.html#MatSetSizes">MatSetSizes</a>() is wrong.\nSee https://www.mcs.anl.gov/petsc/documentation/faq.html#split"</font>);
+<a name="line79"> 79: </a>  <font color="#4169E1">if</font> (<a href="../../../docs/manualpages/Sys/PetscDefined.html#PetscDefined">PetscDefined</a>(USE_DEBUG)) {
+<a name="line80"> 80: </a>    <a href="../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a> l[2],g[2];
+<a name="line81"> 81: </a>    l[0] = (*n == <a href="../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a>) ? 1 : 0;
+<a name="line82"> 82: </a>    l[1] = (*N == <a href="../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a>) ? 1 : 0;
+<a name="line83"> 83: </a>    <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_size.html#MPI_Comm_size">MPI_Comm_size</a>(comm,&amp;size);
+<a name="line84"> 84: </a>    <a href="../../../docs/manualpages/Sys/MPIU_Allreduce.html#MPIU_Allreduce">MPIU_Allreduce</a>(l,g,2,MPI_INT,MPI_SUM,comm);
+<a name="line85"> 85: </a>    <font color="#4169E1">if</font> (g[0] &amp;&amp; g[0] != size) <a href="../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(comm,PETSC_ERR_ARG_INCOMP,<font color="#666666">"All processes must supply <a href="../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a> for local size"</font>);
+<a name="line86"> 86: </a>    <font color="#4169E1">if</font> (g[1] &amp;&amp; g[1] != size) <a href="../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(comm,PETSC_ERR_ARG_INCOMP,<font color="#666666">"All processes must supply <a href="../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a> for global size"</font>);
+<a name="line87"> 87: </a>  }
+
+<a name="line89"> 89: </a>  <font color="#4169E1">if</font> (*N == <a href="../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a>) {
+<a name="line90"> 90: </a>    PetscInt64 m = *n, M;
+<a name="line91"> 91: </a>    <a href="../../../docs/manualpages/Sys/MPIU_Allreduce.html#MPIU_Allreduce">MPIU_Allreduce</a>(&amp;m,&amp;M,1,MPIU_INT64,MPI_SUM,comm);
+<a name="line92"> 92: </a>    <font color="#4169E1">if</font> (M &gt; PETSC_MAX_INT) <a href="../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(comm,PETSC_ERR_INT_OVERFLOW,<font color="#666666">"Global size overflow %"</font> PetscInt64_FMT <font color="#666666">". You may consider ./configure PETSc with --with-64-bit-indices for the case you are running"</font>, M);
+<a name="line93"> 93: </a>    <font color="#4169E1">else</font> *N = (<a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>)M;
+<a name="line94"> 94: </a>  } <font color="#4169E1">else</font> <font color="#4169E1">if</font> (*n == <a href="../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a>) {
+<a name="line95"> 95: </a>    <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_size.html#MPI_Comm_size">MPI_Comm_size</a>(comm,&amp;size);
+<a name="line96"> 96: </a>    <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_rank.html#MPI_Comm_rank">MPI_Comm_rank</a>(comm,&amp;rank);
+<a name="line97"> 97: </a>    *n   = *N/size + ((*N % size) &gt; rank);
+<a name="line98"> 98: </a>  } <font color="#4169E1">else</font> <font color="#4169E1">if</font> (<a href="../../../docs/manualpages/Sys/PetscDefined.html#PetscDefined">PetscDefined</a>(USE_DEBUG)) {
+<a name="line99"> 99: </a>    <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> tmp;
+<a name="line100">100: </a>    <a href="../../../docs/manualpages/Sys/MPIU_Allreduce.html#MPIU_Allreduce">MPIU_Allreduce</a>(n,&amp;tmp,1,<a href="../../../docs/manualpages/Sys/MPIU_INT.html#MPIU_INT">MPIU_INT</a>,MPI_SUM,comm);
+<a name="line101">101: </a>    <font color="#4169E1">if</font> (tmp != *N) <a href="../../../docs/manualpages/Sys/SETERRQ3.html#SETERRQ3">SETERRQ3</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_ARG_SIZ,<font color="#666666">"Sum of local lengths %D does not equal global length %D, my local length %D\n  likely a call to <a href="../../../docs/manualpages/Vec/VecSetSizes.html#VecSetSizes">VecSetSizes</a>() or <a href="../../../docs/manualpages/Mat/MatSetSizes.html#MatSetSizes">MatSetSizes</a>() is wrong.\nSee https://www.mcs.anl.gov/petsc/documentation/faq.html#split"</font>,tmp,*N,*n);
+<a name="line102">102: </a>  }
+<a name="line103">103: </a>  <font color="#4169E1">return</font>(0);
+<a name="line104">104: </a>}
+
+
+<a name="line107">107: </a><font color="#B22222">/*@</font>
+<a name="line108">108: </a><font color="#B22222">    <a href="../../../docs/manualpages/Sys/PetscSplitOwnershipEqual.html#PetscSplitOwnershipEqual">PetscSplitOwnershipEqual</a> - Given a global (or local) length determines a local</font>
+<a name="line109">109: </a><font color="#B22222">        (or global) length via a simple formula, trying to have all local lengths equal</font>
+
+<a name="line111">111: </a><font color="#B22222">   Collective (if n or N is <a href="../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a>)</font>
+
+<a name="line113">113: </a><font color="#B22222">   Input Parameters:</font>
+<a name="line114">114: </a><font color="#B22222">+    comm - MPI communicator that shares the object being divided</font>
+<a name="line115">115: </a><font color="#B22222">.    n - local length (or <a href="../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a> to have it set)</font>
+<a name="line116">116: </a><font color="#B22222">-    N - global length (or <a href="../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a>)</font>
+
+<a name="line118">118: </a><font color="#B22222">   Level: developer</font>
+
+<a name="line120">120: </a><font color="#B22222">   Notes:</font>
+<a name="line121">121: </a><font color="#B22222">     This is intended to be used with <a href="../../../docs/manualpages/Mat/MATSCALAPACK.html#MATSCALAPACK">MATSCALAPACK</a>, where the local size must</font>
+<a name="line122">122: </a><font color="#B22222">     be equal in all processes (except possibly the last one). For instance,</font>
+<a name="line123">123: </a><font color="#B22222">     the local sizes when spliting N=50 with 6 processes are 9,9,9,9,9,5</font>
+
+<a name="line125">125: </a><font color="#B22222">     n and N cannot be both <a href="../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a></font>
+
+<a name="line127">127: </a><font color="#B22222">     If one processor calls this with n or N of <a href="../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a> then all processors</font>
+<a name="line128">128: </a><font color="#B22222">     must. Otherwise, an error is thrown in debug mode while the program will hang</font>
+<a name="line129">129: </a><font color="#B22222">     in optimized (i.e. configured --with-debugging=0) mode.</font>
+
+<a name="line131">131: </a><font color="#B22222">.seealso: <a href="../../../docs/manualpages/Sys/PetscSplitOwnership.html#PetscSplitOwnership">PetscSplitOwnership</a>(), <a href="../../../docs/manualpages/Sys/PetscSplitOwnershipBlock.html#PetscSplitOwnershipBlock">PetscSplitOwnershipBlock</a>()</font>
+
+<a name="line133">133: </a><font color="#B22222">@*/</font>
+<a name="line134">134: </a><strong><font color="#4169E1"><a name="PetscSplitOwnershipEqual"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  <a href="../../../docs/manualpages/Sys/PetscSplitOwnershipEqual.html#PetscSplitOwnershipEqual">PetscSplitOwnershipEqual</a>(<a href="../../../docs/manualpages/Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</a> comm,<a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *n,<a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *N)</font></strong>
+<a name="line135">135: </a>{
+<a name="line137">137: </a>  <a href="../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a>    size,rank;
+
+<a name="line140">140: </a>  <font color="#4169E1">if</font> (*N == <a href="../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a> &amp;&amp; *n == <a href="../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a>) <a href="../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_ARG_INCOMP,<font color="#666666">"Both n and N cannot be <a href="../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a>"</font>);
+<a name="line141">141: </a>  <font color="#4169E1">if</font> (<a href="../../../docs/manualpages/Sys/PetscDefined.html#PetscDefined">PetscDefined</a>(USE_DEBUG)) {
+<a name="line142">142: </a>    <a href="../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a> l[2],g[2];
+<a name="line143">143: </a>    l[0] = (*n == <a href="../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a>) ? 1 : 0;
+<a name="line144">144: </a>    l[1] = (*N == <a href="../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a>) ? 1 : 0;
+<a name="line145">145: </a>    <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_size.html#MPI_Comm_size">MPI_Comm_size</a>(comm,&amp;size);
+<a name="line146">146: </a>    <a href="../../../docs/manualpages/Sys/MPIU_Allreduce.html#MPIU_Allreduce">MPIU_Allreduce</a>(l,g,2,MPI_INT,MPI_SUM,comm);
+<a name="line147">147: </a>    <font color="#4169E1">if</font> (g[0] &amp;&amp; g[0] != size) <a href="../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(comm,PETSC_ERR_ARG_INCOMP,<font color="#666666">"All processes must supply <a href="../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a> for local size"</font>);
+<a name="line148">148: </a>    <font color="#4169E1">if</font> (g[1] &amp;&amp; g[1] != size) <a href="../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(comm,PETSC_ERR_ARG_INCOMP,<font color="#666666">"All processes must supply <a href="../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a> for global size"</font>);
+<a name="line149">149: </a>  }
+
+<a name="line151">151: </a>  <font color="#4169E1">if</font> (*N == <a href="../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a>) {
+<a name="line152">152: </a>    PetscInt64 m = *n, M;
+<a name="line153">153: </a>    <a href="../../../docs/manualpages/Sys/MPIU_Allreduce.html#MPIU_Allreduce">MPIU_Allreduce</a>(&amp;m,&amp;M,1,MPIU_INT64,MPI_SUM,comm);
+<a name="line154">154: </a>    <font color="#4169E1">if</font> (M &gt; PETSC_MAX_INT) <a href="../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(comm,PETSC_ERR_INT_OVERFLOW,<font color="#666666">"Global size overflow %"</font> PetscInt64_FMT <font color="#666666">". You may consider ./configure PETSc with --with-64-bit-indices for the case you are running"</font>, M);
+<a name="line155">155: </a>    <font color="#4169E1">else</font> *N = (<a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>)M;
+<a name="line156">156: </a>  } <font color="#4169E1">else</font> <font color="#4169E1">if</font> (*n == <a href="../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a>) {
+<a name="line157">157: </a>    <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_size.html#MPI_Comm_size">MPI_Comm_size</a>(comm,&amp;size);
+<a name="line158">158: </a>    <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_rank.html#MPI_Comm_rank">MPI_Comm_rank</a>(comm,&amp;rank);
+<a name="line159">159: </a>    *n = *N/size;
+<a name="line160">160: </a>    <font color="#4169E1">if</font> (*N % size) {
+<a name="line161">161: </a>      <font color="#4169E1">if</font> ((rank+1)*(*n+1)&lt;=*N)  *n = *n+1;
+<a name="line162">162: </a>      <font color="#4169E1">else</font> <font color="#4169E1">if</font> (rank*(*n+1)&lt;=*N) *n = *N-rank*(*n+1);
+<a name="line163">163: </a>      <font color="#4169E1">else</font> *n = 0;
+<a name="line164">164: </a>    }
+<a name="line165">165: </a>  } <font color="#4169E1">else</font> <font color="#4169E1">if</font> (<a href="../../../docs/manualpages/Sys/PetscDefined.html#PetscDefined">PetscDefined</a>(USE_DEBUG)) {
+<a name="line166">166: </a>    <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> tmp;
+<a name="line167">167: </a>    <a href="../../../docs/manualpages/Sys/MPIU_Allreduce.html#MPIU_Allreduce">MPIU_Allreduce</a>(n,&amp;tmp,1,<a href="../../../docs/manualpages/Sys/MPIU_INT.html#MPIU_INT">MPIU_INT</a>,MPI_SUM,comm);
+<a name="line168">168: </a>    <font color="#4169E1">if</font> (tmp != *N) <a href="../../../docs/manualpages/Sys/SETERRQ3.html#SETERRQ3">SETERRQ3</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_ARG_SIZ,<font color="#666666">"Sum of local lengths %D does not equal global length %D, my local length %D"</font>,tmp,*N,*n);
+<a name="line169">169: </a>  }
+<a name="line170">170: </a>  <font color="#4169E1">return</font>(0);
+<a name="line171">171: </a>}
+
+</pre>
+</body>
+
+</html>

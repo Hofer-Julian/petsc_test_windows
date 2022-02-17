@@ -1,0 +1,539 @@
+<center><a href="spacesum.c">Actual source code: spacesum.c</a></center><br>
+
+<html>
+<head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/src/dm/dt/space/impls/sum/spacesum.c.html" />
+<title></title>
+<meta name="generator" content="c2html 0.9.4">
+<meta name="date" content="2021-03-30T16:51:02+00:00">
+</head>
+
+<body bgcolor="#FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 src/dm/dt/space/impls/sum/spacesum.c.html "><small>Report Typos and Errors</small></a></div>
+<pre width="80">
+<a name="line1">  1: </a>#include <A href="../../../../../../include/petsc/private/petscfeimpl.h.html">&lt;petsc/private/petscfeimpl.h&gt;</A>
+<a name="line2">  2: </a><font color="#B22222">/*@</font>
+<a name="line3">  3: </a><font color="#B22222">  <a href="../../../../../../docs/manualpages/SPACE/PetscSpaceSumGetNumSubspaces.html#PetscSpaceSumGetNumSubspaces">PetscSpaceSumGetNumSubspaces</a> - Get the number of spaces in the sum</font>
+
+<a name="line5">  5: </a><font color="#B22222">  Input Parameter:</font>
+<a name="line6">  6: </a><font color="#B22222">  . sp  - the function space object</font>
+
+<a name="line8">  8: </a><font color="#B22222">  Output Parameter:</font>
+<a name="line9">  9: </a><font color="#B22222">  . numSumSpaces - the number of spaces</font>
+
+<a name="line11"> 11: </a><font color="#B22222">Level: intermediate</font>
+
+<a name="line13"> 13: </a><font color="#B22222">.seealso: <a href="../../../../../../docs/manualpages/SPACE/PetscSpaceSumSetNumSubspaces.html#PetscSpaceSumSetNumSubspaces">PetscSpaceSumSetNumSubspaces</a>(), <a href="../../../../../../docs/manualpages/SPACE/PetscSpaceSetDegree.html#PetscSpaceSetDegree">PetscSpaceSetDegree</a>(), <a href="../../../../../../docs/manualpages/SPACE/PetscSpaceSetNumVariables.html#PetscSpaceSetNumVariables">PetscSpaceSetNumVariables</a>()</font>
+<a name="line14"> 14: </a><font color="#B22222">@*/</font>
+<a name="line15"> 15: </a><strong><font color="#4169E1"><a name="PetscSpaceSumGetNumSubspaces"></a><a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../../../../docs/manualpages/SPACE/PetscSpaceSumGetNumSubspaces.html#PetscSpaceSumGetNumSubspaces">PetscSpaceSumGetNumSubspaces</a>(<a href="../../../../../../docs/manualpages/FE/PetscSpace.html#PetscSpace">PetscSpace</a> sp,<a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *numSumSpaces)</font></strong>
+<a name="line16"> 16: </a>{
+
+<a name="line22"> 22: </a>  PetscTryMethod(sp,<font color="#666666">"PetscSpaceSumGetNumSubspaces_C"</font>,(<a href="../../../../../../docs/manualpages/FE/PetscSpace.html#PetscSpace">PetscSpace</a>,<a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>*),(sp,numSumSpaces));
+<a name="line23"> 23: </a>  <font color="#4169E1">return</font>(0);
+<a name="line24"> 24: </a>}
+
+<a name="line26"> 26: </a><font color="#B22222">/*@</font>
+<a name="line27"> 27: </a><font color="#B22222">  <a href="../../../../../../docs/manualpages/SPACE/PetscSpaceSumSetNumSubspaces.html#PetscSpaceSumSetNumSubspaces">PetscSpaceSumSetNumSubspaces</a> - Set the number of spaces in the sum</font>
+
+<a name="line29"> 29: </a><font color="#B22222">  Input Parameters:</font>
+<a name="line30"> 30: </a><font color="#B22222">  + sp  - the function space object</font>
+<a name="line31"> 31: </a><font color="#B22222">  - numSumSpaces - the number of spaces</font>
+
+<a name="line33"> 33: </a><font color="#B22222">Level: intermediate</font>
+
+<a name="line35"> 35: </a><font color="#B22222">.seealso: <a href="../../../../../../docs/manualpages/SPACE/PetscSpaceSumGetNumSubspaces.html#PetscSpaceSumGetNumSubspaces">PetscSpaceSumGetNumSubspaces</a>(), <a href="../../../../../../docs/manualpages/SPACE/PetscSpaceSetDegree.html#PetscSpaceSetDegree">PetscSpaceSetDegree</a>(), <a href="../../../../../../docs/manualpages/SPACE/PetscSpaceSetNumVariables.html#PetscSpaceSetNumVariables">PetscSpaceSetNumVariables</a>()</font>
+<a name="line36"> 36: </a><font color="#B22222">@*/</font>
+<a name="line37"> 37: </a><strong><font color="#4169E1"><a name="PetscSpaceSumSetNumSubspaces"></a><a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../../../../docs/manualpages/SPACE/PetscSpaceSumSetNumSubspaces.html#PetscSpaceSumSetNumSubspaces">PetscSpaceSumSetNumSubspaces</a>(<a href="../../../../../../docs/manualpages/FE/PetscSpace.html#PetscSpace">PetscSpace</a> sp,<a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> numSumSpaces)</font></strong>
+<a name="line38"> 38: </a>{
+
+<a name="line43"> 43: </a>  PetscTryMethod(sp,<font color="#666666">"PetscSpaceSumSetNumSubspaces_C"</font>,(<a href="../../../../../../docs/manualpages/FE/PetscSpace.html#PetscSpace">PetscSpace</a>,<a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>),(sp,numSumSpaces));
+<a name="line44"> 44: </a>  <font color="#4169E1">return</font>(0);
+<a name="line45"> 45: </a>}
+
+<a name="line47"> 47: </a><font color="#B22222">/*@</font>
+<a name="line48"> 48: </a><font color="#B22222"> <a href="../../../../../../docs/manualpages/SPACE/PetscSpaceSumGetConcatenate.html#PetscSpaceSumGetConcatenate">PetscSpaceSumGetConcatenate</a> - Get the concatenate flag for this space.</font>
+<a name="line49"> 49: </a><font color="#B22222"> A concatenated sum space will have number of components equal to the sum of the number of components of all subspaces.A non-concatenated,</font>
+<a name="line50"> 50: </a><font color="#B22222"> or direct sum space will have the same number of components as its subspaces .</font>
+
+<a name="line52"> 52: </a><font color="#B22222"> Input Parameters:</font>
+<a name="line53"> 53: </a><font color="#B22222"> . sp - the function space object</font>
+
+<a name="line55"> 55: </a><font color="#B22222"> Output Parameters:</font>
+<a name="line56"> 56: </a><font color="#B22222"> . concatenate - flag indicating whether subspaces are concatenated.</font>
+
+<a name="line58"> 58: </a><font color="#B22222">Level: intermediate</font>
+
+<a name="line60"> 60: </a><font color="#B22222">.seealso: <a href="../../../../../../docs/manualpages/SPACE/PetscSpaceSumSetConcatenate.html#PetscSpaceSumSetConcatenate">PetscSpaceSumSetConcatenate</a>()</font>
+<a name="line61"> 61: </a><font color="#B22222">@*/</font>
+<a name="line62"> 62: </a><strong><font color="#4169E1"><a name="PetscSpaceSumGetConcatenate"></a><a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../../../../docs/manualpages/SPACE/PetscSpaceSumGetConcatenate.html#PetscSpaceSumGetConcatenate">PetscSpaceSumGetConcatenate</a>(<a href="../../../../../../docs/manualpages/FE/PetscSpace.html#PetscSpace">PetscSpace</a> sp,<a href="../../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> *concatenate)</font></strong>
+<a name="line63"> 63: </a>{
+
+<a name="line68"> 68: </a>  PetscTryMethod(sp,<font color="#666666">"PetscSpaceSumGetConcatenate_C"</font>,(<a href="../../../../../../docs/manualpages/FE/PetscSpace.html#PetscSpace">PetscSpace</a>,<a href="../../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>*),(sp,concatenate));
+<a name="line69"> 69: </a>  <font color="#4169E1">return</font>(0);
+<a name="line70"> 70: </a>}
+
+<a name="line72"> 72: </a><font color="#B22222">/*@</font>
+<a name="line73"> 73: </a><font color="#B22222">  <a href="../../../../../../docs/manualpages/SPACE/PetscSpaceSumSetConcatenate.html#PetscSpaceSumSetConcatenate">PetscSpaceSumSetConcatenate</a> - Sets the concatenate flag for this space.</font>
+<a name="line74"> 74: </a><font color="#B22222"> A concatenated sum space will have number of components equal to the sum of the number of components of all subspaces.A non-concatenated,</font>
+<a name="line75"> 75: </a><font color="#B22222"> or direct sum space will have the same number of components as its subspaces .</font>
+
+<a name="line77"> 77: </a><font color="#B22222"> Input Parameters:</font>
+<a name="line78"> 78: </a><font color="#B22222">  + sp - the function space object</font>
+<a name="line79"> 79: </a><font color="#B22222">  - concatenate - are subspaces concatenated components (true) or direct summands (false)</font>
+
+<a name="line81"> 81: </a><font color="#B22222">Level: intermediate</font>
+<a name="line82"> 82: </a><font color="#B22222">.seealso: <a href="../../../../../../docs/manualpages/SPACE/PetscSpaceSumGetConcatenate.html#PetscSpaceSumGetConcatenate">PetscSpaceSumGetConcatenate</a>()</font>
+<a name="line83"> 83: </a><font color="#B22222">@*/</font>
+<a name="line84"> 84: </a><strong><font color="#4169E1"><a name="PetscSpaceSumSetConcatenate"></a><a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../../../../docs/manualpages/SPACE/PetscSpaceSumSetConcatenate.html#PetscSpaceSumSetConcatenate">PetscSpaceSumSetConcatenate</a>(<a href="../../../../../../docs/manualpages/FE/PetscSpace.html#PetscSpace">PetscSpace</a> sp,<a href="../../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> concatenate)</font></strong>
+<a name="line85"> 85: </a>{
+
+<a name="line90"> 90: </a>  PetscTryMethod(sp,<font color="#666666">"PetscSpaceSumSetConcatenate_C"</font>,(<a href="../../../../../../docs/manualpages/FE/PetscSpace.html#PetscSpace">PetscSpace</a>,<a href="../../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>),(sp,concatenate));
+<a name="line91"> 91: </a>  <font color="#4169E1">return</font>(0);
+<a name="line92"> 92: </a>}
+
+<a name="line94"> 94: </a><font color="#B22222">/*@</font>
+<a name="line95"> 95: </a><font color="#B22222">  <a href="../../../../../../docs/manualpages/SPACE/PetscSpaceSumGetSubspace.html#PetscSpaceSumGetSubspace">PetscSpaceSumGetSubspace</a> - Get a space in the sum</font>
+
+<a name="line97"> 97: </a><font color="#B22222">  Input Parameters:</font>
+<a name="line98"> 98: </a><font color="#B22222">  + sp - the function space object</font>
+<a name="line99"> 99: </a><font color="#B22222">  - s  - The space number</font>
+
+<a name="line101">101: </a><font color="#B22222">  Output Parameter:</font>
+<a name="line102">102: </a><font color="#B22222">  . subsp - the <a href="../../../../../../docs/manualpages/FE/PetscSpace.html#PetscSpace">PetscSpace</a></font>
+
+<a name="line104">104: </a><font color="#B22222">Level: intermediate</font>
+
+<a name="line106">106: </a><font color="#B22222">.seealso: <a href="../../../../../../docs/manualpages/SPACE/PetscSpaceSumSetSubspace.html#PetscSpaceSumSetSubspace">PetscSpaceSumSetSubspace</a>(), <a href="../../../../../../docs/manualpages/SPACE/PetscSpaceSetDegree.html#PetscSpaceSetDegree">PetscSpaceSetDegree</a>(), <a href="../../../../../../docs/manualpages/SPACE/PetscSpaceSetNumVariables.html#PetscSpaceSetNumVariables">PetscSpaceSetNumVariables</a>()</font>
+<a name="line107">107: </a><font color="#B22222">@*/</font>
+<a name="line108">108: </a><strong><font color="#4169E1"><a name="PetscSpaceSumGetSubspace"></a><a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../../../../docs/manualpages/SPACE/PetscSpaceSumGetSubspace.html#PetscSpaceSumGetSubspace">PetscSpaceSumGetSubspace</a>(<a href="../../../../../../docs/manualpages/FE/PetscSpace.html#PetscSpace">PetscSpace</a> sp,<a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> s,<a href="../../../../../../docs/manualpages/FE/PetscSpace.html#PetscSpace">PetscSpace</a> *subsp)</font></strong>
+<a name="line109">109: </a>{
+
+<a name="line115">115: </a>  PetscTryMethod(sp,<font color="#666666">"PetscSpaceSumGetSubspace_C"</font>,(<a href="../../../../../../docs/manualpages/FE/PetscSpace.html#PetscSpace">PetscSpace</a>,<a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>,<a href="../../../../../../docs/manualpages/FE/PetscSpace.html#PetscSpace">PetscSpace</a>*),(sp,s,subsp));
+<a name="line116">116: </a>  <font color="#4169E1">return</font>(0);
+<a name="line117">117: </a>}
+
+<a name="line119">119: </a><font color="#B22222">/*@</font>
+<a name="line120">120: </a><font color="#B22222">  <a href="../../../../../../docs/manualpages/SPACE/PetscSpaceSumSetSubspace.html#PetscSpaceSumSetSubspace">PetscSpaceSumSetSubspace</a> - Set a space in the sum</font>
+
+<a name="line122">122: </a><font color="#B22222">  Input Parameters:</font>
+<a name="line123">123: </a><font color="#B22222">  + sp    - the function space object</font>
+<a name="line124">124: </a><font color="#B22222">  . s     - The space number</font>
+<a name="line125">125: </a><font color="#B22222">  - subsp - the number of spaces</font>
+
+<a name="line127">127: </a><font color="#B22222">Level: intermediate</font>
+
+<a name="line129">129: </a><font color="#B22222">.seealso: <a href="../../../../../../docs/manualpages/SPACE/PetscSpaceSumGetSubspace.html#PetscSpaceSumGetSubspace">PetscSpaceSumGetSubspace</a>(), <a href="../../../../../../docs/manualpages/SPACE/PetscSpaceSetDegree.html#PetscSpaceSetDegree">PetscSpaceSetDegree</a>(), <a href="../../../../../../docs/manualpages/SPACE/PetscSpaceSetNumVariables.html#PetscSpaceSetNumVariables">PetscSpaceSetNumVariables</a>()</font>
+<a name="line130">130: </a><font color="#B22222">@*/</font>
+<a name="line131">131: </a><strong><font color="#4169E1"><a name="PetscSpaceSumSetSubspace"></a><a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../../../../docs/manualpages/SPACE/PetscSpaceSumSetSubspace.html#PetscSpaceSumSetSubspace">PetscSpaceSumSetSubspace</a>(<a href="../../../../../../docs/manualpages/FE/PetscSpace.html#PetscSpace">PetscSpace</a> sp,<a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> s,<a href="../../../../../../docs/manualpages/FE/PetscSpace.html#PetscSpace">PetscSpace</a> subsp)</font></strong>
+<a name="line132">132: </a>{
+
+<a name="line138">138: </a>  PetscTryMethod(sp,<font color="#666666">"PetscSpaceSumSetSubspace_C"</font>,(<a href="../../../../../../docs/manualpages/FE/PetscSpace.html#PetscSpace">PetscSpace</a>,<a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>,<a href="../../../../../../docs/manualpages/FE/PetscSpace.html#PetscSpace">PetscSpace</a>),(sp,s,subsp));
+<a name="line139">139: </a>  <font color="#4169E1">return</font>(0);
+<a name="line140">140: </a>}
+
+<a name="line142">142: </a><strong><font color="#4169E1"><a name="PetscSpaceSumGetNumSubspaces_Sum"></a>static <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscSpaceSumGetNumSubspaces_Sum(<a href="../../../../../../docs/manualpages/FE/PetscSpace.html#PetscSpace">PetscSpace</a> space,<a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *numSumSpaces)</font></strong>
+<a name="line143">143: </a>{
+<a name="line144">144: </a>  PetscSpace_Sum *sum = (PetscSpace_Sum*)space-&gt;data;
+
+<a name="line147">147: </a>  *numSumSpaces = sum-&gt;numSumSpaces;
+<a name="line148">148: </a>  <font color="#4169E1">return</font>(0);
+<a name="line149">149: </a>}
+
+<a name="line151">151: </a><strong><font color="#4169E1"><a name="PetscSpaceSumSetNumSubspaces_Sum"></a>static <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscSpaceSumSetNumSubspaces_Sum(<a href="../../../../../../docs/manualpages/FE/PetscSpace.html#PetscSpace">PetscSpace</a> space,<a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> numSumSpaces)</font></strong>
+<a name="line152">152: </a>{
+<a name="line153">153: </a>  PetscSpace_Sum *sum = (PetscSpace_Sum*)space-&gt;data;
+<a name="line154">154: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       Ns   = sum-&gt;numSumSpaces;
+
+<a name="line158">158: </a>  <font color="#4169E1">if</font> (sum-&gt;setupCalled) <a href="../../../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)space),PETSC_ERR_ARG_WRONGSTATE,
+<a name="line159">159: </a>                                <font color="#666666">"Cannot change number of subspaces after setup called\n"</font>);
+<a name="line160">160: </a>  <font color="#4169E1">if</font> (numSumSpaces == Ns) <font color="#4169E1">return</font>(0);
+<a name="line161">161: </a>  <font color="#4169E1">if</font> (Ns &gt;= 0) {
+<a name="line162">162: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> s;
+<a name="line163">163: </a>    <font color="#4169E1">for</font> (s=0; s&lt;Ns; ++s) {
+<a name="line164">164: </a>      <a href="../../../../../../docs/manualpages/SPACE/PetscSpaceDestroy.html#PetscSpaceDestroy">PetscSpaceDestroy</a>(&amp;sum-&gt;sumspaces[s]);
+<a name="line165">165: </a>    }
+<a name="line166">166: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(sum-&gt;sumspaces);
+<a name="line167">167: </a>  }
+
+<a name="line169">169: </a>  Ns   = sum-&gt;numSumSpaces = numSumSpaces;
+<a name="line170">170: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscCalloc1.html#PetscCalloc1">PetscCalloc1</a>(Ns,&amp;sum-&gt;sumspaces);
+<a name="line171">171: </a>  <font color="#4169E1">return</font>(0);
+<a name="line172">172: </a>}
+
+<a name="line174">174: </a><strong><font color="#4169E1"><a name="PetscSpaceSumGetConcatenate_Sum"></a>static <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscSpaceSumGetConcatenate_Sum(<a href="../../../../../../docs/manualpages/FE/PetscSpace.html#PetscSpace">PetscSpace</a> sp,<a href="../../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> *concatenate)</font></strong>
+<a name="line175">175: </a>{
+<a name="line176">176: </a>  PetscSpace_Sum *sum = (PetscSpace_Sum*)sp-&gt;data;
+
+<a name="line179">179: </a>  *concatenate = sum-&gt;concatenate;
+<a name="line180">180: </a>  <font color="#4169E1">return</font>(0);
+<a name="line181">181: </a>}
+
+<a name="line183">183: </a><strong><font color="#4169E1"><a name="PetscSpaceSumSetConcatenate_Sum"></a>static <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscSpaceSumSetConcatenate_Sum(<a href="../../../../../../docs/manualpages/FE/PetscSpace.html#PetscSpace">PetscSpace</a> sp,<a href="../../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> concatenate)</font></strong>
+<a name="line184">184: </a>{
+<a name="line185">185: </a>  PetscSpace_Sum *sum = (PetscSpace_Sum*)sp-&gt;data;
+
+<a name="line188">188: </a>  <font color="#4169E1">if</font> (sum-&gt;setupCalled) <a href="../../../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)sp),PETSC_ERR_ARG_WRONGSTATE,<font color="#666666">"Cannot change space concatenation after setup called.\n"</font>);
+
+<a name="line190">190: </a>  sum-&gt;concatenate = concatenate;
+<a name="line191">191: </a>  <font color="#4169E1">return</font>(0);
+<a name="line192">192: </a>}
+
+<a name="line194">194: </a><strong><font color="#4169E1"><a name="PetscSpaceSumGetSubspace_Sum"></a>static <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscSpaceSumGetSubspace_Sum(<a href="../../../../../../docs/manualpages/FE/PetscSpace.html#PetscSpace">PetscSpace</a> space,<a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> s,<a href="../../../../../../docs/manualpages/FE/PetscSpace.html#PetscSpace">PetscSpace</a> *subspace)</font></strong>
+<a name="line195">195: </a>{
+<a name="line196">196: </a>  PetscSpace_Sum *sum = (PetscSpace_Sum*)space-&gt;data;
+<a name="line197">197: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       Ns   = sum-&gt;numSumSpaces;
+
+<a name="line200">200: </a>  <font color="#4169E1">if</font> (Ns &lt; 0) <a href="../../../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)space),PETSC_ERR_ARG_WRONGSTATE,<font color="#666666">"Must call <a href="../../../../../../docs/manualpages/SPACE/PetscSpaceSumSetNumSubspaces.html#PetscSpaceSumSetNumSubspaces">PetscSpaceSumSetNumSubspaces</a>() first\n"</font>);
+<a name="line201">201: </a>  <font color="#4169E1">if</font> (s&lt;0 || s&gt;=Ns) <a href="../../../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a> (<a href="../../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)space),PETSC_ERR_ARG_OUTOFRANGE,<font color="#666666">"Invalid subspace number %D\n"</font>,subspace);
+
+<a name="line203">203: </a>  *subspace = sum-&gt;sumspaces[s];
+<a name="line204">204: </a>  <font color="#4169E1">return</font>(0);
+<a name="line205">205: </a>}
+
+<a name="line207">207: </a><strong><font color="#4169E1"><a name="PetscSpaceSumSetSubspace_Sum"></a>static <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscSpaceSumSetSubspace_Sum(<a href="../../../../../../docs/manualpages/FE/PetscSpace.html#PetscSpace">PetscSpace</a> space,<a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> s,<a href="../../../../../../docs/manualpages/FE/PetscSpace.html#PetscSpace">PetscSpace</a> subspace)</font></strong>
+<a name="line208">208: </a>{
+<a name="line209">209: </a>  PetscSpace_Sum *sum = (PetscSpace_Sum*)space-&gt;data;
+<a name="line210">210: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       Ns   = sum-&gt;numSumSpaces;
+
+<a name="line214">214: </a>  <font color="#4169E1">if</font> (sum-&gt;setupCalled) <a href="../../../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)space),PETSC_ERR_ARG_WRONGSTATE,<font color="#666666">"Cannot change subspace after setup called\n"</font>);
+<a name="line215">215: </a>  <font color="#4169E1">if</font> (Ns &lt; 0) <a href="../../../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)space),PETSC_ERR_ARG_WRONGSTATE,<font color="#666666">"Must call <a href="../../../../../../docs/manualpages/SPACE/PetscSpaceSumSetNumSubspaces.html#PetscSpaceSumSetNumSubspaces">PetscSpaceSumSetNumSubspaces</a>() first\n"</font>);
+<a name="line216">216: </a>  <font color="#4169E1">if</font> (s &lt; 0 || s &gt;= Ns) <a href="../../../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)space),PETSC_ERR_ARG_OUTOFRANGE,<font color="#666666">"Invalid subspace number %D\n"</font>,subspace);
+
+<a name="line218">218: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscObjectReference.html#PetscObjectReference">PetscObjectReference</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)subspace);
+<a name="line219">219: </a>  <a href="../../../../../../docs/manualpages/SPACE/PetscSpaceDestroy.html#PetscSpaceDestroy">PetscSpaceDestroy</a>(&amp;sum-&gt;sumspaces[s]);
+<a name="line220">220: </a>  sum-&gt;sumspaces[s] = subspace;
+<a name="line221">221: </a>  <font color="#4169E1">return</font>(0);
+<a name="line222">222: </a>}
+
+<a name="line224">224: </a><strong><font color="#4169E1"><a name="PetscSpaceSetFromOptions_Sum"></a>static <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscSpaceSetFromOptions_Sum(PetscOptionItems *PetscOptionsObject,<a href="../../../../../../docs/manualpages/FE/PetscSpace.html#PetscSpace">PetscSpace</a> sp)</font></strong>
+<a name="line225">225: </a>{
+<a name="line226">226: </a>  PetscSpace_Sum *sum = (PetscSpace_Sum*)sp-&gt;data;
+<a name="line227">227: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       Ns,Nc,Nv,deg,i;
+<a name="line228">228: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>      concatenate = <a href="../../../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>;
+<a name="line229">229: </a>  const char     *prefix;
+
+<a name="line233">233: </a>  <a href="../../../../../../docs/manualpages/SPACE/PetscSpaceGetNumVariables.html#PetscSpaceGetNumVariables">PetscSpaceGetNumVariables</a>(sp,&amp;Nv);
+<a name="line234">234: </a>  <font color="#4169E1">if</font> (!Nv) <font color="#4169E1">return</font>(0);
+<a name="line235">235: </a>  <a href="../../../../../../docs/manualpages/SPACE/PetscSpaceGetNumComponents.html#PetscSpaceGetNumComponents">PetscSpaceGetNumComponents</a>(sp,&amp;Nc);
+<a name="line236">236: </a>  <a href="../../../../../../docs/manualpages/SPACE/PetscSpaceSumGetNumSubspaces.html#PetscSpaceSumGetNumSubspaces">PetscSpaceSumGetNumSubspaces</a>(sp,&amp;Ns);
+<a name="line237">237: </a>  <a href="../../../../../../docs/manualpages/SPACE/PetscSpaceGetDegree.html#PetscSpaceGetDegree">PetscSpaceGetDegree</a>(sp,&amp;deg,NULL);
+<a name="line238">238: </a>  Ns   = (Ns == <a href="../../../../../../docs/manualpages/Sys/PETSC_DEFAULT.html#PETSC_DEFAULT">PETSC_DEFAULT</a>) ? 1 : Ns;
+
+<a name="line240">240: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscOptionsHead.html#PetscOptionsHead">PetscOptionsHead</a>(PetscOptionsObject,<font color="#666666">"<a href="../../../../../../docs/manualpages/FE/PetscSpace.html#PetscSpace">PetscSpace</a> sum options"</font>);
+<a name="line241">241: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscOptionsBoundedInt.html#PetscOptionsBoundedInt">PetscOptionsBoundedInt</a>(<font color="#666666">"-petscspace_sum_spaces"</font>,<font color="#666666">"The number of subspaces"</font>,<font color="#666666">"<a href="../../../../../../docs/manualpages/SPACE/PetscSpaceSumSetNumSubspaces.html#PetscSpaceSumSetNumSubspaces">PetscSpaceSumSetNumSubspaces</a>"</font>,Ns,&amp;Ns,NULL,0);
+<a name="line242">242: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscOptionsBool.html#PetscOptionsBool">PetscOptionsBool</a>(<font color="#666666">"-petscspace_sum_concatenate"</font>,<font color="#666666">"Subspaces are concatenated components of the final space"</font>,<font color="#666666">"PetscSpaceSumSetFromOptions"</font>,
+<a name="line243">243: </a>                          concatenate,&amp;concatenate,NULL);
+<a name="line244">244: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscOptionsTail.html#PetscOptionsTail">PetscOptionsTail</a>();
+
+<a name="line246">246: </a>  <font color="#4169E1">if</font> (Ns &lt; 0 || (Nv &gt; 0 &amp;&amp; Ns == 0)) <a href="../../../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)sp),PETSC_ERR_ARG_OUTOFRANGE,<font color="#666666">"Cannot have a sum space of %D spaces\n"</font>,Ns);
+<a name="line247">247: </a>  <font color="#4169E1">if</font> (Ns != sum-&gt;numSumSpaces) {
+<a name="line248">248: </a>    <a href="../../../../../../docs/manualpages/SPACE/PetscSpaceSumSetNumSubspaces.html#PetscSpaceSumSetNumSubspaces">PetscSpaceSumSetNumSubspaces</a>(sp,Ns);
+<a name="line249">249: </a>  }
+<a name="line250">250: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscObjectGetOptionsPrefix.html#PetscObjectGetOptionsPrefix">PetscObjectGetOptionsPrefix</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)sp,&amp;prefix);
+<a name="line251">251: </a>  <font color="#4169E1">for</font> (i=0; i&lt;Ns; ++i) {
+<a name="line252">252: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>   sNv;
+<a name="line253">253: </a>    <a href="../../../../../../docs/manualpages/FE/PetscSpace.html#PetscSpace">PetscSpace</a> subspace;
+
+<a name="line255">255: </a>    <a href="../../../../../../docs/manualpages/SPACE/PetscSpaceSumGetSubspace.html#PetscSpaceSumGetSubspace">PetscSpaceSumGetSubspace</a>(sp,i,&amp;subspace);
+<a name="line256">256: </a>    <font color="#4169E1">if</font> (!subspace) {
+<a name="line257">257: </a>      char subspacePrefix[256];
+
+<a name="line259">259: </a>      <a href="../../../../../../docs/manualpages/SPACE/PetscSpaceCreate.html#PetscSpaceCreate">PetscSpaceCreate</a>(<a href="../../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)sp),&amp;subspace);
+<a name="line260">260: </a>      <a href="../../../../../../docs/manualpages/Sys/PetscObjectSetOptionsPrefix.html#PetscObjectSetOptionsPrefix">PetscObjectSetOptionsPrefix</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)subspace,prefix);
+<a name="line261">261: </a>      <a href="../../../../../../docs/manualpages/Sys/PetscSNPrintf.html#PetscSNPrintf">PetscSNPrintf</a>(subspacePrefix,256,<font color="#666666">"subspace%d_"</font>,i);
+<a name="line262">262: </a>      <a href="../../../../../../docs/manualpages/Sys/PetscObjectAppendOptionsPrefix.html#PetscObjectAppendOptionsPrefix">PetscObjectAppendOptionsPrefix</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)subspace,subspacePrefix);
+<a name="line263">263: </a>    } <font color="#4169E1">else</font> {
+<a name="line264">264: </a>      <a href="../../../../../../docs/manualpages/Sys/PetscObjectReference.html#PetscObjectReference">PetscObjectReference</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)subspace);
+<a name="line265">265: </a>    }
+<a name="line266">266: </a>    <a href="../../../../../../docs/manualpages/SPACE/PetscSpaceSetFromOptions.html#PetscSpaceSetFromOptions">PetscSpaceSetFromOptions</a>(subspace);
+<a name="line267">267: </a>    <a href="../../../../../../docs/manualpages/SPACE/PetscSpaceGetNumVariables.html#PetscSpaceGetNumVariables">PetscSpaceGetNumVariables</a>(subspace,&amp;sNv);
+<a name="line268">268: </a>    <font color="#4169E1">if</font> (!sNv) <a href="../../../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>(
+<a name="line269">269: </a>                         (<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)sp),PETSC_ERR_ARG_WRONGSTATE,<font color="#666666">"Subspace %D has not been set properly, number of variables is 0.\n"</font>,i);
+<a name="line270">270: </a>    <a href="../../../../../../docs/manualpages/SPACE/PetscSpaceSumSetSubspace.html#PetscSpaceSumSetSubspace">PetscSpaceSumSetSubspace</a>(sp,i,subspace);
+<a name="line271">271: </a>    <a href="../../../../../../docs/manualpages/SPACE/PetscSpaceDestroy.html#PetscSpaceDestroy">PetscSpaceDestroy</a>(&amp;subspace);
+<a name="line272">272: </a>  }
+<a name="line273">273: </a>  <font color="#4169E1">return</font>(0);
+<a name="line274">274: </a>}
+
+<a name="line276">276: </a><strong><font color="#4169E1"><a name="PetscSpaceSetUp_Sum"></a>static <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscSpaceSetUp_Sum(<a href="../../../../../../docs/manualpages/FE/PetscSpace.html#PetscSpace">PetscSpace</a> sp)</font></strong>
+<a name="line277">277: </a>{
+<a name="line278">278: </a>  PetscSpace_Sum *sum = (PetscSpace_Sum*)sp-&gt;data;
+<a name="line279">279: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>      concatenate = <a href="../../../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>;
+<a name="line280">280: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       Nv,Ns,Nc,i,sum_Nc = 0,deg = PETSC_MIN_INT,maxDeg = PETSC_MIN_INT;
+
+<a name="line284">284: </a>  <font color="#4169E1">if</font> (sum-&gt;setupCalled) <font color="#4169E1">return</font>(0);
+
+<a name="line286">286: </a>  <a href="../../../../../../docs/manualpages/SPACE/PetscSpaceGetNumVariables.html#PetscSpaceGetNumVariables">PetscSpaceGetNumVariables</a>(sp,&amp;Nv);
+<a name="line287">287: </a>  <a href="../../../../../../docs/manualpages/SPACE/PetscSpaceGetNumComponents.html#PetscSpaceGetNumComponents">PetscSpaceGetNumComponents</a>(sp,&amp;Nc);
+<a name="line288">288: </a>  <a href="../../../../../../docs/manualpages/SPACE/PetscSpaceSumGetNumSubspaces.html#PetscSpaceSumGetNumSubspaces">PetscSpaceSumGetNumSubspaces</a>(sp,&amp;Ns);
+<a name="line289">289: </a>  <font color="#4169E1">if</font> (Ns == <a href="../../../../../../docs/manualpages/Sys/PETSC_DEFAULT.html#PETSC_DEFAULT">PETSC_DEFAULT</a>) {
+<a name="line290">290: </a>    Ns   = 1;
+<a name="line291">291: </a>    <a href="../../../../../../docs/manualpages/SPACE/PetscSpaceSumSetNumSubspaces.html#PetscSpaceSumSetNumSubspaces">PetscSpaceSumSetNumSubspaces</a>(sp,Ns);
+<a name="line292">292: </a>  }
+<a name="line293">293: </a>  <font color="#4169E1">if</font> (!Ns &amp;&amp; Nv) <a href="../../../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)sp),PETSC_ERR_ARG_OUTOFRANGE,<font color="#666666">"Cannot have zero subspaces\n"</font>);
+
+<a name="line295">295: </a>  <font color="#4169E1">for</font> (i=0; i&lt;Ns; ++i) {
+<a name="line296">296: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>   sNv,sNc,iDeg,iMaxDeg;
+<a name="line297">297: </a>    <a href="../../../../../../docs/manualpages/FE/PetscSpace.html#PetscSpace">PetscSpace</a> si;
+
+<a name="line299">299: </a>    <a href="../../../../../../docs/manualpages/SPACE/PetscSpaceSumGetSubspace.html#PetscSpaceSumGetSubspace">PetscSpaceSumGetSubspace</a>(sp,i,&amp;si);
+<a name="line300">300: </a>    <a href="../../../../../../docs/manualpages/SPACE/PetscSpaceSetUp.html#PetscSpaceSetUp">PetscSpaceSetUp</a>(si);
+<a name="line301">301: </a>    <a href="../../../../../../docs/manualpages/SPACE/PetscSpaceGetNumVariables.html#PetscSpaceGetNumVariables">PetscSpaceGetNumVariables</a>(si,&amp;sNv);
+<a name="line302">302: </a>    <font color="#4169E1">if</font> (sNv != Nv) <a href="../../../../../../docs/manualpages/Sys/SETERRQ3.html#SETERRQ3">SETERRQ3</a>(<a href="../../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)sp),PETSC_ERR_ARG_WRONGSTATE,<font color="#666666">"Subspace %D has %D variables, space has %D.\n"</font>,i,sNv,Nv);
+<a name="line303">303: </a>    <a href="../../../../../../docs/manualpages/SPACE/PetscSpaceGetNumComponents.html#PetscSpaceGetNumComponents">PetscSpaceGetNumComponents</a>(si,&amp;sNc);
+<a name="line304">304: </a>    <font color="#4169E1">if</font> (i == 0 &amp;&amp; sNc == Nc) concatenate = <a href="../../../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line305">305: </a>    sum_Nc += sNc;
+<a name="line306">306: </a>    <a href="../../../../../../docs/manualpages/SPACE/PetscSpaceSumGetSubspace.html#PetscSpaceSumGetSubspace">PetscSpaceSumGetSubspace</a>(sp,i,&amp;si);
+<a name="line307">307: </a>    <a href="../../../../../../docs/manualpages/SPACE/PetscSpaceGetDegree.html#PetscSpaceGetDegree">PetscSpaceGetDegree</a>(si,&amp;iDeg,&amp;iMaxDeg);
+<a name="line308">308: </a>    deg     = <a href="../../../../../../docs/manualpages/Sys/PetscMax.html#PetscMax">PetscMax</a>(deg,iDeg);
+<a name="line309">309: </a>    maxDeg  = <a href="../../../../../../docs/manualpages/Sys/PetscMax.html#PetscMax">PetscMax</a>(maxDeg,iMaxDeg);
+<a name="line310">310: </a>  }
+
+<a name="line312">312: </a>  <font color="#4169E1">if</font> (concatenate) {
+<a name="line313">313: </a>    <font color="#4169E1">if</font> (sum_Nc != Nc) {
+<a name="line314">314: </a>      <a href="../../../../../../docs/manualpages/Sys/SETERRQ2.html#SETERRQ2">SETERRQ2</a>(<a href="../../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)sp),PETSC_ERR_ARG_OUTOFRANGE,
+<a name="line315">315: </a>               <font color="#666666">"Total number of subspace components (%D) does not match number of target space components (%D)."</font>,sum_Nc,Nc);
+<a name="line316">316: </a>    }
+<a name="line317">317: </a>  } <font color="#4169E1">else</font> {
+<a name="line318">318: </a>    <font color="#4169E1">if</font> (sum_Nc != Ns*Nc) <a href="../../../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>(
+<a name="line319">319: </a>                                   (<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)sp),PETSC_ERR_ARG_OUTOFRANGE,<font color="#666666">"Subspaces must have same number of components as the target space."</font>);
+<a name="line320">320: </a>  }
+
+<a name="line322">322: </a>  sp-&gt;degree       = deg;
+<a name="line323">323: </a>  sp-&gt;maxDegree    = maxDeg;
+<a name="line324">324: </a>  sum-&gt;concatenate = concatenate;
+<a name="line325">325: </a>  sum-&gt;setupCalled = <a href="../../../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>;
+<a name="line326">326: </a>  <font color="#4169E1">return</font>(0);
+<a name="line327">327: </a>}
+
+<a name="line329">329: </a><strong><font color="#4169E1"><a name="PetscSpaceSumView_Ascii"></a>static <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscSpaceSumView_Ascii(<a href="../../../../../../docs/manualpages/FE/PetscSpace.html#PetscSpace">PetscSpace</a> sp,<a href="../../../../../../docs/manualpages/Viewer/PetscViewer.html#PetscViewer">PetscViewer</a> v)</font></strong>
+<a name="line330">330: </a>{
+<a name="line331">331: </a>  PetscSpace_Sum *sum = (PetscSpace_Sum*)sp-&gt;data;
+<a name="line332">332: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>      concatenate = sum-&gt;concatenate;
+<a name="line333">333: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       i,Ns         = sum-&gt;numSumSpaces;
+
+<a name="line337">337: </a>  <font color="#4169E1">if</font> (concatenate) {
+<a name="line338">338: </a>    <a href="../../../../../../docs/manualpages/Viewer/PetscViewerASCIIPrintf.html#PetscViewerASCIIPrintf">PetscViewerASCIIPrintf</a>(v,<font color="#666666">"Sum space of %D concatenated subspaces\n"</font>,Ns);
+<a name="line339">339: </a>  } <font color="#4169E1">else</font> {
+<a name="line340">340: </a>    <a href="../../../../../../docs/manualpages/Viewer/PetscViewerASCIIPrintf.html#PetscViewerASCIIPrintf">PetscViewerASCIIPrintf</a>(v,<font color="#666666">"Sum space of %D subspaces\n"</font>,Ns);
+<a name="line341">341: </a>  }
+<a name="line342">342: </a>  <font color="#4169E1">for</font> (i=0; i&lt;Ns; ++i) {
+<a name="line343">343: </a>    <a href="../../../../../../docs/manualpages/Viewer/PetscViewerASCIIPushTab.html#PetscViewerASCIIPushTab">PetscViewerASCIIPushTab</a>(v);
+<a name="line344">344: </a>    <a href="../../../../../../docs/manualpages/SPACE/PetscSpaceView.html#PetscSpaceView">PetscSpaceView</a>(sum-&gt;sumspaces[i],v);
+<a name="line345">345: </a>    <a href="../../../../../../docs/manualpages/Viewer/PetscViewerASCIIPopTab.html#PetscViewerASCIIPopTab">PetscViewerASCIIPopTab</a>(v);
+<a name="line346">346: </a>  }
+<a name="line347">347: </a>  <font color="#4169E1">return</font>(0);
+<a name="line348">348: </a>}
+
+<a name="line350">350: </a><strong><font color="#4169E1"><a name="PetscSpaceView_Sum"></a>static <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscSpaceView_Sum(<a href="../../../../../../docs/manualpages/FE/PetscSpace.html#PetscSpace">PetscSpace</a> sp,<a href="../../../../../../docs/manualpages/Viewer/PetscViewer.html#PetscViewer">PetscViewer</a> viewer)</font></strong>
+<a name="line351">351: </a>{
+<a name="line352">352: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>      iascii;
+
+<a name="line356">356: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscObjectTypeCompare.html#PetscObjectTypeCompare">PetscObjectTypeCompare</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)viewer,<a href="../../../../../../docs/manualpages/Viewer/PETSCVIEWERASCII.html#PETSCVIEWERASCII">PETSCVIEWERASCII</a>,&amp;iascii);
+<a name="line357">357: </a>  <font color="#4169E1">if</font> (iascii) {
+<a name="line358">358: </a>    PetscSpaceSumView_Ascii(sp,viewer);
+<a name="line359">359: </a>  }
+<a name="line360">360: </a>  <font color="#4169E1">return</font>(0);
+<a name="line361">361: </a>}
+
+<a name="line363">363: </a><strong><font color="#4169E1"><a name="PetscSpaceDestroy_Sum"></a>static <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscSpaceDestroy_Sum(<a href="../../../../../../docs/manualpages/FE/PetscSpace.html#PetscSpace">PetscSpace</a> sp)</font></strong>
+<a name="line364">364: </a>{
+<a name="line365">365: </a>  PetscSpace_Sum *sum = (PetscSpace_Sum*)sp-&gt;data;
+<a name="line366">366: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       i,Ns   = sum-&gt;numSumSpaces;
+
+<a name="line370">370: </a>  <font color="#4169E1">for</font> (i=0; i&lt;Ns; ++i) {
+<a name="line371">371: </a>    <a href="../../../../../../docs/manualpages/SPACE/PetscSpaceDestroy.html#PetscSpaceDestroy">PetscSpaceDestroy</a>(&amp;sum-&gt;sumspaces[i]);
+<a name="line372">372: </a>  }
+<a name="line373">373: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(sum-&gt;sumspaces);
+<a name="line374">374: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscObjectComposeFunction.html#PetscObjectComposeFunction">PetscObjectComposeFunction</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)sp,<font color="#666666">"PetscSpaceSumSetSubspace_C"</font>,NULL);
+<a name="line375">375: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscObjectComposeFunction.html#PetscObjectComposeFunction">PetscObjectComposeFunction</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)sp,<font color="#666666">"PetscSpaceSumGetSubspace_C"</font>,NULL);
+<a name="line376">376: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscObjectComposeFunction.html#PetscObjectComposeFunction">PetscObjectComposeFunction</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)sp,<font color="#666666">"PetscSpaceSumSetNumSubspaces_C"</font>,NULL);
+<a name="line377">377: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscObjectComposeFunction.html#PetscObjectComposeFunction">PetscObjectComposeFunction</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)sp,<font color="#666666">"PetscSpaceSumGetNumSubspaces_C"</font>,NULL);
+<a name="line378">378: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(sum);
+<a name="line379">379: </a>  <font color="#4169E1">return</font>(0);
+<a name="line380">380: </a>}
+
+<a name="line382">382: </a><strong><font color="#4169E1"><a name="PetscSpaceGetDimension_Sum"></a>static <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscSpaceGetDimension_Sum(<a href="../../../../../../docs/manualpages/FE/PetscSpace.html#PetscSpace">PetscSpace</a> sp,<a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *dim)</font></strong>
+<a name="line383">383: </a>{
+<a name="line384">384: </a>  PetscSpace_Sum *sum = (PetscSpace_Sum*)sp-&gt;data;
+<a name="line385">385: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       i,d = 0,Ns = sum-&gt;numSumSpaces;
+
+<a name="line389">389: </a>  <a href="../../../../../../docs/manualpages/SPACE/PetscSpaceSetUp.html#PetscSpaceSetUp">PetscSpaceSetUp</a>(sp);
+
+<a name="line391">391: </a>  <font color="#4169E1">for</font> (i=0; i&lt;Ns; ++i) {
+<a name="line392">392: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> id;
+
+<a name="line394">394: </a>    <a href="../../../../../../docs/manualpages/SPACE/PetscSpaceGetDimension.html#PetscSpaceGetDimension">PetscSpaceGetDimension</a>(sum-&gt;sumspaces[i],&amp;id);
+<a name="line395">395: </a>    d   += id;
+<a name="line396">396: </a>  }
+
+<a name="line398">398: </a>  *dim = d;
+<a name="line399">399: </a>  <font color="#4169E1">return</font>(0);
+<a name="line400">400: </a>}
+
+<a name="line402">402: </a><strong><font color="#4169E1"><a name="PetscSpaceEvaluate_Sum"></a>static <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscSpaceEvaluate_Sum(<a href="../../../../../../docs/manualpages/FE/PetscSpace.html#PetscSpace">PetscSpace</a> sp,<a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> npoints,const <a href="../../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> points[],<a href="../../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> B[],<a href="../../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> D[],<a href="../../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> H[])</font></strong>
+<a name="line403">403: </a>{
+<a name="line404">404: </a>  PetscSpace_Sum *sum = (PetscSpace_Sum*)sp-&gt;data;
+<a name="line405">405: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>      concatenate = sum-&gt;concatenate;
+<a name="line406">406: </a>  <a href="../../../../../../docs/manualpages/DM/DM.html#DM">DM</a>             dm = sp-&gt;dm;
+<a name="line407">407: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       Nc = sp-&gt;Nc,Nv = sp-&gt;Nv,Ns = sum-&gt;numSumSpaces;
+<a name="line408">408: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       i,s,offset,ncoffset,pdimfull,numelB,numelD,numelH;
+<a name="line409">409: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>      *sB = NULL,*sD = NULL,*sH = NULL;
+
+<a name="line413">413: </a>  <font color="#4169E1">if</font> (!sum-&gt;setupCalled) {
+<a name="line414">414: </a>    <a href="../../../../../../docs/manualpages/SPACE/PetscSpaceSetUp.html#PetscSpaceSetUp">PetscSpaceSetUp</a>(sp);
+<a name="line415">415: </a>  }
+<a name="line416">416: </a>  <a href="../../../../../../docs/manualpages/SPACE/PetscSpaceGetDimension.html#PetscSpaceGetDimension">PetscSpaceGetDimension</a>(sp,&amp;pdimfull);
+<a name="line417">417: </a>  numelB = npoints*pdimfull*Nc;
+<a name="line418">418: </a>  numelD = numelB*Nv;
+<a name="line419">419: </a>  numelH = numelD*Nv;
+<a name="line420">420: </a>  <font color="#4169E1">if</font> (B || D || H) {
+<a name="line421">421: </a>    <a href="../../../../../../docs/manualpages/DM/DMGetWorkArray.html#DMGetWorkArray">DMGetWorkArray</a>(dm,numelB,<a href="../../../../../../docs/manualpages/Sys/MPIU_REAL.html#MPIU_REAL">MPIU_REAL</a>,&amp;sB);
+<a name="line422">422: </a>  }
+<a name="line423">423: </a>  <font color="#4169E1">if</font> (D || H) {
+<a name="line424">424: </a>    <a href="../../../../../../docs/manualpages/DM/DMGetWorkArray.html#DMGetWorkArray">DMGetWorkArray</a>(dm,numelD,<a href="../../../../../../docs/manualpages/Sys/MPIU_REAL.html#MPIU_REAL">MPIU_REAL</a>,&amp;sD);
+<a name="line425">425: </a>  }
+<a name="line426">426: </a>  <font color="#4169E1">if</font> (H) {
+<a name="line427">427: </a>    <a href="../../../../../../docs/manualpages/DM/DMGetWorkArray.html#DMGetWorkArray">DMGetWorkArray</a>(dm,numelH,<a href="../../../../../../docs/manualpages/Sys/MPIU_REAL.html#MPIU_REAL">MPIU_REAL</a>,&amp;sH);
+<a name="line428">428: </a>  }
+<a name="line429">429: </a>  <font color="#4169E1">if</font> (B)
+<a name="line430">430: </a>    <font color="#4169E1">for</font> (i=0; i&lt;numelB; ++i) B[i] = 0.;
+<a name="line431">431: </a>  <font color="#4169E1">if</font> (D)
+<a name="line432">432: </a>    <font color="#4169E1">for</font> (i=0; i&lt;numelD; ++i) D[i] = 0.;
+<a name="line433">433: </a>  <font color="#4169E1">if</font> (H)
+<a name="line434">434: </a>    <font color="#4169E1">for</font> (i=0; i&lt;numelH; ++i) H[i] = 0.;
+
+<a name="line436">436: </a>  <font color="#4169E1">for</font> (s=0,offset=0,ncoffset=0; s&lt;Ns; ++s) {
+<a name="line437">437: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> sNv,spdim,sNc,p;
+
+<a name="line439">439: </a>    <a href="../../../../../../docs/manualpages/SPACE/PetscSpaceGetNumVariables.html#PetscSpaceGetNumVariables">PetscSpaceGetNumVariables</a>(sum-&gt;sumspaces[s],&amp;sNv);
+<a name="line440">440: </a>    <a href="../../../../../../docs/manualpages/SPACE/PetscSpaceGetNumComponents.html#PetscSpaceGetNumComponents">PetscSpaceGetNumComponents</a>(sum-&gt;sumspaces[s],&amp;sNc);
+<a name="line441">441: </a>    <a href="../../../../../../docs/manualpages/SPACE/PetscSpaceGetDimension.html#PetscSpaceGetDimension">PetscSpaceGetDimension</a>(sum-&gt;sumspaces[s],&amp;spdim);
+<a name="line442">442: </a>    <font color="#4169E1">if</font> (offset + spdim &gt; pdimfull) <a href="../../../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>(
+<a name="line443">443: </a>                                             (<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)sp),PETSC_ERR_ARG_OUTOFRANGE,<font color="#666666">"Subspace dimensions exceed target space dimension.\n"</font>);
+<a name="line444">444: </a>    <a href="../../../../../../docs/manualpages/SPACE/PetscSpaceEvaluate.html#PetscSpaceEvaluate">PetscSpaceEvaluate</a>(sum-&gt;sumspaces[s],npoints,points,sB,sD,sH);
+<a name="line445">445: </a>    <font color="#4169E1">if</font> (B || D || H) {
+<a name="line446">446: </a>      <font color="#4169E1">for</font> (p=0; p&lt;npoints; ++p) {
+<a name="line447">447: </a>        <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> j;
+
+<a name="line449">449: </a>        <font color="#4169E1">for</font> (j=0; j&lt;spdim; ++j) {
+<a name="line450">450: </a>          <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> c;
+
+<a name="line452">452: </a>          <font color="#4169E1">for</font> (c=0; c&lt;sNc; ++c) {
+<a name="line453">453: </a>            <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> compoffset,BInd,sBInd;
+
+<a name="line455">455: </a>            compoffset = concatenate ? c+ncoffset : c;
+<a name="line456">456: </a>            BInd       = (p*pdimfull + j + offset)*Nc + compoffset;
+<a name="line457">457: </a>            sBInd      = (p*spdim + j)*sNc + c;
+<a name="line458">458: </a>            <font color="#4169E1">if</font> (B) B[BInd] += sB[sBInd];
+<a name="line459">459: </a>            <font color="#4169E1">if</font> (D || H) {
+<a name="line460">460: </a>              <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> v;
+
+<a name="line462">462: </a>              <font color="#4169E1">for</font> (v=0; v&lt;Nv; ++v) {
+<a name="line463">463: </a>                <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> DInd,sDInd;
+
+<a name="line465">465: </a>                DInd  = BInd*Nv + v;
+<a name="line466">466: </a>                sDInd = sBInd*Nv + v;
+<a name="line467">467: </a>                <font color="#4169E1">if</font> (D) D[DInd] +=sD[sDInd];
+<a name="line468">468: </a>                <font color="#4169E1">if</font> (H) {
+<a name="line469">469: </a>                  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> v2;
+
+<a name="line471">471: </a>                  <font color="#4169E1">for</font> (v2=0; v2&lt;Nv; ++v2) {
+<a name="line472">472: </a>                    <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> HInd,sHInd;
+
+<a name="line474">474: </a>                    HInd     = DInd*Nv + v2;
+<a name="line475">475: </a>                    sHInd    = sDInd*Nv + v2;
+<a name="line476">476: </a>                    H[HInd] += sH[sHInd];
+<a name="line477">477: </a>                  }
+<a name="line478">478: </a>                }
+<a name="line479">479: </a>              }
+<a name="line480">480: </a>            }
+<a name="line481">481: </a>          }
+<a name="line482">482: </a>        }
+<a name="line483">483: </a>      }
+<a name="line484">484: </a>    }
+<a name="line485">485: </a>    offset   += spdim;
+<a name="line486">486: </a>    ncoffset += sNc;
+<a name="line487">487: </a>  }
+
+<a name="line489">489: </a>  <font color="#4169E1">if</font> (H) {
+<a name="line490">490: </a>    <a href="../../../../../../docs/manualpages/DM/DMRestoreWorkArray.html#DMRestoreWorkArray">DMRestoreWorkArray</a>(dm,numelH,<a href="../../../../../../docs/manualpages/Sys/MPIU_REAL.html#MPIU_REAL">MPIU_REAL</a>,&amp;sH);
+<a name="line491">491: </a>  }
+<a name="line492">492: </a>  <font color="#4169E1">if</font> (D || H) {
+<a name="line493">493: </a>    <a href="../../../../../../docs/manualpages/DM/DMRestoreWorkArray.html#DMRestoreWorkArray">DMRestoreWorkArray</a>(dm,numelD,<a href="../../../../../../docs/manualpages/Sys/MPIU_REAL.html#MPIU_REAL">MPIU_REAL</a>,&amp;sD);
+<a name="line494">494: </a>  }
+<a name="line495">495: </a>  <font color="#4169E1">if</font> (B || D || H) {
+<a name="line496">496: </a>    <a href="../../../../../../docs/manualpages/DM/DMRestoreWorkArray.html#DMRestoreWorkArray">DMRestoreWorkArray</a>(dm,numelB,<a href="../../../../../../docs/manualpages/Sys/MPIU_REAL.html#MPIU_REAL">MPIU_REAL</a>,&amp;sB);
+<a name="line497">497: </a>  }
+<a name="line498">498: </a>  <font color="#4169E1">return</font>(0);
+<a name="line499">499: </a>}
+
+<a name="line501">501: </a><strong><font color="#4169E1"><a name="PetscSpaceInitialize_Sum"></a>static <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscSpaceInitialize_Sum(<a href="../../../../../../docs/manualpages/FE/PetscSpace.html#PetscSpace">PetscSpace</a> sp)</font></strong>
+<a name="line502">502: </a>{
+
+<a name="line506">506: </a>  sp-&gt;ops-&gt;setfromoptions = PetscSpaceSetFromOptions_Sum;
+<a name="line507">507: </a>  sp-&gt;ops-&gt;setup          = PetscSpaceSetUp_Sum;
+<a name="line508">508: </a>  sp-&gt;ops-&gt;view           = PetscSpaceView_Sum;
+<a name="line509">509: </a>  sp-&gt;ops-&gt;destroy        = PetscSpaceDestroy_Sum;
+<a name="line510">510: </a>  sp-&gt;ops-&gt;getdimension   = PetscSpaceGetDimension_Sum;
+<a name="line511">511: </a>  sp-&gt;ops-&gt;evaluate       = PetscSpaceEvaluate_Sum;
+
+<a name="line513">513: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscObjectComposeFunction.html#PetscObjectComposeFunction">PetscObjectComposeFunction</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)sp,<font color="#666666">"PetscSpaceSumGetNumSubspaces_C"</font>,PetscSpaceSumGetNumSubspaces_Sum);
+<a name="line514">514: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscObjectComposeFunction.html#PetscObjectComposeFunction">PetscObjectComposeFunction</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)sp,<font color="#666666">"PetscSpaceSumSetNumSubspaces_C"</font>,PetscSpaceSumSetNumSubspaces_Sum);
+<a name="line515">515: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscObjectComposeFunction.html#PetscObjectComposeFunction">PetscObjectComposeFunction</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)sp,<font color="#666666">"PetscSpaceSumGetSubspace_C"</font>,PetscSpaceSumGetSubspace_Sum);
+<a name="line516">516: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscObjectComposeFunction.html#PetscObjectComposeFunction">PetscObjectComposeFunction</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)sp,<font color="#666666">"PetscSpaceSumSetSubspace_C"</font>,PetscSpaceSumSetSubspace_Sum);
+<a name="line517">517: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscObjectComposeFunction.html#PetscObjectComposeFunction">PetscObjectComposeFunction</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)sp,<font color="#666666">"PetscSpaceSumGetConcatenate_C"</font>,PetscSpaceSumGetConcatenate_Sum);
+<a name="line518">518: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscObjectComposeFunction.html#PetscObjectComposeFunction">PetscObjectComposeFunction</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)sp,<font color="#666666">"PetscSpaceSumSetConcatenate_C"</font>,PetscSpaceSumSetConcatenate_Sum);
+<a name="line519">519: </a>  <font color="#4169E1">return</font>(0);
+<a name="line520">520: </a>}
+
+<a name="line522">522: </a><font color="#B22222">/*MC</font>
+<a name="line523">523: </a><font color="#B22222">  <a href="../../../../../../docs/manualpages/SPACE/PETSCSPACESUM.html#PETSCSPACESUM">PETSCSPACESUM</a> = "sum" - A <a href="../../../../../../docs/manualpages/FE/PetscSpace.html#PetscSpace">PetscSpace</a> object that encapsulates a sum of subspaces.</font>
+<a name="line524">524: </a><font color="#B22222">  That sum can either be direct or concatenate a concatenation.For example if A and B are spaces each with 2 components,</font>
+<a name="line525">525: </a><font color="#B22222">  the direct sum of A and B will also have 2 components while the concatenated sum will have 4 components.In both cases A and B must be defined over the</font>
+<a name="line526">526: </a><font color="#B22222">  same number of variables.</font>
+
+<a name="line528">528: </a><font color="#B22222">Level: intermediate</font>
+
+<a name="line530">530: </a><font color="#B22222">.seealso: <a href="../../../../../../docs/manualpages/FE/PetscSpaceType.html#PetscSpaceType">PetscSpaceType</a>, <a href="../../../../../../docs/manualpages/SPACE/PetscSpaceCreate.html#PetscSpaceCreate">PetscSpaceCreate</a>(), <a href="../../../../../../docs/manualpages/SPACE/PetscSpaceSetType.html#PetscSpaceSetType">PetscSpaceSetType</a>()</font>
+<a name="line531">531: </a><font color="#B22222">M*/</font>
+<a name="line532">532: </a><strong><font color="#4169E1"><a name="PetscSpaceCreate_Sum"></a>PETSC_EXTERN <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscSpaceCreate_Sum(<a href="../../../../../../docs/manualpages/FE/PetscSpace.html#PetscSpace">PetscSpace</a> sp)</font></strong>
+<a name="line533">533: </a>{
+<a name="line534">534: </a>  PetscSpace_Sum *sum;
+
+<a name="line539">539: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscNewLog.html#PetscNewLog">PetscNewLog</a>(sp,&amp;sum);
+<a name="line540">540: </a>  sp-&gt;data = sum;
+<a name="line541">541: </a>  PetscSpaceInitialize_Sum(sp);
+<a name="line542">542: </a>  <font color="#4169E1">return</font>(0);
+<a name="line543">543: </a>}
+
+<a name="line545">545: </a><strong><font color="#4169E1"><a name="PetscSpaceCreateSum"></a>PETSC_EXTERN <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscSpaceCreateSum(<a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> numSubspaces,const <a href="../../../../../../docs/manualpages/FE/PetscSpace.html#PetscSpace">PetscSpace</a> subspaces[],<a href="../../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> concatenate,<a href="../../../../../../docs/manualpages/FE/PetscSpace.html#PetscSpace">PetscSpace</a> *sumSpace)</font></strong>
+<a name="line546">546: </a>{
+<a name="line547">547: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       i,Nv,Nc = 0;
+
+<a name="line551">551: </a>  <font color="#4169E1">if</font> (sumSpace) {
+<a name="line552">552: </a>    <a href="../../../../../../docs/manualpages/SPACE/PetscSpaceDestroy.html#PetscSpaceDestroy">PetscSpaceDestroy</a>(sumSpace);
+<a name="line553">553: </a>  }
+<a name="line554">554: </a>  <a href="../../../../../../docs/manualpages/SPACE/PetscSpaceCreate.html#PetscSpaceCreate">PetscSpaceCreate</a>(<a href="../../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)subspaces[0]),sumSpace);
+<a name="line555">555: </a>  <a href="../../../../../../docs/manualpages/SPACE/PetscSpaceSetType.html#PetscSpaceSetType">PetscSpaceSetType</a>(*sumSpace,<a href="../../../../../../docs/manualpages/SPACE/PETSCSPACESUM.html#PETSCSPACESUM">PETSCSPACESUM</a>);
+<a name="line556">556: </a>  <a href="../../../../../../docs/manualpages/SPACE/PetscSpaceSumSetNumSubspaces.html#PetscSpaceSumSetNumSubspaces">PetscSpaceSumSetNumSubspaces</a>(*sumSpace,numSubspaces);
+<a name="line557">557: </a>  <a href="../../../../../../docs/manualpages/SPACE/PetscSpaceSumSetConcatenate.html#PetscSpaceSumSetConcatenate">PetscSpaceSumSetConcatenate</a>(*sumSpace,concatenate);
+<a name="line558">558: </a>  <font color="#4169E1">for</font> (i=0; i&lt;numSubspaces; ++i) {
+<a name="line559">559: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> sNc;
+
+<a name="line561">561: </a>    <a href="../../../../../../docs/manualpages/SPACE/PetscSpaceSumSetSubspace.html#PetscSpaceSumSetSubspace">PetscSpaceSumSetSubspace</a>(*sumSpace,i,subspaces[i]);
+<a name="line562">562: </a>    <a href="../../../../../../docs/manualpages/SPACE/PetscSpaceGetNumComponents.html#PetscSpaceGetNumComponents">PetscSpaceGetNumComponents</a>(subspaces[i],&amp;sNc);
+<a name="line563">563: </a>    <font color="#4169E1">if</font> (concatenate) Nc += sNc;
+<a name="line564">564: </a>    <font color="#4169E1">else</font> Nc = sNc;
+<a name="line565">565: </a>  }
+<a name="line566">566: </a>  <a href="../../../../../../docs/manualpages/SPACE/PetscSpaceGetNumVariables.html#PetscSpaceGetNumVariables">PetscSpaceGetNumVariables</a>(subspaces[0],&amp;Nv);
+<a name="line567">567: </a>  <a href="../../../../../../docs/manualpages/SPACE/PetscSpaceSetNumComponents.html#PetscSpaceSetNumComponents">PetscSpaceSetNumComponents</a>(*sumSpace,Nc);
+<a name="line568">568: </a>  <a href="../../../../../../docs/manualpages/SPACE/PetscSpaceSetNumVariables.html#PetscSpaceSetNumVariables">PetscSpaceSetNumVariables</a>(*sumSpace,Nv);
+<a name="line569">569: </a>  <a href="../../../../../../docs/manualpages/SPACE/PetscSpaceSetUp.html#PetscSpaceSetUp">PetscSpaceSetUp</a>(*sumSpace);
+
+<a name="line571">571: </a>  <font color="#4169E1">return</font>(0);
+<a name="line572">572: </a>}
+</pre>
+</body>
+
+</html>

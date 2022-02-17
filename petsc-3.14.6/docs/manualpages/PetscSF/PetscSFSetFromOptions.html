@@ -1,0 +1,55 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/PetscSF/PetscSFSetFromOptions.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>PetscSFSetFromOptions</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/PetscSF/PetscSFSetFromOptions.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="PetscSFSetFromOptions"><H1>PetscSFSetFromOptions</H1></A>
+set <A HREF="../PetscSF/PetscSF.html#PetscSF">PetscSF</A> options using the options database 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscsf.h" 
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../PetscSF/PetscSFSetFromOptions.html#PetscSFSetFromOptions">PetscSFSetFromOptions</A>(<A HREF="../PetscSF/PetscSF.html#PetscSF">PetscSF</A> sf)
+</PRE>
+Logically Collective
+<P>
+<H3><FONT COLOR="#CC3333">Input Arguments</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>sf </B></TD><TD>- star forest
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Options Database Keys</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>-sf_type               </B></TD><TD>- implementation type, see <A HREF="../PetscSF/PetscSFSetType.html#PetscSFSetType">PetscSFSetType</A>()
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>-sf_rank_order         </B></TD><TD>- sort composite points for gathers and scatters in rank order, gathers are non-deterministic otherwise
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>-sf_use_default_stream </B></TD><TD>- Assume callers of SF computed the input root/leafdata with the default cuda stream. SF will also
+use the default stream to process data. Therefore, no stream synchronization is needed between SF and its caller (default: true).
+If true, this option only works with -use_gpu_aware_mpi 1.
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>-sf_use_stream_aware_mpi  </B></TD><TD>- Assume the underlying MPI is cuda-stream aware and SF won't sync streams for send/recv buffers passed to MPI (default: false).
+If true, this option only works with -use_gpu_aware_mpi 1.
+</TD></TR>
+<P>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>-sf_backend cuda | kokkos </B></TD><TD>- Select the device backend SF uses. Currently SF has two backends: cuda and Kokkos.
+On CUDA devices, one can choose cuda or kokkos with the default being cuda. On other devices,
+the only available is kokkos.
+</TD></TR></TABLE>
+<P>
+
+<P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>intermediate<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/vec/is/sf/interface/sf.c.html#PetscSFSetFromOptions">src/vec/is/sf/interface/sf.c</A>
+<P><H3><FONT COLOR="#CC3333">Examples</FONT></H3>
+<A HREF="../../../src/vec/is/sf/tutorials/ex1.c.html">src/vec/is/sf/tutorials/ex1.c.html</A><BR>
+<A HREF="../../../src/vec/is/sf/tutorials/ex2.c.html">src/vec/is/sf/tutorials/ex2.c.html</A><BR>
+<A HREF="../../../src/vec/is/sf/tutorials/ex1f.F90.html">src/vec/is/sf/tutorials/ex1f.F90.html</A><BR>
+<P><H3><FONT COLOR="CC3333">Implementations</FONT></H3><A HREF="../../../src/vec/is/sf/impls/window/sfwindow.c.html#PetscSFSetFromOptions_Window">PetscSFSetFromOptions_Window in src/vec/is/sf/impls/window/sfwindow.c</A><BR>
+<BR><A HREF="./index.html">Index of all PetscSF routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

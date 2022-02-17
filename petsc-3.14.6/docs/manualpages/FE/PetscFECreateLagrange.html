@@ -1,0 +1,52 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/FE/PetscFECreateLagrange.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>PetscFECreateLagrange</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/FE/PetscFECreateLagrange.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="PetscFECreateLagrange"><H1>PetscFECreateLagrange</H1></A>
+Create a <A HREF="../FE/PetscFE.html#PetscFE">PetscFE</A> for the basic Lagrange space of degree k 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscfe.h" 
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../FE/PetscFECreateLagrange.html#PetscFECreateLagrange">PetscFECreateLagrange</A>(<A HREF="../Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</A> comm, <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> dim, <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> Nc, <A HREF="../Sys/PetscBool.html#PetscBool">PetscBool</A> isSimplex, <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> k, <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> qorder, <A HREF="../FE/PetscFE.html#PetscFE">PetscFE</A> *fem)
+</PRE>
+Collective
+<P>
+<H3><FONT COLOR="#CC3333">Input Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>comm      </B></TD><TD>- The MPI comm
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>dim       </B></TD><TD>- The spatial dimension
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>Nc        </B></TD><TD>- The number of components
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>isSimplex </B></TD><TD>- Flag for simplex reference cell, otherwise its a tensor product
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>k         </B></TD><TD>- The degree k of the space
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>qorder    </B></TD><TD>- The quadrature order or <A HREF="../Sys/PETSC_DETERMINE.html#PETSC_DETERMINE">PETSC_DETERMINE</A> to use <A HREF="../FE/PetscSpace.html#PetscSpace">PetscSpace</A> polynomial degree
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Output Parameter</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>fem       </B></TD><TD>- The <A HREF="../FE/PetscFE.html#PetscFE">PetscFE</A> object
+</TD></TR></TABLE>
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">Notes</FONT></H3>
+For simplices, this element is the space of maximum polynomial degree k, otherwise it is a tensor product of 1D polynomials, each with maximal degree k.
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../FE/PetscFECreate.html#PetscFECreate">PetscFECreate</A>(), <A HREF="../SPACE/PetscSpaceCreate.html#PetscSpaceCreate">PetscSpaceCreate</A>(), <A HREF="../DUALSPACE/PetscDualSpaceCreate.html#PetscDualSpaceCreate">PetscDualSpaceCreate</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>beginner<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/dm/dt/fe/interface/fe.c.html#PetscFECreateLagrange">src/dm/dt/fe/interface/fe.c</A>
+<BR><A HREF="./index.html">Index of all FE routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

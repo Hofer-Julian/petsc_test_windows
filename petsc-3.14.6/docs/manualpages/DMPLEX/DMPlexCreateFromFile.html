@@ -1,0 +1,63 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DMPLEX/DMPlexCreateFromFile.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>DMPlexCreateFromFile</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/DMPLEX/DMPlexCreateFromFile.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="DMPlexCreateFromFile"><H1>DMPlexCreateFromFile</H1></A>
+This takes a filename and produces a <A HREF="../DM/DM.html#DM">DM</A> 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscdmplex.h"   
+#include "petscdmplex.h"   
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../DMPLEX/DMPlexCreateFromFile.html#DMPlexCreateFromFile">DMPlexCreateFromFile</A>(<A HREF="../Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</A> comm, const char filename[], <A HREF="../Sys/PetscBool.html#PetscBool">PetscBool</A> interpolate, <A HREF="../DM/DM.html#DM">DM</A> *dm)
+</PRE>
+<H3><FONT COLOR="#CC3333">Input Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>comm </B></TD><TD>- The communicator
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>filename </B></TD><TD>- A file name
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>interpolate </B></TD><TD>- Flag to create intermediate mesh pieces (edges, faces)
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Output Parameter</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>dm </B></TD><TD>- The <A HREF="../DM/DM.html#DM">DM</A>
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Options Database Keys</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>-dm_plex_create_from_hdf5_xdmf </B></TD><TD>- use the <A HREF="../Viewer/PetscViewerFormat.html#PetscViewerFormat">PETSC_VIEWER_HDF5_XDMF</A> format for reading HDF5
+</TD></TR></TABLE>
+<P>
+Use -dm_plex_create_ prefix to pass options to the internal <A HREF="../Viewer/PetscViewer.html#PetscViewer">PetscViewer</A>, e.g.
+<pre>
+-dm_plex_create_viewer_hdf5_collective
+</pre>
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../DMPLEX/DMPlexCreateFromDAG.html#DMPlexCreateFromDAG">DMPlexCreateFromDAG</A>(), <A HREF="../DMPLEX/DMPlexCreateFromCellListPetsc.html#DMPlexCreateFromCellListPetsc">DMPlexCreateFromCellListPetsc</A>(), <A HREF="../DMPLEX/DMPlexCreate.html#DMPlexCreate">DMPlexCreate</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>beginner<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/dm/impls/plex/plexcreate.c.html#DMPlexCreateFromFile">src/dm/impls/plex/plexcreate.c</A>
+<P><H3><FONT COLOR="#CC3333">Examples</FONT></H3>
+<A HREF="../../../src/dm/impls/plex/tutorials/ex2.c.html">src/dm/impls/plex/tutorials/ex2.c.html</A><BR>
+<A HREF="../../../src/dm/impls/plex/tutorials/ex5.c.html">src/dm/impls/plex/tutorials/ex5.c.html</A><BR>
+<A HREF="../../../src/dm/impls/plex/tutorials/ex9.c.html">src/dm/impls/plex/tutorials/ex9.c.html</A><BR>
+<A HREF="../../../src/dm/label/tutorials/ex1.c.html">src/dm/label/tutorials/ex1.c.html</A><BR>
+<A HREF="../../../src/dm/label/tutorials/ex1f90.F90.html">src/dm/label/tutorials/ex1f90.F90.html</A><BR>
+<A HREF="../../../src/snes/tutorials/ex12.c.html">src/snes/tutorials/ex12.c.html</A><BR>
+<A HREF="../../../src/snes/tutorials/ex62.c.html">src/snes/tutorials/ex62.c.html</A><BR>
+<A HREF="../../../src/ts/tutorials/ex11.c.html">src/ts/tutorials/ex11.c.html</A><BR>
+<A HREF="../../../src/ts/tutorials/ex48.c.html">src/ts/tutorials/ex48.c.html</A><BR>
+<A HREF="../../../src/ts/tutorials/ex52.c.html">src/ts/tutorials/ex52.c.html</A><BR>
+<BR><A HREF="./index.html">Index of all DMPLEX routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

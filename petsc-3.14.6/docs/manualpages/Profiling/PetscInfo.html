@@ -1,0 +1,118 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Profiling/PetscInfo.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>PetscInfo</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/Profiling/PetscInfo.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="PetscInfo"><H1>PetscInfo</H1></A>
+Logs informative data 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include &lt;petscsys.h&gt;
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../Profiling/PetscInfo.html#PetscInfo">PetscInfo</A>(<A HREF="../Sys/PetscObject.html#PetscObject">PetscObject</A> obj, const char message[])
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> PetscInfo1(<A HREF="../Sys/PetscObject.html#PetscObject">PetscObject</A> obj, const char formatmessage[],arg1)
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> PetscInfo2(<A HREF="../Sys/PetscObject.html#PetscObject">PetscObject</A> obj, const char formatmessage[],arg1,arg2)
+...
+</PRE>
+Collective on obj
+<P>
+<H3><FONT COLOR="#CC3333">Input Parameter</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>obj </B></TD><TD>- object most closely associated with the logging statement or NULL
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>message </B></TD><TD>- logging message
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>formatmessage </B></TD><TD>- logging message using standard "printf" format
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>arg1, arg2, ... </B></TD><TD>- arguments of the format
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Notes</FONT></H3>
+<A HREF="../Profiling/PetscInfo.html#PetscInfo">PetscInfo</A>() prints only from the first processor in the communicator of obj.
+If obj is NULL, the <A HREF="../Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</A> communicator is used, i.e. every rank of <A HREF="../Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</A> prints the message.
+<P>
+Extent of the printed messages can be controlled using the option database key -info as follows.
+<P>
+<pre>
+  -info [filename][:[~]&lt;list,of,classnames&gt;[:[~]self]]
+</pre>
+<P>
+No filename means standard output PETSC_STDOUT is used.
+<P>
+The optional &lt;list,of,classnames&gt; is a comma separated list of enabled classes, e.g. vec,mat,ksp.
+If this list is not specified, all classes are enabled.
+Prepending the list with ~ means inverted selection, i.e. all classes except the listed are enabled.
+A special classname sys relates to <A HREF="../Profiling/PetscInfo.html#PetscInfo">PetscInfo</A>() with obj being NULL.
+<P>
+The optional self keyword specifies that <A HREF="../Profiling/PetscInfo.html#PetscInfo">PetscInfo</A>() is enabled only for communicator size = 1 (e.g. <A HREF="../Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</A>), i.e. only <A HREF="../Profiling/PetscInfo.html#PetscInfo">PetscInfo</A>() calls which print from every rank of <A HREF="../Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</A> are enabled.
+By contrast, ~self means that <A HREF="../Profiling/PetscInfo.html#PetscInfo">PetscInfo</A>() is enabled only for communicator size &gt; 1 (e.g. <A HREF="../Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</A>), i.e. those <A HREF="../Profiling/PetscInfo.html#PetscInfo">PetscInfo</A>() calls which print from every rank of <A HREF="../Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</A> are disabled.
+<P>
+All classname/self matching is case insensitive. Filename is case sensitive.
+<P>
+<H3><FONT COLOR="#CC3333">Example of Usage</FONT></H3>
+<pre>
+    <A HREF="../Mat/Mat.html#Mat">Mat</A> A;
+</pre>
+<pre>
+    <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> alpha;
+</pre>
+<pre>
+    ...
+</pre>
+<pre>
+    PetscInfo1(A,"Matrix uses parameter alpha=%D\n",alpha);
+</pre>
+<P>
+<H3><FONT COLOR="#CC3333">Options Examples</FONT></H3>
+Each call of the form
+<pre>
+    <A HREF="../Profiling/PetscInfo.html#PetscInfo">PetscInfo</A>(obj, msg);
+</pre>
+<pre>
+    PetscInfo1(obj, msg, arg1);
+</pre>
+<pre>
+    PetscInfo2(obj, msg, arg1, arg2);
+</pre>
+is evaluated as follows.
+<pre>
+    -info or -info :: prints msg to PETSC_STDOUT, for any obj regardless class or communicator
+</pre>
+<pre>
+    -info :mat:self prints msg to PETSC_STDOUT only if class of obj is <A HREF="../Mat/Mat.html#Mat">Mat</A>, and its communicator has size = 1
+</pre>
+<pre>
+    -info myInfoFileName:~vec:~self prints msg to file named myInfoFileName, only if the obj's class is NULL or other than <A HREF="../Vec/Vec.html#Vec">Vec</A>, and obj's communicator has size &gt; 1
+</pre>
+<pre>
+    -info :sys prints to PETSC_STDOUT only if obj is NULL
+</pre>
+Note that
+<pre>
+    -info :sys:~self
+</pre>
+deactivates all info messages because sys means obj = NULL which implies <A HREF="../Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</A> but ~self filters out everything on <A HREF="../Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</A>.
+<P>
+<H3><FONT COLOR="#CC3333">Fortran Note</FONT></H3>
+This function does not take the obj argument, there is only the <A HREF="../Profiling/PetscInfo.html#PetscInfo">PetscInfo</A>()
+version, not PetscInfo1() etc.
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../Profiling/PetscInfoAllow.html#PetscInfoAllow">PetscInfoAllow</A>(), <A HREF="../Profiling/PetscInfoSetFromOptions.html#PetscInfoSetFromOptions">PetscInfoSetFromOptions</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>intermediate<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/sys/info/verboseinfo.c.html#PetscInfo">src/sys/info/verboseinfo.c</A>
+<P><H3><FONT COLOR="#CC3333">Examples</FONT></H3>
+<A HREF="../../../src/sys/tutorials/ex3f.F.html">src/sys/tutorials/ex3f.F.html</A><BR>
+<A HREF="../../../src/ksp/ksp/tutorials/ex72.c.html">src/ksp/ksp/tutorials/ex72.c.html</A><BR>
+<A HREF="../../../src/ksp/ksp/tutorials/ex73.c.html">src/ksp/ksp/tutorials/ex73.c.html</A><BR>
+<A HREF="../../../src/ts/tutorials/ex11.c.html">src/ts/tutorials/ex11.c.html</A><BR>
+<BR><A HREF="./index.html">Index of all Profiling routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

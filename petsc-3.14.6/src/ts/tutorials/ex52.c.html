@@ -1,0 +1,398 @@
+<center><a href="ex52.c">Actual source code: ex52.c</a></center><br>
+
+<html>
+<head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/src/ts/tutorials/ex52.c.html" />
+<title></title>
+<meta name="generator" content="c2html 0.9.4">
+<meta name="date" content="2021-03-30T16:51:53+00:00">
+</head>
+
+<body bgcolor="#FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 src/ts/tutorials/ex52.c.html "><small>Report Typos and Errors</small></a></div>
+<pre width="80">
+<a name="line1">  1: </a>static char help[] = <font color="#666666">"Simple Advection-diffusion equation solved using FVM in <a href="../../../docs/manualpages/DMPLEX/DMPLEX.html#DMPLEX">DMPLEX</a>\n"</font>;
+
+<a name="line3">  3: </a><font color="#B22222">/*</font>
+<a name="line4">  4: </a><font color="#B22222">   Solves the simple advection equation given by</font>
+
+<a name="line6">  6: </a><font color="#B22222">   q_t + u (q_x) + v (q_y) - D (q_xx + q_yy) = 0 using FVM and First Order Upwind discretization.</font>
+
+<a name="line8">  8: </a><font color="#B22222">   with a user defined initial condition.</font>
+
+<a name="line10"> 10: </a><font color="#B22222">   with dirichlet/neumann conditions on the four boundaries of the domain.</font>
+
+<a name="line12"> 12: </a><font color="#B22222">   User can define the mesh parameters either in the command line or inside</font>
+<a name="line13"> 13: </a><font color="#B22222">   the ProcessOptions() routine.</font>
+
+<a name="line15"> 15: </a><font color="#B22222">   Contributed by: Mukkund Sunjii, Domenico Lahaye</font>
+<a name="line16"> 16: </a><font color="#B22222">*/</font>
+
+<a name="line18"> 18: </a>#include <A href="../../../include/petscdmplex.h.html">&lt;petscdmplex.h&gt;</A>
+<a name="line19"> 19: </a>#include <A href="../../../include/petscts.h.html">&lt;petscts.h&gt;</A>
+<a name="line20"> 20: </a>#include <A href="../../../include/petscblaslapack.h.html">&lt;petscblaslapack.h&gt;</A>
+
+<a name="line22"> 22: </a><font color="#A020F0">#if defined(PETSC_HAVE_CGNS)</font>
+<a name="line23"> 23: </a><strong><font color="#228B22">#undef I</font></strong>
+<a name="line24"> 24: </a><font color="#A020F0">#include &lt;cgnslib.h&gt;</font>
+<a name="line25"> 25: </a><font color="#A020F0">#endif</font>
+<a name="line26"> 26: </a><font color="#B22222">/*</font>
+<a name="line27"> 27: </a><font color="#B22222">   User-defined routines</font>
+<a name="line28"> 28: </a><font color="#B22222">*/</font>
+<a name="line29"> 29: </a><strong><font color="#4169E1">extern <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> FormFunction(<a href="../../../docs/manualpages/TS/TS.html#TS">TS</a>, <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>, <a href="../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a>, <a href="../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a>, void *), FormInitialSolution(<a href="../../../docs/manualpages/DM/DM.html#DM">DM</a>, <a href="../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a>)</font></strong>;
+<a name="line30"> 30: </a><strong><font color="#4169E1">extern <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MyTSMonitor(<a href="../../../docs/manualpages/TS/TS.html#TS">TS</a>, <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>, <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>, <a href="../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a>, void *)</font></strong>;
+<a name="line31"> 31: </a><strong><font color="#4169E1">extern <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MySNESMonitor(<a href="../../../docs/manualpages/SNES/SNES.html#SNES">SNES</a>, <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>, <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>, PetscViewerAndFormat *)</font></strong>;
+
+<a name="line33"> 33: </a><font color="#B22222">/* Defining the usr defined context */</font>
+<a name="line34"> 34: </a><font color="#4169E1">typedef</font> <font color="#4169E1">struct</font> {
+<a name="line35"> 35: </a>    <a href="../../../docs/manualpages/DM/DM.html#DM">DM</a>          da;
+<a name="line36"> 36: </a>    <a href="../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>   interpolate;                  <font color="#B22222">/* Generate intermediate mesh elements */</font>
+<a name="line37"> 37: </a>    char        filename[PETSC_MAX_PATH_LEN]; <font color="#B22222">/* Mesh filename */</font>
+<a name="line38"> 38: </a>    <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>    dim;
+<a name="line39"> 39: </a>    <a href="../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> diffusion;
+<a name="line40"> 40: </a>    <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>   u, v;
+<a name="line41"> 41: </a>    <a href="../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> delta_x, delta_y;
+<a name="line42"> 42: </a>    <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>    cells[2];
+<a name="line43"> 43: </a>} AppCtx;
+
+<a name="line45"> 45: </a><font color="#B22222">/* Options for the scenario */</font>
+<a name="line46"> 46: </a><strong><font color="#4169E1"><a name="ProcessOptions"></a>static <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> ProcessOptions(<a href="../../../docs/manualpages/Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</a> comm, AppCtx *options)</font></strong>
+<a name="line47"> 47: </a>{
+
+<a name="line51"> 51: </a>    options-&gt;interpolate = <a href="../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>;
+<a name="line52"> 52: </a>    options-&gt;filename[0] = '\0';
+<a name="line53"> 53: </a>    options-&gt;dim = 2;
+<a name="line54"> 54: </a>    options-&gt;u = 2.5;
+<a name="line55"> 55: </a>    options-&gt;v = 0.0;
+<a name="line56"> 56: </a>    options-&gt;cells[0] = 20;
+<a name="line57"> 57: </a>    options-&gt;cells[1] = 20;
+<a name="line58"> 58: </a>    options-&gt;diffusion = 0.0;
+
+<a name="line60"> 60: </a>    <a href="../../../docs/manualpages/Sys/PetscOptionsBegin.html#PetscOptionsBegin">PetscOptionsBegin</a>(comm, <font color="#666666">""</font>, <font color="#666666">"Meshing Problem Options"</font>, <font color="#666666">"<a href="../../../docs/manualpages/DMPLEX/DMPLEX.html#DMPLEX">DMPLEX</a>"</font>);
+<a name="line61"> 61: </a>    <a href="../../../docs/manualpages/Sys/PetscOptionsBool.html#PetscOptionsBool">PetscOptionsBool</a>(<font color="#666666">"-interpolate"</font>, <font color="#666666">"Generate intermediate mesh elements"</font>, <font color="#666666">"advection_DMPLEX.c"</font>,options-&gt;interpolate, &amp;options-&gt;interpolate, NULL);
+<a name="line62"> 62: </a>    <a href="../../../docs/manualpages/Sys/PetscOptionsString.html#PetscOptionsString">PetscOptionsString</a>(<font color="#666666">"-filename"</font>, <font color="#666666">"The mesh file"</font>, <font color="#666666">"advection_DMPLEX.c"</font>, options-&gt;filename, options-&gt;filename, <font color="#4169E1">sizeof</font>(options-&gt;filename), NULL);
+<a name="line63"> 63: </a>    <a href="../../../docs/manualpages/Sys/PetscOptionsRangeInt.html#PetscOptionsRangeInt">PetscOptionsRangeInt</a>(<font color="#666666">"-dim"</font>, <font color="#666666">"Problem dimension used for the non-file mesh."</font>, <font color="#666666">"ex7.c"</font>, options-&gt;dim, &amp;options-&gt;dim, NULL,1,3);
+<a name="line64"> 64: </a>    <a href="../../../docs/manualpages/Sys/PetscOptionsReal.html#PetscOptionsReal">PetscOptionsReal</a>(<font color="#666666">"-u"</font>, <font color="#666666">"The x component of the convective coefficient"</font>, <font color="#666666">"advection_DMPLEX.c"</font>, options-&gt;u, &amp;options-&gt;u, NULL);
+<a name="line65"> 65: </a>    <a href="../../../docs/manualpages/Sys/PetscOptionsReal.html#PetscOptionsReal">PetscOptionsReal</a>(<font color="#666666">"-v"</font>, <font color="#666666">"The y component of the convective coefficient"</font>, <font color="#666666">"advection_DMPLEX.c"</font>, options-&gt;v, &amp;options-&gt;v, NULL);
+<a name="line66"> 66: </a>    <a href="../../../docs/manualpages/Sys/PetscOptionsScalar.html#PetscOptionsScalar">PetscOptionsScalar</a>(<font color="#666666">"-diffus"</font>, <font color="#666666">"The diffusive coefficient"</font>, <font color="#666666">"advection_DMPLEX.c"</font>, options-&gt;diffusion, &amp;options-&gt;diffusion, NULL);
+<a name="line67"> 67: </a>    <a href="../../../docs/manualpages/Sys/PetscOptionsEnd.html#PetscOptionsEnd">PetscOptionsEnd</a>();
+<a name="line68"> 68: </a>    <font color="#4169E1">return</font>(0);
+<a name="line69"> 69: </a>}
+
+<a name="line71"> 71: </a><font color="#B22222">/*</font>
+<a name="line72"> 72: </a><font color="#B22222">  User can provide the file containing the mesh.</font>
+<a name="line73"> 73: </a><font color="#B22222">  Or can generate the mesh using <a href="../../../docs/manualpages/DMPLEX/DMPlexCreateBoxMesh.html#DMPlexCreateBoxMesh">DMPlexCreateBoxMesh</a> with the specified options.</font>
+<a name="line74"> 74: </a><font color="#B22222">*/</font>
+<a name="line75"> 75: </a><strong><font color="#4169E1"><a name="CreateMesh"></a>static <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> CreateMesh(<a href="../../../docs/manualpages/Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</a> comm, AppCtx *user, <a href="../../../docs/manualpages/DM/DM.html#DM">DM</a> *dm)</font></strong>
+<a name="line76"> 76: </a>{
+<a name="line77"> 77: </a>    size_t len;
+<a name="line80"> 80: </a>    <a href="../../../docs/manualpages/Sys/PetscStrlen.html#PetscStrlen">PetscStrlen</a>(user-&gt;filename, &amp;len);
+<a name="line81"> 81: </a>    <font color="#4169E1">if</font> (!len) {
+<a name="line82"> 82: </a>        <a href="../../../docs/manualpages/DM/DMLabel.html#DMLabel">DMLabel</a> label;
+<a name="line83"> 83: </a>        <a href="../../../docs/manualpages/DMPLEX/DMPlexCreateBoxMesh.html#DMPlexCreateBoxMesh">DMPlexCreateBoxMesh</a>(comm, user-&gt;dim, <a href="../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>, user-&gt;cells, NULL, NULL, NULL, user-&gt;interpolate, dm);
+<a name="line84"> 84: </a>        <font color="#B22222">/* Mark boundary and set BC */</font>
+<a name="line85"> 85: </a>        <a href="../../../docs/manualpages/DM/DMCreateLabel.html#DMCreateLabel">DMCreateLabel</a>(*dm, <font color="#666666">"boundary"</font>);
+<a name="line86"> 86: </a>        <a href="../../../docs/manualpages/DM/DMGetLabel.html#DMGetLabel">DMGetLabel</a>(*dm, <font color="#666666">"boundary"</font>, &amp;label);
+<a name="line87"> 87: </a>        <a href="../../../docs/manualpages/DMPLEX/DMPlexMarkBoundaryFaces.html#DMPlexMarkBoundaryFaces">DMPlexMarkBoundaryFaces</a>(*dm, 1, label);
+<a name="line88"> 88: </a>        <a href="../../../docs/manualpages/DMPLEX/DMPlexLabelComplete.html#DMPlexLabelComplete">DMPlexLabelComplete</a>(*dm, label);
+<a name="line89"> 89: </a>    } <font color="#4169E1">else</font> {
+<a name="line90"> 90: </a>        <a href="../../../docs/manualpages/DMPLEX/DMPlexCreateFromFile.html#DMPlexCreateFromFile">DMPlexCreateFromFile</a>(comm, user-&gt;filename, user-&gt;interpolate, dm);
+<a name="line91"> 91: </a>    }
+<a name="line92"> 92: </a>    <a href="../../../docs/manualpages/Sys/PetscObjectSetName.html#PetscObjectSetName">PetscObjectSetName</a>((<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>) * dm, <font color="#666666">"Mesh"</font>);
+<a name="line93"> 93: </a>    <a href="../../../docs/manualpages/DM/DMSetFromOptions.html#DMSetFromOptions">DMSetFromOptions</a>(*dm);
+<a name="line94"> 94: </a>    <a href="../../../docs/manualpages/DM/DMViewFromOptions.html#DMViewFromOptions">DMViewFromOptions</a>(*dm, NULL, <font color="#666666">"-dm_view"</font>);
+<a name="line95"> 95: </a>    <font color="#4169E1">return</font>(0);
+<a name="line96"> 96: </a>}
+
+<a name="line98"> 98: </a>    <font color="#B22222">/* This routine is responsible for defining the local solution vector x</font>
+<a name="line99"> 99: </a><font color="#B22222">    with a given initial solution.</font>
+<a name="line100">100: </a><font color="#B22222">    The initial solution can be modified accordingly inside the loops.</font>
+<a name="line101">101: </a><font color="#B22222">    No need for a local vector because there is exchange of information</font>
+<a name="line102">102: </a><font color="#B22222">    across the processors. Unlike for FormFunction which depends on the neighbours */</font>
+<a name="line103">103: </a><strong><font color="#4169E1"><a name="FormInitialSolution"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> FormInitialSolution(<a href="../../../docs/manualpages/DM/DM.html#DM">DM</a> da, <a href="../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> U)</font></strong>
+<a name="line104">104: </a>{
+<a name="line106">106: </a>    <a href="../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>    *u;
+<a name="line107">107: </a>    <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       cell, cStart, cEnd;
+<a name="line108">108: </a>    <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>      cellvol, centroid[3], normal[3];
+
+<a name="line111">111: </a>    <font color="#B22222">/* Get pointers to vector data */</font>
+<a name="line112">112: </a>    <a href="../../../docs/manualpages/Vec/VecGetArray.html#VecGetArray">VecGetArray</a>(U, &amp;u);
+<a name="line113">113: </a>    <font color="#B22222">/* Get local grid boundaries */</font>
+<a name="line114">114: </a>    <a href="../../../docs/manualpages/DMPLEX/DMPlexGetHeightStratum.html#DMPlexGetHeightStratum">DMPlexGetHeightStratum</a>(da, 0, &amp;cStart, &amp;cEnd);
+<a name="line115">115: </a>    <font color="#B22222">/* Assigning the values at the cell centers based on x and y directions */</font>
+<a name="line116">116: </a>    <font color="#4169E1">for</font> (cell = cStart; cell &lt; cEnd; cell++) {
+<a name="line117">117: </a>        <a href="../../../docs/manualpages/DMPLEX/DMPlexComputeCellGeometryFVM.html#DMPlexComputeCellGeometryFVM">DMPlexComputeCellGeometryFVM</a>(da, cell, &amp;cellvol, centroid, normal);
+<a name="line118">118: </a>        <font color="#4169E1">if</font> (centroid[0] &gt; 0.9 &amp;&amp; centroid[0] &lt; 0.95) {
+<a name="line119">119: </a>            <font color="#4169E1">if</font> (centroid[1] &gt; 0.9 &amp;&amp; centroid[1] &lt; 0.95) u[cell] = 2.0;
+<a name="line120">120: </a>        }
+<a name="line121">121: </a>        <font color="#4169E1">else</font> u[cell] = 0;
+<a name="line122">122: </a>    }
+<a name="line123">123: </a>    <a href="../../../docs/manualpages/Vec/VecRestoreArray.html#VecRestoreArray">VecRestoreArray</a>(U, &amp;u);
+<a name="line124">124: </a>    <font color="#4169E1">return</font>(0);
+<a name="line125">125: </a>}
+
+<a name="line127">127: </a><strong><font color="#4169E1"><a name="MyTSMonitor"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MyTSMonitor(<a href="../../../docs/manualpages/TS/TS.html#TS">TS</a> ts, <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> step, <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> ptime, <a href="../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> v, void *ctx)</font></strong>
+<a name="line128">128: </a>{
+<a name="line130">130: </a>    <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>      norm;
+<a name="line131">131: </a>    <a href="../../../docs/manualpages/Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</a>       comm;
+
+<a name="line134">134: </a>    <font color="#4169E1">if</font> (step &lt; 0) <font color="#4169E1">return</font>(0); <font color="#B22222">/* step of -1 indicates an interpolated solution */</font>
+<a name="line135">135: </a>    <a href="../../../docs/manualpages/Vec/VecNorm.html#VecNorm">VecNorm</a>(v, <a href="../../../docs/manualpages/Vec/NORM_2.html#NORM_2">NORM_2</a>, &amp;norm);
+<a name="line136">136: </a>    <a href="../../../docs/manualpages/Sys/PetscObjectGetComm.html#PetscObjectGetComm">PetscObjectGetComm</a>((<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>) ts, &amp;comm);
+<a name="line137">137: </a>    <a href="../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(comm, <font color="#666666">"timestep %D time %g norm %g\n"</font>, step, (double) ptime, (double) norm);
+<a name="line138">138: </a>    <font color="#4169E1">return</font>(0);
+<a name="line139">139: </a>}
+
+<a name="line141">141: </a><font color="#B22222">/*</font>
+<a name="line142">142: </a><font color="#B22222">   MySNESMonitor - illustrate how to set user-defined monitoring routine for <a href="../../../docs/manualpages/SNES/SNES.html#SNES">SNES</a>.</font>
+<a name="line143">143: </a><font color="#B22222">   Input Parameters:</font>
+<a name="line144">144: </a><font color="#B22222">     snes - the <a href="../../../docs/manualpages/SNES/SNES.html#SNES">SNES</a> context</font>
+<a name="line145">145: </a><font color="#B22222">     its - iteration number</font>
+<a name="line146">146: </a><font color="#B22222">     fnorm - 2-norm function value (may be estimated)</font>
+<a name="line147">147: </a><font color="#B22222">     ctx - optional user-defined context for private data for the</font>
+<a name="line148">148: </a><font color="#B22222">         monitor routine, as set by <a href="../../../docs/manualpages/SNES/SNESMonitorSet.html#SNESMonitorSet">SNESMonitorSet</a>()</font>
+<a name="line149">149: </a><font color="#B22222">*/</font>
+<a name="line150">150: </a><strong><font color="#4169E1"><a name="MySNESMonitor"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MySNESMonitor(<a href="../../../docs/manualpages/SNES/SNES.html#SNES">SNES</a> snes, <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> its, <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> fnorm, PetscViewerAndFormat *vf)</font></strong>
+<a name="line151">151: </a>{
+
+<a name="line155">155: </a>    SNESMonitorDefaultShort(snes, its, fnorm, vf);
+<a name="line156">156: </a>    <font color="#4169E1">return</font>(0);
+<a name="line157">157: </a>}
+
+<a name="line159">159: </a><font color="#B22222">/*</font>
+<a name="line160">160: </a><font color="#B22222">   FormFunction - Evaluates nonlinear function, F(x).</font>
+
+<a name="line162">162: </a><font color="#B22222">   Input Parameters:</font>
+<a name="line163">163: </a><font color="#B22222">.  ts - the <a href="../../../docs/manualpages/TS/TS.html#TS">TS</a> context</font>
+<a name="line164">164: </a><font color="#B22222">.  X - input vector</font>
+<a name="line165">165: </a><font color="#B22222">.  ctx - optional user-defined context, as set by <a href="../../../docs/manualpages/SNES/SNESSetFunction.html#SNESSetFunction">SNESSetFunction</a>()</font>
+
+<a name="line167">167: </a><font color="#B22222">   Output Parameter:</font>
+<a name="line168">168: </a><font color="#B22222">.  F - function vector</font>
+<a name="line169">169: </a><font color="#B22222"> */</font>
+<a name="line170">170: </a><strong><font color="#4169E1"><a name="FormFunction"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> FormFunction(<a href="../../../docs/manualpages/TS/TS.html#TS">TS</a> ts, <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> ftime, <a href="../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> X, <a href="../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> F, void *ctx)</font></strong>
+<a name="line171">171: </a>{
+<a name="line172">172: </a>    AppCtx *user = (AppCtx *) ctx;
+<a name="line173">173: </a>    <a href="../../../docs/manualpages/DM/DM.html#DM">DM</a> da = (<a href="../../../docs/manualpages/DM/DM.html#DM">DM</a>) user-&gt;da;
+<a name="line175">175: </a>    <a href="../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> *x, *f;
+<a name="line176">176: </a>    <a href="../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> localX;
+<a name="line177">177: </a>    <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> fStart, fEnd, nF;
+<a name="line178">178: </a>    <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> cell, cStart, cEnd, nC;
+<a name="line179">179: </a>    <a href="../../../docs/manualpages/DM/DM.html#DM">DM</a> dmFace;      <font color="#B22222">/* <a href="../../../docs/manualpages/DMPLEX/DMPLEX.html#DMPLEX">DMPLEX</a> for face geometry */</font>
+<a name="line180">180: </a>    <a href="../../../docs/manualpages/FV/PetscFV.html#PetscFV">PetscFV</a> fvm;                <font color="#B22222">/* specify type of FVM discretization */</font>
+<a name="line181">181: </a>    <a href="../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> cellGeom, faceGeom; <font color="#B22222">/* vector of structs related to cell/face geometry*/</font>
+<a name="line182">182: </a>    const <a href="../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> *fgeom;             <font color="#B22222">/* values stored in the vector facegeom */</font>
+<a name="line183">183: </a>    <a href="../../../docs/manualpages/FV/PetscFVFaceGeom.html#PetscFVFaceGeom">PetscFVFaceGeom</a> *fgA;               <font color="#B22222">/* struct with face geometry information */</font>
+<a name="line184">184: </a>    const <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *cellcone, *cellsupport;
+<a name="line185">185: </a>    <a href="../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> flux_east, flux_west, flux_north, flux_south, flux_centre;
+<a name="line186">186: </a>    <a href="../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> centroid_x[2], centroid_y[2], boundary = 0.0;
+<a name="line187">187: </a>    <a href="../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> boundary_left = 0.0;
+<a name="line188">188: </a>    <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> u_plus, u_minus, v_plus, v_minus, zero = 0.0;
+<a name="line189">189: </a>    <a href="../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> delta_x, delta_y;
+
+<a name="line191">191: </a>    <font color="#B22222">/* Get the local vector from the <a href="../../../docs/manualpages/DM/DM.html#DM">DM</a> object. */</font>
+<a name="line193">193: </a>    <a href="../../../docs/manualpages/DM/DMGetLocalVector.html#DMGetLocalVector">DMGetLocalVector</a>(da, &amp;localX);
+
+<a name="line195">195: </a>    <font color="#B22222">/* Scatter ghost points to local vector,using the 2-step process</font>
+<a name="line196">196: </a><font color="#B22222">       <a href="../../../docs/manualpages/DM/DMGlobalToLocalBegin.html#DMGlobalToLocalBegin">DMGlobalToLocalBegin</a>(),<a href="../../../docs/manualpages/DM/DMGlobalToLocalEnd.html#DMGlobalToLocalEnd">DMGlobalToLocalEnd</a>(). */</font>
+<a name="line197">197: </a>    <a href="../../../docs/manualpages/DM/DMGlobalToLocalBegin.html#DMGlobalToLocalBegin">DMGlobalToLocalBegin</a>(da, X, <a href="../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>, localX);
+<a name="line198">198: </a>    <a href="../../../docs/manualpages/DM/DMGlobalToLocalEnd.html#DMGlobalToLocalEnd">DMGlobalToLocalEnd</a>(da, X, <a href="../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>, localX);
+<a name="line199">199: </a>    <font color="#B22222">/* Get pointers to vector data. */</font>
+<a name="line200">200: </a>    <a href="../../../docs/manualpages/Vec/VecGetArray.html#VecGetArray">VecGetArray</a>(localX, &amp;x);
+<a name="line201">201: </a>    <a href="../../../docs/manualpages/Vec/VecGetArray.html#VecGetArray">VecGetArray</a>(F, &amp;f);
+
+<a name="line203">203: </a>    <font color="#B22222">/* Obtaining local cell and face ownership */</font>
+<a name="line204">204: </a>    <a href="../../../docs/manualpages/DMPLEX/DMPlexGetHeightStratum.html#DMPlexGetHeightStratum">DMPlexGetHeightStratum</a>(da, 0, &amp;cStart, &amp;cEnd);
+<a name="line205">205: </a>    <a href="../../../docs/manualpages/DMPLEX/DMPlexGetHeightStratum.html#DMPlexGetHeightStratum">DMPlexGetHeightStratum</a>(da, 1, &amp;fStart, &amp;fEnd);
+
+<a name="line207">207: </a>    <font color="#B22222">/* Creating the <a href="../../../docs/manualpages/FV/PetscFV.html#PetscFV">PetscFV</a> object to obtain face and cell geometry.</font>
+<a name="line208">208: </a><font color="#B22222">    Later to be used to compute face centroid to find cell widths. */</font>
+
+<a name="line210">210: </a>    <a href="../../../docs/manualpages/FV/PetscFVCreate.html#PetscFVCreate">PetscFVCreate</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>, &amp;fvm);
+<a name="line211">211: </a>    <a href="../../../docs/manualpages/FV/PetscFVSetType.html#PetscFVSetType">PetscFVSetType</a>(fvm, <a href="../../../docs/manualpages/FV/PETSCFVUPWIND.html#PETSCFVUPWIND">PETSCFVUPWIND</a>);
+<a name="line212">212: </a>    <font color="#B22222">/*....Retrieve precomputed cell geometry....*/</font>
+<a name="line213">213: </a>    <a href="../../../docs/manualpages/DMPLEX/DMPlexGetDataFVM.html#DMPlexGetDataFVM">DMPlexGetDataFVM</a>(da, fvm, &amp;cellGeom, &amp;faceGeom, NULL);
+<a name="line214">214: </a>    <a href="../../../docs/manualpages/DM/VecGetDM.html#VecGetDM">VecGetDM</a>(faceGeom, &amp;dmFace);
+<a name="line215">215: </a>    <a href="../../../docs/manualpages/Vec/VecGetArrayRead.html#VecGetArrayRead">VecGetArrayRead</a>(faceGeom, &amp;fgeom);
+
+<a name="line217">217: </a>    <font color="#B22222">/* Spanning through all the cells and an inner loop through the faces. Find the</font>
+<a name="line218">218: </a><font color="#B22222">    face neighbors and pick the upwinded cell value for flux. */</font>
+
+<a name="line220">220: </a>    u_plus = <a href="../../../docs/manualpages/Sys/PetscMax.html#PetscMax">PetscMax</a>(user-&gt;u, zero);
+<a name="line221">221: </a>    u_minus = <a href="../../../docs/manualpages/Sys/PetscMin.html#PetscMin">PetscMin</a>(user-&gt;u, zero);
+<a name="line222">222: </a>    v_plus = <a href="../../../docs/manualpages/Sys/PetscMax.html#PetscMax">PetscMax</a>(user-&gt;v, zero);
+<a name="line223">223: </a>    v_minus = <a href="../../../docs/manualpages/Sys/PetscMin.html#PetscMin">PetscMin</a>(user-&gt;v, zero);
+
+<a name="line225">225: </a>    <font color="#4169E1">for</font> (cell = cStart; cell &lt; cEnd; cell++) {
+<a name="line226">226: </a>        <font color="#B22222">/* Obtaining the faces of the cell */</font>
+<a name="line227">227: </a>        <a href="../../../docs/manualpages/DMPLEX/DMPlexGetConeSize.html#DMPlexGetConeSize">DMPlexGetConeSize</a>(da, cell, &amp;nF);
+<a name="line228">228: </a>        <a href="../../../docs/manualpages/DMPLEX/DMPlexGetCone.html#DMPlexGetCone">DMPlexGetCone</a>(da, cell, &amp;cellcone);
+
+<a name="line230">230: </a>        <font color="#B22222">/* south */</font>
+<a name="line231">231: </a>        <a href="../../../docs/manualpages/DMPLEX/DMPlexPointLocalRead.html#DMPlexPointLocalRead">DMPlexPointLocalRead</a>(dmFace, cellcone[0], fgeom, &amp;fgA);
+<a name="line232">232: </a>        centroid_y[0] = fgA-&gt;centroid[1];
+<a name="line233">233: </a>        <font color="#B22222">/* North */</font>
+<a name="line234">234: </a>        <a href="../../../docs/manualpages/DMPLEX/DMPlexPointLocalRead.html#DMPlexPointLocalRead">DMPlexPointLocalRead</a>(dmFace, cellcone[2], fgeom, &amp;fgA);
+<a name="line235">235: </a>        centroid_y[1] = fgA-&gt;centroid[1];
+<a name="line236">236: </a>        <font color="#B22222">/* West */</font>
+<a name="line237">237: </a>        <a href="../../../docs/manualpages/DMPLEX/DMPlexPointLocalRead.html#DMPlexPointLocalRead">DMPlexPointLocalRead</a>(dmFace, cellcone[3], fgeom, &amp;fgA);
+<a name="line238">238: </a>        centroid_x[0] = fgA-&gt;centroid[0];
+<a name="line239">239: </a>        <font color="#B22222">/* East */</font>
+<a name="line240">240: </a>        <a href="../../../docs/manualpages/DMPLEX/DMPlexPointLocalRead.html#DMPlexPointLocalRead">DMPlexPointLocalRead</a>(dmFace, cellcone[1], fgeom, &amp;fgA);
+<a name="line241">241: </a>        centroid_x[1] = fgA-&gt;centroid[0];
+
+<a name="line243">243: </a>        <font color="#B22222">/* Computing the cell widths in the x and y direction */</font>
+<a name="line244">244: </a>        delta_x = centroid_x[1] - centroid_x[0];
+<a name="line245">245: </a>        delta_y = centroid_y[1] - centroid_y[0];
+
+<a name="line247">247: </a>        <font color="#B22222">/* Getting the neighbors of each face</font>
+<a name="line248">248: </a><font color="#B22222">           Going through the faces by the order (cellcone) */</font>
+
+<a name="line250">250: </a>        <font color="#B22222">/* cellcone[0] - south */</font>
+<a name="line251">251: </a>        <a href="../../../docs/manualpages/DMPLEX/DMPlexGetSupportSize.html#DMPlexGetSupportSize">DMPlexGetSupportSize</a>(da, cellcone[0], &amp;nC);
+<a name="line252">252: </a>        <a href="../../../docs/manualpages/DMPLEX/DMPlexGetSupport.html#DMPlexGetSupport">DMPlexGetSupport</a>(da, cellcone[0], &amp;cellsupport);
+<a name="line253">253: </a>        <font color="#4169E1">if</font> (nC == 2) flux_south = (x[cellsupport[0]] * (-v_plus - user-&gt;diffusion * delta_x)) / delta_y;
+<a name="line254">254: </a>        <font color="#4169E1">else</font> flux_south = (boundary * (-v_plus - user-&gt;diffusion * delta_x)) / delta_y;
+
+<a name="line256">256: </a>        <font color="#B22222">/* cellcone[1] - east */</font>
+<a name="line257">257: </a>        <a href="../../../docs/manualpages/DMPLEX/DMPlexGetSupportSize.html#DMPlexGetSupportSize">DMPlexGetSupportSize</a>(da, cellcone[1], &amp;nC);
+<a name="line258">258: </a>        <a href="../../../docs/manualpages/DMPLEX/DMPlexGetSupport.html#DMPlexGetSupport">DMPlexGetSupport</a>(da, cellcone[1], &amp;cellsupport);
+<a name="line259">259: </a>        <font color="#4169E1">if</font> (nC == 2) flux_east = (x[cellsupport[1]] * (u_minus - user-&gt;diffusion * delta_y)) / delta_x;
+<a name="line260">260: </a>        <font color="#4169E1">else</font> flux_east = (boundary * (u_minus - user-&gt;diffusion * delta_y)) / delta_x;
+
+<a name="line262">262: </a>        <font color="#B22222">/* cellcone[2] - north */</font>
+<a name="line263">263: </a>        <a href="../../../docs/manualpages/DMPLEX/DMPlexGetSupportSize.html#DMPlexGetSupportSize">DMPlexGetSupportSize</a>(da, cellcone[2], &amp;nC);
+<a name="line264">264: </a>        <a href="../../../docs/manualpages/DMPLEX/DMPlexGetSupport.html#DMPlexGetSupport">DMPlexGetSupport</a>(da, cellcone[2], &amp;cellsupport);
+<a name="line265">265: </a>        <font color="#4169E1">if</font> (nC == 2) flux_north = (x[cellsupport[1]] * (v_minus - user-&gt;diffusion * delta_x)) / delta_y;
+<a name="line266">266: </a>        <font color="#4169E1">else</font> flux_north = (boundary * (v_minus - user-&gt;diffusion * delta_x)) / delta_y;
+
+<a name="line268">268: </a>        <font color="#B22222">/* cellcone[3] - west */</font>
+<a name="line269">269: </a>        <a href="../../../docs/manualpages/DMPLEX/DMPlexGetSupportSize.html#DMPlexGetSupportSize">DMPlexGetSupportSize</a>(da, cellcone[3], &amp;nC);
+<a name="line270">270: </a>        <a href="../../../docs/manualpages/DMPLEX/DMPlexGetSupport.html#DMPlexGetSupport">DMPlexGetSupport</a>(da, cellcone[3], &amp;cellsupport);
+<a name="line271">271: </a>        <font color="#4169E1">if</font> (nC == 2) flux_west = (x[cellsupport[0]] * (-u_plus - user-&gt;diffusion * delta_y)) / delta_x;
+<a name="line272">272: </a>        <font color="#4169E1">else</font> flux_west = (boundary_left * (-u_plus - user-&gt;diffusion * delta_y)) / delta_x;
+
+<a name="line274">274: </a>        <font color="#B22222">/* Contribution by the cell to the fluxes */</font>
+<a name="line275">275: </a>        flux_centre = x[cell] * ((u_plus - u_minus + 2 * user-&gt;diffusion * delta_y) / delta_x +
+<a name="line276">276: </a>                                 (v_plus - v_minus + 2 * user-&gt;diffusion * delta_x) / delta_y);
+
+<a name="line278">278: </a>        <font color="#B22222">/* Calculating the net flux for each cell</font>
+<a name="line279">279: </a><font color="#B22222">           and computing the RHS time derivative f[.] */</font>
+<a name="line280">280: </a>        f[cell] = -(flux_centre + flux_east + flux_west + flux_north + flux_south);
+<a name="line281">281: </a>    }
+<a name="line282">282: </a>    <a href="../../../docs/manualpages/FV/PetscFVDestroy.html#PetscFVDestroy">PetscFVDestroy</a>(&amp;fvm);
+<a name="line283">283: </a>    <a href="../../../docs/manualpages/Vec/VecRestoreArray.html#VecRestoreArray">VecRestoreArray</a>(localX, &amp;x);
+<a name="line284">284: </a>    <a href="../../../docs/manualpages/Vec/VecRestoreArray.html#VecRestoreArray">VecRestoreArray</a>(F, &amp;f);
+<a name="line285">285: </a>    <a href="../../../docs/manualpages/DM/DMRestoreLocalVector.html#DMRestoreLocalVector">DMRestoreLocalVector</a>(da, &amp;localX);
+<a name="line286">286: </a>    <font color="#4169E1">return</font>(0);
+<a name="line287">287: </a>}
+
+<a name="line289">289: </a><strong><font color="#4169E1"><a name="main"></a>int main(int argc, char **argv)</font></strong>
+<a name="line290">290: </a>{
+<a name="line291">291: </a>    <a href="../../../docs/manualpages/TS/TS.html#TS">TS</a>                   ts;                         <font color="#B22222">/* time integrator */</font>
+<a name="line292">292: </a>    <a href="../../../docs/manualpages/SNES/SNES.html#SNES">SNES</a>                 snes;
+<a name="line293">293: </a>    <a href="../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a>                  x, r;                        <font color="#B22222">/* solution, residual vectors */</font>
+<a name="line294">294: </a>    <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>       ierr;
+<a name="line295">295: </a>    <a href="../../../docs/manualpages/DM/DM.html#DM">DM</a>                   da;
+<a name="line296">296: </a>    <a href="../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a>          rank;
+<a name="line297">297: </a>    PetscViewerAndFormat *vf;
+<a name="line298">298: </a>    AppCtx               user;                             <font color="#B22222">/* mesh context */</font>
+<a name="line299">299: </a>    <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>             numFields = 1, numBC, i;
+<a name="line300">300: </a>    <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>             numComp[1];
+<a name="line301">301: </a>    <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>             numDof[12];
+<a name="line302">302: </a>    <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>             bcField[1];
+<a name="line303">303: </a>    <a href="../../../docs/manualpages/PetscSection/PetscSection.html#PetscSection">PetscSection</a>         section;
+<a name="line304">304: </a>    <a href="../../../docs/manualpages/IS/IS.html#IS">IS</a>                   bcPointIS[1];
+
+<a name="line306">306: </a>    <font color="#B22222">/* Initialize program */</font>
+<a name="line307">307: </a>    <a href="../../../docs/manualpages/Sys/PetscInitialize.html#PetscInitialize">PetscInitialize</a>(&amp;argc, &amp;argv, (char *) 0, help);<font color="#4169E1">if</font> (ierr) <font color="#4169E1">return</font> ierr;
+<a name="line308">308: </a>    <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_rank.html#MPI_Comm_rank">MPI_Comm_rank</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>, &amp;rank);
+<a name="line309">309: </a>    <font color="#B22222">/* Create distributed array (<a href="../../../docs/manualpages/DMPLEX/DMPLEX.html#DMPLEX">DMPLEX</a>) to manage parallel grid and vectors */</font>
+<a name="line310">310: </a>    ProcessOptions(<a href="../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>, &amp;user);
+<a name="line311">311: </a>    CreateMesh(<a href="../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>, &amp;user, &amp;da);
+
+<a name="line313">313: </a>    <font color="#B22222">/* Specifying the fields and dof for the formula through PETSc Section</font>
+<a name="line314">314: </a><font color="#B22222">    Create a scalar field u with 1 component on cells, faces and edges.</font>
+<a name="line315">315: </a><font color="#B22222">    Alternatively, the field information could be added through a PETSCFV object</font>
+<a name="line316">316: </a><font color="#B22222">    using <a href="../../../docs/manualpages/DM/DMAddField.html#DMAddField">DMAddField</a>(...).*/</font>
+<a name="line317">317: </a>    numComp[0] = 1;
+
+<a name="line319">319: </a>    <font color="#4169E1">for</font> (i = 0; i &lt; numFields * (user.dim + 1); ++i) numDof[i] = 0;
+
+<a name="line321">321: </a>    numDof[0 * (user.dim + 1)] = 1;
+<a name="line322">322: </a>    numDof[0 * (user.dim + 1) + user.dim - 1] = 1;
+<a name="line323">323: </a>    numDof[0 * (user.dim + 1) + user.dim] = 1;
+
+<a name="line325">325: </a>    <font color="#B22222">/* Setup boundary conditions */</font>
+<a name="line326">326: </a>    numBC = 1;
+<a name="line327">327: </a>    <font color="#B22222">/* Prescribe a Dirichlet condition on u on the boundary</font>
+<a name="line328">328: </a><font color="#B22222">       Label "marker" is made by the mesh creation routine  */</font>
+<a name="line329">329: </a>    bcField[0] = 0;
+<a name="line330">330: </a>    <a href="../../../docs/manualpages/DM/DMGetStratumIS.html#DMGetStratumIS">DMGetStratumIS</a>(da, <font color="#666666">"marker"</font>, 1, &amp;bcPointIS[0]);
+
+<a name="line332">332: </a>    <font color="#B22222">/* Create a <a href="../../../docs/manualpages/PetscSection/PetscSection.html#PetscSection">PetscSection</a> with this data layout */</font>
+<a name="line333">333: </a>    <a href="../../../docs/manualpages/DM/DMSetNumFields.html#DMSetNumFields">DMSetNumFields</a>(da, numFields);
+<a name="line334">334: </a>    <a href="../../../docs/manualpages/DMPLEX/DMPlexCreateSection.html#DMPlexCreateSection">DMPlexCreateSection</a>(da, NULL, numComp, numDof, numBC, bcField, NULL, bcPointIS, NULL, &amp;section);
+
+<a name="line336">336: </a>    <font color="#B22222">/* Name the Field variables */</font>
+<a name="line337">337: </a>    <a href="../../../docs/manualpages/PetscSection/PetscSectionSetFieldName.html#PetscSectionSetFieldName">PetscSectionSetFieldName</a>(section, 0, <font color="#666666">"u"</font>);
+
+<a name="line339">339: </a>    <font color="#B22222">/* Tell the <a href="../../../docs/manualpages/DM/DM.html#DM">DM</a> to use this section (with the specified fields and dof) */</font>
+<a name="line340">340: </a>    <a href="../../../docs/manualpages/DM/DMSetLocalSection.html#DMSetLocalSection">DMSetLocalSection</a>(da, section);
+<a name="line341">341: </a>    user.da = da;
+
+<a name="line343">343: </a>    <font color="#B22222">/* Extract global vectors from <a href="../../../docs/manualpages/DMDA/DMDA.html#DMDA">DMDA</a>; then duplicate for remaining</font>
+<a name="line344">344: </a><font color="#B22222">       vectors that are the same types */</font>
+
+<a name="line346">346: </a>    <font color="#B22222">/* Create a <a href="../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> with this layout and view it */</font>
+<a name="line347">347: </a>    <a href="../../../docs/manualpages/DM/DMGetGlobalVector.html#DMGetGlobalVector">DMGetGlobalVector</a>(da, &amp;x);
+<a name="line348">348: </a>    <a href="../../../docs/manualpages/Vec/VecDuplicate.html#VecDuplicate">VecDuplicate</a>(x, &amp;r);
+
+<a name="line350">350: </a>    <font color="#B22222">/* Create timestepping solver context */</font>
+<a name="line351">351: </a>    <a href="../../../docs/manualpages/TS/TSCreate.html#TSCreate">TSCreate</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>, &amp;ts);
+<a name="line352">352: </a>    <a href="../../../docs/manualpages/TS/TSSetProblemType.html#TSSetProblemType">TSSetProblemType</a>(ts, <a href="../../../docs/manualpages/TS/TSProblemType.html#TSProblemType">TS_NONLINEAR</a>);
+<a name="line353">353: </a>    <a href="../../../docs/manualpages/TS/TSSetRHSFunction.html#TSSetRHSFunction">TSSetRHSFunction</a>(ts, NULL, FormFunction, &amp;user);
+
+<a name="line355">355: </a>    <a href="../../../docs/manualpages/TS/TSSetMaxTime.html#TSSetMaxTime">TSSetMaxTime</a>(ts, 1.0);
+<a name="line356">356: </a>    <a href="../../../docs/manualpages/TS/TSSetExactFinalTime.html#TSSetExactFinalTime">TSSetExactFinalTime</a>(ts, <a href="../../../docs/manualpages/TS/TSExactFinalTimeOption.html#TSExactFinalTimeOption">TS_EXACTFINALTIME_STEPOVER</a>);
+<a name="line357">357: </a>    <a href="../../../docs/manualpages/TS/TSMonitorSet.html#TSMonitorSet">TSMonitorSet</a>(ts, MyTSMonitor, <a href="../../../docs/manualpages/Viewer/PETSC_VIEWER_STDOUT_WORLD.html#PETSC_VIEWER_STDOUT_WORLD">PETSC_VIEWER_STDOUT_WORLD</a>, NULL);
+<a name="line358">358: </a>    <a href="../../../docs/manualpages/TS/TSSetDM.html#TSSetDM">TSSetDM</a>(ts, da);
+
+<a name="line360">360: </a>    <font color="#B22222">/* Customize nonlinear solver */</font>
+<a name="line361">361: </a>    <a href="../../../docs/manualpages/TS/TSSetType.html#TSSetType">TSSetType</a>(ts, <a href="../../../docs/manualpages/TS/TSEULER.html#TSEULER">TSEULER</a>);
+<a name="line362">362: </a>    <a href="../../../docs/manualpages/TS/TSGetSNES.html#TSGetSNES">TSGetSNES</a>(ts, &amp;snes);
+<a name="line363">363: </a>    <a href="../../../docs/manualpages/Viewer/PetscViewerAndFormatCreate.html#PetscViewerAndFormatCreate">PetscViewerAndFormatCreate</a>(<a href="../../../docs/manualpages/Viewer/PETSC_VIEWER_STDOUT_WORLD.html#PETSC_VIEWER_STDOUT_WORLD">PETSC_VIEWER_STDOUT_WORLD</a>, <a href="../../../docs/manualpages/Viewer/PetscViewerFormat.html#PetscViewerFormat">PETSC_VIEWER_DEFAULT</a>, &amp;vf);
+<a name="line364">364: </a>    <a href="../../../docs/manualpages/SNES/SNESMonitorSet.html#SNESMonitorSet">SNESMonitorSet</a>(snes, (<a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> (*)(<a href="../../../docs/manualpages/SNES/SNES.html#SNES">SNES</a>, <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>, <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>, void *)) MySNESMonitor, vf,(<a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> (*)(void **)) <a href="../../../docs/manualpages/Viewer/PetscViewerAndFormatDestroy.html#PetscViewerAndFormatDestroy">PetscViewerAndFormatDestroy</a>);
+
+<a name="line366">366: </a>     <font color="#B22222">/* Set initial conditions */</font>
+<a name="line367">367: </a>    FormInitialSolution(da, x);
+<a name="line368">368: </a>    <a href="../../../docs/manualpages/TS/TSSetTimeStep.html#TSSetTimeStep">TSSetTimeStep</a>(ts, .0001);
+<a name="line369">369: </a>    <a href="../../../docs/manualpages/TS/TSSetSolution.html#TSSetSolution">TSSetSolution</a>(ts, x);
+<a name="line370">370: </a>    <font color="#B22222">/* Set runtime options */</font>
+<a name="line371">371: </a>    <a href="../../../docs/manualpages/TS/TSSetFromOptions.html#TSSetFromOptions">TSSetFromOptions</a>(ts);
+<a name="line372">372: </a>    <font color="#B22222">/* Solve nonlinear system */</font>
+<a name="line373">373: </a>    <a href="../../../docs/manualpages/TS/TSSolve.html#TSSolve">TSSolve</a>(ts, x);
+
+<a name="line375">375: </a>    <font color="#B22222">/* Clean up routine */</font>
+<a name="line376">376: </a>    <a href="../../../docs/manualpages/DM/DMRestoreGlobalVector.html#DMRestoreGlobalVector">DMRestoreGlobalVector</a>(da, &amp;x);
+<a name="line377">377: </a>    <a href="../../../docs/manualpages/IS/ISDestroy.html#ISDestroy">ISDestroy</a>(&amp;bcPointIS[0]);
+<a name="line378">378: </a>    <a href="../../../docs/manualpages/PetscSection/PetscSectionDestroy.html#PetscSectionDestroy">PetscSectionDestroy</a>(&amp;section);
+<a name="line379">379: </a>    <a href="../../../docs/manualpages/Vec/VecDestroy.html#VecDestroy">VecDestroy</a>(&amp;r);
+<a name="line380">380: </a>    <a href="../../../docs/manualpages/TS/TSDestroy.html#TSDestroy">TSDestroy</a>(&amp;ts);
+<a name="line381">381: </a>    <a href="../../../docs/manualpages/DM/DMDestroy.html#DMDestroy">DMDestroy</a>(&amp;da);
+<a name="line382">382: </a>    <a href="../../../docs/manualpages/Sys/PetscFinalize.html#PetscFinalize">PetscFinalize</a>();
+<a name="line383">383: </a>    <font color="#4169E1">return</font> ierr;
+<a name="line384">384: </a>}
+
+<a name="line386">386: </a><font color="#B22222">/*TEST</font>
+
+<a name="line388">388: </a><font color="#B22222">    test:</font>
+<a name="line389">389: </a><font color="#B22222">      suffix: 0</font>
+<a name="line390">390: </a><font color="#B22222">      args: -ts_max_steps 5 -ts_type rk</font>
+<a name="line391">391: </a><font color="#B22222">      requires: !single !complex triangle ctetgen</font>
+
+<a name="line393">393: </a><font color="#B22222">TEST*/</font>
+</pre>
+</body>
+
+</html>

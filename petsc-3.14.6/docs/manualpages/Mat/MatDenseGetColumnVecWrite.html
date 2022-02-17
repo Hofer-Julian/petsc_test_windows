@@ -1,0 +1,49 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatDenseGetColumnVecWrite.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>MatDenseGetColumnVecWrite</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/Mat/MatDenseGetColumnVecWrite.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="MatDenseGetColumnVecWrite"><H1>MatDenseGetColumnVecWrite</H1></A>
+Gives write-only access to a column of a dense matrix, represented as a <A HREF="../Vec/Vec.html#Vec">Vec</A>. 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscmat.h" 
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../Mat/MatDenseGetColumnVecWrite.html#MatDenseGetColumnVecWrite">MatDenseGetColumnVecWrite</A>(<A HREF="../Mat/Mat.html#Mat">Mat</A> A,<A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> col,<A HREF="../Vec/Vec.html#Vec">Vec</A> *v)
+</PRE>
+Collective
+<P>
+<H3><FONT COLOR="#CC3333">Input Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>mat </B></TD><TD>- the <A HREF="../Mat/Mat.html#Mat">Mat</A> object
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>col </B></TD><TD>- the column index
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Output Parameter</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>v </B></TD><TD>- the vector
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Notes</FONT></H3>
+The vector is owned by PETSc. Users need to call <A HREF="../Mat/MatDenseRestoreColumnVecWrite.html#MatDenseRestoreColumnVecWrite">MatDenseRestoreColumnVecWrite</A>() when the vector is no longer needed.
+Use <A HREF="../Mat/MatDenseGetColumnVec.html#MatDenseGetColumnVec">MatDenseGetColumnVec</A>() to obtain read-write access or <A HREF="../Mat/MatDenseGetColumnVecRead.html#MatDenseGetColumnVecRead">MatDenseGetColumnVecRead</A>() for read-only access.
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../Mat/MATDENSE.html#MATDENSE">MATDENSE</A>, <A HREF="../Mat/MATDENSECUDA.html#MATDENSECUDA">MATDENSECUDA</A>, <A HREF="../Mat/MatDenseGetColumnVec.html#MatDenseGetColumnVec">MatDenseGetColumnVec</A>(), <A HREF="../Mat/MatDenseGetColumnVecRead.html#MatDenseGetColumnVecRead">MatDenseGetColumnVecRead</A>(), <A HREF="../Mat/MatDenseRestoreColumnVec.html#MatDenseRestoreColumnVec">MatDenseRestoreColumnVec</A>(), <A HREF="../Mat/MatDenseRestoreColumnVecRead.html#MatDenseRestoreColumnVecRead">MatDenseRestoreColumnVecRead</A>(), <A HREF="../Mat/MatDenseRestoreColumnVecWrite.html#MatDenseRestoreColumnVecWrite">MatDenseRestoreColumnVecWrite</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>intermediate<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/mat/impls/dense/seq/dense.c.html#MatDenseGetColumnVecWrite">src/mat/impls/dense/seq/dense.c</A>
+<P><H3><FONT COLOR="CC3333">Implementations</FONT></H3><A HREF="../../../src/mat/impls/dense/mpi/mpidense.c.html#MatDenseGetColumnVecWrite_MPIDenseCUDA">MatDenseGetColumnVecWrite_MPIDenseCUDA in src/mat/impls/dense/mpi/mpidense.c</A><BR>
+<A HREF="../../../src/mat/impls/dense/mpi/mpidense.c.html#MatDenseGetColumnVecWrite_MPIDense">MatDenseGetColumnVecWrite_MPIDense in src/mat/impls/dense/mpi/mpidense.c</A><BR>
+<A HREF="../../../src/mat/impls/dense/seq/cuda/densecuda.cu.html#MatDenseGetColumnVecWrite_SeqDenseCUDA">MatDenseGetColumnVecWrite_SeqDenseCUDA in src/mat/impls/dense/seq/cuda/densecuda.cu</A><BR>
+<A HREF="../../../src/mat/impls/dense/seq/dense.c.html#MatDenseGetColumnVecWrite_SeqDense">MatDenseGetColumnVecWrite_SeqDense in src/mat/impls/dense/seq/dense.c</A><BR>
+<BR><A HREF="./index.html">Index of all Mat routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

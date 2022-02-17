@@ -1,0 +1,36 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DMNetwork/PetscSFGetSubSF.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>PetscSFGetSubSF</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/DMNetwork/PetscSFGetSubSF.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="PetscSFGetSubSF"><H1>PetscSFGetSubSF</H1></A>
+Returns an SF for a specific subset of points. Leaves are re-numbered to reflect the new ordering. 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscdmnetwork.h"  
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../DMNetwork/PetscSFGetSubSF.html#PetscSFGetSubSF">PetscSFGetSubSF</A>(<A HREF="../PetscSF/PetscSF.html#PetscSF">PetscSF</A> mastersf, <A HREF="../IS/ISLocalToGlobalMapping.html#ISLocalToGlobalMapping">ISLocalToGlobalMapping</A> map, <A HREF="../PetscSF/PetscSF.html#PetscSF">PetscSF</A> *subSF)
+</PRE>
+<H3><FONT COLOR="#CC3333">Input Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>masterSF </B></TD><TD>- the original SF structure
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>map      </B></TD><TD>- a ISLocalToGlobal mapping that contains the subset of points
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Output Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>subSF    </B></TD><TD>- a subset of the masterSF for the desired subset.
+</TD></TR></TABLE>
+<P>
+
+<P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>intermediate<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/dm/impls/network/network.c.html#PetscSFGetSubSF">src/dm/impls/network/network.c</A>
+<BR><A HREF="./index.html">Index of all DMNetwork routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

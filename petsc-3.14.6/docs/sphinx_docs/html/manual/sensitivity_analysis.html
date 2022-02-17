@@ -1,0 +1,443 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/sphinx_docs/html/manual/sensitivity_analysis.html" />
+    <meta charset="utf-8" />
+    <title>Performing sensitivity analysis &#8212; PETSc 3.14.6 documentation</title>
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/katex-math.css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/contrib/auto-render.min.js"></script>
+    <script src="../_static/katex_autorenderer.js"></script>
+    <link rel="shortcut icon" href="../_static/PETSc_RGB-logo.png"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="High Level Support for Multigrid with KSPSetDM() and SNESSetDM()" href="high_level_mg.html" />
+    <link rel="prev" title="TS: Scalable ODE and DAE Solvers" href="ts.html" /> 
+  </head><body>
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/sphinx_docs/html/manual/sensitivity_analysis.html "><small>Report Typos and Errors</small></a></div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="high_level_mg.html" title="High Level Support for Multigrid with KSPSetDM() and SNESSetDM()"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="ts.html" title="TS: Scalable ODE and DAE Solvers"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">PETSc 3.14.6 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >PETSc Users Manual</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="programming.html" accesskey="U">Programming with PETSc</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/PETSc-TAO_RGB.svg" alt="Logo"/>
+            </a></p>
+  <h3><a href="../index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Performing sensitivity analysis</a><ul>
+<li><a class="reference internal" href="#using-the-discrete-adjoint-methods">Using the discrete adjoint methods</a></li>
+<li><a class="reference internal" href="#checkpointing">Checkpointing</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#solving-steady-state-problems-with-pseudo-timestepping">Solving Steady-State Problems with Pseudo-Timestepping</a></li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="ts.html"
+                        title="previous chapter">TS: Scalable ODE and DAE Solvers</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="high_level_mg.html"
+                        title="next chapter">High Level Support for Multigrid with KSPSetDM() and SNESSetDM()</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/manual/sensitivity_analysis.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="performing-sensitivity-analysis">
+<span id="chapter-sa"></span><h1>Performing sensitivity analysis<a class="headerlink" href="#performing-sensitivity-analysis" title="Permalink to this headline">¶</a></h1>
+<p>The <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/TS/TS.html#TS">TS</a></span></code> library provides a framework based on discrete adjoint models
+for sensitivity analysis for ODEs and DAEs. The ODE/DAE solution process
+(henceforth called the forward run) can be obtained by using either
+explicit or implicit solvers in <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/TS/TS.html#TS">TS</a></span></code>, depending on the problem
+properties. Currently supported method types are <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/TS/TSRK.html#TSRK">TSRK</a></span></code> (Runge-Kutta)
+explicit methods and <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/TS/TSTHETA.html#TSTHETA">TSTHETA</a></span></code> implicit methods, which include
+<code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/TS/TSBEULER.html#TSBEULER">TSBEULER</a></span></code> and <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/TS/TSCN.html#TSCN">TSCN</a></span></code>.</p>
+<div class="section" id="using-the-discrete-adjoint-methods">
+<h2>Using the discrete adjoint methods<a class="headerlink" href="#using-the-discrete-adjoint-methods" title="Permalink to this headline">¶</a></h2>
+<p>Consider the ODE/DAE</p>
+<div class="math">
+\[F(t,y,\dot{y},p) = 0, \quad y(t_0)=y_0(p) \quad t_0 \le t \le t_F
+
+\]</div>
+<p>and the cost function(s)</p>
+<div class="math">
+\[\Psi_i(y_0,p) = \Phi_i(y_F,p) + \int_{t_0}^{t_F} r_i(y(t),p,t)dt \quad i=1,...,n_\text{cost}.
+
+\]</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">TSAdjoint</span></code> routines of PETSc provide</p>
+<div class="math">
+\[\frac{\partial \Psi_i}{\partial y_0} = \lambda_i
+
+\]</div>
+<p>and</p>
+<div class="math">
+\[\frac{\partial \Psi_i}{\partial p} = \mu_i + \lambda_i (\frac{\partial y_0}{\partial p}).
+
+\]</div>
+<p>To perform the discrete adjoint sensitivity analysis one first sets up
+the <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/TS/TS.html#TS">TS</a></span></code> object for a regular forward run but with one extra function
+call</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/TS/TSSetSaveTrajectory.html#TSSetSaveTrajectory">TSSetSaveTrajectory</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/TS/TS.html#TS">TS</a></span> <span class="n">ts</span><span class="p">),</span>
+</pre></div>
+</div>
+<p>then calls <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/TS/TSSolve.html#TSSolve">TSSolve</a>()</span></code> in the usual manner.</p>
+<p>One must create two arrays of <span class="math">\(n_\text{cost}\)</span> vectors
+<span class="math">\(\lambda\)</span> and<span class="math">\(\mu\)</span> (if there are no parameters <span class="math">\(p\)</span>
+then one can use <code class="docutils literal notranslate"><span class="pre">NULL</span></code> for the <span class="math">\(\mu\)</span> array.) The
+<span class="math">\(\lambda\)</span> vectors are the same dimension and parallel layout as
+the solution vector for the ODE, the <span class="math">\(mu\)</span> vectors are of dimension
+<span class="math">\(p\)</span>; when <span class="math">\(p\)</span> is small usually all its elements are on the
+first MPI process, while the vectors have no entries on the other
+processes. <span class="math">\(\lambda_i\)</span> and <span class="math">\(mu_i\)</span> should be initialized with
+the values <span class="math">\(d\Phi_i/dy|_{t=t_F}\)</span> and <span class="math">\(d\Phi_i/dp|_{t=t_F}\)</span>
+respectively. Then one calls</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sensitivity/TSSetCostGradients.html#TSSetCostGradients">TSSetCostGradients</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/TS/TS.html#TS">TS</a></span> <span class="n">ts</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span> <span class="n">numcost</span><span class="p">,</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span> <span class="o">*</span><span class="n">lambda</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span> <span class="o">*</span><span class="n">mu</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>If <span class="math">\(F()\)</span> is a function of <span class="math">\(p\)</span> one needs to also provide the
+Jacobian <span class="math">\(-F_p\)</span> with</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sensitivity/TSSetRHSJacobianP.html#TSSetRHSJacobianP">TSSetRHSJacobianP</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/TS/TS.html#TS">TS</a></span> <span class="n">ts</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/Mat.html#Mat">Mat</a></span> <span class="n">Amat</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a></span> <span class="p">(</span><span class="o">*</span><span class="n">fp</span><span class="p">)(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/TS/TS.html#TS">TS</a></span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a></span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/Mat.html#Mat">Mat</a></span><span class="p">,</span><span class="kt">void</span><span class="o">*</span><span class="p">),</span><span class="kt">void</span> <span class="o">*</span><span class="n">ctx</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The arguments for the function <code class="docutils literal notranslate"><span class="pre">fp()</span></code> are the timestep context,
+current time, <span class="math">\(y\)</span>, and the (optional) user-provided context.</p>
+<p>If there is an integral term in the cost function, i.e. <span class="math">\(r\)</span> is
+nonzero, it can be transformed into another ODE that is augmented to the
+original ODE. To evaluate the integral, one needs to create a child
+<code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/TS/TS.html#TS">TS</a></span></code> objective by calling</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sensitivity/TSCreateQuadratureTS.html#TSCreateQuadratureTS">TSCreateQuadratureTS</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/TS/TS.html#TS">TS</a></span> <span class="n">ts</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a></span> <span class="n">fwd</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/TS/TS.html#TS">TS</a></span> <span class="o">*</span><span class="n">quadts</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>and provide the ODE RHS function (which evaluates the integrand
+<span class="math">\(r\)</span>) with</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/TS/TSSetRHSFunction.html#TSSetRHSFunction">TSSetRHSFunction</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/TS/TS.html#TS">TS</a></span> <span class="n">quadts</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span> <span class="n">R</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a></span> <span class="p">(</span><span class="o">*</span><span class="n">rf</span><span class="p">)(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/TS/TS.html#TS">TS</a></span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a></span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span><span class="p">,</span><span class="kt">void</span><span class="o">*</span><span class="p">),</span><span class="kt">void</span> <span class="o">*</span><span class="n">ctx</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Similar to the settings for the original ODE, Jacobians of the integrand
+can be provided with</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/TS/TSSetRHSJacobian.html#TSSetRHSJacobian">TSSetRHSJacobian</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/TS/TS.html#TS">TS</a></span> <span class="n">quadts</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span> <span class="n">DRDU</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span> <span class="n">DRDU</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a></span> <span class="p">(</span><span class="o">*</span><span class="n">drdyf</span><span class="p">)(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/TS/TS.html#TS">TS</a></span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a></span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span><span class="o">*</span><span class="p">,</span><span class="kt">void</span><span class="o">*</span><span class="p">),</span><span class="kt">void</span> <span class="o">*</span><span class="n">ctx</span><span class="p">)</span>
+<span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sensitivity/TSSetRHSJacobianP.html#TSSetRHSJacobianP">TSSetRHSJacobianP</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/TS/TS.html#TS">TS</a></span> <span class="n">quadts</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span> <span class="n">DRDU</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span> <span class="n">DRDU</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a></span> <span class="p">(</span><span class="o">*</span><span class="n">drdyp</span><span class="p">)(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/TS/TS.html#TS">TS</a></span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a></span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span><span class="o">*</span><span class="p">,</span><span class="kt">void</span><span class="o">*</span><span class="p">),</span><span class="kt">void</span> <span class="o">*</span><span class="n">ctx</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>where <span class="math">\(\mathrm{drdyf}= dr /dy\)</span>, <span class="math">\(\mathrm{drdpf} = dr /dp\)</span>.
+Since the integral term is additive to the cost function, its gradient
+information will be included in <span class="math">\(\lambda\)</span> and <span class="math">\(\mu\)</span>.</p>
+<p>Lastly, one starts the backward run by calling</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sensitivity/TSAdjointSolve.html#TSAdjointSolve">TSAdjointSolve</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/TS/TS.html#TS">TS</a></span> <span class="n">ts</span><span class="p">).</span>
+</pre></div>
+</div>
+<p>One can obtain the value of the integral term by calling</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sensitivity/TSGetCostIntegral.html#TSGetCostIntegral">TSGetCostIntegral</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/TS/TS.html#TS">TS</a></span> <span class="n">ts</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span> <span class="o">*</span><span class="n">q</span><span class="p">).</span>
+</pre></div>
+</div>
+<p>or accessing directly the solution vector used by quadts.</p>
+<p>The second argument of <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sensitivity/TSCreateQuadratureTS.html#TSCreateQuadratureTS">TSCreateQuadratureTS</a>()</span></code> allows one to choose
+if the integral term is evaluated in the forward run (inside
+<code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/TS/TSSolve.html#TSSolve">TSSolve</a>()</span></code>) or in the backward run (inside <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sensitivity/TSAdjointSolve.html#TSAdjointSolve">TSAdjointSolve</a>()</span></code>) when
+<code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sensitivity/TSSetCostGradients.html#TSSetCostGradients">TSSetCostGradients</a>()</span></code> and <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sensitivity/TSSetCostIntegrand.html#TSSetCostIntegrand">TSSetCostIntegrand</a>()</span></code> are called before
+<code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/TS/TSSolve.html#TSSolve">TSSolve</a>()</span></code>. Note that this also allows for evaluating the integral
+without having to use the adjoint solvers.</p>
+<p>To provide a better understanding of the use of the adjoint solvers, we
+introduce a simple example, corresponding to
+<a class="reference external" href="https://www.mcs.anl.gov/petsc/petsc-current/src/ts/tutorials/power_grid/ex3adj.c.html">TS Power Grid Tutorial ex3adj</a>.
+The problem is to study dynamic security of power system when there are
+credible contingencies such as short-circuits or loss of generators,
+transmission lines, or loads. The dynamic security constraints are
+incorporated as equality constraints in the form of discretized
+differential equations and inequality constraints for bounds on the
+trajectory. The governing ODE system is</p>
+<div class="math">
+\[\begin{aligned}
+    \phi' &= &\omega_B (\omega - \omega_S)  \\
+    2H/\omega_S \, \omega' & =& p_m - p_{max} sin(\phi) -D (\omega - \omega_S), \quad t_0 \leq t \leq t_F,\end{aligned}\]</div>
+<p>where <span class="math">\(\phi\)</span> is the phase angle and <span class="math">\(\omega\)</span> is the
+frequency.</p>
+<p>The initial conditions at time <span class="math">\(t_0\)</span> are</p>
+<div class="math">
+\[\begin{aligned}
+\phi(t_0) &=& \arcsin \left( p_m / p_{max} \right), \\
+w(t_0) & =& 1.\end{aligned}\]</div>
+<p><span class="math">\(p_{max}\)</span> is a positive number when the system operates normally.
+At an event such as fault incidence/removal, <span class="math">\(p_{max}\)</span> will change
+to <span class="math">\(0\)</span> temporarily and back to the original value after the fault
+is fixed. The objective is to maximize <span class="math">\(p_m\)</span> subject to the above
+ODE constraints and <span class="math">\(\phi&lt;\phi_S\)</span> during all times. To accommodate
+the inequality constraint, we want to compute the sensitivity of the
+cost function</p>
+<div class="math">
+\[\Psi(p_m,\phi) = -p_m + c \int_{t_0}^{t_F} \left( \max(0, \phi - \phi_S ) \right)^2 dt
+
+\]</div>
+<p>with respect to the parameter <span class="math">\(p_m\)</span>. <span class="math">\(numcost\)</span> is <span class="math">\(1\)</span>
+since it is a scalar function.</p>
+<p>For ODE solution, PETSc requires user-provided functions to evaluate the
+system <span class="math">\(F(t,y,\dot{y},p)\)</span> (set by <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/TS/TSSetIFunction.html#TSSetIFunction">TSSetIFunction</a>()</span></code> ) and its
+corresponding Jacobian <span class="math">\(F_y + \sigma F_{\dot y}\)</span> (set by
+<code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/TS/TSSetIJacobian.html#TSSetIJacobian">TSSetIJacobian</a>()</span></code>). Note that the solution state <span class="math">\(y\)</span> is
+<span class="math">\([ \phi \;  \omega ]^T\)</span> here. For sensitivity analysis, we need to
+provide a routine to compute <span class="math">\(\mathrm{f}_p=[0 \; 1]^T\)</span> using
+<code class="docutils literal notranslate"><span class="pre">TSASetRHSJacobianP()</span></code>, and three routines corresponding to the
+integrand <span class="math">\(r=c \left( \max(0, \phi - \phi_S ) \right)^2\)</span>,
+<span class="math">\(r_p = [0 \; 0]^T\)</span> and
+<span class="math">\(r_y= [ 2 c \left( \max(0, \phi - \phi_S ) \right) \; 0]^T\)</span> using
+<code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sensitivity/TSSetCostIntegrand.html#TSSetCostIntegrand">TSSetCostIntegrand</a>()</span></code>.</p>
+<p>In the adjoint run, <span class="math">\(\lambda\)</span> and <span class="math">\(\mu\)</span> are initialized as
+<span class="math">\([ 0 \;  0 ]^T\)</span> and <span class="math">\([-1]\)</span> at the final time <span class="math">\(t_F\)</span>.
+After <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sensitivity/TSAdjointSolve.html#TSAdjointSolve">TSAdjointSolve</a>()</span></code>, the sensitivity of the cost function w.r.t.
+initial conditions is given by the sensitivity variable <span class="math">\(\lambda\)</span>
+(at time <span class="math">\(t_0\)</span>) directly. And the sensitivity of the cost function
+w.r.t. the parameter <span class="math">\(p_m\)</span> can be computed (by users) as</p>
+<div class="math">
+\[\frac{\mathrm{d} \Psi}{\mathrm{d} p_m} = \mu(t_0) + \lambda(t_0)  \frac{\mathrm{d} \left[ \phi(t_0) \; \omega(t_0) \right]^T}{\mathrm{d} p_m}  .
+
+\]</div>
+<p>For explicit methods where one does not need to provide the Jacobian
+<span class="math">\(F_u\)</span> for the forward solve one still does need it for the
+backward solve and thus must call</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/TS/TSSetRHSJacobian.html#TSSetRHSJacobian">TSSetRHSJacobian</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/TS/TS.html#TS">TS</a></span> <span class="n">ts</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/Mat.html#Mat">Mat</a></span> <span class="n">Amat</span><span class="p">,</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/Mat.html#Mat">Mat</a></span> <span class="n">Pmat</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a></span> <span class="p">(</span><span class="o">*</span><span class="n">f</span><span class="p">)(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/TS/TS.html#TS">TS</a></span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a></span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/Mat.html#Mat">Mat</a></span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/Mat.html#Mat">Mat</a></span><span class="p">,</span><span class="kt">void</span><span class="o">*</span><span class="p">),</span><span class="kt">void</span> <span class="o">*</span><span class="n">fP</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Examples include:</p>
+<ul class="simple">
+<li><p>a discrete adjoint sensitivity using explicit time stepping methods
+<a class="reference external" href="https://www.mcs.anl.gov/petsc/petsc-current/src/ts/tutorials/ex16adj.c.html">TS Tutorial ex16adj</a>,</p></li>
+<li><p>a discrete adjoint sensitivity using implicit time stepping methods
+<a class="reference external" href="https://www.mcs.anl.gov/petsc/petsc-current/src/ts/tutorials/ex20adj.c.html">TS Tutorial ex20adj</a>,</p></li>
+<li><p>an optimization using the discrete adjoint models of ERK
+<a class="reference external" href="https://www.mcs.anl.gov/petsc/petsc-current/src/ts/tutorials/ex16opt_ic.c.html">TS Tutorial ex16opt_ic</a>
+and
+<cite>TS Tutorial ex16opt_p</cite> &lt;<a class="reference external" href="https://www.mcs.anl.gov/petsc/petsc-current/src/ts/tutorials/ex16opt_p.c.html">https://www.mcs.anl.gov/petsc/petsc-current/src/ts/tutorials/ex16opt_p.c.html</a>&gt;`__,</p></li>
+<li><p>an optimization using the discrete adjoint models of Theta methods
+for stiff DAEs
+<a class="reference external" href="https://www.mcs.anl.gov/petsc/petsc-current/src/ts/tutorials/ex20opt_ic.c.html">TS Tutorial ex20opt_ic</a>
+and
+<a class="reference external" href="https://www.mcs.anl.gov/petsc/petsc-current/src/ts/tutorials/ex20opt_p.c.html">TS Tutorial ex20opt_p</a>,</p></li>
+<li><p>an ODE-constrained optimization using the discrete adjoint models of
+Theta methods for cost function with an integral term
+<a class="reference external" href="https://www.mcs.anl.gov/petsc/petsc-current/src/ts/tutorials/power_grid/ex3opt.c.html">TS Power Grid Tutorial ex3opt</a>,</p></li>
+<li><p>a discrete adjoint sensitivity using <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/TS/TSCN.html#TSCN">TSCN</a></span></code> (Crank-Nicolson)
+methods for DAEs with discontinuities
+<a class="reference external" href="https://www.mcs.anl.gov/petsc/petsc-current/src/ts/tutorials/power_grid/stability_9bus/ex9busadj.c.html">TS Power Grid Stability Tutorial ex9busadj.c</a>,</p></li>
+<li><p>a DAE-constrained optimization using the discrete adjoint models of
+<code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/TS/TSCN.html#TSCN">TSCN</a></span></code> (Crank-Nicolson) methods for cost function with an integral
+term
+<a class="reference external" href="https://www.mcs.anl.gov/petsc/petsc-current/src/ts/tutorials/power_grid/stability_9bus/ex9busopt.c.html">TS Power Grid Tutorial ex9busopt.c</a>,</p></li>
+<li><p>a discrete adjoint sensitivity using <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/TS/TSCN.html#TSCN">TSCN</a></span></code> methods for a PDE
+problem
+<a class="reference external" href="https://www.mcs.anl.gov/petsc/petsc-current/src/ts/tutorials/advection-diffusion-reaction/ex5adj.c.html">TS Advection-Diffusion-Reaction Tutorial ex5adj</a>.</p></li>
+</ul>
+</div>
+<div class="section" id="checkpointing">
+<h2>Checkpointing<a class="headerlink" href="#checkpointing" title="Permalink to this headline">¶</a></h2>
+<p>The discrete adjoint model requires the states (and stage values in the
+context of multistage timestepping methods) to evaluate the Jacobian
+matrices during the adjoint (backward) run. By default, PETSc stores the
+whole trajectory to disk as binary files, each of which contains the
+information for a single time step including state, time, and stage
+values (optional). One can also make PETSc store the trajectory to
+memory with the option <code class="docutils literal notranslate"><span class="pre">-ts_trajectory_type</span> <span class="pre">memory</span></code>. However, there
+might not be sufficient memory capacity especially for large-scale
+problems and long-time integration.</p>
+<p>A so-called checkpointing scheme is needed to solve this problem. The
+scheme stores checkpoints at selective time steps and recomputes the
+missing information. The <code class="docutils literal notranslate"><span class="pre">revolve</span></code> library is used by PETSc
+<code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/TS/TSTrajectory.html#TSTrajectory">TSTrajectory</a></span></code> to generate an optimal checkpointing schedule that
+minimizes the recomputations given a limited number of available
+checkpoints. One can specify the number of available checkpoints with
+the option
+<code class="docutils literal notranslate"><span class="pre">-ts_trajectory_max_cps_ram</span> <span class="pre">[maximum</span> <span class="pre">number</span> <span class="pre">of</span> <span class="pre">checkpoints</span> <span class="pre">in</span> <span class="pre">RAM]</span></code>.
+Note that one checkpoint corresponds to one time step.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">revolve</span></code> library also provides an optimal multistage
+checkpointing scheme that uses both RAM and disk for storage. This
+scheme is automatically chosen if one uses both the option
+<code class="docutils literal notranslate"><span class="pre">-ts_trajectory_max_cps_ram</span> <span class="pre">[maximum</span> <span class="pre">number</span> <span class="pre">of</span> <span class="pre">checkpoints</span> <span class="pre">in</span> <span class="pre">RAM]</span></code>
+and the option
+<code class="docutils literal notranslate"><span class="pre">-ts_trajectory_max_cps_disk</span> <span class="pre">[maximum</span> <span class="pre">number</span> <span class="pre">of</span> <span class="pre">checkpoints</span> <span class="pre">on</span> <span class="pre">disk]</span></code>.</p>
+<p>Some other useful options are listed below.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">-ts_trajectory_view</span></code> prints the total number of recomputations,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-ts_monitor</span></code> and <code class="docutils literal notranslate"><span class="pre">-ts_adjoint_monitor</span></code> allow users to monitor
+the progress of the adjoint work flow,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-ts_trajectory_type</span> <span class="pre">visualization</span></code> may be used to save the whole
+trajectory for visualization. It stores the solution and the time,
+but no stage values. The binary files generated can be read into
+MATLAB via the script
+<code class="docutils literal notranslate"><span class="pre">${PETSC_DIR}/share/petsc/matlab/PetscReadBinaryTrajectory.m</span></code>.</p></li>
+</ul>
+</div>
+</div>
+<div class="section" id="solving-steady-state-problems-with-pseudo-timestepping">
+<h1>Solving Steady-State Problems with Pseudo-Timestepping<a class="headerlink" href="#solving-steady-state-problems-with-pseudo-timestepping" title="Permalink to this headline">¶</a></h1>
+<p><strong>Simple Example:</strong> <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/TS/TS.html#TS">TS</a></span></code> provides a general code for performing pseudo
+timestepping with a variable timestep at each physical node point. For
+example, instead of directly attacking the steady-state problem</p>
+<div class="math">
+\[G(u) = 0,
+
+\]</div>
+<p>we can use pseudo-transient continuation by solving</p>
+<div class="math">
+\[u_t = G(u).
+
+\]</div>
+<p>Using time differencing</p>
+<div class="math">
+\[u_t \doteq \frac{{u^{n+1}} - {u^{n}} }{dt^{n}}
+
+\]</div>
+<p>with the backward Euler method, we obtain nonlinear equations at a
+series of pseudo-timesteps</p>
+<div class="math">
+\[\frac{1}{dt^n} B (u^{n+1} - u^{n} ) = G(u^{n+1}).
+
+\]</div>
+<p>For this problem the user must provide <span class="math">\(G(u)\)</span>, the time steps
+<span class="math">\(dt^{n}\)</span> and the left-hand-side matrix <span class="math">\(B\)</span> (or optionally,
+if the timestep is position independent and <span class="math">\(B\)</span> is the identity
+matrix, a scalar timestep), as well as optionally the Jacobian of
+<span class="math">\(G(u)\)</span>.</p>
+<p>More generally, this can be applied to implicit ODE and DAE for which
+the transient form is</p>
+<div class="math">
+\[F(u,\dot{u}) = 0.
+
+\]</div>
+<p>For solving steady-state problems with pseudo-timestepping one proceeds
+as follows.</p>
+<ul>
+<li><p>Provide the function <code class="docutils literal notranslate"><span class="pre">G(u)</span></code> with the routine</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/TS/TSSetRHSFunction.html#TSSetRHSFunction">TSSetRHSFunction</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/TS/TS.html#TS">TS</a></span> <span class="n">ts</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span> <span class="n">r</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a></span> <span class="p">(</span><span class="o">*</span><span class="n">f</span><span class="p">)(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/TS/TS.html#TS">TS</a></span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a></span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span><span class="p">,</span><span class="kt">void</span><span class="o">*</span><span class="p">),</span><span class="kt">void</span> <span class="o">*</span><span class="n">fP</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>The arguments to the function <code class="docutils literal notranslate"><span class="pre">f()</span></code> are the timestep context, the
+current time, the input for the function, the output for the function
+and the (optional) user-provided context variable <code class="docutils literal notranslate"><span class="pre">fP</span></code>.</p>
+</li>
+<li><p>Provide the (approximate) Jacobian matrix of <code class="docutils literal notranslate"><span class="pre">G(u)</span></code> and a function
+to compute it at each Newton iteration. This is done with the command</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/TS/TSSetRHSJacobian.html#TSSetRHSJacobian">TSSetRHSJacobian</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/TS/TS.html#TS">TS</a></span> <span class="n">ts</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/Mat.html#Mat">Mat</a></span> <span class="n">Amat</span><span class="p">,</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/Mat.html#Mat">Mat</a></span> <span class="n">Pmat</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a></span> <span class="p">(</span><span class="o">*</span><span class="n">f</span><span class="p">)(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/TS/TS.html#TS">TS</a></span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a></span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/Mat.html#Mat">Mat</a></span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/Mat.html#Mat">Mat</a></span><span class="p">,</span><span class="kt">void</span><span class="o">*</span><span class="p">),</span><span class="kt">void</span> <span class="o">*</span><span class="n">fP</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>The arguments for the function <code class="docutils literal notranslate"><span class="pre">f()</span></code> are the timestep context, the
+current time, the location where the Jacobian is to be computed, the
+(approximate) Jacobian matrix, an alternative approximate Jacobian
+matrix used to construct the preconditioner, and the optional
+user-provided context, passed in as <code class="docutils literal notranslate"><span class="pre">fP</span></code>. The user must provide the
+Jacobian as a matrix; thus, if using a matrix-free approach, one must
+create a <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MATSHELL.html#MATSHELL">MATSHELL</a></span></code> matrix.</p>
+</li>
+</ul>
+<p>In addition, the user must provide a routine that computes the
+pseudo-timestep. This is slightly different depending on if one is using
+a constant timestep over the entire grid, or it varies with location.</p>
+<ul>
+<li><p>For location-independent pseudo-timestepping, one uses the routine</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/TS/TSPseudoSetTimeStep.html#TSPseudoSetTimeStep">TSPseudoSetTimeStep</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/TS/TS.html#TS">TS</a></span> <span class="n">ts</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span><span class="p">(</span><span class="o">*</span><span class="n">dt</span><span class="p">)(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/TS/TS.html#TS">TS</a></span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a></span><span class="o">*</span><span class="p">,</span><span class="kt">void</span><span class="o">*</span><span class="p">),</span><span class="kt">void</span><span class="o">*</span> <span class="n">dtctx</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>The function <code class="docutils literal notranslate"><span class="pre">dt</span></code> is a user-provided function that computes the
+next pseudo-timestep. As a default one can use
+<code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/TS/TSPseudoTimeStepDefault.html#TSPseudoTimeStepDefault">TSPseudoTimeStepDefault</a>(<a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/TS/TS.html#TS">TS</a>,<a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>*,void*)</span></code> for <code class="docutils literal notranslate"><span class="pre">dt</span></code>. This
+routine updates the pseudo-timestep with one of two strategies: the
+default</p>
+<div class="math">
+\[dt^{n} = dt_{\mathrm{increment}}*dt^{n-1}*\frac{|| F(u^{n-1}) ||}{|| F(u^{n})||}
+
+\]</div>
+<p>or, the alternative,</p>
+<div class="math">
+\[dt^{n} = dt_{\mathrm{increment}}*dt^{0}*\frac{|| F(u^{0}) ||}{|| F(u^{n})||}
+
+\]</div>
+<p>which can be set with the call</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/TS/TSPseudoIncrementDtFromInitialDt.html#TSPseudoIncrementDtFromInitialDt">TSPseudoIncrementDtFromInitialDt</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/TS/TS.html#TS">TS</a></span> <span class="n">ts</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>or the option <code class="docutils literal notranslate"><span class="pre">-ts_pseudo_increment_dt_from_initial_dt</span></code>. The value
+<span class="math">\(dt_{\mathrm{increment}}\)</span> is by default <span class="math">\(1.1\)</span>, but can be
+reset with the call</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/TS/TSPseudoSetTimeStepIncrement.html#TSPseudoSetTimeStepIncrement">TSPseudoSetTimeStepIncrement</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/TS/TS.html#TS">TS</a></span> <span class="n">ts</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a></span> <span class="n">inc</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>or the option <code class="docutils literal notranslate"><span class="pre">-ts_pseudo_increment</span> <span class="pre">&lt;inc&gt;</span></code>.</p>
+</li>
+<li><p>For location-dependent pseudo-timestepping, the interface function
+has not yet been created.</p></li>
+</ul>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="high_level_mg.html" title="High Level Support for Multigrid with KSPSetDM() and SNESSetDM()"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="ts.html" title="TS: Scalable ODE and DAE Solvers"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">PETSc 3.14.6 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >PETSc Users Manual</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="programming.html" >Programming with PETSc</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 1991-2021, UChicago Argonne, LLC and the PETSc Development Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.4.
+    </div>
+  </body>
+</html>

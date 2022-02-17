@@ -1,0 +1,57 @@
+
+<html>
+<head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/src/ksp/ksp/tutorials/amrex/makefile.html" />
+<title></title>
+<meta name="generator" content="c2html 0.9.4">
+<meta name="date" content="2021-03-30T16:51:34+00:00">
+</head>
+
+<body bgcolor="#FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 src/ksp/ksp/tutorials/amrex/makefile.html "><small>Report Typos and Errors</small></a></div>
+<pre width="80">-include ../../../../../petscdir.mk
+CFLAGS           =
+CXXFLAGS         = ${AMREX_INCLUDE}
+FFLAGS		 =
+CPPFLAGS         =
+FPPFLAGS         =
+LOCDIR		 = src/ksp/ksp/tutorials/amrex/
+MANSEC           = <a href="ROOT/docs/manualpages/KSP/KSP.html#KSP">KSP</a>
+EXAMPLESC	 =
+EXAMPLESF	 =
+EXAMPLESCH	 = MyEB.H MyTest.H
+EXAMPLESFH       =
+OBJECTS          = main.o MyTest.o initEB.o
+
+include ${PETSC_DIR}/lib/petsc/conf/variables
+include ${PETSC_DIR}/lib/petsc/conf/rules
+
+<font color="#A020F0"># TODO: have configure determine  -Wl,-undefined,dynamic_lookup for all OS</font>
+
+<strong><font color="#FF0000">amrex:</font></strong> $(OBJECTS)
+	-${CXXLINKER} -o amrex $(OBJECTS) ${AMREX_LIB} -Wl,-undefined,dynamic_lookup ${PETSC_KSP_LIB}
+	${RM} $(OBJECTS)
+
+<font color="#A020F0">#-------------------------------------------------------------------------</font>
+
+<font color="#A020F0">#  these tests are used by the makefile in PETSC_DIR for basic tests of the install and should not be removed</font>
+<strong><font color="#FF0000">testamrex:</font></strong> amrex
+	@<font color="#4169E1">if</font> [ <font color="#666666">"${PETSC_WITH_BATCH}"</font> != <font color="#666666">""</font> ]; then \
+           echo <font color="#666666">"Running with batch filesystem; to test run src/ksp/ksp/tutorials/amrex/amrex with"</font> ; \
+           echo <font color="#666666">"your systems batch system"</font>; \
+        elif [ <font color="#666666">"${MPIEXEC}"</font> = <font color="#666666">"/bin/false"</font> ]; then \
+           echo <font color="#666666">"*mpiexec not found*. Please run src/ksp/ksp/tutorials/amrex/amrex manually"</font>; \
+        elif [ -f amrex ]; then \
+	   ${MPIEXEC} -n 1 ./amrex inputs.rt.2d.petsc | egrep -v <font color="#666666">"(AMReX|Timers)"</font> &gt; amrex_1.tmp 2&gt;&amp;1; \
+	   <font color="#4169E1">if</font> (${DIFF} output/amrex_1.testout amrex_1.tmp &gt; /dev/null 2&gt;&amp;1) then \
+           echo <font color="#666666">"example src/ksp/ksp/tutorials/amrex/amrex run successfully with 1 MPI process"</font>; \
+	   <font color="#4169E1">else</font> echo <font color="#666666">"Possible error running  example src/ksp/ksp/tutorials/amrex/amrex with 1 MPI process"</font>; \
+           echo <font color="#666666">"See http://www.mcs.anl.gov/petsc/documentation/faq.html"</font>;\
+           cat amrex_1.tmp; fi;  \
+         ${RM} -f amrex_1.tmp; fi
+
+include ${PETSC_DIR}/lib/petsc/conf/test
+</pre>
+</body>
+
+</html>

@@ -1,0 +1,32 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DM/DMPolytopeType.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>DMPolytopeType</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/DM/DMPolytopeType.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="DMPolytopeType"><H1>DMPolytopeType</H1></A>
+This describes the polytope represented by each cell. 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+typedef enum {<A HREF="../DM/DMPolytopeType.html#DMPolytopeType">DM_POLYTOPE_POINT</A>, <A HREF="../DM/DMPolytopeType.html#DMPolytopeType">DM_POLYTOPE_SEGMENT</A>, <A HREF="../DM/DMPolytopeType.html#DMPolytopeType">DM_POLYTOPE_POINT_PRISM_TENSOR</A>, <A HREF="../DM/DMPolytopeType.html#DMPolytopeType">DM_POLYTOPE_TRIANGLE</A>, <A HREF="../DM/DMPolytopeType.html#DMPolytopeType">DM_POLYTOPE_QUADRILATERAL</A>, <A HREF="../DM/DMPolytopeType.html#DMPolytopeType">DM_POLYTOPE_SEG_PRISM_TENSOR</A>, <A HREF="../DM/DMPolytopeType.html#DMPolytopeType">DM_POLYTOPE_TETRAHEDRON</A>, <A HREF="../DM/DMPolytopeType.html#DMPolytopeType">DM_POLYTOPE_HEXAHEDRON</A>, <A HREF="../DM/DMPolytopeType.html#DMPolytopeType">DM_POLYTOPE_TRI_PRISM</A>, <A HREF="../DM/DMPolytopeType.html#DMPolytopeType">DM_POLYTOPE_TRI_PRISM_TENSOR</A>, <A HREF="../DM/DMPolytopeType.html#DMPolytopeType">DM_POLYTOPE_QUAD_PRISM_TENSOR</A>, <A HREF="../DM/DMPolytopeType.html#DMPolytopeType">DM_POLYTOPE_FV_GHOST</A>, <A HREF="../DM/DMPolytopeType.html#DMPolytopeType">DM_POLYTOPE_INTERIOR_GHOST</A>, <A HREF="../DM/DMPolytopeType.html#DMPolytopeType">DM_POLYTOPE_UNKNOWN</A>, <A HREF="../DM/DMPolytopeType.html#DMPolytopeType">DM_NUM_POLYTOPES</A>} <A HREF="../DM/DMPolytopeType.html#DMPolytopeType">DMPolytopeType</A>;
+</PRE>
+
+<P>
+While most operations only need the topology information in the Plex, we must sometimes have the
+user specify a polytope. For instance, when interpolating from a cell-vertex mesh, the type of
+polytope can be ambiguous. Also, Plex allows different symmetries of prism cell with the same
+constituent points. Normally these types are autoamtically inferred and the user does not specify
+them.
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../DMPLEX/DMPlexComputeCellTypes.html#DMPlexComputeCellTypes">DMPlexComputeCellTypes</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>beginner<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/dm/../../include/petscdmtypes.h.html#DMPolytopeType">src/dm/../../include/petscdmtypes.h</A>
+<BR><A HREF="./index.html">Index of all DM routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

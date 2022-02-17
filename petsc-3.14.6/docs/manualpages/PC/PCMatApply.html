@@ -1,0 +1,57 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/PC/PCMatApply.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>PCMatApply</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/PC/PCMatApply.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="PCMatApply"><H1>PCMatApply</H1></A>
+Applies the preconditioner to multiple vectors stored as a <A HREF="../Mat/MATDENSE.html#MATDENSE">MATDENSE</A>. Like <A HREF="../PC/PCApply.html#PCApply">PCApply</A>(), Y and X must be different matrices. 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscksp.h" 
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A>  <A HREF="../PC/PCMatApply.html#PCMatApply">PCMatApply</A>(<A HREF="../PC/PC.html#PC">PC</A> pc,<A HREF="../Mat/Mat.html#Mat">Mat</A> X,<A HREF="../Mat/Mat.html#Mat">Mat</A> Y)
+</PRE>
+Collective on <A HREF="../PC/PC.html#PC">PC</A>
+<P>
+<H3><FONT COLOR="#CC3333">Input Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>pc </B></TD><TD>- the preconditioner context
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>X </B></TD><TD>- block of input vectors
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Output Parameter</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>Y </B></TD><TD>- block of output vectors
+</TD></TR></TABLE>
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../PC/PCApply.html#PCApply">PCApply</A>(), <A HREF="../KSP/KSPMatSolve.html#KSPMatSolve">KSPMatSolve</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>developer<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/ksp/pc/interface/precon.c.html#PCMatApply">src/ksp/pc/interface/precon.c</A>
+<P><H3><FONT COLOR="#CC3333">Examples</FONT></H3>
+<A HREF="../../../src/ksp/ksp/tutorials/ex79.c.html">src/ksp/ksp/tutorials/ex79.c.html</A><BR>
+<P><H3><FONT COLOR="CC3333">Implementations</FONT></H3><A HREF="../../../src/ksp/pc/impls/asm/asm.c.html#PCMatApply_ASM">PCMatApply_ASM in src/ksp/pc/impls/asm/asm.c</A><BR>
+<A HREF="../../../src/ksp/pc/impls/bjacobi/bjacobi.c.html#PCMatApply_BJacobi_Singleblock">PCMatApply_BJacobi_Singleblock in src/ksp/pc/impls/bjacobi/bjacobi.c</A><BR>
+<A HREF="../../../src/ksp/pc/impls/bjacobi/bjacobi.c.html#PCMatApply_BJacobi_Multiproc">PCMatApply_BJacobi_Multiproc in src/ksp/pc/impls/bjacobi/bjacobi.c</A><BR>
+<A HREF="../../../src/ksp/pc/impls/factor/cholesky/cholesky.c.html#PCMatApply_Cholesky">PCMatApply_Cholesky in src/ksp/pc/impls/factor/cholesky/cholesky.c</A><BR>
+<A HREF="../../../src/ksp/pc/impls/factor/icc/icc.c.html#PCMatApply_ICC">PCMatApply_ICC in src/ksp/pc/impls/factor/icc/icc.c</A><BR>
+<A HREF="../../../src/ksp/pc/impls/factor/ilu/ilu.c.html#PCMatApply_ILU">PCMatApply_ILU in src/ksp/pc/impls/factor/ilu/ilu.c</A><BR>
+<A HREF="../../../src/ksp/pc/impls/factor/lu/lu.c.html#PCMatApply_LU">PCMatApply_LU in src/ksp/pc/impls/factor/lu/lu.c</A><BR>
+<A HREF="../../../src/ksp/pc/impls/gasm/gasm.c.html#PCMatApply_GASM">PCMatApply_GASM in src/ksp/pc/impls/gasm/gasm.c</A><BR>
+<A HREF="../../../src/ksp/pc/impls/hpddm/hpddm.cxx.html#PCMatApply_HPDDM">PCMatApply_HPDDM in src/ksp/pc/impls/hpddm/hpddm.cxx</A><BR>
+<A HREF="../../../src/ksp/pc/impls/ksp/pcksp.c.html#PCMatApply_KSP">PCMatApply_KSP in src/ksp/pc/impls/ksp/pcksp.c</A><BR>
+<A HREF="../../../src/ksp/pc/impls/mat/pcmat.c.html#PCMatApply_Mat">PCMatApply_Mat in src/ksp/pc/impls/mat/pcmat.c</A><BR>
+<A HREF="../../../src/ksp/pc/impls/none/none.c.html#PCMatApply_None">PCMatApply_None in src/ksp/pc/impls/none/none.c</A><BR>
+<A HREF="../../../src/ksp/pc/impls/shell/shellpc.c.html#PCMatApply_Shell">PCMatApply_Shell in src/ksp/pc/impls/shell/shellpc.c</A><BR>
+<A HREF="../../../src/ksp/pc/impls/spai/ispai.c.html#PCMatApply_SPAI">PCMatApply_SPAI in src/ksp/pc/impls/spai/ispai.c</A><BR>
+<BR><A HREF="./index.html">Index of all PC routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

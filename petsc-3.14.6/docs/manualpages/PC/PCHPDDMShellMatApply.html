@@ -1,0 +1,41 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/PC/PCHPDDMShellMatApply.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>PCHPDDMShellMatApply</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/PC/PCHPDDMShellMatApply.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="PCHPDDMShellMatApply"><H1>PCHPDDMShellMatApply</H1></A>
+Variant of <A HREF="../PC/PCHPDDMShellApply.html#PCHPDDMShellApply">PCHPDDMShellApply</A>() for blocks of vectors 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscpc.h" 
+static <A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../PC/PCHPDDMShellMatApply.html#PCHPDDMShellMatApply">PCHPDDMShellMatApply</A>(<A HREF="../PC/PC.html#PC">PC</A> pc, <A HREF="../Mat/Mat.html#Mat">Mat</A> X, <A HREF="../Mat/Mat.html#Mat">Mat</A> Y)
+</PRE>
+<H3><FONT COLOR="#CC3333">Input Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>pc </B></TD><TD>- preconditioner context
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>X </B></TD><TD>- block of input vectors
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Output Parameter</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>Y </B></TD><TD>- block of output vectors
+</TD></TR></TABLE>
+<P>
+Application Interface Routine: <A HREF="../PC/PCApply.html#PCApply">PCApply</A>()
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+  <A HREF="../PC/PCHPDDM.html#PCHPDDM">PCHPDDM</A>, <A HREF="../PC/PCHPDDMShellMatApply.html#PCHPDDMShellMatApply">PCHPDDMShellMatApply</A>(), <A HREF="../PC/PCHPDDMCoarseCorrectionType.html#PCHPDDMCoarseCorrectionType">PCHPDDMCoarseCorrectionType</A>
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>advanced<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/ksp/pc/impls/hpddm/hpddm.cxx.html#PCHPDDMShellMatApply">src/ksp/pc/impls/hpddm/hpddm.cxx</A>
+<BR><A HREF="./index.html">Index of all PC routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

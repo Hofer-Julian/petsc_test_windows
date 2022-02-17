@@ -1,0 +1,54 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscIntSortSemiOrderedWithArray.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>PetscIntSortSemiOrderedWithArray</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/Sys/PetscIntSortSemiOrderedWithArray.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="PetscIntSortSemiOrderedWithArray"><H1>PetscIntSortSemiOrderedWithArray</H1></A>
+Sorts an array of integers in place in increasing order and reorders a second array to match the first. 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscsys.h"  
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../Sys/PetscIntSortSemiOrderedWithArray.html#PetscIntSortSemiOrderedWithArray">PetscIntSortSemiOrderedWithArray</A>(<A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> n, <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> arr1[], <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> arr2[])
+</PRE>
+Not Collective
+<P>
+<H3><FONT COLOR="#CC3333">Input Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>n   </B></TD><TD>- number of values
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>arr1 </B></TD><TD>- array of integers to be sorted
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>arr2 </B></TD><TD>- array of integers to be reordered
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Output Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>arr1 </B></TD><TD>- sorted array of integers
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>arr2 </B></TD><TD>- reordered array of integers
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Notes</FONT></H3>
+The arrays CANNOT overlap.
+<P>
+If the array to be sorted is less than 64 entries long <A HREF="../Sys/PetscSortIntWithArray.html#PetscSortIntWithArray">PetscSortIntWithArray</A>() is automatically used.
+<P>
+This function serves as an alternative to <A HREF="../Sys/PetscSortIntWithArray.html#PetscSortIntWithArray">PetscSortIntWithArray</A>(). While this function works for any array of integers it is
+significantly faster if the array is not totally random. There are exceptions to this and so it is __highly__
+recomended that the user benchmark their code to see which routine is fastest.
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../Sys/PetscTimSortWithArray.html#PetscTimSortWithArray">PetscTimSortWithArray</A>(), <A HREF="../Sys/PetscSortIntWithArray.html#PetscSortIntWithArray">PetscSortIntWithArray</A>(), <A HREF="../Sys/PetscSortIntWithPermutation.html#PetscSortIntWithPermutation">PetscSortIntWithPermutation</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>intermediate<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/sys/utils/sortso.c.html#PetscIntSortSemiOrderedWithArray">src/sys/utils/sortso.c</A>
+<BR><A HREF="./index.html">Index of all Sys routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

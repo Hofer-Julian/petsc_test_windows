@@ -1,0 +1,1355 @@
+<center><a href="sortso.c">Actual source code: sortso.c</a></center><br>
+
+<html>
+<head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/src/sys/utils/sortso.c.html" />
+<title></title>
+<meta name="generator" content="c2html 0.9.4">
+<meta name="date" content="2021-03-30T16:49:29+00:00">
+</head>
+
+<body bgcolor="#FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 src/sys/utils/sortso.c.html "><small>Report Typos and Errors</small></a></div>
+<pre width="80">
+<a name="line1">  1: </a>#include <A href="../../../include/petscsys.h.html">&lt;petscsys.h&gt;</A>
+<a name="line2">  2: </a>#include <A href="../../../include/petsc/private/petscimpl.h.html">&lt;petsc/private/petscimpl.h&gt;</A>
+
+<a name="line4">  4: </a><strong><font color="#4169E1"><a name="Compare_PetscMPIInt_Private"></a>PETSC_STATIC_INLINE int Compare_PetscMPIInt_Private(const void *left, const void *right, PETSC_UNUSED void *ctx)</font></strong>
+<a name="line5">  5: </a>{
+<a name="line6">  6: </a>  <a href="../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a> l = *(<a href="../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a> *) left, r = *(<a href="../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a> *) right;
+<a name="line7">  7: </a>  <font color="#4169E1">return</font> (l &lt; r) ? -1 : (l &gt; r);
+<a name="line8">  8: </a>}
+
+<a name="line10"> 10: </a><strong><font color="#4169E1"><a name="Compare_PetscInt_Private"></a>PETSC_STATIC_INLINE int Compare_PetscInt_Private(const void *left, const void *right, PETSC_UNUSED void *ctx)</font></strong>
+<a name="line11"> 11: </a>{
+<a name="line12"> 12: </a>  <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> l = *(<a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *) left, r = *(<a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *) right;
+<a name="line13"> 13: </a>  <font color="#4169E1">return</font> (l &lt; r) ? -1 : (l &gt; r);
+<a name="line14"> 14: </a>}
+
+<a name="line16"> 16: </a><strong><font color="#4169E1"><a name="Compare_PetscReal_Private"></a>PETSC_STATIC_INLINE int Compare_PetscReal_Private(const void *left, const void *right, PETSC_UNUSED void *ctx)</font></strong>
+<a name="line17"> 17: </a>{
+<a name="line18"> 18: </a>  <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> l = *(<a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> *) left, r = *(<a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> *) right;
+<a name="line19"> 19: </a>  <font color="#4169E1">return</font> (l &lt; r) ? -1 : (l &gt; r);
+<a name="line20"> 20: </a>}
+
+<a name="line22"> 22: </a><strong><font color="#228B22">#define MIN_GALLOP_CONST_GLOBAL 8</font></strong>
+<a name="line23"> 23: </a>static <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> MIN_GALLOP_GLOBAL = MIN_GALLOP_CONST_GLOBAL;
+<a name="line24"> 24: </a><strong><font color="#4169E1">typedef int (*CompFunc)(const void *, const void *, void *)</font></strong>;
+
+<a name="line26"> 26: </a><font color="#B22222">/* Mostly to force clang uses the builtins, but can't hurt to have gcc compilers also do the same */</font>
+<a name="line27"> 27: </a><font color="#A020F0">#if !defined (PETSC_USE_DEBUG) &amp;&amp; defined(__GNUC__)</font>
+<a name="line28"> 28: </a><strong><font color="#4169E1"><a name="COPYSWAPPY"></a>PETSC_STATIC_INLINE void COPYSWAPPY(char *a, char *b, char *t, size_t size)</font></strong>
+<a name="line29"> 29: </a>{
+<a name="line30"> 30: </a>  __builtin_memcpy(t, b, size);
+<a name="line31"> 31: </a>  __builtin_memmove(b, a, size);
+<a name="line32"> 32: </a>  __builtin_memcpy(a, t, size);
+<a name="line33"> 33: </a>  <font color="#4169E1">return</font>;
+<a name="line34"> 34: </a>}
+
+<a name="line36"> 36: </a><strong><font color="#4169E1"><a name="COPYSWAPPY2"></a>PETSC_STATIC_INLINE void COPYSWAPPY2(char *aa, char *ab, size_t asize, char *ba, char *bb, size_t bsize, char *t)</font></strong>
+<a name="line37"> 37: </a>{
+<a name="line38"> 38: </a>  __builtin_memcpy(t, ab, asize);
+<a name="line39"> 39: </a>  __builtin_memmove(ab, aa, asize);
+<a name="line40"> 40: </a>  __builtin_memcpy(aa, t, asize);
+<a name="line41"> 41: </a>  __builtin_memcpy(t, bb, bsize);
+<a name="line42"> 42: </a>  __builtin_memmove(bb, ba, bsize);
+<a name="line43"> 43: </a>  __builtin_memcpy(ba, t, bsize);
+<a name="line44"> 44: </a>  <font color="#4169E1">return</font>;
+<a name="line45"> 45: </a>}
+
+<a name="line47"> 47: </a><strong><font color="#4169E1"><a name="Petsc_memcpy"></a>PETSC_STATIC_INLINE void Petsc_memcpy(char *dest, const char *src, size_t size)</font></strong>
+<a name="line48"> 48: </a>{
+<a name="line49"> 49: </a>  __builtin_memcpy(dest, src, size);
+<a name="line50"> 50: </a>  <font color="#4169E1">return</font>;
+<a name="line51"> 51: </a>}
+
+<a name="line53"> 53: </a><strong><font color="#4169E1"><a name="Petsc_memcpy2"></a>PETSC_STATIC_INLINE void Petsc_memcpy2(char *adest, const char *asrc, size_t asize, char *bdest, const char *bsrc, size_t bsize)</font></strong>
+<a name="line54"> 54: </a>{
+<a name="line55"> 55: </a>  __builtin_memcpy(adest, asrc, asize);
+<a name="line56"> 56: </a>  __builtin_memcpy(bdest, asrc, bsize);
+<a name="line57"> 57: </a>  <font color="#4169E1">return</font>;
+<a name="line58"> 58: </a>}
+
+<a name="line60"> 60: </a><strong><font color="#4169E1"><a name="Petsc_memmove"></a>PETSC_STATIC_INLINE void Petsc_memmove(char *dest, const char *src, size_t size)</font></strong>
+<a name="line61"> 61: </a>{
+<a name="line62"> 62: </a>  __builtin_memmove(dest, src, size);
+<a name="line63"> 63: </a>  <font color="#4169E1">return</font>;
+<a name="line64"> 64: </a>}
+
+<a name="line66"> 66: </a><strong><font color="#4169E1"><a name="Petsc_memmove2"></a>PETSC_STATIC_INLINE void Petsc_memmove2(char *adest, const char *asrc, size_t asize, char *bdest, const char *bsrc, size_t bsize)</font></strong>
+<a name="line67"> 67: </a>{
+<a name="line68"> 68: </a>  __builtin_memmove(adest, asrc, asize);
+<a name="line69"> 69: </a>  __builtin_memmove(bdest, bsrc, bsize);
+<a name="line70"> 70: </a>  <font color="#4169E1">return</font>;
+<a name="line71"> 71: </a>}
+<a name="line72"> 72: </a><font color="#A020F0"># else</font>
+<a name="line73"> 73: </a><strong><font color="#4169E1"><a name="COPYSWAPPY"></a>PETSC_STATIC_INLINE void COPYSWAPPY(char *a, char *b, char *t, size_t size)</font></strong>
+<a name="line74"> 74: </a>{
+<a name="line77"> 77: </a>  <a href="../../../docs/manualpages/Sys/PetscMemcpy.html#PetscMemcpy">PetscMemcpy</a>(t, b, size);CHKERRABORT(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,ierr);
+<a name="line78"> 78: </a>  <a href="../../../docs/manualpages/Sys/PetscMemmove.html#PetscMemmove">PetscMemmove</a>(b, a, size);CHKERRABORT(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,ierr);
+<a name="line79"> 79: </a>  <a href="../../../docs/manualpages/Sys/PetscMemcpy.html#PetscMemcpy">PetscMemcpy</a>(a, t, size);CHKERRABORT(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,ierr);
+<a name="line80"> 80: </a>  PetscFunctionReturnVoid();
+<a name="line81"> 81: </a>}
+
+<a name="line83"> 83: </a><strong><font color="#4169E1"><a name="COPYSWAPPY2"></a>PETSC_STATIC_INLINE void COPYSWAPPY2(char *aa, char *ab, size_t asize, char *ba, char *bb, size_t bsize, char *t)</font></strong>
+<a name="line84"> 84: </a>{
+<a name="line87"> 87: </a>  <a href="../../../docs/manualpages/Sys/PetscMemcpy.html#PetscMemcpy">PetscMemcpy</a>(t, ab, asize);CHKERRABORT(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,ierr);
+<a name="line88"> 88: </a>  <a href="../../../docs/manualpages/Sys/PetscMemmove.html#PetscMemmove">PetscMemmove</a>(ab, aa, asize);CHKERRABORT(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,ierr);
+<a name="line89"> 89: </a>  <a href="../../../docs/manualpages/Sys/PetscMemcpy.html#PetscMemcpy">PetscMemcpy</a>(aa, t, asize);CHKERRABORT(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,ierr);
+<a name="line90"> 90: </a>  <a href="../../../docs/manualpages/Sys/PetscMemcpy.html#PetscMemcpy">PetscMemcpy</a>(t, bb, bsize);CHKERRABORT(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,ierr);
+<a name="line91"> 91: </a>  <a href="../../../docs/manualpages/Sys/PetscMemmove.html#PetscMemmove">PetscMemmove</a>(bb, ba, bsize);CHKERRABORT(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,ierr);
+<a name="line92"> 92: </a>  <a href="../../../docs/manualpages/Sys/PetscMemcpy.html#PetscMemcpy">PetscMemcpy</a>(ba, t, bsize);CHKERRABORT(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,ierr);
+<a name="line93"> 93: </a>  PetscFunctionReturnVoid();
+<a name="line94"> 94: </a>}
+
+<a name="line96"> 96: </a><strong><font color="#4169E1"><a name="Petsc_memcpy"></a>PETSC_STATIC_INLINE void Petsc_memcpy(char *dest, const char *src, size_t size)</font></strong>
+<a name="line97"> 97: </a>{
+<a name="line100">100: </a>  <a href="../../../docs/manualpages/Sys/PetscMemcpy.html#PetscMemcpy">PetscMemcpy</a>(dest, src, size);CHKERRABORT(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,ierr);
+<a name="line101">101: </a>  PetscFunctionReturnVoid();
+<a name="line102">102: </a>}
+
+<a name="line104">104: </a><strong><font color="#4169E1"><a name="Petsc_memcpy2"></a>PETSC_STATIC_INLINE void Petsc_memcpy2(char *adest, const char *asrc, size_t asize, char *bdest, const char *bsrc, size_t bsize)</font></strong>
+<a name="line105">105: </a>{
+<a name="line108">108: </a>  <a href="../../../docs/manualpages/Sys/PetscMemcpy.html#PetscMemcpy">PetscMemcpy</a>(adest, asrc, asize);CHKERRABORT(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,ierr);
+<a name="line109">109: </a>  <a href="../../../docs/manualpages/Sys/PetscMemcpy.html#PetscMemcpy">PetscMemcpy</a>(bdest, asrc, bsize);CHKERRABORT(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,ierr);
+<a name="line110">110: </a>  PetscFunctionReturnVoid();
+<a name="line111">111: </a>}
+
+<a name="line113">113: </a><strong><font color="#4169E1"><a name="Petsc_memmove"></a>PETSC_STATIC_INLINE void Petsc_memmove(char *dest, const char *src, size_t size)</font></strong>
+<a name="line114">114: </a>{
+<a name="line117">117: </a>  <a href="../../../docs/manualpages/Sys/PetscMemmove.html#PetscMemmove">PetscMemmove</a>(dest, src, size);CHKERRABORT(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,ierr);
+<a name="line118">118: </a>  PetscFunctionReturnVoid();
+<a name="line119">119: </a>}
+
+<a name="line121">121: </a><strong><font color="#4169E1"><a name="Petsc_memmove2"></a>PETSC_STATIC_INLINE void Petsc_memmove2(char *adest, const char *asrc, size_t asize, char *bdest, const char *bsrc, size_t bsize)</font></strong>
+<a name="line122">122: </a>{
+<a name="line125">125: </a>  <a href="../../../docs/manualpages/Sys/PetscMemmove.html#PetscMemmove">PetscMemmove</a>(adest, asrc, asize);CHKERRABORT(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,ierr);
+<a name="line126">126: </a>  <a href="../../../docs/manualpages/Sys/PetscMemmove.html#PetscMemmove">PetscMemmove</a>(bdest, bsrc, bsize);CHKERRABORT(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,ierr);
+<a name="line127">127: </a>  PetscFunctionReturnVoid();
+<a name="line128">128: </a>}
+<a name="line129">129: </a><font color="#A020F0">#endif</font>
+
+<a name="line131">131: </a><font color="#B22222">/* Start left look right. Looking for e.g. B[0] in A or mergelo. l inclusive, r inclusive. Returns first m such that arr[m] &gt;</font>
+<a name="line132">132: </a><font color="#B22222"> x. Output also inclusive.</font>
+
+<a name="line134">134: </a><font color="#B22222"> NOTE: Both gallopsearch functions CANNOT distinguish between inserting AFTER the entire array vs inserting at entry n!! For example for an array:</font>
+
+<a name="line136">136: </a><font color="#B22222">   {0,1,2,3,4,5}</font>
+
+<a name="line138">138: </a><font color="#B22222">   when looking to insert "5" this routine will return *m = 6, but when looking to insert "6" it will ALSO return *m = 6.</font>
+<a name="line139">139: </a><font color="#B22222">  */</font>
+<a name="line140">140: </a><strong><font color="#4169E1"><a name="PetscGallopSearchLeft_Private"></a>PETSC_STATIC_INLINE <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscGallopSearchLeft_Private(const char *arr, size_t size, CompFunc cmp, void *ctx, <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> l, <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> r, const char *x, <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *m)</font></strong>
+<a name="line141">141: </a>{
+<a name="line142">142: </a>  <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> last = l, k = 1, mid, cur = l+1;
+
+<a name="line145">145: </a>  *m = l;
+<a name="line146">146: </a>  <font color="#4169E1">if</font> (<a href="../../../docs/manualpages/Sys/PetscUnlikelyDebug.html#PetscUnlikelyDebug">PetscUnlikelyDebug</a>(r &lt; l)) <a href="../../../docs/manualpages/Sys/SETERRQ2.html#SETERRQ2">SETERRQ2</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_PLIB,<font color="#666666">"r %D &lt; l %D in PetscGallopSearchLeft"</font>,r,l);
+<a name="line147">147: </a>  <font color="#4169E1">if</font> ((*cmp)(x, arr+r*size, ctx) &gt;= 0) {*m = r; <font color="#4169E1">return</font>(0);}
+<a name="line148">148: </a>  <font color="#4169E1">if</font> ((*cmp)(x, (arr)+l*size, ctx) &lt; 0 || <a href="../../../docs/manualpages/Sys/PetscUnlikely.html#PetscUnlikely">PetscUnlikely</a>(!(r-l))) <font color="#4169E1">return</font>(0);
+<a name="line149">149: </a>  <font color="#4169E1">while</font> (<a href="../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>) {
+<a name="line150">150: </a>    <font color="#4169E1">if</font> (<a href="../../../docs/manualpages/Sys/PetscUnlikely.html#PetscUnlikely">PetscUnlikely</a>(cur &gt; r)) {cur = r; <font color="#4169E1">break</font>;}
+<a name="line151">151: </a>    <font color="#4169E1">if</font> ((*cmp)(x, (arr)+cur*size, ctx) &lt; 0) <font color="#4169E1">break</font>;
+<a name="line152">152: </a>    last = cur;
+<a name="line153">153: </a>    cur += (k &lt;&lt;= 1) + 1;
+<a name="line154">154: </a>    ++k;
+<a name="line155">155: </a>  }
+<a name="line156">156: </a>  <font color="#B22222">/* standard binary search but take last 0 mid 0 cur 1 into account*/</font>
+<a name="line157">157: </a>  <font color="#4169E1">while</font> (cur &gt; last + 1) {
+<a name="line158">158: </a>    mid = last + ((cur - last) &gt;&gt; 1);
+<a name="line159">159: </a>    <font color="#4169E1">if</font> ((*cmp)(x, (arr)+mid*size, ctx) &lt; 0) {
+<a name="line160">160: </a>      cur = mid;
+<a name="line161">161: </a>    } <font color="#4169E1">else</font> {
+<a name="line162">162: </a>      last = mid;
+<a name="line163">163: </a>    }
+<a name="line164">164: </a>  }
+<a name="line165">165: </a>  *m = cur;
+<a name="line166">166: </a>  <font color="#4169E1">return</font>(0);
+<a name="line167">167: </a>}
+
+<a name="line169">169: </a><font color="#B22222">/* Start right look left. Looking for e.g. A[-1] in B or mergehi. l inclusive, r inclusive. Returns last m such that arr[m]</font>
+<a name="line170">170: </a><font color="#B22222"> &lt; x. Output also inclusive */</font>
+<a name="line171">171: </a><strong><font color="#4169E1"><a name="PetscGallopSearchRight_Private"></a>PETSC_STATIC_INLINE <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscGallopSearchRight_Private(const char *arr, size_t size, CompFunc cmp, void *ctx, <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> l, <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> r, const char *x, <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *m)</font></strong>
+<a name="line172">172: </a>{
+<a name="line173">173: </a>  <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> last = r, k = 1, mid, cur = r-1;
+
+<a name="line176">176: </a>  *m = r;
+<a name="line177">177: </a>  <font color="#4169E1">if</font> (<a href="../../../docs/manualpages/Sys/PetscUnlikelyDebug.html#PetscUnlikelyDebug">PetscUnlikelyDebug</a>(r &lt; l)) <a href="../../../docs/manualpages/Sys/SETERRQ2.html#SETERRQ2">SETERRQ2</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_PLIB,<font color="#666666">"r %D &lt; l %D in PetscGallopSearchRight"</font>,r,l);
+<a name="line178">178: </a>  <font color="#4169E1">if</font> ((*cmp)(x, arr+l*size, ctx) &lt;= 0) {*m = l; <font color="#4169E1">return</font>(0);}
+<a name="line179">179: </a>  <font color="#4169E1">if</font> ((*cmp)(x, (arr)+r*size, ctx) &gt; 0 || <a href="../../../docs/manualpages/Sys/PetscUnlikely.html#PetscUnlikely">PetscUnlikely</a>(!(r-l))) <font color="#4169E1">return</font>(0);
+<a name="line180">180: </a>  <font color="#4169E1">while</font> (<a href="../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>) {
+<a name="line181">181: </a>    <font color="#4169E1">if</font> (<a href="../../../docs/manualpages/Sys/PetscUnlikely.html#PetscUnlikely">PetscUnlikely</a>(cur &lt; l)) {cur = l; <font color="#4169E1">break</font>;}
+<a name="line182">182: </a>    <font color="#4169E1">if</font> ((*cmp)(x, (arr)+cur*size, ctx) &gt; 0) <font color="#4169E1">break</font>;
+<a name="line183">183: </a>    last = cur;
+<a name="line184">184: </a>    cur -= (k &lt;&lt;= 1) + 1;
+<a name="line185">185: </a>    ++k;
+<a name="line186">186: </a>  }
+<a name="line187">187: </a>  <font color="#B22222">/* standard binary search but take last r-1 mid r-1 cur r-2 into account*/</font>
+<a name="line188">188: </a>  <font color="#4169E1">while</font> (last &gt; cur + 1) {
+<a name="line189">189: </a>    mid = last - ((last - cur) &gt;&gt; 1);
+<a name="line190">190: </a>    <font color="#4169E1">if</font> ((*cmp)(x, (arr)+mid*size, ctx) &gt; 0) {
+<a name="line191">191: </a>      cur = mid;
+<a name="line192">192: </a>    } <font color="#4169E1">else</font> {
+<a name="line193">193: </a>      last = mid;
+<a name="line194">194: </a>    }
+<a name="line195">195: </a>  }
+<a name="line196">196: </a>  *m = cur;
+<a name="line197">197: </a>  <font color="#4169E1">return</font>(0);
+<a name="line198">198: </a>}
+
+<a name="line200">200: </a><font color="#B22222">/* Mergesort where size of left half &lt;= size of right half, so mergesort is done left to right. Arr should be pointer to</font>
+<a name="line201">201: </a><font color="#B22222"> complete array, left is first index of left array, mid is first index of right array, right is last index of right</font>
+<a name="line202">202: </a><font color="#B22222"> array */</font>
+<a name="line203">203: </a><strong><font color="#4169E1"><a name="PetscTimSortMergeLo_Private"></a>PETSC_STATIC_INLINE <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscTimSortMergeLo_Private(char *arr, char *tarr, size_t size, CompFunc cmp, void *ctx, <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> left, <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> mid, <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> right)</font></strong>
+<a name="line204">204: </a>{
+<a name="line205">205: </a>  <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       i = 0, j = mid, k = left, gallopleft = 0, gallopright = 0;
+<a name="line206">206: </a>  const <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> llen = mid-left;
+
+<a name="line210">210: </a>  Petsc_memcpy(tarr, arr+(left*size), llen*size);
+<a name="line211">211: </a>  <font color="#4169E1">while</font> ((i &lt; llen) &amp;&amp; (j &lt;= right)) {
+<a name="line212">212: </a>    <font color="#4169E1">if</font> ((*cmp)(tarr+(i*size), arr+(j*size), ctx) &lt; 0) {
+<a name="line213">213: </a>      Petsc_memcpy(arr+(k*size), tarr+(i*size), size);
+<a name="line214">214: </a>      ++k;
+<a name="line215">215: </a>      gallopright = 0;
+<a name="line216">216: </a>      <font color="#4169E1">if</font> (++i &lt; llen &amp;&amp; ++gallopleft &gt;= MIN_GALLOP_GLOBAL) {
+<a name="line217">217: </a>        <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> l1, l2, diff1, diff2;
+<a name="line218">218: </a>        <font color="#4169E1">do</font> {
+<a name="line219">219: </a>          <font color="#4169E1">if</font> (MIN_GALLOP_GLOBAL &gt; 1) --MIN_GALLOP_GLOBAL;
+<a name="line220">220: </a>          <font color="#B22222">/* search temp for right[j], can move up to that of temp into arr immediately */</font>
+<a name="line221">221: </a>          PetscGallopSearchLeft_Private(tarr, size, cmp, ctx, i, llen-1, arr+(j*size), &amp;l1);
+<a name="line222">222: </a>          diff1 = l1-i;
+<a name="line223">223: </a>          Petsc_memcpy(arr+(k*size), tarr+(i*size), diff1*size);
+<a name="line224">224: </a>          k += diff1;
+<a name="line225">225: </a>          i = l1;
+<a name="line226">226: </a>          <font color="#B22222">/* search right for temp[i], can move up to that many of right into arr */</font>
+<a name="line227">227: </a>          PetscGallopSearchLeft_Private(arr, size, cmp, ctx, j, right, tarr+(i*size), &amp;l2);
+<a name="line228">228: </a>          diff2 = l2-j;
+<a name="line229">229: </a>          Petsc_memmove((arr)+k*size, (arr)+j*size, diff2*size);
+<a name="line230">230: </a>          k += diff2;
+<a name="line231">231: </a>          j = l2;
+<a name="line232">232: </a>          <font color="#4169E1">if</font> (i &gt;= llen || j &gt; right) <font color="#4169E1">break</font>;
+<a name="line233">233: </a>        } <font color="#4169E1">while</font> (diff1 &gt; MIN_GALLOP_GLOBAL || diff2 &gt; MIN_GALLOP_GLOBAL);
+<a name="line234">234: </a>        ++MIN_GALLOP_GLOBAL;
+<a name="line235">235: </a>      }
+<a name="line236">236: </a>    } <font color="#4169E1">else</font> {
+<a name="line237">237: </a>      Petsc_memmove(arr+(k*size), arr+(j*size), size);
+<a name="line238">238: </a>      ++k;
+<a name="line239">239: </a>      gallopleft = 0;
+<a name="line240">240: </a>      <font color="#4169E1">if</font> (++j &lt;= right &amp;&amp; ++gallopright &gt;= MIN_GALLOP_GLOBAL) {
+<a name="line241">241: </a>        <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> l1, l2, diff1, diff2;
+<a name="line242">242: </a>        <font color="#4169E1">do</font> {
+<a name="line243">243: </a>          <font color="#4169E1">if</font> (MIN_GALLOP_GLOBAL &gt; 1) --MIN_GALLOP_GLOBAL;
+<a name="line244">244: </a>          <font color="#B22222">/* search right for temp[i], can move up to that many of right into arr */</font>
+<a name="line245">245: </a>          PetscGallopSearchLeft_Private(arr, size, cmp, ctx, j, right, tarr+(i*size), &amp;l2);
+<a name="line246">246: </a>          diff2 = l2-j;
+<a name="line247">247: </a>          Petsc_memmove(arr+(k*size), arr+(j*size), diff2*size);
+<a name="line248">248: </a>          k += diff2;
+<a name="line249">249: </a>          j = l2;
+<a name="line250">250: </a>          <font color="#B22222">/* search temp for right[j], can copy up to that of temp into arr immediately */</font>
+<a name="line251">251: </a>          PetscGallopSearchLeft_Private(tarr, size, cmp, ctx, i, llen-1, arr+(j*size), &amp;l1);
+<a name="line252">252: </a>          diff1 = l1-i;
+<a name="line253">253: </a>          Petsc_memcpy(arr+(k*size), tarr+(i*size), diff1*size);
+<a name="line254">254: </a>          k += diff1;
+<a name="line255">255: </a>          i = l1;
+<a name="line256">256: </a>          <font color="#4169E1">if</font> (i &gt;= llen || j &gt; right) <font color="#4169E1">break</font>;
+<a name="line257">257: </a>        } <font color="#4169E1">while</font> (diff1 &gt; MIN_GALLOP_GLOBAL || diff2 &gt; MIN_GALLOP_GLOBAL);
+<a name="line258">258: </a>        ++MIN_GALLOP_GLOBAL;
+<a name="line259">259: </a>      }
+<a name="line260">260: </a>    }
+<a name="line261">261: </a>  }
+<a name="line262">262: </a>  <font color="#4169E1">if</font> (i&lt;llen) {Petsc_memcpy(arr+(k*size), tarr+(i*size), (llen-i)*size);}
+<a name="line263">263: </a>  <font color="#4169E1">return</font>(0);
+<a name="line264">264: </a>}
+
+<a name="line266">266: </a><strong><font color="#4169E1"><a name="PetscTimSortMergeLoWithArray_Private"></a>PETSC_STATIC_INLINE <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscTimSortMergeLoWithArray_Private(char *arr, char *atarr, size_t asize, char *barr, char *btarr, size_t bsize, CompFunc cmp, void *ctx, <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> left, <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> mid, <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> right)</font></strong>
+<a name="line267">267: </a>{
+<a name="line268">268: </a>  <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       i = 0, j = mid, k = left, gallopleft = 0, gallopright = 0;
+<a name="line269">269: </a>  const <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> llen = mid-left;
+
+<a name="line273">273: </a>  Petsc_memcpy2(atarr, arr+(left*asize), llen*asize, btarr, barr+(left*bsize), llen*bsize);
+<a name="line274">274: </a>  <font color="#4169E1">while</font> ((i &lt; llen) &amp;&amp; (j &lt;= right)) {
+<a name="line275">275: </a>    <font color="#4169E1">if</font> ((*cmp)(atarr+(i*asize), arr+(j*asize), ctx) &lt; 0) {
+<a name="line276">276: </a>      Petsc_memcpy2(arr+(k*asize), atarr+(i*asize), asize, barr+(k*bsize), btarr+(i*bsize), bsize);
+<a name="line277">277: </a>      ++k;
+<a name="line278">278: </a>      gallopright = 0;
+<a name="line279">279: </a>      <font color="#4169E1">if</font> (++i &lt; llen &amp;&amp; ++gallopleft &gt;= MIN_GALLOP_GLOBAL) {
+<a name="line280">280: </a>        <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> l1, l2, diff1, diff2;
+<a name="line281">281: </a>        <font color="#4169E1">do</font> {
+<a name="line282">282: </a>          <font color="#4169E1">if</font> (MIN_GALLOP_GLOBAL &gt; 1) --MIN_GALLOP_GLOBAL;
+<a name="line283">283: </a>          <font color="#B22222">/* search temp for right[j], can move up to that of temp into arr immediately */</font>
+<a name="line284">284: </a>          PetscGallopSearchLeft_Private(atarr, asize, cmp, ctx, i, llen-1, arr+(j*asize), &amp;l1);
+<a name="line285">285: </a>          diff1 = l1-i;
+<a name="line286">286: </a>          Petsc_memcpy2(arr+(k*asize), atarr+(i*asize), diff1*asize, barr+(k*bsize), btarr+(i*bsize), diff1*bsize);
+<a name="line287">287: </a>          k += diff1;
+<a name="line288">288: </a>          i = l1;
+<a name="line289">289: </a>          <font color="#B22222">/* search right for temp[i], can move up to that many of right into arr */</font>
+<a name="line290">290: </a>          PetscGallopSearchLeft_Private(arr, asize, cmp, ctx, j, right, atarr+(i*asize), &amp;l2);
+<a name="line291">291: </a>          diff2 = l2-j;
+<a name="line292">292: </a>          Petsc_memmove2(arr+(k*asize), arr+(j*asize), diff2*asize, barr+(k*bsize), barr+(j*bsize), diff2*bsize);
+<a name="line293">293: </a>          k += diff2;
+<a name="line294">294: </a>          j = l2;
+<a name="line295">295: </a>          <font color="#4169E1">if</font> (i &gt;= llen || j &gt; right) <font color="#4169E1">break</font>;
+<a name="line296">296: </a>        } <font color="#4169E1">while</font> (diff1 &gt; MIN_GALLOP_GLOBAL || diff2 &gt; MIN_GALLOP_GLOBAL);
+<a name="line297">297: </a>        ++MIN_GALLOP_GLOBAL;
+<a name="line298">298: </a>      }
+<a name="line299">299: </a>    } <font color="#4169E1">else</font> {
+<a name="line300">300: </a>      Petsc_memmove2(arr+(k*asize), arr+(j*asize), asize, barr+(k*bsize), barr+(j*bsize), bsize);
+<a name="line301">301: </a>      ++k;
+<a name="line302">302: </a>      gallopleft = 0;
+<a name="line303">303: </a>      <font color="#4169E1">if</font> (++j &lt;= right &amp;&amp; ++gallopright &gt;= MIN_GALLOP_GLOBAL) {
+<a name="line304">304: </a>        <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> l1, l2, diff1, diff2;
+<a name="line305">305: </a>        <font color="#4169E1">do</font> {
+<a name="line306">306: </a>          <font color="#4169E1">if</font> (MIN_GALLOP_GLOBAL &gt; 1) --MIN_GALLOP_GLOBAL;
+<a name="line307">307: </a>          <font color="#B22222">/* search right for temp[i], can move up to that many of right into arr */</font>
+<a name="line308">308: </a>          PetscGallopSearchLeft_Private(arr, asize, cmp, ctx, j, right, atarr+(i*asize), &amp;l2);
+<a name="line309">309: </a>          diff2 = l2-j;
+<a name="line310">310: </a>          Petsc_memmove2(arr+(k*asize), arr+(j*asize), diff2*asize, barr+(k*bsize), barr+(j*bsize), diff2*bsize);
+<a name="line311">311: </a>          k += diff2;
+<a name="line312">312: </a>          j = l2;
+<a name="line313">313: </a>          <font color="#B22222">/* search temp for right[j], can copy up to that of temp into arr immediately */</font>
+<a name="line314">314: </a>          PetscGallopSearchLeft_Private(atarr, asize, cmp, ctx, i, llen-1, arr+(j*asize), &amp;l1);
+<a name="line315">315: </a>          diff1 = l1-i;
+<a name="line316">316: </a>          Petsc_memcpy2(arr+(k*asize), atarr+(i*asize), diff1*asize, barr+(k*bsize), btarr+(i*bsize), diff1*bsize);
+<a name="line317">317: </a>          k += diff1;
+<a name="line318">318: </a>          i = l1;
+<a name="line319">319: </a>          <font color="#4169E1">if</font> (i &gt;= llen || j &gt; right) <font color="#4169E1">break</font>;
+<a name="line320">320: </a>        } <font color="#4169E1">while</font> (diff1 &gt; MIN_GALLOP_GLOBAL || diff2 &gt; MIN_GALLOP_GLOBAL);
+<a name="line321">321: </a>        ++MIN_GALLOP_GLOBAL;
+<a name="line322">322: </a>      }
+<a name="line323">323: </a>    }
+<a name="line324">324: </a>  }
+<a name="line325">325: </a>  <font color="#4169E1">if</font> (i&lt;llen) {Petsc_memcpy2(arr+(k*asize), atarr+(i*asize), (llen-i)*asize, barr+(k*bsize), btarr+(i*bsize), (llen-i)*bsize);}
+<a name="line326">326: </a>  <font color="#4169E1">return</font>(0);
+<a name="line327">327: </a>}
+
+<a name="line329">329: </a><font color="#B22222">/* Mergesort where size of right half &lt; size of left half, so mergesort is done right to left. Arr should be pointer to</font>
+<a name="line330">330: </a><font color="#B22222"> complete array, left is first index of left array, mid is first index of right array, right is last index of right</font>
+<a name="line331">331: </a><font color="#B22222"> array */</font>
+<a name="line332">332: </a><strong><font color="#4169E1"><a name="PetscTimSortMergeHi_Private"></a>PETSC_STATIC_INLINE <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscTimSortMergeHi_Private(char *arr, char *tarr, size_t size, CompFunc cmp, void *ctx, <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> left, <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> mid, <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> right)</font></strong>
+<a name="line333">333: </a>{
+<a name="line334">334: </a>  <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       i = right-mid, j = mid-1, k = right, gallopleft = 0, gallopright = 0;
+<a name="line335">335: </a>  const <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> rlen = right-mid+1;
+
+<a name="line339">339: </a>  Petsc_memcpy(tarr, (arr)+mid*size, rlen*size);
+<a name="line340">340: </a>  <font color="#4169E1">while</font> ((i &gt;= 0) &amp;&amp; (j &gt;= left)) {
+<a name="line341">341: </a>    <font color="#4169E1">if</font> ((*cmp)((tarr)+i*size, (arr)+j*size, ctx) &gt; 0) {
+<a name="line342">342: </a>      Petsc_memcpy((arr)+k*size, (tarr)+i*size, size);
+<a name="line343">343: </a>      --k;
+<a name="line344">344: </a>      gallopleft = 0;
+<a name="line345">345: </a>      <font color="#4169E1">if</font> (--i &gt;= 0 &amp;&amp; ++gallopright &gt;= MIN_GALLOP_GLOBAL) {
+<a name="line346">346: </a>        <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> l1, l2, diff1, diff2;
+<a name="line347">347: </a>        <font color="#4169E1">do</font> {
+<a name="line348">348: </a>          <font color="#4169E1">if</font> (MIN_GALLOP_GLOBAL &gt; 1) --MIN_GALLOP_GLOBAL;
+<a name="line349">349: </a>          <font color="#B22222">/* search temp for left[j], can copy up to that many of temp into arr */</font>
+<a name="line350">350: </a>          PetscGallopSearchRight_Private(tarr, size, cmp, ctx, 0, i, (arr)+j*size, &amp;l1);
+<a name="line351">351: </a>          diff1 = i-l1;
+<a name="line352">352: </a>          Petsc_memcpy((arr)+(k-diff1+1)*size, (tarr)+(l1+1)*size, diff1*size);
+<a name="line353">353: </a>          k -= diff1;
+<a name="line354">354: </a>          i = l1;
+<a name="line355">355: </a>          <font color="#B22222">/* search left for temp[i], can move up to that many of left up arr */</font>
+<a name="line356">356: </a>          PetscGallopSearchRight_Private(arr, size, cmp, ctx, left, j, (tarr)+i*size, &amp;l2);
+<a name="line357">357: </a>          diff2 = j-l2;
+<a name="line358">358: </a>          Petsc_memmove((arr)+(k-diff2+1)*size, (arr)+(l2+1)*size, diff2*size);
+<a name="line359">359: </a>          k -= diff2;
+<a name="line360">360: </a>          j = l2;
+<a name="line361">361: </a>          <font color="#4169E1">if</font> (i &lt; 0 || j &lt; left) <font color="#4169E1">break</font>;
+<a name="line362">362: </a>        } <font color="#4169E1">while</font> (diff1 &gt; MIN_GALLOP_GLOBAL || diff2 &gt; MIN_GALLOP_GLOBAL);
+<a name="line363">363: </a>        ++MIN_GALLOP_GLOBAL;
+<a name="line364">364: </a>      }
+<a name="line365">365: </a>    } <font color="#4169E1">else</font> {
+<a name="line366">366: </a>      Petsc_memmove((arr)+k*size, (arr)+j*size, size);
+<a name="line367">367: </a>      --k;
+<a name="line368">368: </a>      gallopright = 0;
+<a name="line369">369: </a>      <font color="#4169E1">if</font> (--j &gt;= left &amp;&amp; ++gallopleft &gt;= MIN_GALLOP_GLOBAL) {
+<a name="line370">370: </a>        <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> l1, l2, diff1, diff2;
+<a name="line371">371: </a>        <font color="#4169E1">do</font> {
+<a name="line372">372: </a>          <font color="#4169E1">if</font> (MIN_GALLOP_GLOBAL &gt; 1) --MIN_GALLOP_GLOBAL;
+<a name="line373">373: </a>          <font color="#B22222">/* search left for temp[i], can move up to that many of left up arr */</font>
+<a name="line374">374: </a>          PetscGallopSearchRight_Private(arr, size, cmp, ctx, left, j, (tarr)+i*size, &amp;l2);
+<a name="line375">375: </a>          diff2 = j-l2;
+<a name="line376">376: </a>          Petsc_memmove((arr)+(k-diff2+1)*size, (arr)+(l2+1)*size, diff2*size);
+<a name="line377">377: </a>          k -= diff2;
+<a name="line378">378: </a>          j = l2;
+<a name="line379">379: </a>          <font color="#B22222">/* search temp for left[j], can copy up to that many of temp into arr */</font>
+<a name="line380">380: </a>          PetscGallopSearchRight_Private(tarr, size, cmp, ctx, 0, i, (arr)+j*size, &amp;l1);
+<a name="line381">381: </a>          diff1 = i-l1;
+<a name="line382">382: </a>          Petsc_memcpy((arr)+(k-diff1+1)*size, (tarr)+(l1+1)*size, diff1*size);
+<a name="line383">383: </a>          k -= diff1;
+<a name="line384">384: </a>          i = l1;
+<a name="line385">385: </a>          <font color="#4169E1">if</font> (i &lt; 0 || j &lt; left) <font color="#4169E1">break</font>;
+<a name="line386">386: </a>        } <font color="#4169E1">while</font> (diff1 &gt; MIN_GALLOP_GLOBAL || diff2 &gt; MIN_GALLOP_GLOBAL);
+<a name="line387">387: </a>        ++MIN_GALLOP_GLOBAL;
+<a name="line388">388: </a>      }
+<a name="line389">389: </a>    }
+<a name="line390">390: </a>  }
+<a name="line391">391: </a>  <font color="#4169E1">if</font> (i &gt;= 0) {Petsc_memcpy((arr)+left*size, tarr, (i+1)*size);}
+<a name="line392">392: </a>  <font color="#4169E1">return</font>(0);
+<a name="line393">393: </a>}
+
+<a name="line395">395: </a><strong><font color="#4169E1"><a name="PetscTimSortMergeHiWithArray_Private"></a>PETSC_STATIC_INLINE <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscTimSortMergeHiWithArray_Private(char *arr, char *atarr, size_t asize, char *barr, char *btarr, size_t bsize, CompFunc cmp, void *ctx, <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> left, <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> mid, <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> right)</font></strong>
+<a name="line396">396: </a>{
+<a name="line397">397: </a>  <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       i = right-mid, j = mid-1, k = right, gallopleft = 0, gallopright = 0;
+<a name="line398">398: </a>  const <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> rlen = right-mid+1;
+
+<a name="line402">402: </a>  Petsc_memcpy2(atarr, (arr)+mid*asize, rlen*asize, btarr, (barr)+mid*bsize, rlen*bsize);
+<a name="line403">403: </a>  <font color="#4169E1">while</font> ((i &gt;= 0) &amp;&amp; (j &gt;= left)) {
+<a name="line404">404: </a>    <font color="#4169E1">if</font> ((*cmp)((atarr)+i*asize, (arr)+j*asize, ctx) &gt; 0) {
+<a name="line405">405: </a>      Petsc_memcpy2((arr)+k*asize, (atarr)+i*asize, asize, (barr)+k*bsize, (btarr)+i*bsize, bsize);
+<a name="line406">406: </a>      --k;
+<a name="line407">407: </a>      gallopleft = 0;
+<a name="line408">408: </a>      <font color="#4169E1">if</font> (--i &gt;= 0 &amp;&amp; ++gallopright &gt;= MIN_GALLOP_GLOBAL) {
+<a name="line409">409: </a>        <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> l1, l2, diff1, diff2;
+<a name="line410">410: </a>        <font color="#4169E1">do</font> {
+<a name="line411">411: </a>          <font color="#4169E1">if</font> (MIN_GALLOP_GLOBAL &gt; 1) --MIN_GALLOP_GLOBAL;
+<a name="line412">412: </a>          <font color="#B22222">/* search temp for left[j], can copy up to that many of temp into arr */</font>
+<a name="line413">413: </a>          PetscGallopSearchRight_Private(atarr, asize, cmp, ctx, 0, i, (arr)+j*asize, &amp;l1);
+<a name="line414">414: </a>          diff1 = i-l1;
+<a name="line415">415: </a>          Petsc_memcpy2((arr)+(k-diff1+1)*asize, (atarr)+(l1+1)*asize, diff1*asize, (barr)+(k-diff1+1)*bsize, (btarr)+(l1+1)*bsize, diff1*bsize);
+<a name="line416">416: </a>          k -= diff1;
+<a name="line417">417: </a>          i = l1;
+<a name="line418">418: </a>          <font color="#B22222">/* search left for temp[i], can move up to that many of left up arr */</font>
+<a name="line419">419: </a>          PetscGallopSearchRight_Private(arr, asize, cmp, ctx, left, j, (atarr)+i*asize, &amp;l2);
+<a name="line420">420: </a>          diff2 = j-l2;
+<a name="line421">421: </a>          Petsc_memmove2((arr)+(k-diff2+1)*asize, (arr)+(l2+1)*asize, diff2*asize, (barr)+(k-diff2+1)*bsize, (barr)+(l2+1)*bsize, diff2*bsize);
+<a name="line422">422: </a>          k -= diff2;
+<a name="line423">423: </a>          j = l2;
+<a name="line424">424: </a>          <font color="#4169E1">if</font> (i &lt; 0 || j &lt; left) <font color="#4169E1">break</font>;
+<a name="line425">425: </a>        } <font color="#4169E1">while</font> (diff1 &gt; MIN_GALLOP_GLOBAL || diff2 &gt; MIN_GALLOP_GLOBAL);
+<a name="line426">426: </a>        ++MIN_GALLOP_GLOBAL;
+<a name="line427">427: </a>      }
+<a name="line428">428: </a>    } <font color="#4169E1">else</font> {
+<a name="line429">429: </a>      Petsc_memmove2((arr)+k*asize, (arr)+j*asize, asize, (barr)+k*bsize, (barr)+j*bsize, bsize);
+<a name="line430">430: </a>      --k;
+<a name="line431">431: </a>      gallopright = 0;
+<a name="line432">432: </a>      <font color="#4169E1">if</font> (--j &gt;= left &amp;&amp; ++gallopleft &gt;= MIN_GALLOP_GLOBAL) {
+<a name="line433">433: </a>        <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> l1, l2, diff1, diff2;
+<a name="line434">434: </a>        <font color="#4169E1">do</font> {
+<a name="line435">435: </a>          <font color="#4169E1">if</font> (MIN_GALLOP_GLOBAL &gt; 1) --MIN_GALLOP_GLOBAL;
+<a name="line436">436: </a>          <font color="#B22222">/* search left for temp[i], can move up to that many of left up arr */</font>
+<a name="line437">437: </a>          PetscGallopSearchRight_Private(arr, asize, cmp, ctx, left, j, (atarr)+i*asize, &amp;l2);
+<a name="line438">438: </a>          diff2 = j-l2;
+<a name="line439">439: </a>          Petsc_memmove2((arr)+(k-diff2+1)*asize, (arr)+(l2+1)*asize, diff2*asize, (barr)+(k-diff2+1)*bsize, (barr)+(l2+1)*bsize, diff2*bsize);
+<a name="line440">440: </a>          k -= diff2;
+<a name="line441">441: </a>          j = l2;
+<a name="line442">442: </a>          <font color="#B22222">/* search temp for left[j], can copy up to that many of temp into arr */</font>
+<a name="line443">443: </a>          PetscGallopSearchRight_Private(atarr, asize, cmp, ctx, 0, i, (arr)+j*asize, &amp;l1);
+<a name="line444">444: </a>          diff1 = i-l1;
+<a name="line445">445: </a>          Petsc_memcpy2((arr)+(k-diff1+1)*asize, (atarr)+(l1+1)*asize, diff1*asize, (barr)+(k-diff1+1)*bsize, (btarr)+(l1+1)*bsize, diff1*bsize);
+<a name="line446">446: </a>          k -= diff1;
+<a name="line447">447: </a>          i = l1;
+<a name="line448">448: </a>          <font color="#4169E1">if</font> (i &lt; 0 || j &lt; left) <font color="#4169E1">break</font>;
+<a name="line449">449: </a>        } <font color="#4169E1">while</font> (diff1 &gt; MIN_GALLOP_GLOBAL || diff2 &gt; MIN_GALLOP_GLOBAL);
+<a name="line450">450: </a>        ++MIN_GALLOP_GLOBAL;
+<a name="line451">451: </a>      }
+<a name="line452">452: </a>    }
+<a name="line453">453: </a>  }
+<a name="line454">454: </a>  <font color="#4169E1">if</font> (i &gt;= 0) {Petsc_memcpy2((arr)+left*asize, atarr, (i+1)*asize, (barr)+left*bsize, btarr, (i+1)*bsize);}
+<a name="line455">455: </a>  <font color="#4169E1">return</font>(0);
+<a name="line456">456: </a>}
+
+<a name="line458">458: </a><font color="#B22222">/* Left is inclusive lower bound of array slice, start is start location of unsorted section, right is inclusive upper</font>
+<a name="line459">459: </a><font color="#B22222"> bound of array slice. If unsure of where unsorted section starts or if entire length is unsorted pass start = left */</font>
+<a name="line460">460: </a><strong><font color="#4169E1"><a name="PetscInsertionSort_Private"></a>PETSC_STATIC_INLINE <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscInsertionSort_Private(char *arr, char *tarr, size_t size, CompFunc cmp, void *ctx, <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> left, <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> start, <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> right)</font></strong>
+<a name="line461">461: </a>{
+<a name="line462">462: </a>  <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> i = start == left ? start+1 : start;
+
+<a name="line465">465: </a>  <font color="#4169E1">for</font> (; i &lt;= right; ++i) {
+<a name="line466">466: </a>    <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> j = i-1;
+<a name="line467">467: </a>    Petsc_memcpy(tarr, arr+(i*size), size);
+<a name="line468">468: </a>    <font color="#4169E1">while</font> ((j &gt;= left) &amp;&amp; ((*cmp)(tarr, (arr)+j*size, ctx) &lt; 0)) {
+<a name="line469">469: </a>      COPYSWAPPY(arr+(j+1)*size, arr+j*size, tarr+size, size);
+<a name="line470">470: </a>      --j;
+<a name="line471">471: </a>    }
+<a name="line472">472: </a>    Petsc_memcpy((arr)+(j+1)*size, tarr, size);
+<a name="line473">473: </a>  }
+<a name="line474">474: </a>  <font color="#4169E1">return</font>(0);
+<a name="line475">475: </a>}
+
+<a name="line477">477: </a><strong><font color="#4169E1"><a name="PetscInsertionSortWithArray_Private"></a>PETSC_STATIC_INLINE <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscInsertionSortWithArray_Private(char *arr, char *atarr, size_t asize, char *barr, char *btarr, size_t bsize, CompFunc cmp, void *ctx, <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> left, <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> start, <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> right)</font></strong>
+<a name="line478">478: </a>{
+<a name="line479">479: </a>  <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> i = start == left ? start+1 : start;
+
+<a name="line482">482: </a>  <font color="#4169E1">for</font> (; i &lt;= right; ++i) {
+<a name="line483">483: </a>    <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> j = i-1;
+<a name="line484">484: </a>    Petsc_memcpy2(atarr, arr+(i*asize), asize, btarr, barr+(i*bsize), bsize);
+<a name="line485">485: </a>    <font color="#4169E1">while</font> ((j &gt;= left) &amp;&amp; ((*cmp)(atarr, arr+(j*asize), ctx) &lt; 0)) {
+<a name="line486">486: </a>      COPYSWAPPY2(arr+(j+1)*asize, arr+j*asize, asize, barr+(j+1)*bsize, barr+j*bsize, bsize, atarr+asize);
+<a name="line487">487: </a>      --j;
+<a name="line488">488: </a>    }
+<a name="line489">489: </a>    Petsc_memcpy2(arr+(j+1)*asize, atarr, asize, barr+(j+1)*bsize, btarr, bsize);
+<a name="line490">490: </a>  }
+<a name="line491">491: </a>  <font color="#4169E1">return</font>(0);
+<a name="line492">492: </a>}
+
+<a name="line494">494: </a><font color="#B22222">/* See PetscInsertionSort_Private */</font>
+<a name="line495">495: </a><strong><font color="#4169E1"><a name="PetscBinaryInsertionSort_Private"></a>PETSC_STATIC_INLINE <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscBinaryInsertionSort_Private(char *arr, char *tarr, size_t size, CompFunc cmp, void *ctx, <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> left, <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> start, <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> right)</font></strong>
+<a name="line496">496: </a>{
+<a name="line497">497: </a>  <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> i = start == left ? start+1 : start;
+
+<a name="line500">500: </a>  <font color="#4169E1">for</font> (; i &lt;= right; ++i) {
+<a name="line501">501: </a>    <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> l = left, r = i;
+<a name="line502">502: </a>    Petsc_memcpy(tarr, arr+(i*size), size);
+<a name="line503">503: </a>    <font color="#4169E1">do</font> {
+<a name="line504">504: </a>      const <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> m = l + ((r - l) &gt;&gt; 1);
+<a name="line505">505: </a>      <font color="#4169E1">if</font> ((*cmp)(tarr, arr+(m*size), ctx) &lt; 0) {
+<a name="line506">506: </a>        r = m;
+<a name="line507">507: </a>      } <font color="#4169E1">else</font> {
+<a name="line508">508: </a>        l = m + 1;
+<a name="line509">509: </a>      }
+<a name="line510">510: </a>    } <font color="#4169E1">while</font> (l &lt; r);
+<a name="line511">511: </a>    Petsc_memmove(arr+((l+1)*size), arr+(l*size), (i-l)*size);
+<a name="line512">512: </a>    Petsc_memcpy(arr+(l*size), tarr, size);
+<a name="line513">513: </a>  }
+<a name="line514">514: </a>  <font color="#4169E1">return</font>(0);
+<a name="line515">515: </a>}
+
+<a name="line517">517: </a><strong><font color="#4169E1"><a name="PetscBinaryInsertionSortWithArray_Private"></a>PETSC_STATIC_INLINE <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscBinaryInsertionSortWithArray_Private(char *arr, char *atarr, size_t asize, char *barr, char *btarr, size_t bsize, CompFunc cmp, void *ctx, <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> left, <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> start, <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> right)</font></strong>
+<a name="line518">518: </a>{
+<a name="line519">519: </a>  <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> i = start == left ? start+1 : start;
+
+<a name="line522">522: </a>  <font color="#4169E1">for</font> (; i &lt;= right; ++i) {
+<a name="line523">523: </a>    <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> l = left, r = i;
+<a name="line524">524: </a>    Petsc_memcpy2(atarr, arr+(i*asize), asize, btarr, barr+(i*bsize), bsize);
+<a name="line525">525: </a>    <font color="#4169E1">do</font> {
+<a name="line526">526: </a>      const <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> m = l + ((r - l) &gt;&gt; 1);
+<a name="line527">527: </a>      <font color="#4169E1">if</font> ((*cmp)(atarr, arr+(m*asize), ctx) &lt; 0) {
+<a name="line528">528: </a>        r = m;
+<a name="line529">529: </a>      } <font color="#4169E1">else</font> {
+<a name="line530">530: </a>        l = m + 1;
+<a name="line531">531: </a>      }
+<a name="line532">532: </a>    } <font color="#4169E1">while</font> (l &lt; r);
+<a name="line533">533: </a>    Petsc_memmove2(arr+((l+1)*asize), arr+(l*asize), (i-l)*asize, barr+((l+1)*bsize), barr+(l*bsize), (i-l)*bsize);
+<a name="line534">534: </a>    Petsc_memcpy2(arr+(l*asize), atarr, asize, barr+(l*bsize), btarr, bsize);
+<a name="line535">535: </a>  }
+<a name="line536">536: </a>  <font color="#4169E1">return</font>(0);
+<a name="line537">537: </a>}
+
+<a name="line539">539: </a><font color="#4169E1">typedef</font> <font color="#4169E1">struct</font> {
+<a name="line540">540: </a>  <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> size;
+<a name="line541">541: </a>  <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> start;
+<a name="line542">542: </a>} PetscTimSortStack PETSC_ATTRIBUTEALIGNED(2*<font color="#4169E1">sizeof</font>(<a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>));
+
+<a name="line544">544: </a><font color="#4169E1">typedef</font> <font color="#4169E1">struct</font> {
+<a name="line545">545: </a>  char   *ptr PETSC_ATTRIBUTEALIGNED(PETSC_MEMALIGN);
+<a name="line546">546: </a>  size_t size;
+<a name="line547">547: </a>  size_t maxsize;
+<a name="line548">548: </a>} PetscTimSortBuffer;
+
+<a name="line550">550: </a><strong><font color="#4169E1"><a name="PetscTimSortResizeBuffer_Private"></a>PETSC_STATIC_INLINE <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscTimSortResizeBuffer_Private(PetscTimSortBuffer *buff, size_t newSize)</font></strong>
+<a name="line551">551: </a>{
+<a name="line553">553: </a>  <font color="#4169E1">if</font> (<a href="../../../docs/manualpages/Sys/PetscLikely.html#PetscLikely">PetscLikely</a>(newSize &lt;= buff-&gt;size)) <font color="#4169E1">return</font>(0);
+<a name="line554">554: </a>  {
+<a name="line555">555: </a>    <font color="#B22222">/* Can't be larger than n, there is merit to simply allocating buff to n to begin with */</font>
+<a name="line557">557: </a>    size_t         newMax = <a href="../../../docs/manualpages/Sys/PetscMin.html#PetscMin">PetscMin</a>(newSize*newSize, buff-&gt;maxsize);
+<a name="line558">558: </a>    <a href="../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(buff-&gt;ptr);
+<a name="line559">559: </a>    <a href="../../../docs/manualpages/Sys/PetscMalloc1.html#PetscMalloc1">PetscMalloc1</a>(newMax, &amp;buff-&gt;ptr);
+<a name="line560">560: </a>    buff-&gt;size = newMax;
+<a name="line561">561: </a>  }
+<a name="line562">562: </a>  <font color="#4169E1">return</font>(0);
+<a name="line563">563: </a>}
+
+<a name="line565">565: </a><strong><font color="#4169E1"><a name="PetscTimSortForceCollapse_Private"></a>PETSC_STATIC_INLINE <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscTimSortForceCollapse_Private(char *arr, size_t size, CompFunc cmp, void *ctx, PetscTimSortBuffer *buff, PetscTimSortStack *stack, <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> stacksize)</font></strong>
+<a name="line566">566: </a>{
+<a name="line568">568: </a>  <font color="#4169E1">for</font> (;stacksize; --stacksize) {
+<a name="line569">569: </a>    <font color="#B22222">/* A = stack[i-1], B = stack[i], if A[-1] &lt;= B[0] means sorted */</font>
+<a name="line570">570: </a>    <font color="#4169E1">if</font> ((*cmp)(arr+(stack[stacksize].start-1)*size, arr+(stack[stacksize].start)*size, ctx) &gt; 0) {
+<a name="line571">571: </a>      <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       l, m = stack[stacksize].start, r;
+<a name="line573">573: </a>      <font color="#B22222">/* Search A for B[0] insertion */</font>
+<a name="line574">574: </a>      PetscGallopSearchLeft_Private(arr, size, cmp, ctx, stack[stacksize-1].start, stack[stacksize].start-1, (arr)+(stack[stacksize].start)*size, &amp;l);
+<a name="line575">575: </a>      <font color="#B22222">/* Search B for A[-1] insertion */</font>
+<a name="line576">576: </a>      PetscGallopSearchRight_Private(arr, size, cmp, ctx, stack[stacksize].start, stack[stacksize].start+stack[stacksize].size-1, (arr)+(stack[stacksize].start-1)*size, &amp;r);
+<a name="line577">577: </a>      <font color="#4169E1">if</font> (m-l &lt;= r-m) {
+<a name="line578">578: </a>        PetscTimSortResizeBuffer_Private(buff, (m-l+1)*size);
+<a name="line579">579: </a>        PetscTimSortMergeLo_Private(arr, buff-&gt;ptr, size, cmp, ctx, l, m, r);
+<a name="line580">580: </a>      } <font color="#4169E1">else</font> {
+<a name="line581">581: </a>        PetscTimSortResizeBuffer_Private(buff, (r-m+1)*size);
+<a name="line582">582: </a>        PetscTimSortMergeHi_Private(arr, buff-&gt;ptr, size, cmp, ctx, l, m, r);
+<a name="line583">583: </a>      }
+<a name="line584">584: </a>    }
+<a name="line585">585: </a>    <font color="#B22222">/* Update A with merge */</font>
+<a name="line586">586: </a>    stack[stacksize-1].size += stack[stacksize].size;
+<a name="line587">587: </a>  }
+<a name="line588">588: </a>  <font color="#4169E1">return</font>(0);
+<a name="line589">589: </a>}
+
+<a name="line591">591: </a><strong><font color="#4169E1"><a name="PetscTimSortForceCollapseWithArray_Private"></a>PETSC_STATIC_INLINE <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscTimSortForceCollapseWithArray_Private(char *arr, size_t asize, char *barr, size_t bsize, CompFunc cmp, void *ctx, PetscTimSortBuffer *abuff, PetscTimSortBuffer *bbuff, PetscTimSortStack *stack, <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> stacksize)</font></strong>
+<a name="line592">592: </a>{
+<a name="line594">594: </a>  <font color="#4169E1">for</font> (;stacksize; --stacksize) {
+<a name="line595">595: </a>    <font color="#B22222">/* A = stack[i-1], B = stack[i], if A[-1] &lt;= B[0] means sorted */</font>
+<a name="line596">596: </a>    <font color="#4169E1">if</font> ((*cmp)(arr+(stack[stacksize].start-1)*asize, arr+(stack[stacksize].start)*asize, ctx) &gt; 0) {
+<a name="line597">597: </a>      <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       l, m = stack[stacksize].start, r;
+<a name="line599">599: </a>      <font color="#B22222">/* Search A for B[0] insertion */</font>
+<a name="line600">600: </a>      PetscGallopSearchLeft_Private(arr, asize, cmp, ctx, stack[stacksize-1].start, stack[stacksize].start-1, (arr)+(stack[stacksize].start)*asize, &amp;l);
+<a name="line601">601: </a>      <font color="#B22222">/* Search B for A[-1] insertion */</font>
+<a name="line602">602: </a>      PetscGallopSearchRight_Private(arr, asize, cmp, ctx, stack[stacksize].start, stack[stacksize].start+stack[stacksize].size-1, (arr)+(stack[stacksize].start-1)*asize, &amp;r);
+<a name="line603">603: </a>      <font color="#4169E1">if</font> (m-l &lt;= r-m) {
+<a name="line604">604: </a>        PetscTimSortResizeBuffer_Private(abuff, (m-l+1)*asize);
+<a name="line605">605: </a>        PetscTimSortResizeBuffer_Private(bbuff, (m-l+1)*bsize);
+<a name="line606">606: </a>        PetscTimSortMergeLoWithArray_Private(arr, abuff-&gt;ptr, asize, barr, bbuff-&gt;ptr, bsize, cmp, ctx, l, m, r);
+<a name="line607">607: </a>      } <font color="#4169E1">else</font> {
+<a name="line608">608: </a>        PetscTimSortResizeBuffer_Private(abuff, (r-m+1)*asize);
+<a name="line609">609: </a>        PetscTimSortResizeBuffer_Private(bbuff, (r-m+1)*bsize);
+<a name="line610">610: </a>        PetscTimSortMergeHiWithArray_Private(arr, abuff-&gt;ptr, asize, barr, bbuff-&gt;ptr, bsize, cmp, ctx, l, m, r);
+<a name="line611">611: </a>      }
+<a name="line612">612: </a>    }
+<a name="line613">613: </a>    <font color="#B22222">/* Update A with merge */</font>
+<a name="line614">614: </a>    stack[stacksize-1].size += stack[stacksize].size;
+<a name="line615">615: </a>  }
+<a name="line616">616: </a>  <font color="#4169E1">return</font>(0);
+<a name="line617">617: </a>}
+
+<a name="line619">619: </a><strong><font color="#4169E1"><a name="PetscTimSortMergeCollapse_Private"></a>PETSC_STATIC_INLINE <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscTimSortMergeCollapse_Private(char *arr, size_t size, CompFunc cmp, void *ctx, PetscTimSortBuffer *buff, PetscTimSortStack *stack, <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *stacksize)</font></strong>
+<a name="line620">620: </a>{
+<a name="line621">621: </a>  <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       i = *stacksize;
+
+<a name="line625">625: </a>  <font color="#4169E1">while</font> (i) {
+<a name="line626">626: </a>    <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> l, m, r, itemp = i;
+
+<a name="line628">628: </a>    <font color="#4169E1">if</font> (i == 1) {
+<a name="line629">629: </a>      <font color="#B22222">/* A = stack[i-1], B = stack[i] */</font>
+<a name="line630">630: </a>      <font color="#4169E1">if</font> (stack[i-1].size &lt; stack[i].size) {
+<a name="line631">631: </a>        <font color="#B22222">/* if A[-1] &lt;= B[0] then sorted */</font>
+<a name="line632">632: </a>        <font color="#4169E1">if</font> ((*cmp)(arr+(stack[i].start-1)*size, arr+(stack[i].start)*size, ctx) &gt; 0) {
+<a name="line633">633: </a>          m = stack[i].start;
+<a name="line634">634: </a>          <font color="#B22222">/* Search A for B[0] insertion */</font>
+<a name="line635">635: </a>          PetscGallopSearchLeft_Private(arr, size, cmp, ctx, stack[i-1].start, stack[i].start-1, (arr)+stack[i].start*size, &amp;l);
+<a name="line636">636: </a>          <font color="#B22222">/* Search B for A[-1] insertion */</font>
+<a name="line637">637: </a>          PetscGallopSearchRight_Private(arr, size, cmp, ctx, stack[i].start, stack[i].start+stack[i].size-1, arr+(stack[i].start-1)*size, &amp;r);
+<a name="line638">638: </a>          <font color="#4169E1">if</font> (m-l &lt;= r-m) {
+<a name="line639">639: </a>            PetscTimSortResizeBuffer_Private(buff, (m-l+1)*size);
+<a name="line640">640: </a>            PetscTimSortMergeLo_Private(arr, buff-&gt;ptr, size, cmp, ctx, l, m, r);
+<a name="line641">641: </a>          } <font color="#4169E1">else</font> {
+<a name="line642">642: </a>            PetscTimSortResizeBuffer_Private(buff, (r-m+1)*size);
+<a name="line643">643: </a>            PetscTimSortMergeHi_Private(arr, buff-&gt;ptr, size, cmp, ctx, l, m, r);
+<a name="line644">644: </a>          }
+<a name="line645">645: </a>        }
+<a name="line646">646: </a>        <font color="#B22222">/* Update A with merge */</font>
+<a name="line647">647: </a>        stack[i-1].size += stack[i].size;
+<a name="line648">648: </a>        --i;
+<a name="line649">649: </a>      }
+<a name="line650">650: </a>    } <font color="#4169E1">else</font> {
+<a name="line651">651: </a>      <font color="#B22222">/* i &gt; 2, i.e. C exists</font>
+<a name="line652">652: </a><font color="#B22222">       A = stack[i-2], B = stack[i-1], C = stack[i]; */</font>
+<a name="line653">653: </a>      <font color="#4169E1">if</font> (stack[i-2].size &lt;= stack[i-1].size+stack[i].size) {
+<a name="line654">654: </a>        <font color="#4169E1">if</font> (stack[i-2].size &lt; stack[i].size) {
+<a name="line655">655: </a>          <font color="#B22222">/* merge B into A, but if A[-1] &lt;= B[0] then already sorted */</font>
+<a name="line656">656: </a>          <font color="#4169E1">if</font> ((*cmp)(arr+(stack[i-1].start-1)*size, arr+(stack[i-1].start)*size, ctx) &gt; 0) {
+<a name="line657">657: </a>            m = stack[i-1].start;
+<a name="line658">658: </a>            <font color="#B22222">/* Search A for B[0] insertion */</font>
+<a name="line659">659: </a>            PetscGallopSearchLeft_Private(arr, size, cmp, ctx, stack[i-2].start, stack[i-1].start-1, (arr)+(stack[i-1].start)*size, &amp;l);
+<a name="line660">660: </a>            <font color="#B22222">/* Search B for A[-1] insertion */</font>
+<a name="line661">661: </a>            PetscGallopSearchRight_Private(arr, size, cmp, ctx, stack[i-1].start, stack[i-1].start+stack[i-1].size-1, (arr)+(stack[i-1].start-1)*size, &amp;r);
+<a name="line662">662: </a>            <font color="#4169E1">if</font> (m-l &lt;= r-m) {
+<a name="line663">663: </a>              PetscTimSortResizeBuffer_Private(buff, (m-l+1)*size);
+<a name="line664">664: </a>              PetscTimSortMergeLo_Private(arr, buff-&gt;ptr, size, cmp, ctx, l, m, r);
+<a name="line665">665: </a>            } <font color="#4169E1">else</font> {
+<a name="line666">666: </a>              PetscTimSortResizeBuffer_Private(buff, (r-m+1)*size);
+<a name="line667">667: </a>              PetscTimSortMergeHi_Private(arr, buff-&gt;ptr, size, cmp, ctx, l, m, r);
+<a name="line668">668: </a>            }
+<a name="line669">669: </a>          }
+<a name="line670">670: </a>          <font color="#B22222">/* Update A with merge */</font>
+<a name="line671">671: </a>          stack[i-2].size += stack[i-1].size;
+<a name="line672">672: </a>          <font color="#B22222">/* Push C up the stack */</font>
+<a name="line673">673: </a>          stack[i-1].start = stack[i].start;
+<a name="line674">674: </a>          stack[i-1].size = stack[i].size;
+<a name="line675">675: </a>        } <font color="#4169E1">else</font> {
+<a name="line676">676: </a>          <font color="#B22222">/* merge C into B */</font>
+<a name="line677">677: </a><strong><font color="#FF0000">          mergeBC:</font></strong>
+<a name="line678">678: </a>          <font color="#B22222">/* If B[-1] &lt;= C[0] then... you know the drill */</font>
+<a name="line679">679: </a>          <font color="#4169E1">if</font> ((*cmp)(arr+(stack[i].start-1)*size, arr+(stack[i].start)*size, ctx) &gt; 0) {
+<a name="line680">680: </a>            m = stack[i].start;
+<a name="line681">681: </a>            <font color="#B22222">/* Search B for C[0] insertion */</font>
+<a name="line682">682: </a>            PetscGallopSearchLeft_Private(arr, size, cmp, ctx, stack[i-1].start, stack[i].start-1, arr+stack[i].start*size, &amp;l);
+<a name="line683">683: </a>            <font color="#B22222">/* Search C for B[-1] insertion */</font>
+<a name="line684">684: </a>            PetscGallopSearchRight_Private(arr, size, cmp, ctx, stack[i].start, stack[i].start+stack[i].size-1, (arr)+(stack[i].start-1)*size, &amp;r);
+<a name="line685">685: </a>            <font color="#4169E1">if</font> (m-l &lt;= r-m) {
+<a name="line686">686: </a>              PetscTimSortResizeBuffer_Private(buff, (m-l+1)*size);
+<a name="line687">687: </a>              PetscTimSortMergeLo_Private(arr, buff-&gt;ptr, size, cmp, ctx, l, m, r);
+<a name="line688">688: </a>            } <font color="#4169E1">else</font> {
+<a name="line689">689: </a>              PetscTimSortResizeBuffer_Private(buff, (r-m+1)*size);
+<a name="line690">690: </a>              PetscTimSortMergeHi_Private(arr, buff-&gt;ptr, size, cmp, ctx, l, m, r);
+<a name="line691">691: </a>            }
+<a name="line692">692: </a>          }
+<a name="line693">693: </a>          <font color="#B22222">/* Update B with merge */</font>
+<a name="line694">694: </a>          stack[i-1].size += stack[i].size;
+<a name="line695">695: </a>        }
+<a name="line696">696: </a>        --i;
+<a name="line697">697: </a>      } <font color="#4169E1">else</font> <font color="#4169E1">if</font> (stack[i-1].size &lt;= stack[i].size) {
+<a name="line698">698: </a>        <font color="#B22222">/* merge C into B */</font>
+<a name="line699">699: </a>        <font color="#4169E1">goto</font> mergeBC;
+<a name="line700">700: </a>      }
+<a name="line701">701: </a>    }
+<a name="line702">702: </a>    <font color="#4169E1">if</font> (itemp == i) <font color="#4169E1">break</font>;
+<a name="line703">703: </a>  }
+<a name="line704">704: </a>  *stacksize = i;
+<a name="line705">705: </a>  <font color="#4169E1">return</font>(0);
+<a name="line706">706: </a>}
+
+<a name="line708">708: </a><strong><font color="#4169E1"><a name="PetscTimSortMergeCollapseWithArray_Private"></a>PETSC_STATIC_INLINE <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscTimSortMergeCollapseWithArray_Private(char *arr, size_t asize, char *barr, size_t bsize, CompFunc cmp, void *ctx, PetscTimSortBuffer *abuff, PetscTimSortBuffer *bbuff, PetscTimSortStack *stack, <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *stacksize)</font></strong>
+<a name="line709">709: </a>{
+<a name="line710">710: </a>  <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       i = *stacksize;
+
+<a name="line714">714: </a>  <font color="#4169E1">while</font> (i) {
+<a name="line715">715: </a>    <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> l, m, r, itemp = i;
+
+<a name="line717">717: </a>    <font color="#4169E1">if</font> (i == 1) {
+<a name="line718">718: </a>      <font color="#B22222">/* A = stack[i-1], B = stack[i] */</font>
+<a name="line719">719: </a>      <font color="#4169E1">if</font> (stack[i-1].size &lt; stack[i].size) {
+<a name="line720">720: </a>        <font color="#B22222">/* if A[-1] &lt;= B[0] then sorted */</font>
+<a name="line721">721: </a>        <font color="#4169E1">if</font> ((*cmp)(arr+(stack[i].start-1)*asize, arr+(stack[i].start)*asize, ctx) &gt; 0) {
+<a name="line722">722: </a>          m = stack[i].start;
+<a name="line723">723: </a>          <font color="#B22222">/* Search A for B[0] insertion */</font>
+<a name="line724">724: </a>          PetscGallopSearchLeft_Private(arr, asize, cmp, ctx, stack[i-1].start, stack[i].start-1, (arr)+stack[i].start*asize, &amp;l);
+<a name="line725">725: </a>          <font color="#B22222">/* Search B for A[-1] insertion */</font>
+<a name="line726">726: </a>          PetscGallopSearchRight_Private(arr, asize, cmp, ctx, stack[i].start, stack[i].start+stack[i].size-1, arr+(stack[i].start-1)*asize, &amp;r);
+<a name="line727">727: </a>          <font color="#4169E1">if</font> (m-l &lt;= r-m) {
+<a name="line728">728: </a>            PetscTimSortResizeBuffer_Private(abuff, (m-l+1)*asize);
+<a name="line729">729: </a>            PetscTimSortResizeBuffer_Private(bbuff, (m-l+1)*bsize);
+<a name="line730">730: </a>            PetscTimSortMergeLoWithArray_Private(arr, abuff-&gt;ptr, asize, barr, bbuff-&gt;ptr, bsize, cmp, ctx, l, m, r);
+<a name="line731">731: </a>          } <font color="#4169E1">else</font> {
+<a name="line732">732: </a>            PetscTimSortResizeBuffer_Private(abuff, (r-m+1)*asize);
+<a name="line733">733: </a>            PetscTimSortResizeBuffer_Private(bbuff, (r-m+1)*bsize);
+<a name="line734">734: </a>            PetscTimSortMergeHiWithArray_Private(arr, abuff-&gt;ptr, asize, barr, bbuff-&gt;ptr, bsize, cmp, ctx, l, m, r);
+<a name="line735">735: </a>          }
+<a name="line736">736: </a>        }
+<a name="line737">737: </a>        <font color="#B22222">/* Update A with merge */</font>
+<a name="line738">738: </a>        stack[i-1].size += stack[i].size;
+<a name="line739">739: </a>        --i;
+<a name="line740">740: </a>      }
+<a name="line741">741: </a>    } <font color="#4169E1">else</font> {
+<a name="line742">742: </a>      <font color="#B22222">/* i &gt; 2, i.e. C exists</font>
+<a name="line743">743: </a><font color="#B22222">       A = stack[i-2], B = stack[i-1], C = stack[i]; */</font>
+<a name="line744">744: </a>      <font color="#4169E1">if</font> (stack[i-2].size &lt;= stack[i-1].size+stack[i].size) {
+<a name="line745">745: </a>        <font color="#4169E1">if</font> (stack[i-2].size &lt; stack[i].size) {
+<a name="line746">746: </a>          <font color="#B22222">/* merge B into A, but if A[-1] &lt;= B[0] then already sorted */</font>
+<a name="line747">747: </a>          <font color="#4169E1">if</font> ((*cmp)(arr+(stack[i-1].start-1)*asize, arr+(stack[i-1].start)*asize, ctx) &gt; 0) {
+<a name="line748">748: </a>            m = stack[i-1].start;
+<a name="line749">749: </a>            <font color="#B22222">/* Search A for B[0] insertion */</font>
+<a name="line750">750: </a>            PetscGallopSearchLeft_Private(arr, asize, cmp, ctx, stack[i-2].start, stack[i-1].start-1, (arr)+(stack[i-1].start)*asize, &amp;l);
+<a name="line751">751: </a>            <font color="#B22222">/* Search B for A[-1] insertion */</font>
+<a name="line752">752: </a>            PetscGallopSearchRight_Private(arr, asize, cmp, ctx, stack[i-1].start, stack[i-1].start+stack[i-1].size-1, (arr)+(stack[i-1].start-1)*asize, &amp;r);
+<a name="line753">753: </a>            <font color="#4169E1">if</font> (m-l &lt;= r-m) {
+<a name="line754">754: </a>              PetscTimSortResizeBuffer_Private(abuff, (m-l+1)*asize);
+<a name="line755">755: </a>              PetscTimSortResizeBuffer_Private(bbuff, (m-l+1)*bsize);
+<a name="line756">756: </a>              PetscTimSortMergeLoWithArray_Private(arr, abuff-&gt;ptr, asize, barr, bbuff-&gt;ptr, bsize, cmp, ctx, l, m, r);
+<a name="line757">757: </a>            } <font color="#4169E1">else</font> {
+<a name="line758">758: </a>              PetscTimSortResizeBuffer_Private(abuff, (r-m+1)*asize);
+<a name="line759">759: </a>              PetscTimSortResizeBuffer_Private(bbuff, (r-m+1)*bsize);
+<a name="line760">760: </a>              PetscTimSortMergeHiWithArray_Private(arr, abuff-&gt;ptr, asize, barr, bbuff-&gt;ptr, bsize, cmp, ctx, l, m, r);
+<a name="line761">761: </a>            }
+<a name="line762">762: </a>          }
+<a name="line763">763: </a>          <font color="#B22222">/* Update A with merge */</font>
+<a name="line764">764: </a>          stack[i-2].size += stack[i-1].size;
+<a name="line765">765: </a>          <font color="#B22222">/* Push C up the stack */</font>
+<a name="line766">766: </a>          stack[i-1].start = stack[i].start;
+<a name="line767">767: </a>          stack[i-1].size = stack[i].size;
+<a name="line768">768: </a>        } <font color="#4169E1">else</font> {
+<a name="line769">769: </a>          <font color="#B22222">/* merge C into B */</font>
+<a name="line770">770: </a><strong><font color="#FF0000">          mergeBC:</font></strong>
+<a name="line771">771: </a>          <font color="#B22222">/* If B[-1] &lt;= C[0] then... you know the drill */</font>
+<a name="line772">772: </a>          <font color="#4169E1">if</font> ((*cmp)(arr+(stack[i].start-1)*asize, arr+(stack[i].start)*asize, ctx) &gt; 0) {
+<a name="line773">773: </a>            m = stack[i].start;
+<a name="line774">774: </a>            <font color="#B22222">/* Search B for C[0] insertion */</font>
+<a name="line775">775: </a>            PetscGallopSearchLeft_Private(arr, asize, cmp, ctx, stack[i-1].start, stack[i].start-1, arr+stack[i].start*asize, &amp;l);
+<a name="line776">776: </a>            <font color="#B22222">/* Search C for B[-1] insertion */</font>
+<a name="line777">777: </a>            PetscGallopSearchRight_Private(arr, asize, cmp, ctx, stack[i].start, stack[i].start+stack[i].size-1, (arr)+(stack[i].start-1)*asize, &amp;r);
+<a name="line778">778: </a>            <font color="#4169E1">if</font> (m-l &lt;= r-m) {
+<a name="line779">779: </a>              PetscTimSortResizeBuffer_Private(abuff, (m-l+1)*asize);
+<a name="line780">780: </a>              PetscTimSortResizeBuffer_Private(bbuff, (m-l+1)*bsize);
+<a name="line781">781: </a>              PetscTimSortMergeLoWithArray_Private(arr, abuff-&gt;ptr, asize, barr, bbuff-&gt;ptr, bsize, cmp, ctx, l, m, r);
+<a name="line782">782: </a>            } <font color="#4169E1">else</font> {
+<a name="line783">783: </a>              PetscTimSortResizeBuffer_Private(abuff, (r-m+1)*asize);
+<a name="line784">784: </a>              PetscTimSortResizeBuffer_Private(bbuff, (r-m+1)*bsize);
+<a name="line785">785: </a>              PetscTimSortMergeHiWithArray_Private(arr, abuff-&gt;ptr, asize, barr, bbuff-&gt;ptr, bsize, cmp, ctx, l, m, r);
+<a name="line786">786: </a>            }
+<a name="line787">787: </a>          }
+<a name="line788">788: </a>          <font color="#B22222">/* Update B with merge */</font>
+<a name="line789">789: </a>          stack[i-1].size += stack[i].size;
+<a name="line790">790: </a>        }
+<a name="line791">791: </a>        --i;
+<a name="line792">792: </a>      } <font color="#4169E1">else</font> <font color="#4169E1">if</font> (stack[i-1].size &lt;= stack[i].size) {
+<a name="line793">793: </a>        <font color="#B22222">/* merge C into B */</font>
+<a name="line794">794: </a>        <font color="#4169E1">goto</font> mergeBC;
+<a name="line795">795: </a>      }
+<a name="line796">796: </a>    }
+<a name="line797">797: </a>    <font color="#4169E1">if</font> (itemp == i) <font color="#4169E1">break</font>;
+<a name="line798">798: </a>  }
+<a name="line799">799: </a>  *stacksize = i;
+<a name="line800">800: </a>  <font color="#4169E1">return</font>(0);
+<a name="line801">801: </a>}
+
+<a name="line803">803: </a><font color="#B22222">/* March sequentially through the array building up a "run" of weakly increasing or strictly decreasing contiguous</font>
+<a name="line804">804: </a><font color="#B22222"> elements. Decreasing runs are reversed by swapping. If the run is less than minrun, artificially extend it via either</font>
+<a name="line805">805: </a><font color="#B22222"> binary insertion sort or regulat insertion sort */</font>
+<a name="line806">806: </a><strong><font color="#4169E1"><a name="PetscTimSortBuildRun_Private"></a>PETSC_STATIC_INLINE <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscTimSortBuildRun_Private(char *arr, char *tarr, size_t size, CompFunc cmp, void *ctx, <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> n, <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> minrun, <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> runstart, <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *runend)</font></strong>
+<a name="line807">807: </a>{
+<a name="line808">808: </a>  const <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> re = <a href="../../../docs/manualpages/Sys/PetscMin.html#PetscMin">PetscMin</a>(runstart+minrun, n-1);
+<a name="line809">809: </a>  <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       ri = runstart;
+
+<a name="line812">812: </a>  <font color="#4169E1">if</font> (<a href="../../../docs/manualpages/Sys/PetscUnlikely.html#PetscUnlikely">PetscUnlikely</a>(runstart == n-1)) {*runend = runstart; <font color="#4169E1">return</font>(0);}
+<a name="line813">813: </a>  <font color="#B22222">/* guess whether run is ascending or descending and tally up the longest consecutive run. essentially a coinflip for random data */</font>
+<a name="line814">814: </a>  <font color="#4169E1">if</font> ((*cmp)((arr)+(ri+1)*size, (arr)+ri*size, ctx) &lt; 0) {
+<a name="line815">815: </a>    ++ri;
+<a name="line816">816: </a>    <font color="#4169E1">while</font> (ri &lt; n-1) {
+<a name="line817">817: </a>      <font color="#4169E1">if</font> ((*cmp)((arr)+(ri+1)*size, (arr)+ri*size, ctx) &gt;= 0) <font color="#4169E1">break</font>;
+<a name="line818">818: </a>      ++ri;
+<a name="line819">819: </a>    }
+<a name="line820">820: </a>    {
+<a name="line821">821: </a>      <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> lo = runstart, hi = ri;
+<a name="line822">822: </a>      <font color="#4169E1">for</font> (; lo &lt; hi; ++lo, --hi) {
+<a name="line823">823: </a>        COPYSWAPPY(arr+lo*size, arr+hi*size, tarr, size);
+<a name="line824">824: </a>      }
+<a name="line825">825: </a>    }
+<a name="line826">826: </a>  } <font color="#4169E1">else</font> {
+<a name="line827">827: </a>    ++ri;
+<a name="line828">828: </a>    <font color="#4169E1">while</font> (ri &lt; n-1) {
+<a name="line829">829: </a>      <font color="#4169E1">if</font> ((*cmp)((arr)+(ri+1)*size, (arr)+ri*size, ctx) &lt; 0) <font color="#4169E1">break</font>;
+<a name="line830">830: </a>      ++ri;
+<a name="line831">831: </a>    }
+<a name="line832">832: </a>  }
+<a name="line833">833: </a><font color="#A020F0">#if defined(PETSC_USE_DEBUG)</font>
+<a name="line834">834: </a>  {
+<a name="line836">836: </a>    PetscInfo1(NULL, <font color="#666666">"natural run length = %D\n"</font>, ri-runstart+1);
+<a name="line837">837: </a>  }
+<a name="line838">838: </a><font color="#A020F0">#endif</font>
+<a name="line839">839: </a>  <font color="#4169E1">if</font> (ri &lt; re) {
+<a name="line840">840: </a>    <font color="#B22222">/* the attempt failed, this section likely contains random data. If ri got close to minrun (within 50%) then we try</font>
+<a name="line841">841: </a><font color="#B22222">     binary search */</font>
+<a name="line842">842: </a>    <font color="#4169E1">if</font> (ri-runstart &lt;= minrun &gt;&gt; 1) {
+<a name="line843">843: </a>      ++MIN_GALLOP_GLOBAL; <font color="#B22222">/* didn't get close hedge our bets against random data */</font>
+<a name="line844">844: </a>      PetscInsertionSort_Private(arr, tarr, size, cmp, ctx, runstart, ri, re);
+<a name="line845">845: </a>    } <font color="#4169E1">else</font> {
+<a name="line846">846: </a>      PetscBinaryInsertionSort_Private(arr, tarr, size, cmp, ctx, runstart, ri, re);
+<a name="line847">847: </a>    }
+<a name="line848">848: </a>    *runend = re;
+<a name="line849">849: </a>  } <font color="#4169E1">else</font> *runend = ri;
+<a name="line850">850: </a>  <font color="#4169E1">return</font>(0);
+<a name="line851">851: </a>}
+
+<a name="line853">853: </a><strong><font color="#4169E1"><a name="PetscTimSortBuildRunWithArray_Private"></a>PETSC_STATIC_INLINE <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscTimSortBuildRunWithArray_Private(char *arr, char *atarr, size_t asize, char *barr, char *btarr, size_t bsize, CompFunc cmp, void *ctx, <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> n, <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> minrun, <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> runstart, <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *runend)</font></strong>
+<a name="line854">854: </a>{
+<a name="line855">855: </a>  const <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> re = <a href="../../../docs/manualpages/Sys/PetscMin.html#PetscMin">PetscMin</a>(runstart+minrun, n-1);
+<a name="line856">856: </a>  <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       ri = runstart;
+
+<a name="line859">859: </a>  <font color="#4169E1">if</font> (<a href="../../../docs/manualpages/Sys/PetscUnlikely.html#PetscUnlikely">PetscUnlikely</a>(runstart == n-1)) {*runend = runstart; <font color="#4169E1">return</font>(0);}
+<a name="line860">860: </a>  <font color="#B22222">/* guess whether run is ascending or descending and tally up the longest consecutive run. essentially a coinflip for random data */</font>
+<a name="line861">861: </a>  <font color="#4169E1">if</font> ((*cmp)((arr)+(ri+1)*asize, arr+(ri*asize), ctx) &lt; 0) {
+<a name="line862">862: </a>    ++ri;
+<a name="line863">863: </a>    <font color="#4169E1">while</font> (ri &lt; n-1) {
+<a name="line864">864: </a>      <font color="#4169E1">if</font> ((*cmp)((arr)+(ri+1)*asize, (arr)+ri*asize, ctx) &gt;= 0) <font color="#4169E1">break</font>;
+<a name="line865">865: </a>      ++ri;
+<a name="line866">866: </a>    }
+<a name="line867">867: </a>    {
+<a name="line868">868: </a>      <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> lo = runstart, hi = ri;
+<a name="line869">869: </a>      <font color="#4169E1">for</font> (; lo &lt; hi; ++lo, --hi) {
+<a name="line870">870: </a>        COPYSWAPPY2(arr+lo*asize, arr+hi*asize, asize, barr+lo*bsize, barr+hi*bsize, bsize, atarr);
+<a name="line871">871: </a>      }
+<a name="line872">872: </a>    }
+<a name="line873">873: </a>  } <font color="#4169E1">else</font> {
+<a name="line874">874: </a>    ++ri;
+<a name="line875">875: </a>    <font color="#4169E1">while</font> (ri &lt; n-1) {
+<a name="line876">876: </a>      <font color="#4169E1">if</font> ((*cmp)((arr)+(ri+1)*asize, (arr)+ri*asize, ctx) &lt; 0) <font color="#4169E1">break</font>;
+<a name="line877">877: </a>      ++ri;
+<a name="line878">878: </a>    }
+<a name="line879">879: </a>  }
+<a name="line880">880: </a><font color="#A020F0">#if defined(PETSC_USE_DEBUG)</font>
+<a name="line881">881: </a>  {
+<a name="line883">883: </a>    PetscInfo1(NULL, <font color="#666666">"natural run length = %D\n"</font>, ri-runstart+1);
+<a name="line884">884: </a>  }
+<a name="line885">885: </a><font color="#A020F0">#endif</font>
+<a name="line886">886: </a>  <font color="#4169E1">if</font> (ri &lt; re) {
+<a name="line887">887: </a>    <font color="#B22222">/* the attempt failed, this section likely contains random data. If ri got close to minrun (within 50%) then we try</font>
+<a name="line888">888: </a><font color="#B22222">     binary search */</font>
+<a name="line889">889: </a>    <font color="#4169E1">if</font> (ri-runstart &lt;= minrun &gt;&gt; 1) {
+<a name="line890">890: </a>      ++MIN_GALLOP_GLOBAL; <font color="#B22222">/* didn't get close hedge our bets against random data */</font>
+<a name="line891">891: </a>      PetscInsertionSortWithArray_Private(arr, atarr, asize, barr, btarr, bsize, cmp, ctx, runstart, ri, re);
+<a name="line892">892: </a>    } <font color="#4169E1">else</font> {
+<a name="line893">893: </a>      PetscBinaryInsertionSortWithArray_Private(arr, atarr, asize, barr, btarr, bsize, cmp, ctx, runstart, ri, re);
+<a name="line894">894: </a>    }
+<a name="line895">895: </a>    *runend = re;
+<a name="line896">896: </a>  } <font color="#4169E1">else</font> *runend = ri;
+<a name="line897">897: </a>  <font color="#4169E1">return</font>(0);
+<a name="line898">898: </a>}
+
+<a name="line900">900: </a><font color="#B22222">/*@C</font>
+<a name="line901">901: </a><font color="#B22222">  <a href="../../../docs/manualpages/Sys/PetscTimSort.html#PetscTimSort">PetscTimSort</a> - Sorts an array in place in increasing order using Tim Peters adaptive sorting algorithm.</font>
+
+<a name="line903">903: </a><font color="#B22222">  Not Collective</font>
+
+<a name="line905">905: </a><font color="#B22222">  Input Parameters:</font>
+<a name="line906">906: </a><font color="#B22222">+ n    - number of values</font>
+<a name="line907">907: </a><font color="#B22222">. arr  - array to be sorted</font>
+<a name="line908">908: </a><font color="#B22222">. size - size in bytes of the datatype held in arr</font>
+<a name="line909">909: </a><font color="#B22222">. cmp  - function pointer to comparison function</font>
+<a name="line910">910: </a><font color="#B22222">- ctx  - optional context to be passed to comparison function, NULL if not needed</font>
+
+<a name="line912">912: </a><font color="#B22222">  Output Parameters:</font>
+<a name="line913">913: </a><font color="#B22222">. arr  - sorted array</font>
+
+<a name="line915">915: </a><font color="#B22222">  Notes:</font>
+<a name="line916">916: </a><font color="#B22222">  Timsort makes the assumption that input data is already likely partially ordered, or that it contains contiguous</font>
+<a name="line917">917: </a><font color="#B22222"> sections (termed 'runs') where the data is locally ordered (but not necessarily globally ordered). It therefore aims to</font>
+<a name="line918">918: </a><font color="#B22222"> select slices of the array in such a way that resulting mergesorts operate on near perfectly length-balanced arrays. To</font>
+<a name="line919">919: </a><font color="#B22222"> do so it repeatedly triggers attempts throughout to merge adjacent runs.</font>
+
+<a name="line921">921: </a><font color="#B22222">  Should one run continuously "win" a comparison the algorithm begins the "gallop" phase. It will aggressively search</font>
+<a name="line922">922: </a><font color="#B22222">  the "winner" for the location of the "losers" next entry (and vice versa) to copy all preceding elements into place in</font>
+<a name="line923">923: </a><font color="#B22222">  bulk. However if the data is truly unordered (as is the case with random data) the immense gains possible from these</font>
+<a name="line924">924: </a><font color="#B22222">  searches are expected __not__ to repay their costs. While adjacent arrays are almost all nearly the same size, they</font>
+<a name="line925">925: </a><font color="#B22222">  likely all contain similar data.</font>
+
+<a name="line927">927: </a><font color="#B22222">  Sample usage:</font>
+<a name="line928">928: </a><font color="#B22222">  The comparison function must follow the qsort() comparison function paradigm, returning the sign of the difference</font>
+<a name="line929">929: </a><font color="#B22222">  between its arguments. If left &lt; right : return -1, if left == right : return 0, if left &gt; right : return 1. The user</font>
+<a name="line930">930: </a><font color="#B22222">  may also</font>
+<a name="line931">931: </a><font color="#B22222"> change or reverse the order of the sort by flipping the above. Note that stability of the sort is only guaranteed if</font>
+<a name="line932">932: </a><font color="#B22222"> the comparison function forms a valid trigraph. For example when sorting an array of type "my_type" in increasing</font>
+<a name="line933">933: </a><font color="#B22222">  order</font>
+
+<a name="line935">935: </a><font color="#B22222">.vb</font>
+<a name="line936">936: </a><font color="#B22222">  int my_increasing_comparison_function(const void *left, const void *right, void *ctx) {</font>
+<a name="line937">937: </a><font color="#B22222">    my_type l = *(my_type *) left, r = *(my_type *) right;</font>
+<a name="line938">938: </a><font color="#B22222">    return (l &lt; r) ? -1 : (l &gt; r);</font>
+<a name="line939">939: </a><font color="#B22222">  }</font>
+<a name="line940">940: </a><font color="#B22222">.ve</font>
+<a name="line941">941: </a><font color="#B22222">  Note the context is unused here but you may use it to pass and subsequently access whatever information required</font>
+<a name="line942">942: </a><font color="#B22222">  inside the comparison function. The context pointer will unaltered except for any changes made inside the comparison function.</font>
+<a name="line943">943: </a><font color="#B22222">  Then pass the function</font>
+<a name="line944">944: </a><font color="#B22222">.vb</font>
+<a name="line945">945: </a><font color="#B22222">  <a href="../../../docs/manualpages/Sys/PetscTimSort.html#PetscTimSort">PetscTimSort</a>(n, arr, sizeof(arr[0]), my_increasing_comparison_function, ctx)</font>
+<a name="line946">946: </a><font color="#B22222">.ve</font>
+
+<a name="line948">948: </a><font color="#B22222">  Fortran Notes:</font>
+<a name="line949">949: </a><font color="#B22222">  To use this from fortran you must write a comparison subroutine with 4 arguments which accepts left, right, ctx and</font>
+<a name="line950">950: </a><font color="#B22222">  returns result. For example</font>
+<a name="line951">951: </a><font color="#B22222">.vb</font>
+<a name="line952">952: </a><font color="#B22222"> subroutine CompareIntegers(left,right,ctx,result)</font>
+<a name="line953">953: </a><font color="#B22222">   implicit none</font>
+
+<a name="line955">955: </a><font color="#B22222">   <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>,intent(in) :: left, right</font>
+<a name="line956">956: </a><font color="#B22222">   type(UserCtx)       :: ctx</font>
+<a name="line957">957: </a><font color="#B22222">   integer,intent(out) :: result</font>
+
+<a name="line959">959: </a><font color="#B22222">   if (left &lt; right) then</font>
+<a name="line960">960: </a><font color="#B22222">     result = -1</font>
+<a name="line961">961: </a><font color="#B22222">   else if (left == right) then</font>
+<a name="line962">962: </a><font color="#B22222">     result = 0</font>
+<a name="line963">963: </a><font color="#B22222">   else</font>
+<a name="line964">964: </a><font color="#B22222">     result = 1</font>
+<a name="line965">965: </a><font color="#B22222">   end if</font>
+<a name="line966">966: </a><font color="#B22222">   return</font>
+<a name="line967">967: </a><font color="#B22222"> end subroutine CompareIntegers</font>
+<a name="line968">968: </a><font color="#B22222">.ve</font>
+
+<a name="line970">970: </a><font color="#B22222">  References:</font>
+<a name="line971">971: </a><font color="#B22222">  1. - Tim Peters. https://bugs.python.org/file4451/timsort.txt</font>
+
+<a name="line973">973: </a><font color="#B22222">  Level: developer</font>
+
+<a name="line975">975: </a><font color="#B22222">.seealso: <a href="../../../docs/manualpages/Sys/PetscTimSortWithArray.html#PetscTimSortWithArray">PetscTimSortWithArray</a>(), <a href="../../../docs/manualpages/Sys/PetscIntSortSemiOrdered.html#PetscIntSortSemiOrdered">PetscIntSortSemiOrdered</a>(), <a href="../../../docs/manualpages/Sys/PetscRealSortSemiOrdered.html#PetscRealSortSemiOrdered">PetscRealSortSemiOrdered</a>(), <a href="../../../docs/manualpages/Sys/PetscMPIIntSortSemiOrdered.html#PetscMPIIntSortSemiOrdered">PetscMPIIntSortSemiOrdered</a>()</font>
+<a name="line976">976: </a><font color="#B22222">@*/</font>
+<a name="line977">977: </a><strong><font color="#4169E1"><a name="PetscTimSort"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../docs/manualpages/Sys/PetscTimSort.html#PetscTimSort">PetscTimSort</a>(<a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> n, void *arr, size_t size, int (*cmp)(const void *, const void *, void *), void *ctx)</font></strong>
+<a name="line978">978: </a>{
+<a name="line979">979: </a>  <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>           stacksize = 0, minrun, runstart = 0, runend = 0;
+<a name="line980">980: </a>  PetscTimSortStack  runstack[128];
+<a name="line981">981: </a>  PetscTimSortBuffer buff;
+<a name="line982">982: </a>  <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>     ierr;
+<a name="line983">983: </a>  <font color="#B22222">/* stacksize  = log_phi(n) = log_2(n)/log_2(phi), so 128 is enough for ~5.614e26 elements.</font>
+<a name="line984">984: </a><font color="#B22222">   It is so unlikely that this limit is reached that this is __never__ checked for */</font>
+
+<a name="line987">987: </a>  <font color="#B22222">/* Compute minrun. Minrun should be (32, 65) such that N/minrun</font>
+<a name="line988">988: </a><font color="#B22222">   is a power of 2 or one plus a power of 2 */</font>
+<a name="line989">989: </a>  {
+<a name="line990">990: </a>    <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> t = n, r = 0;
+<a name="line991">991: </a>    <font color="#B22222">/* r becomes 1 if the least significant bits contain at least one off bit */</font>
+<a name="line992">992: </a>    <font color="#4169E1">while</font> (t &gt;= 64) {
+<a name="line993">993: </a>      r |= t &amp; 1;
+<a name="line994">994: </a>      t &gt;&gt;= 1;
+<a name="line995">995: </a>    }
+<a name="line996">996: </a>    minrun = t + r;
+<a name="line997">997: </a>  }
+<a name="line998">998: </a>  <font color="#4169E1">if</font> (<a href="../../../docs/manualpages/Sys/PetscDefined.html#PetscDefined">PetscDefined</a>(USE_DEBUG)) {
+<a name="line999">999: </a>    PetscInfo1(NULL, <font color="#666666">"minrun = %D\n"</font>, minrun);
+<a name="line1000">1000: </a>    <font color="#4169E1">if</font> (n &lt; 64) {
+<a name="line1001">1001: </a>      PetscInfo1(NULL, <font color="#666666">"n %D &lt; 64, consider using <a href="../../../docs/manualpages/Sys/PetscSortInt.html#PetscSortInt">PetscSortInt</a>() instead\n"</font>, n);
+<a name="line1002">1002: </a>    } <font color="#4169E1">else</font> <font color="#4169E1">if</font> ((minrun &lt; 32) || (minrun &gt; 65)) <a href="../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_PLIB,<font color="#666666">"Calculated minrun %D not in range (32,65)"</font>,minrun);
+<a name="line1003">1003: </a>  }
+<a name="line1004">1004: </a>  <a href="../../../docs/manualpages/Sys/PetscMalloc1.html#PetscMalloc1">PetscMalloc1</a>((size_t) minrun*size, &amp;buff.ptr);
+<a name="line1005">1005: </a>  buff.size = (size_t) minrun*size;
+<a name="line1006">1006: </a>  buff.maxsize = (size_t) n*size;
+<a name="line1007">1007: </a>  MIN_GALLOP_GLOBAL = MIN_GALLOP_CONST_GLOBAL;
+<a name="line1008">1008: </a>  <font color="#4169E1">while</font> (runstart &lt; n) {
+<a name="line1009">1009: </a>    <font color="#B22222">/* Check if additional entries are at least partially ordered and build natural run */</font>
+<a name="line1010">1010: </a>    PetscTimSortBuildRun_Private((char *)arr, buff.ptr, size, cmp, ctx, n, minrun, runstart, &amp;runend);
+<a name="line1011">1011: </a>    runstack[stacksize].start = runstart;
+<a name="line1012">1012: </a>    runstack[stacksize].size = runend-runstart+1;
+<a name="line1013">1013: </a>    PetscTimSortMergeCollapse_Private((char *)arr, size, cmp, ctx, &amp;buff, runstack, &amp;stacksize);
+<a name="line1014">1014: </a>    ++stacksize;
+<a name="line1015">1015: </a>    runstart = runend+1;
+<a name="line1016">1016: </a>  }
+<a name="line1017">1017: </a>  <font color="#B22222">/* Have been inside while, so discard last stacksize++ */</font>
+<a name="line1018">1018: </a>  --stacksize;
+<a name="line1019">1019: </a>  PetscTimSortForceCollapse_Private((char *)arr, size, cmp, ctx, &amp;buff, runstack, stacksize);
+<a name="line1020">1020: </a>  <a href="../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(buff.ptr);
+<a name="line1021">1021: </a>  MIN_GALLOP_GLOBAL = MIN_GALLOP_CONST_GLOBAL;
+<a name="line1022">1022: </a>  <font color="#4169E1">return</font>(0);
+<a name="line1023">1023: </a>}
+
+<a name="line1025">1025: </a><font color="#B22222">/*@C</font>
+<a name="line1026">1026: </a><font color="#B22222">  <a href="../../../docs/manualpages/Sys/PetscTimSortWithArray.html#PetscTimSortWithArray">PetscTimSortWithArray</a> - Sorts an array in place in increasing order using Tim Peters adaptive sorting algorithm and</font>
+<a name="line1027">1027: </a><font color="#B22222">  reorders a second array to match the first. The arrays need not be the same type.</font>
+
+<a name="line1029">1029: </a><font color="#B22222">  Not Collective</font>
+
+<a name="line1031">1031: </a><font color="#B22222">  Input Parameters:</font>
+<a name="line1032">1032: </a><font color="#B22222">+ n     - number of values</font>
+<a name="line1033">1033: </a><font color="#B22222">. arr   - array to be sorted</font>
+<a name="line1034">1034: </a><font color="#B22222">. asize - size in bytes of the datatype held in arr</font>
+<a name="line1035">1035: </a><font color="#B22222">. barr  - array to be reordered</font>
+<a name="line1036">1036: </a><font color="#B22222">. asize - size in bytes of the datatype held in barr</font>
+<a name="line1037">1037: </a><font color="#B22222">. cmp   - function pointer to comparison function</font>
+<a name="line1038">1038: </a><font color="#B22222">- ctx   - optional context to be passed to comparison function, NULL if not needed</font>
+
+<a name="line1040">1040: </a><font color="#B22222">  Output Parameters:</font>
+<a name="line1041">1041: </a><font color="#B22222">+ arr  - sorted array</font>
+<a name="line1042">1042: </a><font color="#B22222">- barr - reordered array</font>
+
+<a name="line1044">1044: </a><font color="#B22222">  Notes:</font>
+<a name="line1045">1045: </a><font color="#B22222">  The arrays need not be of the same type, however barr MUST contain at least as many elements as arr and the two CANNOT</font>
+<a name="line1046">1046: </a><font color="#B22222">  overlap.</font>
+
+<a name="line1048">1048: </a><font color="#B22222">  Timsort makes the assumption that input data is already likely partially ordered, or that it contains contiguous</font>
+<a name="line1049">1049: </a><font color="#B22222">  sections (termed 'runs') where the data is locally ordered (but not necessarily globally ordered). It therefore aims</font>
+<a name="line1050">1050: </a><font color="#B22222"> to select slices of the array in such a way that resulting mergesorts operate on near perfectly length-balanced</font>
+<a name="line1051">1051: </a><font color="#B22222"> arrays. To do so it repeatedly triggers attempts throughout to merge adjacent runs.</font>
+
+<a name="line1053">1053: </a><font color="#B22222">  Should one run continuously "win" a comparison the algorithm begins the "gallop" phase. It will aggressively search</font>
+<a name="line1054">1054: </a><font color="#B22222">  the "winner" for the location of the "losers" next entry (and vice versa) to copy all preceding elements into place in</font>
+<a name="line1055">1055: </a><font color="#B22222">  bulk. However if the data is truly unordered (as is the case with random data) the immense gains possible from these</font>
+<a name="line1056">1056: </a><font color="#B22222">  searches are expected __not__ to repay their costs. While adjacent arrays are almost all nearly the same size, they</font>
+<a name="line1057">1057: </a><font color="#B22222">  likely all contain similar data.</font>
+
+<a name="line1059">1059: </a><font color="#B22222">  Sample usage:</font>
+<a name="line1060">1060: </a><font color="#B22222">  The comparison function must follow the qsort() comparison function paradigm, returning the sign of the difference</font>
+<a name="line1061">1061: </a><font color="#B22222">  between its arguments. If left &lt; right : return -1, if left == right : return 0, if left &gt; right : return 1. The user</font>
+<a name="line1062">1062: </a><font color="#B22222">  may also change or reverse the order of the sort by flipping the above. Note that stability of the sort is only</font>
+<a name="line1063">1063: </a><font color="#B22222">  guaranteed if the comparison function forms a valid trigraph. For example when sorting an array of type "my_type" in</font>
+<a name="line1064">1064: </a><font color="#B22222">  increasing order</font>
+
+<a name="line1066">1066: </a><font color="#B22222">.vb</font>
+<a name="line1067">1067: </a><font color="#B22222">  int my_increasing_comparison_function(const void *left, const void *right, void *ctx) {</font>
+<a name="line1068">1068: </a><font color="#B22222">    my_type l = *(my_type *) left, r = *(my_type *) right;</font>
+<a name="line1069">1069: </a><font color="#B22222">    return (l &lt; r) ? -1 : (l &gt; r);</font>
+<a name="line1070">1070: </a><font color="#B22222">  }</font>
+<a name="line1071">1071: </a><font color="#B22222">.ve</font>
+<a name="line1072">1072: </a><font color="#B22222">  Note the context is unused here but you may use it to pass and subsequently access whatever information required</font>
+<a name="line1073">1073: </a><font color="#B22222">  inside the comparison function. The context pointer will unaltered except for any changes made inside the comparison function.</font>
+<a name="line1074">1074: </a><font color="#B22222">  Then pass the function</font>
+<a name="line1075">1075: </a><font color="#B22222">.vb</font>
+<a name="line1076">1076: </a><font color="#B22222">  <a href="../../../docs/manualpages/Sys/PetscTimSortWithArray.html#PetscTimSortWithArray">PetscTimSortWithArray</a>(n, arr, sizeof(arr[0]), barr, sizeof(barr[0]), my_increasing_comparison_function, ctx)</font>
+<a name="line1077">1077: </a><font color="#B22222">.ve</font>
+
+
+<a name="line1080">1080: </a><font color="#B22222">  Fortran Notes:</font>
+<a name="line1081">1081: </a><font color="#B22222">  To use this from fortran you must write a comparison subroutine with 4 arguments which accepts left, right, ctx and</font>
+<a name="line1082">1082: </a><font color="#B22222">  returns result. For example</font>
+<a name="line1083">1083: </a><font color="#B22222">.vb</font>
+<a name="line1084">1084: </a><font color="#B22222"> subroutine CompareIntegers(left,right,ctx,result)</font>
+<a name="line1085">1085: </a><font color="#B22222">   implicit none</font>
+
+<a name="line1087">1087: </a><font color="#B22222">   <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>,intent(in) :: left, right</font>
+<a name="line1088">1088: </a><font color="#B22222">   type(UserCtx)       :: ctx</font>
+<a name="line1089">1089: </a><font color="#B22222">   integer,intent(out) :: result</font>
+
+<a name="line1091">1091: </a><font color="#B22222">   if (left &lt; right) then</font>
+<a name="line1092">1092: </a><font color="#B22222">     result = -1</font>
+<a name="line1093">1093: </a><font color="#B22222">   else if (left == right) then</font>
+<a name="line1094">1094: </a><font color="#B22222">     result = 0</font>
+<a name="line1095">1095: </a><font color="#B22222">   else</font>
+<a name="line1096">1096: </a><font color="#B22222">     result = 1</font>
+<a name="line1097">1097: </a><font color="#B22222">   end if</font>
+<a name="line1098">1098: </a><font color="#B22222">   return</font>
+<a name="line1099">1099: </a><font color="#B22222"> end subroutine CompareIntegers</font>
+<a name="line1100">1100: </a><font color="#B22222">.ve</font>
+
+<a name="line1102">1102: </a><font color="#B22222">  References:</font>
+<a name="line1103">1103: </a><font color="#B22222">  1. - Tim Peters. https://bugs.python.org/file4451/timsort.txt</font>
+
+<a name="line1105">1105: </a><font color="#B22222">  Level: developer</font>
+
+<a name="line1107">1107: </a><font color="#B22222">.seealso: <a href="../../../docs/manualpages/Sys/PetscTimSort.html#PetscTimSort">PetscTimSort</a>(), <a href="../../../docs/manualpages/Sys/PetscIntSortSemiOrderedWithArray.html#PetscIntSortSemiOrderedWithArray">PetscIntSortSemiOrderedWithArray</a>(), <a href="../../../docs/manualpages/Sys/PetscRealSortSemiOrderedWithArrayInt.html#PetscRealSortSemiOrderedWithArrayInt">PetscRealSortSemiOrderedWithArrayInt</a>(), <a href="../../../docs/manualpages/Sys/PetscMPIIntSortSemiOrderedWithArray.html#PetscMPIIntSortSemiOrderedWithArray">PetscMPIIntSortSemiOrderedWithArray</a>()</font>
+<a name="line1108">1108: </a><font color="#B22222">@*/</font>
+<a name="line1109">1109: </a><strong><font color="#4169E1"><a name="PetscTimSortWithArray"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../docs/manualpages/Sys/PetscTimSortWithArray.html#PetscTimSortWithArray">PetscTimSortWithArray</a>(<a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> n, void *arr, size_t asize, void *barr, size_t bsize, int (*cmp)(const void *, const void *, void *), void *ctx)</font></strong>
+<a name="line1110">1110: </a>{
+<a name="line1111">1111: </a>  <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>           stacksize = 0, minrun, runstart = 0, runend = 0;
+<a name="line1112">1112: </a>  PetscTimSortStack  runstack[128];
+<a name="line1113">1113: </a>  PetscTimSortBuffer abuff, bbuff;
+<a name="line1114">1114: </a>  <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>     ierr;
+<a name="line1115">1115: </a>  <font color="#B22222">/* stacksize  = log_phi(n) = log_2(n)/log_2(phi), so 128 is enough for ~5.614e26 elements.</font>
+<a name="line1116">1116: </a><font color="#B22222">   It is so unlikely that this limit is reached that this is __never__ checked for */</font>
+
+<a name="line1119">1119: </a>  <font color="#B22222">/* Compute minrun. Minrun should be (32, 65) such that N/minrun</font>
+<a name="line1120">1120: </a><font color="#B22222">   is a power of 2 or one plus a power of 2 */</font>
+<a name="line1121">1121: </a>  {
+<a name="line1122">1122: </a>    <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> t = n, r = 0;
+<a name="line1123">1123: </a>    <font color="#B22222">/* r becomes 1 if the least significant bits contain at least one off bit */</font>
+<a name="line1124">1124: </a>    <font color="#4169E1">while</font> (t &gt;= 64) {
+<a name="line1125">1125: </a>      r |= t &amp; 1;
+<a name="line1126">1126: </a>      t &gt;&gt;= 1;
+<a name="line1127">1127: </a>    }
+<a name="line1128">1128: </a>    minrun = t + r;
+<a name="line1129">1129: </a>  }
+<a name="line1130">1130: </a>  <font color="#4169E1">if</font> (<a href="../../../docs/manualpages/Sys/PetscDefined.html#PetscDefined">PetscDefined</a>(USE_DEBUG)) {
+<a name="line1131">1131: </a>    PetscInfo1(NULL, <font color="#666666">"minrun = %D\n"</font>, minrun);
+<a name="line1132">1132: </a>    <font color="#4169E1">if</font> (n &lt; 64) {
+<a name="line1133">1133: </a>      PetscInfo1(NULL, <font color="#666666">"n %D &lt; 64, consider using <a href="../../../docs/manualpages/Sys/PetscSortInt.html#PetscSortInt">PetscSortInt</a>() instead\n"</font>, n);
+<a name="line1134">1134: </a>    } <font color="#4169E1">else</font> <font color="#4169E1">if</font> ((minrun &lt; 32) || (minrun &gt; 65)) <a href="../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_PLIB,<font color="#666666">"Calculated minrun %D not in range (32,65)"</font>,minrun);
+<a name="line1135">1135: </a>  }
+<a name="line1136">1136: </a>  <a href="../../../docs/manualpages/Sys/PetscMalloc1.html#PetscMalloc1">PetscMalloc1</a>((size_t) minrun*asize, &amp;abuff.ptr);
+<a name="line1137">1137: </a>  abuff.size = (size_t) minrun*asize;
+<a name="line1138">1138: </a>  abuff.maxsize = (size_t) n*asize;
+<a name="line1139">1139: </a>  <a href="../../../docs/manualpages/Sys/PetscMalloc1.html#PetscMalloc1">PetscMalloc1</a>((size_t) minrun*bsize, &amp;bbuff.ptr);
+<a name="line1140">1140: </a>  bbuff.size = (size_t) minrun*bsize;
+<a name="line1141">1141: </a>  bbuff.maxsize = (size_t) n*bsize;
+<a name="line1142">1142: </a>  MIN_GALLOP_GLOBAL = MIN_GALLOP_CONST_GLOBAL;
+<a name="line1143">1143: </a>  <font color="#4169E1">while</font> (runstart &lt; n) {
+<a name="line1144">1144: </a>    <font color="#B22222">/* Check if additional entries are at least partially ordered and build natural run */</font>
+<a name="line1145">1145: </a>    PetscTimSortBuildRunWithArray_Private((char *)arr, abuff.ptr, asize, (char *)barr, bbuff.ptr, bsize, cmp, ctx, n, minrun, runstart, &amp;runend);
+<a name="line1146">1146: </a>    runstack[stacksize].start = runstart;
+<a name="line1147">1147: </a>    runstack[stacksize].size = runend-runstart+1;
+<a name="line1148">1148: </a>    PetscTimSortMergeCollapseWithArray_Private((char *)arr, asize, (char *)barr, bsize, cmp, ctx, &amp;abuff, &amp;bbuff, runstack, &amp;stacksize);
+<a name="line1149">1149: </a>    ++stacksize;
+<a name="line1150">1150: </a>    runstart = runend+1;
+<a name="line1151">1151: </a>  }
+<a name="line1152">1152: </a>  <font color="#B22222">/* Have been inside while, so discard last stacksize++ */</font>
+<a name="line1153">1153: </a>  --stacksize;
+<a name="line1154">1154: </a>  PetscTimSortForceCollapseWithArray_Private((char *)arr, asize, (char *)barr, bsize, cmp, ctx, &amp;abuff, &amp;bbuff, runstack, stacksize);
+<a name="line1155">1155: </a>  <a href="../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(abuff.ptr);
+<a name="line1156">1156: </a>  <a href="../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(bbuff.ptr);
+<a name="line1157">1157: </a>  MIN_GALLOP_GLOBAL = MIN_GALLOP_CONST_GLOBAL;
+<a name="line1158">1158: </a>  <font color="#4169E1">return</font>(0);
+<a name="line1159">1159: </a>}
+
+<a name="line1161">1161: </a><font color="#B22222">/*@</font>
+<a name="line1162">1162: </a><font color="#B22222">   <a href="../../../docs/manualpages/Sys/PetscIntSortSemiOrdered.html#PetscIntSortSemiOrdered">PetscIntSortSemiOrdered</a> - Sorts an array of integers in place in increasing order.</font>
+
+<a name="line1164">1164: </a><font color="#B22222">   Not Collective</font>
+
+<a name="line1166">1166: </a><font color="#B22222">   Input Parameters:</font>
+<a name="line1167">1167: </a><font color="#B22222">+  n   - number of values</font>
+<a name="line1168">1168: </a><font color="#B22222">-  arr - array of integers</font>
+
+<a name="line1170">1170: </a><font color="#B22222">   Output Parameters:</font>
+<a name="line1171">1171: </a><font color="#B22222">.  arr - sorted array of integers</font>
+
+<a name="line1173">1173: </a><font color="#B22222">   Notes:</font>
+<a name="line1174">1174: </a><font color="#B22222">   If the array is less than 64 entries long <a href="../../../docs/manualpages/Sys/PetscSortInt.html#PetscSortInt">PetscSortInt</a>() is automatically used.</font>
+
+<a name="line1176">1176: </a><font color="#B22222">   This function serves as an alternative to <a href="../../../docs/manualpages/Sys/PetscSortInt.html#PetscSortInt">PetscSortInt</a>(). While this function works for any array of integers it is</font>
+<a name="line1177">1177: </a><font color="#B22222">   significantly faster if the array is not totally random. There are exceptions to this and so it is __highly__</font>
+<a name="line1178">1178: </a><font color="#B22222">   recomended that the user benchmark their code to see which routine is fastest.</font>
+
+<a name="line1180">1180: </a><font color="#B22222">   Level: intermediate</font>
+
+<a name="line1182">1182: </a><font color="#B22222">.seealso: <a href="../../../docs/manualpages/Sys/PetscTimSort.html#PetscTimSort">PetscTimSort</a>(), <a href="../../../docs/manualpages/Sys/PetscSortInt.html#PetscSortInt">PetscSortInt</a>(), <a href="../../../docs/manualpages/Sys/PetscSortIntWithPermutation.html#PetscSortIntWithPermutation">PetscSortIntWithPermutation</a>()</font>
+<a name="line1183">1183: </a><font color="#B22222">@*/</font>
+<a name="line1184">1184: </a><strong><font color="#4169E1"><a name="PetscIntSortSemiOrdered"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../docs/manualpages/Sys/PetscIntSortSemiOrdered.html#PetscIntSortSemiOrdered">PetscIntSortSemiOrdered</a>(<a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> n, <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> arr[])</font></strong>
+<a name="line1185">1185: </a>{
+<a name="line1188">1188: </a>  <font color="#4169E1">if</font> (n &lt;= 1) <font color="#4169E1">return</font>(0);
+<a name="line1190">1190: </a>  <font color="#4169E1">if</font> (n &lt; 64) {
+<a name="line1191">1191: </a>    <a href="../../../docs/manualpages/Sys/PetscSortInt.html#PetscSortInt">PetscSortInt</a>(n, arr);
+<a name="line1192">1192: </a>  } <font color="#4169E1">else</font> {
+<a name="line1193">1193: </a>    <a href="../../../docs/manualpages/Sys/PetscTimSort.html#PetscTimSort">PetscTimSort</a>(n, arr, <font color="#4169E1">sizeof</font>(<a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>), Compare_PetscInt_Private, NULL);
+<a name="line1194">1194: </a>  }
+<a name="line1195">1195: </a>  <font color="#4169E1">return</font>(0);
+<a name="line1196">1196: </a>}
+
+<a name="line1198">1198: </a><font color="#B22222">/*@</font>
+<a name="line1199">1199: </a><font color="#B22222">   <a href="../../../docs/manualpages/Sys/PetscIntSortSemiOrderedWithArray.html#PetscIntSortSemiOrderedWithArray">PetscIntSortSemiOrderedWithArray</a> - Sorts an array of integers in place in increasing order and reorders a second</font>
+<a name="line1200">1200: </a><font color="#B22222">   array to match the first.</font>
+
+<a name="line1202">1202: </a><font color="#B22222">   Not Collective</font>
+
+<a name="line1204">1204: </a><font color="#B22222">   Input Parameters:</font>
+<a name="line1205">1205: </a><font color="#B22222">+  n   - number of values</font>
+<a name="line1206">1206: </a><font color="#B22222">.  arr1 - array of integers to be sorted</font>
+<a name="line1207">1207: </a><font color="#B22222">-  arr2 - array of integers to be reordered</font>
+
+<a name="line1209">1209: </a><font color="#B22222">   Output Parameters:</font>
+<a name="line1210">1210: </a><font color="#B22222">+  arr1 - sorted array of integers</font>
+<a name="line1211">1211: </a><font color="#B22222">-  arr2 - reordered array of integers</font>
+
+<a name="line1213">1213: </a><font color="#B22222">   Notes:</font>
+<a name="line1214">1214: </a><font color="#B22222">   The arrays CANNOT overlap.</font>
+
+<a name="line1216">1216: </a><font color="#B22222">   If the array to be sorted is less than 64 entries long <a href="../../../docs/manualpages/Sys/PetscSortIntWithArray.html#PetscSortIntWithArray">PetscSortIntWithArray</a>() is automatically used.</font>
+
+<a name="line1218">1218: </a><font color="#B22222">   This function serves as an alternative to <a href="../../../docs/manualpages/Sys/PetscSortIntWithArray.html#PetscSortIntWithArray">PetscSortIntWithArray</a>(). While this function works for any array of integers it is</font>
+<a name="line1219">1219: </a><font color="#B22222">   significantly faster if the array is not totally random. There are exceptions to this and so it is __highly__</font>
+<a name="line1220">1220: </a><font color="#B22222">   recomended that the user benchmark their code to see which routine is fastest.</font>
+
+<a name="line1222">1222: </a><font color="#B22222">   Level: intermediate</font>
+
+<a name="line1224">1224: </a><font color="#B22222">.seealso: <a href="../../../docs/manualpages/Sys/PetscTimSortWithArray.html#PetscTimSortWithArray">PetscTimSortWithArray</a>(), <a href="../../../docs/manualpages/Sys/PetscSortIntWithArray.html#PetscSortIntWithArray">PetscSortIntWithArray</a>(), <a href="../../../docs/manualpages/Sys/PetscSortIntWithPermutation.html#PetscSortIntWithPermutation">PetscSortIntWithPermutation</a>()</font>
+<a name="line1225">1225: </a><font color="#B22222">@*/</font>
+<a name="line1226">1226: </a><strong><font color="#4169E1"><a name="PetscIntSortSemiOrderedWithArray"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../docs/manualpages/Sys/PetscIntSortSemiOrderedWithArray.html#PetscIntSortSemiOrderedWithArray">PetscIntSortSemiOrderedWithArray</a>(<a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> n, <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> arr1[], <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> arr2[])</font></strong>
+<a name="line1227">1227: </a>{
+<a name="line1232">1232: </a>  <font color="#4169E1">if</font> (n == 1) <font color="#4169E1">return</font>(0);
+<a name="line1233">1233: </a>  <font color="#4169E1">if</font> (n &lt; 64) {
+<a name="line1234">1234: </a>    <a href="../../../docs/manualpages/Sys/PetscSortIntWithArray.html#PetscSortIntWithArray">PetscSortIntWithArray</a>(n, arr1, arr2);
+<a name="line1235">1235: </a>  } <font color="#4169E1">else</font> {
+<a name="line1236">1236: </a>    <a href="../../../docs/manualpages/Sys/PetscTimSortWithArray.html#PetscTimSortWithArray">PetscTimSortWithArray</a>(n, arr1, <font color="#4169E1">sizeof</font>(<a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>), arr2, <font color="#4169E1">sizeof</font>(<a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>), Compare_PetscInt_Private, NULL);
+<a name="line1237">1237: </a>  }
+<a name="line1238">1238: </a>  <font color="#4169E1">return</font>(0);
+<a name="line1239">1239: </a>}
+
+<a name="line1241">1241: </a><font color="#B22222">/*@</font>
+<a name="line1242">1242: </a><font color="#B22222">   <a href="../../../docs/manualpages/Sys/PetscMPIIntSortSemiOrdered.html#PetscMPIIntSortSemiOrdered">PetscMPIIntSortSemiOrdered</a> - Sorts an array of PetscMPIInts in place in increasing order.</font>
+
+<a name="line1244">1244: </a><font color="#B22222">   Not Collective</font>
+
+<a name="line1246">1246: </a><font color="#B22222">   Input Parameters:</font>
+<a name="line1247">1247: </a><font color="#B22222">+  n   - number of values</font>
+<a name="line1248">1248: </a><font color="#B22222">-  arr - array of PetscMPIInts</font>
+
+<a name="line1250">1250: </a><font color="#B22222">   Output Parameters:</font>
+<a name="line1251">1251: </a><font color="#B22222">.  arr - sorted array of integers</font>
+
+<a name="line1253">1253: </a><font color="#B22222">   Notes:</font>
+<a name="line1254">1254: </a><font color="#B22222">   If the array is less than 64 entries long <a href="../../../docs/manualpages/Sys/PetscSortMPIInt.html#PetscSortMPIInt">PetscSortMPIInt</a>() is automatically used.</font>
+
+<a name="line1256">1256: </a><font color="#B22222">   This function serves as an alternative to <a href="../../../docs/manualpages/Sys/PetscSortMPIInt.html#PetscSortMPIInt">PetscSortMPIInt</a>(). While this function works for any array of PetscMPIInts it is</font>
+<a name="line1257">1257: </a><font color="#B22222">   significantly faster if the array is not totally random. There are exceptions to this and so it is __highly__</font>
+<a name="line1258">1258: </a><font color="#B22222">   recomended that the user benchmark their code to see which routine is fastest.</font>
+
+<a name="line1260">1260: </a><font color="#B22222">   Level: intermediate</font>
+
+<a name="line1262">1262: </a><font color="#B22222">.seealso: <a href="../../../docs/manualpages/Sys/PetscTimSort.html#PetscTimSort">PetscTimSort</a>(), <a href="../../../docs/manualpages/Sys/PetscSortMPIInt.html#PetscSortMPIInt">PetscSortMPIInt</a>()</font>
+<a name="line1263">1263: </a><font color="#B22222">@*/</font>
+<a name="line1264">1264: </a><strong><font color="#4169E1"><a name="PetscMPIIntSortSemiOrdered"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../docs/manualpages/Sys/PetscMPIIntSortSemiOrdered.html#PetscMPIIntSortSemiOrdered">PetscMPIIntSortSemiOrdered</a>(<a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> n, <a href="../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a> arr[])</font></strong>
+<a name="line1265">1265: </a>{
+<a name="line1266">1266: </a>  <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  ierr;
+
+<a name="line1270">1270: </a>  <font color="#4169E1">if</font> (n == 1) <font color="#4169E1">return</font>(0);
+<a name="line1271">1271: </a>  <font color="#4169E1">if</font> (n &lt; 64) {
+<a name="line1272">1272: </a>    <a href="../../../docs/manualpages/Sys/PetscSortMPIInt.html#PetscSortMPIInt">PetscSortMPIInt</a>(n, arr);
+<a name="line1273">1273: </a>  } <font color="#4169E1">else</font> {
+<a name="line1274">1274: </a>    <a href="../../../docs/manualpages/Sys/PetscTimSort.html#PetscTimSort">PetscTimSort</a>(n, arr, <font color="#4169E1">sizeof</font>(<a href="../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a>), Compare_PetscMPIInt_Private, NULL);
+<a name="line1275">1275: </a>  }
+<a name="line1276">1276: </a>  <font color="#4169E1">return</font>(0);
+<a name="line1277">1277: </a>}
+
+<a name="line1279">1279: </a><font color="#B22222">/*@</font>
+<a name="line1280">1280: </a><font color="#B22222">   <a href="../../../docs/manualpages/Sys/PetscMPIIntSortSemiOrderedWithArray.html#PetscMPIIntSortSemiOrderedWithArray">PetscMPIIntSortSemiOrderedWithArray</a> - Sorts an array of integers in place in increasing order and reorders a second</font>
+<a name="line1281">1281: </a><font color="#B22222">   array to match the first.</font>
+
+<a name="line1283">1283: </a><font color="#B22222">   Not Collective</font>
+
+<a name="line1285">1285: </a><font color="#B22222">   Input Parameters:</font>
+<a name="line1286">1286: </a><font color="#B22222">+  n   - number of values</font>
+<a name="line1287">1287: </a><font color="#B22222">.  arr1 - array of integers to be sorted</font>
+<a name="line1288">1288: </a><font color="#B22222">-  arr2 - array of integers to be reordered</font>
+
+<a name="line1290">1290: </a><font color="#B22222">   Output Parameters:</font>
+<a name="line1291">1291: </a><font color="#B22222">+  arr1 - sorted array of integers</font>
+<a name="line1292">1292: </a><font color="#B22222">-  arr2 - reordered array of integers</font>
+
+<a name="line1294">1294: </a><font color="#B22222">   Notes:</font>
+<a name="line1295">1295: </a><font color="#B22222">   The arrays CANNOT overlap.</font>
+
+<a name="line1297">1297: </a><font color="#B22222">   If the array to be sorted is less than 64 entries long <a href="../../../docs/manualpages/Sys/PetscSortMPIIntWithArray.html#PetscSortMPIIntWithArray">PetscSortMPIIntWithArray</a>() is automatically used.</font>
+
+<a name="line1299">1299: </a><font color="#B22222">   This function serves as an alternative to <a href="../../../docs/manualpages/Sys/PetscSortMPIIntWithArray.html#PetscSortMPIIntWithArray">PetscSortMPIIntWithArray</a>(). While this function works for any array of integers it is</font>
+<a name="line1300">1300: </a><font color="#B22222">   significantly faster if the array is not totally random. There are exceptions to this and so it is __highly__</font>
+<a name="line1301">1301: </a><font color="#B22222">   recomended that the user benchmark their code to see which routine is fastest.</font>
+
+<a name="line1303">1303: </a><font color="#B22222">   Level: intermediate</font>
+
+<a name="line1305">1305: </a><font color="#B22222">.seealso: <a href="../../../docs/manualpages/Sys/PetscTimSortWithArray.html#PetscTimSortWithArray">PetscTimSortWithArray</a>(), <a href="../../../docs/manualpages/Sys/PetscSortMPIIntWithArray.html#PetscSortMPIIntWithArray">PetscSortMPIIntWithArray</a>(), PetscSortMPIIntWithPermutation()</font>
+<a name="line1306">1306: </a><font color="#B22222">@*/</font>
+<a name="line1307">1307: </a><strong><font color="#4169E1"><a name="PetscMPIIntSortSemiOrderedWithArray"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../docs/manualpages/Sys/PetscMPIIntSortSemiOrderedWithArray.html#PetscMPIIntSortSemiOrderedWithArray">PetscMPIIntSortSemiOrderedWithArray</a>(<a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> n, <a href="../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a> arr1[], <a href="../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a> arr2[])</font></strong>
+<a name="line1308">1308: </a>{
+<a name="line1311">1311: </a>  <font color="#4169E1">if</font> (n &lt;= 1) <font color="#4169E1">return</font>(0);
+<a name="line1314">1314: </a>  <font color="#4169E1">if</font> (n &lt; 64) {
+<a name="line1315">1315: </a>    <a href="../../../docs/manualpages/Sys/PetscSortMPIIntWithArray.html#PetscSortMPIIntWithArray">PetscSortMPIIntWithArray</a>(n, arr1, arr2);
+<a name="line1316">1316: </a>  } <font color="#4169E1">else</font> {
+<a name="line1317">1317: </a>    <a href="../../../docs/manualpages/Sys/PetscTimSortWithArray.html#PetscTimSortWithArray">PetscTimSortWithArray</a>(n, arr1, <font color="#4169E1">sizeof</font>(<a href="../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a>), arr2, <font color="#4169E1">sizeof</font>(<a href="../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a>), Compare_PetscMPIInt_Private, NULL);
+<a name="line1318">1318: </a>  }
+<a name="line1319">1319: </a>  <font color="#4169E1">return</font>(0);
+<a name="line1320">1320: </a>}
+
+<a name="line1322">1322: </a><font color="#B22222">/*@</font>
+<a name="line1323">1323: </a><font color="#B22222">   <a href="../../../docs/manualpages/Sys/PetscRealSortSemiOrdered.html#PetscRealSortSemiOrdered">PetscRealSortSemiOrdered</a> - Sorts an array of PetscReals in place in increasing order.</font>
+
+<a name="line1325">1325: </a><font color="#B22222">   Not Collective</font>
+
+<a name="line1327">1327: </a><font color="#B22222">   Input Parameters:</font>
+<a name="line1328">1328: </a><font color="#B22222">+  n   - number of values</font>
+<a name="line1329">1329: </a><font color="#B22222">-  arr - array of PetscReals</font>
+
+<a name="line1331">1331: </a><font color="#B22222">   Output Parameters:</font>
+<a name="line1332">1332: </a><font color="#B22222">.  arr - sorted array of integers</font>
+
+<a name="line1334">1334: </a><font color="#B22222">   Notes:</font>
+<a name="line1335">1335: </a><font color="#B22222">   If the array is less than 64 entries long <a href="../../../docs/manualpages/Sys/PetscSortReal.html#PetscSortReal">PetscSortReal</a>() is automatically used.</font>
+
+<a name="line1337">1337: </a><font color="#B22222">   This function serves as an alternative to <a href="../../../docs/manualpages/Sys/PetscSortReal.html#PetscSortReal">PetscSortReal</a>(). While this function works for any array of PetscReals it is</font>
+<a name="line1338">1338: </a><font color="#B22222">   significantly faster if the array is not totally random. There are exceptions to this and so it is __highly__</font>
+<a name="line1339">1339: </a><font color="#B22222">   recomended that the user benchmark their code to see which routine is fastest.</font>
+
+<a name="line1341">1341: </a><font color="#B22222">   Level: intermediate</font>
+
+<a name="line1343">1343: </a><font color="#B22222">.seealso: <a href="../../../docs/manualpages/Sys/PetscTimSort.html#PetscTimSort">PetscTimSort</a>(), <a href="../../../docs/manualpages/Sys/PetscSortReal.html#PetscSortReal">PetscSortReal</a>(), <a href="../../../docs/manualpages/Sys/PetscSortRealWithPermutation.html#PetscSortRealWithPermutation">PetscSortRealWithPermutation</a>()</font>
+<a name="line1344">1344: </a><font color="#B22222">@*/</font>
+<a name="line1345">1345: </a><strong><font color="#4169E1"><a name="PetscRealSortSemiOrdered"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../docs/manualpages/Sys/PetscRealSortSemiOrdered.html#PetscRealSortSemiOrdered">PetscRealSortSemiOrdered</a>(<a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> n, <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> arr[])</font></strong>
+<a name="line1346">1346: </a>{
+<a name="line1347">1347: </a>  <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  ierr;
+
+<a name="line1350">1350: </a>  <font color="#4169E1">if</font> (n &lt;= 1) <font color="#4169E1">return</font>(0);
+<a name="line1352">1352: </a>  <font color="#4169E1">if</font> (n &lt; 64) {
+<a name="line1353">1353: </a>    <a href="../../../docs/manualpages/Sys/PetscSortReal.html#PetscSortReal">PetscSortReal</a>(n, arr);
+<a name="line1354">1354: </a>  } <font color="#4169E1">else</font> {
+<a name="line1355">1355: </a>    <a href="../../../docs/manualpages/Sys/PetscTimSort.html#PetscTimSort">PetscTimSort</a>(n, arr, <font color="#4169E1">sizeof</font>(<a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>), Compare_PetscReal_Private, NULL);
+<a name="line1356">1356: </a>  }
+<a name="line1357">1357: </a>  <font color="#4169E1">return</font>(0);
+<a name="line1358">1358: </a>}
+
+<a name="line1360">1360: </a><font color="#B22222">/*@</font>
+<a name="line1361">1361: </a><font color="#B22222">   <a href="../../../docs/manualpages/Sys/PetscRealSortSemiOrderedWithArrayInt.html#PetscRealSortSemiOrderedWithArrayInt">PetscRealSortSemiOrderedWithArrayInt</a> - Sorts an array of PetscReals in place in increasing order and reorders a second</font>
+<a name="line1362">1362: </a><font color="#B22222">   array of PetscInts to match the first.</font>
+
+<a name="line1364">1364: </a><font color="#B22222">   Not Collective</font>
+
+<a name="line1366">1366: </a><font color="#B22222">   Input Parameters:</font>
+<a name="line1367">1367: </a><font color="#B22222">+  n   - number of values</font>
+<a name="line1368">1368: </a><font color="#B22222">.  arr1 - array of PetscReals to be sorted</font>
+<a name="line1369">1369: </a><font color="#B22222">-  arr2 - array of PetscReals to be reordered</font>
+
+<a name="line1371">1371: </a><font color="#B22222">   Output Parameters:</font>
+<a name="line1372">1372: </a><font color="#B22222">+  arr1 - sorted array of PetscReals</font>
+<a name="line1373">1373: </a><font color="#B22222">-  arr2 - reordered array of PetscInts</font>
+
+<a name="line1375">1375: </a><font color="#B22222">   Notes:</font>
+<a name="line1376">1376: </a><font color="#B22222">   If the array to be sorted is less than 64 entries long <a href="../../../docs/manualpages/Sys/PetscSortRealWithArrayInt.html#PetscSortRealWithArrayInt">PetscSortRealWithArrayInt</a>() is automatically used.</font>
+
+<a name="line1378">1378: </a><font color="#B22222">   This function serves as an alternative to PetscSortRealWithArray(). While this function works for any array of PetscReals it is</font>
+<a name="line1379">1379: </a><font color="#B22222">   significantly faster if the array is not totally random. There are exceptions to this and so it is __highly__</font>
+<a name="line1380">1380: </a><font color="#B22222">   recomended that the user benchmark their code to see which routine is fastest.</font>
+
+<a name="line1382">1382: </a><font color="#B22222">   Level: intermediate</font>
+
+<a name="line1384">1384: </a><font color="#B22222">.seealso: <a href="../../../docs/manualpages/Sys/PetscTimSortWithArray.html#PetscTimSortWithArray">PetscTimSortWithArray</a>(), <a href="../../../docs/manualpages/Sys/PetscSortRealWithArrayInt.html#PetscSortRealWithArrayInt">PetscSortRealWithArrayInt</a>(), <a href="../../../docs/manualpages/Sys/PetscSortRealWithPermutation.html#PetscSortRealWithPermutation">PetscSortRealWithPermutation</a>()</font>
+<a name="line1385">1385: </a><font color="#B22222">@*/</font>
+<a name="line1386">1386: </a><strong><font color="#4169E1"><a name="PetscRealSortSemiOrderedWithArrayInt"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../docs/manualpages/Sys/PetscRealSortSemiOrderedWithArrayInt.html#PetscRealSortSemiOrderedWithArrayInt">PetscRealSortSemiOrderedWithArrayInt</a>(<a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> n, <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> arr1[], <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> arr2[])</font></strong>
+<a name="line1387">1387: </a>{
+<a name="line1390">1390: </a>  <font color="#4169E1">if</font> (n &lt;= 1) <font color="#4169E1">return</font>(0);
+<a name="line1393">1393: </a>  <font color="#4169E1">if</font> (n &lt; 64) {
+<a name="line1394">1394: </a>    <a href="../../../docs/manualpages/Sys/PetscSortRealWithArrayInt.html#PetscSortRealWithArrayInt">PetscSortRealWithArrayInt</a>(n, arr1, arr2);
+<a name="line1395">1395: </a>  } <font color="#4169E1">else</font> {
+<a name="line1396">1396: </a>    <a href="../../../docs/manualpages/Sys/PetscTimSortWithArray.html#PetscTimSortWithArray">PetscTimSortWithArray</a>(n, arr1, <font color="#4169E1">sizeof</font>(<a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>), arr2, <font color="#4169E1">sizeof</font>(<a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>), Compare_PetscReal_Private, NULL);
+<a name="line1397">1397: </a>  }
+<a name="line1398">1398: </a>  <font color="#4169E1">return</font>(0);
+<a name="line1399">1399: </a>}
+</pre>
+</body>
+
+</html>

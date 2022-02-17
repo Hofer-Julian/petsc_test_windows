@@ -1,0 +1,38 @@
+
+<html>
+<head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/src/dm/impls/swarm/tests/makefile.html" />
+<title></title>
+<meta name="generator" content="c2html 0.9.4">
+<meta name="date" content="2021-03-30T16:50:52+00:00">
+</head>
+
+<body bgcolor="#FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 src/dm/impls/swarm/tests/makefile.html "><small>Report Typos and Errors</small></a></div>
+<pre width="80">-include ../../../../../petscdir.mk
+CFLAGS	        =
+FFLAGS	        =
+CPPFLAGS        =
+FPPFLAGS        =
+LOCDIR          = src/dm/impls/swarm/tests/
+EXAMPLESC       = ex1.c ex2.c ex4.c ex5.c
+EXAMPLESF       =
+MANSEC          = <a href="ROOT/docs/manualpages/DM/DM.html#DM">DM</a>
+
+include ${PETSC_DIR}/lib/petsc/conf/variables
+include ${PETSC_DIR}/lib/petsc/conf/rules
+include ${PETSC_DIR}/lib/petsc/conf/test
+
+NP=1
+N=1
+P=1
+ORDER=2
+
+<strong><font color="#FF0000">run:</font></strong>
+	-${MPIEXEC} -n ${NP} ./ex2 -dim 2 -pc_type lu -faces ${N} -particles_cell ${P} -petscspace_order ${ORDER} -petscfe_default_quadrature_order ${ORDER} -dm_view hdf5:sol.h5 -fhat_view hdf5:sol.h5::append -rhs_view hdf5:sol.h5::append -simplex 0 -function linear -mesh_perturbation 1.e-21 -particle_perturbation 1.e-22
+	-@${PETSC_DIR}/lib/petsc/bin/petsc_gen_xdmf.py sol.h5
+
+</pre>
+</body>
+
+</html>

@@ -1,0 +1,57 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatProductSymbolic.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>MatProductSymbolic</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/Mat/MatProductSymbolic.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="MatProductSymbolic"><H1>MatProductSymbolic</H1></A>
+Perform the symbolic portion of a matrix product, this creates a data structure for use with the numerical produce. 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscmat.h" 
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../Mat/MatProductSymbolic.html#MatProductSymbolic">MatProductSymbolic</A>(<A HREF="../Mat/Mat.html#Mat">Mat</A> mat)
+</PRE>
+Collective on <A HREF="../Mat/Mat.html#Mat">Mat</A>
+<P>
+<H3><FONT COLOR="#CC3333">Input/Output Parameter</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>mat </B></TD><TD>- the matrix to hold a product
+</TD></TR></TABLE>
+<P>
+
+<P>
+Notes: <A HREF="../Mat/MatProductSetFromOptions.html#MatProductSetFromOptions">MatProductSetFromOptions</A>() must have been called on mat before calling this function
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../Mat/MatProductCreate.html#MatProductCreate">MatProductCreate</A>(), <A HREF="../Mat/MatProductCreateWithMat.html#MatProductCreateWithMat">MatProductCreateWithMat</A>(), <A HREF="../Mat/MatProductSetFromOptions.html#MatProductSetFromOptions">MatProductSetFromOptions</A>(), <A HREF="../Mat/MatProductNumeric.html#MatProductNumeric">MatProductNumeric</A>(), <A HREF="../Mat/MatProductSetType.html#MatProductSetType">MatProductSetType</A>(), <A HREF="../Mat/MatProductSetAlgorithm.html#MatProductSetAlgorithm">MatProductSetAlgorithm</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>intermediate<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/mat/interface/matproduct.c.html#MatProductSymbolic">src/mat/interface/matproduct.c</A>
+<P><H3><FONT COLOR="#CC3333">Examples</FONT></H3>
+<A HREF="../../../src/tao/pde_constrained/tutorials/parabolic.c.html">src/tao/pde_constrained/tutorials/parabolic.c.html</A><BR>
+<P><H3><FONT COLOR="CC3333">Implementations</FONT></H3><A HREF="../../../src/mat/impls/aij/mpi/mpimatmatmatmult.c.html#MatProductSymbolic_ABC_Transpose_AIJ_AIJ">MatProductSymbolic_ABC_Transpose_AIJ_AIJ in src/mat/impls/aij/mpi/mpimatmatmatmult.c</A><BR>
+<A HREF="../../../src/mat/impls/aij/mpi/mpimatmatmatmult.c.html#MatProductSymbolic_RARt_MPIAIJ_MPIAIJ">MatProductSymbolic_RARt_MPIAIJ_MPIAIJ in src/mat/impls/aij/mpi/mpimatmatmatmult.c</A><BR>
+<A HREF="../../../src/mat/impls/aij/mpi/mpimatmatmult.c.html#MatProductSymbolic_AB_MPIAIJ_MPIAIJ">MatProductSymbolic_AB_MPIAIJ_MPIAIJ in src/mat/impls/aij/mpi/mpimatmatmult.c</A><BR>
+<A HREF="../../../src/mat/impls/aij/mpi/mpimatmatmult.c.html#MatProductSymbolic_AtB_MPIAIJ_MPIAIJ">MatProductSymbolic_AtB_MPIAIJ_MPIAIJ in src/mat/impls/aij/mpi/mpimatmatmult.c</A><BR>
+<A HREF="../../../src/mat/impls/aij/mpi/mpiptap.c.html#MatProductSymbolic_PtAP_MPIAIJ_MPIAIJ">MatProductSymbolic_PtAP_MPIAIJ_MPIAIJ in src/mat/impls/aij/mpi/mpiptap.c</A><BR>
+<A HREF="../../../src/mat/impls/aij/seq/aijmkl/aijmkl.c.html#MatProductSymbolic_AtB_SeqAIJMKL_SeqAIJMKL">MatProductSymbolic_AtB_SeqAIJMKL_SeqAIJMKL in src/mat/impls/aij/seq/aijmkl/aijmkl.c</A><BR>
+<A HREF="../../../src/mat/impls/aij/seq/aijmkl/aijmkl.c.html#MatProductSymbolic_PtAP_SeqAIJMKL_SeqAIJMKL_SymmetricReal">MatProductSymbolic_PtAP_SeqAIJMKL_SeqAIJMKL_SymmetricReal in src/mat/impls/aij/seq/aijmkl/aijmkl.c</A><BR>
+<A HREF="../../../src/mat/impls/aij/seq/matmatmult.c.html#MatProductSymbolic_AtB_SeqAIJ_SeqAIJ">MatProductSymbolic_AtB_SeqAIJ_SeqAIJ in src/mat/impls/aij/seq/matmatmult.c</A><BR>
+<A HREF="../../../src/mat/impls/aij/seq/matptap.c.html#MatProductSymbolic_PtAP_SeqAIJ_SeqAIJ">MatProductSymbolic_PtAP_SeqAIJ_SeqAIJ in src/mat/impls/aij/seq/matptap.c</A><BR>
+<A HREF="../../../src/mat/impls/aij/seq/matrart.c.html#MatProductSymbolic_RARt_SeqAIJ_SeqAIJ">MatProductSymbolic_RARt_SeqAIJ_SeqAIJ in src/mat/impls/aij/seq/matrart.c</A><BR>
+<A HREF="../../../src/mat/impls/aij/seq/seqcusparse/aijcusparse.cu.html#MatProductSymbolic_SeqAIJCUSPARSE_SeqDENSECUDA">MatProductSymbolic_SeqAIJCUSPARSE_SeqDENSECUDA in src/mat/impls/aij/seq/seqcusparse/aijcusparse.cu</A><BR>
+<A HREF="../../../src/mat/impls/hara/mathara.cu.html#MatProductSymbolic_HARA">MatProductSymbolic_HARA in src/mat/impls/hara/mathara.cu</A><BR>
+<A HREF="../../../src/mat/impls/hypre/mhypre.c.html#MatProductSymbolic_AB_HYPRE">MatProductSymbolic_AB_HYPRE in src/mat/impls/hypre/mhypre.c</A><BR>
+<A HREF="../../../src/mat/impls/hypre/mhypre.c.html#MatProductSymbolic_PtAP_HYPRE">MatProductSymbolic_PtAP_HYPRE in src/mat/impls/hypre/mhypre.c</A><BR>
+<A HREF="../../../src/mat/impls/is/matis.c.html#MatProductSymbolic_PtAP_IS_XAIJ">MatProductSymbolic_PtAP_IS_XAIJ in src/mat/impls/is/matis.c</A><BR>
+<A HREF="../../../src/mat/impls/maij/maij.c.html#MatProductSymbolic_PtAP_SeqAIJ_SeqMAIJ">MatProductSymbolic_PtAP_SeqAIJ_SeqMAIJ in src/mat/impls/maij/maij.c</A><BR>
+<A HREF="../../../src/mat/impls/maij/maij.c.html#MatProductSymbolic_PtAP_MPIAIJ_MPIMAIJ">MatProductSymbolic_PtAP_MPIAIJ_MPIMAIJ in src/mat/impls/maij/maij.c</A><BR>
+<A HREF="../../../src/mat/impls/nest/matnest.c.html#MatProductSymbolic_Nest_Dense">MatProductSymbolic_Nest_Dense in src/mat/impls/nest/matnest.c</A><BR>
+<A HREF="../../../src/mat/impls/shell/shell.c.html#MatProductSymbolic_Shell_X">MatProductSymbolic_Shell_X in src/mat/impls/shell/shell.c</A><BR>
+<BR><A HREF="./index.html">Index of all Mat routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

@@ -1,0 +1,62 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/TS/TSSetTransientVariable.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>TSSetTransientVariable</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/TS/TSSetTransientVariable.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="TSSetTransientVariable"><H1>TSSetTransientVariable</H1></A>
+sets function to transform from state to transient variables 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscts.h"  
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../TS/TSSetTransientVariable.html#TSSetTransientVariable">TSSetTransientVariable</A>(<A HREF="../TS/TS.html#TS">TS</A> ts,TSTransientVariable tvar,void *ctx)
+</PRE>
+Logically Collective
+<P>
+<H3><FONT COLOR="#CC3333">Input Arguments</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>ts </B></TD><TD>- time stepping context on which to change the transient variable
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>tvar </B></TD><TD>- a function that transforms to transient variables
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>ctx </B></TD><TD>- a context for tvar
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Calling sequence of tvar</FONT></H3>
+<pre>
+    <A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> tvar(<A HREF="../TS/TS.html#TS">TS</A> ts,<A HREF="../Vec/Vec.html#Vec">Vec</A> p,<A HREF="../Vec/Vec.html#Vec">Vec</A> c,void *ctx);
+</pre>
+<P>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>ts </B></TD><TD>- timestep context
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>p </B></TD><TD>- input vector (primative form)
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>c </B></TD><TD>- output vector, transient variables (conservative form)
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>ctx </B></TD><TD>- [optional] user-defined function context
+</TD></TR></TABLE>
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">Notes</FONT></H3>
+This is typically used to transform from primitive to conservative variables so that a time integrator (e.g., <A HREF="../TS/TSBDF.html#TSBDF">TSBDF</A>)
+can be conservative.  In this context, primitive variables P are used to model the state (e.g., because they lead to
+well-conditioned formulations even in limiting cases such as low-Mach or zero porosity).  The transient variable is
+C(P), specified by calling this function.  An IFunction thus receives arguments (P, Cdot) and the IJacobian must be
+evaluated via the chain rule, as in
+<P>
+dF/dP + shift * dF/dCdot dC/dP.
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../TS/DMTSSetTransientVariable.html#DMTSSetTransientVariable">DMTSSetTransientVariable</A>(), <A HREF="../TS/DMTSGetTransientVariable.html#DMTSGetTransientVariable">DMTSGetTransientVariable</A>(), <A HREF="../TS/TSSetIFunction.html#TSSetIFunction">TSSetIFunction</A>(), <A HREF="../TS/TSSetIJacobian.html#TSSetIJacobian">TSSetIJacobian</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>advanced<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/ts/interface/ts.c.html#TSSetTransientVariable">src/ts/interface/ts.c</A>
+<BR><A HREF="./index.html">Index of all TS routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

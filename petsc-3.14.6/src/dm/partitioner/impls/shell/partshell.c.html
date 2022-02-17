@@ -1,0 +1,238 @@
+<center><a href="partshell.c">Actual source code: partshell.c</a></center><br>
+
+<html>
+<head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/src/dm/partitioner/impls/shell/partshell.c.html" />
+<title></title>
+<meta name="generator" content="c2html 0.9.4">
+<meta name="date" content="2021-03-30T16:51:06+00:00">
+</head>
+
+<body bgcolor="#FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 src/dm/partitioner/impls/shell/partshell.c.html "><small>Report Typos and Errors</small></a></div>
+<pre width="80">
+<a name="line1">  1: </a>#include <A href="../../../../../include/petsc/private/partitionerimpl.h.html">&lt;petsc/private/partitionerimpl.h&gt;</A>
+
+<a name="line3">  3: </a><font color="#4169E1">typedef</font> <font color="#4169E1">struct</font> {
+<a name="line4">  4: </a>  <a href="../../../../../docs/manualpages/PetscSection/PetscSection.html#PetscSection">PetscSection</a> section;   <font color="#B22222">/* Sizes for each partition */</font>
+<a name="line5">  5: </a>  <a href="../../../../../docs/manualpages/IS/IS.html#IS">IS</a>           partition; <font color="#B22222">/* Points in each partition */</font>
+<a name="line6">  6: </a>  <a href="../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>    random;    <font color="#B22222">/* Flag for a random partition */</font>
+<a name="line7">  7: </a>} PetscPartitioner_Shell;
+
+<a name="line9">  9: </a><strong><font color="#4169E1"><a name="PetscPartitionerReset_Shell"></a>static <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscPartitionerReset_Shell(<a href="../../../../../docs/manualpages/DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</a> part)</font></strong>
+<a name="line10"> 10: </a>{
+<a name="line11"> 11: </a>  PetscPartitioner_Shell *p = (PetscPartitioner_Shell *) part-&gt;data;
+<a name="line12"> 12: </a>  <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>          ierr;
+
+<a name="line15"> 15: </a>  <a href="../../../../../docs/manualpages/PetscSection/PetscSectionDestroy.html#PetscSectionDestroy">PetscSectionDestroy</a>(&amp;p-&gt;section);
+<a name="line16"> 16: </a>  <a href="../../../../../docs/manualpages/IS/ISDestroy.html#ISDestroy">ISDestroy</a>(&amp;p-&gt;partition);
+<a name="line17"> 17: </a>  <font color="#4169E1">return</font>(0);
+<a name="line18"> 18: </a>}
+
+<a name="line20"> 20: </a><strong><font color="#4169E1"><a name="PetscPartitionerDestroy_Shell"></a>static <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscPartitionerDestroy_Shell(<a href="../../../../../docs/manualpages/DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</a> part)</font></strong>
+<a name="line21"> 21: </a>{
+
+<a name="line25"> 25: </a>  PetscPartitionerReset_Shell(part);
+<a name="line26"> 26: </a>  <a href="../../../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(part-&gt;data);
+<a name="line27"> 27: </a>  <font color="#4169E1">return</font>(0);
+<a name="line28"> 28: </a>}
+
+<a name="line30"> 30: </a><strong><font color="#4169E1"><a name="PetscPartitionerView_Shell_ASCII"></a>static <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscPartitionerView_Shell_ASCII(<a href="../../../../../docs/manualpages/DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</a> part, <a href="../../../../../docs/manualpages/Viewer/PetscViewer.html#PetscViewer">PetscViewer</a> viewer)</font></strong>
+<a name="line31"> 31: </a>{
+<a name="line32"> 32: </a>  PetscPartitioner_Shell *p = (PetscPartitioner_Shell *) part-&gt;data;
+<a name="line33"> 33: </a>  <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>          ierr;
+
+<a name="line36"> 36: </a>  <font color="#4169E1">if</font> (p-&gt;random) {
+<a name="line37"> 37: </a>    <a href="../../../../../docs/manualpages/Viewer/PetscViewerASCIIPushTab.html#PetscViewerASCIIPushTab">PetscViewerASCIIPushTab</a>(viewer);
+<a name="line38"> 38: </a>    <a href="../../../../../docs/manualpages/Viewer/PetscViewerASCIIPrintf.html#PetscViewerASCIIPrintf">PetscViewerASCIIPrintf</a>(viewer, <font color="#666666">"using random partition\n"</font>);
+<a name="line39"> 39: </a>    <a href="../../../../../docs/manualpages/Viewer/PetscViewerASCIIPopTab.html#PetscViewerASCIIPopTab">PetscViewerASCIIPopTab</a>(viewer);
+<a name="line40"> 40: </a>  }
+<a name="line41"> 41: </a>  <font color="#4169E1">return</font>(0);
+<a name="line42"> 42: </a>}
+
+<a name="line44"> 44: </a><strong><font color="#4169E1"><a name="PetscPartitionerView_Shell"></a>static <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscPartitionerView_Shell(<a href="../../../../../docs/manualpages/DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</a> part, <a href="../../../../../docs/manualpages/Viewer/PetscViewer.html#PetscViewer">PetscViewer</a> viewer)</font></strong>
+<a name="line45"> 45: </a>{
+<a name="line46"> 46: </a>  <a href="../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>      iascii;
+
+<a name="line52"> 52: </a>  <a href="../../../../../docs/manualpages/Sys/PetscObjectTypeCompare.html#PetscObjectTypeCompare">PetscObjectTypeCompare</a>((<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>) viewer, <a href="../../../../../docs/manualpages/Viewer/PETSCVIEWERASCII.html#PETSCVIEWERASCII">PETSCVIEWERASCII</a>, &amp;iascii);
+<a name="line53"> 53: </a>  <font color="#4169E1">if</font> (iascii) {PetscPartitionerView_Shell_ASCII(part, viewer);}
+<a name="line54"> 54: </a>  <font color="#4169E1">return</font>(0);
+<a name="line55"> 55: </a>}
+
+<a name="line57"> 57: </a><strong><font color="#4169E1"><a name="PetscPartitionerSetFromOptions_Shell"></a>static <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscPartitionerSetFromOptions_Shell(PetscOptionItems *PetscOptionsObject, <a href="../../../../../docs/manualpages/DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</a> part)</font></strong>
+<a name="line58"> 58: </a>{
+<a name="line59"> 59: </a>  <a href="../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>      random = <a href="../../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>, set;
+
+<a name="line63"> 63: </a>  <a href="../../../../../docs/manualpages/Sys/PetscOptionsHead.html#PetscOptionsHead">PetscOptionsHead</a>(PetscOptionsObject, <font color="#666666">"<a href="../../../../../docs/manualpages/DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</a> Shell Options"</font>);
+<a name="line64"> 64: </a>  <a href="../../../../../docs/manualpages/DM/PetscPartitionerShellGetRandom.html#PetscPartitionerShellGetRandom">PetscPartitionerShellGetRandom</a>(part, &amp;random);
+<a name="line65"> 65: </a>  <a href="../../../../../docs/manualpages/Sys/PetscOptionsBool.html#PetscOptionsBool">PetscOptionsBool</a>(<font color="#666666">"-petscpartitioner_shell_random"</font>, <font color="#666666">"Use a random partition"</font>, <font color="#666666">"<a href="../../../../../docs/manualpages/DM/PetscPartitionerView.html#PetscPartitionerView">PetscPartitionerView</a>"</font>, <a href="../../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>, &amp;random, &amp;set);
+<a name="line66"> 66: </a>  <font color="#4169E1">if</font> (set) {<a href="../../../../../docs/manualpages/DM/PetscPartitionerShellSetRandom.html#PetscPartitionerShellSetRandom">PetscPartitionerShellSetRandom</a>(part, random);}
+<a name="line67"> 67: </a>  <a href="../../../../../docs/manualpages/Sys/PetscOptionsTail.html#PetscOptionsTail">PetscOptionsTail</a>();
+<a name="line68"> 68: </a>  <font color="#4169E1">return</font>(0);
+<a name="line69"> 69: </a>}
+
+<a name="line71"> 71: </a><strong><font color="#4169E1"><a name="PetscPartitionerPartition_Shell"></a>static <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscPartitionerPartition_Shell(<a href="../../../../../docs/manualpages/DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</a> part, <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> nparts, <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> numVertices, <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> start[], <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> adjacency[], <a href="../../../../../docs/manualpages/PetscSection/PetscSection.html#PetscSection">PetscSection</a> vertSection, <a href="../../../../../docs/manualpages/PetscSection/PetscSection.html#PetscSection">PetscSection</a> targetSection, <a href="../../../../../docs/manualpages/PetscSection/PetscSection.html#PetscSection">PetscSection</a> partSection, <a href="../../../../../docs/manualpages/IS/IS.html#IS">IS</a> *partition)</font></strong>
+<a name="line72"> 72: </a>{
+<a name="line73"> 73: </a>  PetscPartitioner_Shell *p = (PetscPartitioner_Shell *) part-&gt;data;
+<a name="line74"> 74: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>                np;
+<a name="line75"> 75: </a>  <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>          ierr;
+
+<a name="line78"> 78: </a>  <font color="#4169E1">if</font> (p-&gt;random) {
+<a name="line79"> 79: </a>    <a href="../../../../../docs/manualpages/Sys/PetscRandom.html#PetscRandom">PetscRandom</a> r;
+<a name="line80"> 80: </a>    <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>   *sizes, *points, v, p;
+<a name="line81"> 81: </a>    <a href="../../../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a> rank;
+
+<a name="line83"> 83: </a>    <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_rank.html#MPI_Comm_rank">MPI_Comm_rank</a>(<a href="../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>) part), &amp;rank);
+<a name="line84"> 84: </a>    <a href="../../../../../docs/manualpages/Sys/PetscRandomCreate.html#PetscRandomCreate">PetscRandomCreate</a>(<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, &amp;r);
+<a name="line85"> 85: </a>    <a href="../../../../../docs/manualpages/Sys/PetscRandomSetInterval.html#PetscRandomSetInterval">PetscRandomSetInterval</a>(r, 0.0, (<a href="../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>) nparts);
+<a name="line86"> 86: </a>    <a href="../../../../../docs/manualpages/Sys/PetscRandomSetFromOptions.html#PetscRandomSetFromOptions">PetscRandomSetFromOptions</a>(r);
+<a name="line87"> 87: </a>    <a href="../../../../../docs/manualpages/Sys/PetscCalloc2.html#PetscCalloc2">PetscCalloc2</a>(nparts, &amp;sizes, numVertices, &amp;points);
+<a name="line88"> 88: </a>    <font color="#4169E1">for</font> (v = 0; v &lt; numVertices; ++v) {points[v] = v;}
+<a name="line89"> 89: </a>    <font color="#4169E1">for</font> (p = 0; p &lt; nparts; ++p) {sizes[p] = numVertices/nparts + (<a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>) (p &lt; numVertices % nparts);}
+<a name="line90"> 90: </a>    <font color="#4169E1">for</font> (v = numVertices-1; v &gt; 0; --v) {
+<a name="line91"> 91: </a>      <a href="../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> val;
+<a name="line92"> 92: </a>      <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>  w, tmp;
+
+<a name="line94"> 94: </a>      <a href="../../../../../docs/manualpages/Sys/PetscRandomSetInterval.html#PetscRandomSetInterval">PetscRandomSetInterval</a>(r, 0.0, (<a href="../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>) (v+1));
+<a name="line95"> 95: </a>      <a href="../../../../../docs/manualpages/Sys/PetscRandomGetValueReal.html#PetscRandomGetValueReal">PetscRandomGetValueReal</a>(r, &amp;val);
+<a name="line96"> 96: </a>      w    = PetscFloorReal(val);
+<a name="line97"> 97: </a>      tmp       = points[v];
+<a name="line98"> 98: </a>      points[v] = points[w];
+<a name="line99"> 99: </a>      points[w] = tmp;
+<a name="line100">100: </a>    }
+<a name="line101">101: </a>    <a href="../../../../../docs/manualpages/Sys/PetscRandomDestroy.html#PetscRandomDestroy">PetscRandomDestroy</a>(&amp;r);
+<a name="line102">102: </a>    <a href="../../../../../docs/manualpages/DM/PetscPartitionerShellSetPartition.html#PetscPartitionerShellSetPartition">PetscPartitionerShellSetPartition</a>(part, nparts, sizes, points);
+<a name="line103">103: </a>    <a href="../../../../../docs/manualpages/Sys/PetscFree2.html#PetscFree2">PetscFree2</a>(sizes, points);
+<a name="line104">104: </a>  }
+<a name="line105">105: </a>  <font color="#4169E1">if</font> (!p-&gt;section) <a href="../../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>) part), PETSC_ERR_ARG_WRONG, <font color="#666666">"Shell partitioner information not provided. Please call <a href="../../../../../docs/manualpages/DM/PetscPartitionerShellSetPartition.html#PetscPartitionerShellSetPartition">PetscPartitionerShellSetPartition</a>()"</font>);
+<a name="line106">106: </a>  <a href="../../../../../docs/manualpages/PetscSection/PetscSectionGetChart.html#PetscSectionGetChart">PetscSectionGetChart</a>(p-&gt;section, NULL, &amp;np);
+<a name="line107">107: </a>  <font color="#4169E1">if</font> (nparts != np) <a href="../../../../../docs/manualpages/Sys/SETERRQ2.html#SETERRQ2">SETERRQ2</a>(<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, PETSC_ERR_ARG_OUTOFRANGE, <font color="#666666">"Number of requested partitions %d != configured partitions %d"</font>, nparts, np);
+<a name="line108">108: </a>  <a href="../../../../../docs/manualpages/IS/ISGetLocalSize.html#ISGetLocalSize">ISGetLocalSize</a>(p-&gt;partition, &amp;np);
+<a name="line109">109: </a>  <font color="#4169E1">if</font> (numVertices != np) <a href="../../../../../docs/manualpages/Sys/SETERRQ2.html#SETERRQ2">SETERRQ2</a>(<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, PETSC_ERR_ARG_OUTOFRANGE, <font color="#666666">"Number of input vertices %d != configured vertices %d"</font>, numVertices, np);
+<a name="line110">110: </a>  <a href="../../../../../docs/manualpages/PetscSection/PetscSectionCopy.html#PetscSectionCopy">PetscSectionCopy</a>(p-&gt;section, partSection);
+<a name="line111">111: </a>  *partition = p-&gt;partition;
+<a name="line112">112: </a>  <a href="../../../../../docs/manualpages/Sys/PetscObjectReference.html#PetscObjectReference">PetscObjectReference</a>((<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>) p-&gt;partition);
+<a name="line113">113: </a>  <font color="#4169E1">return</font>(0);
+<a name="line114">114: </a>}
+
+<a name="line116">116: </a><strong><font color="#4169E1"><a name="PetscPartitionerInitialize_Shell"></a>static <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscPartitionerInitialize_Shell(<a href="../../../../../docs/manualpages/DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</a> part)</font></strong>
+<a name="line117">117: </a>{
+<a name="line119">119: </a>  part-&gt;noGraph             = <a href="../../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>; <font color="#B22222">/* PetscPartitionerShell cannot overload the partition call, so it is safe for now */</font>
+<a name="line120">120: </a>  part-&gt;ops-&gt;view           = PetscPartitionerView_Shell;
+<a name="line121">121: </a>  part-&gt;ops-&gt;setfromoptions = PetscPartitionerSetFromOptions_Shell;
+<a name="line122">122: </a>  part-&gt;ops-&gt;reset          = PetscPartitionerReset_Shell;
+<a name="line123">123: </a>  part-&gt;ops-&gt;destroy        = PetscPartitionerDestroy_Shell;
+<a name="line124">124: </a>  part-&gt;ops-&gt;partition      = PetscPartitionerPartition_Shell;
+<a name="line125">125: </a>  <font color="#4169E1">return</font>(0);
+<a name="line126">126: </a>}
+
+<a name="line128">128: </a><font color="#B22222">/*MC</font>
+<a name="line129">129: </a><font color="#B22222">  <a href="../../../../../docs/manualpages/DM/PETSCPARTITIONERSHELL.html#PETSCPARTITIONERSHELL">PETSCPARTITIONERSHELL</a> = "shell" - A <a href="../../../../../docs/manualpages/DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</a> object</font>
+
+<a name="line131">131: </a><font color="#B22222">  Level: intermediate</font>
+
+<a name="line133">133: </a><font color="#B22222">  Options Database Keys:</font>
+<a name="line134">134: </a><font color="#B22222">.  -petscpartitioner_shell_random - Use a random partition</font>
+
+<a name="line136">136: </a><font color="#B22222">.seealso: <a href="../../../../../docs/manualpages/DM/PetscPartitionerType.html#PetscPartitionerType">PetscPartitionerType</a>, <a href="../../../../../docs/manualpages/DM/PetscPartitionerCreate.html#PetscPartitionerCreate">PetscPartitionerCreate</a>(), <a href="../../../../../docs/manualpages/DM/PetscPartitionerSetType.html#PetscPartitionerSetType">PetscPartitionerSetType</a>()</font>
+<a name="line137">137: </a><font color="#B22222">M*/</font>
+
+<a name="line139">139: </a><strong><font color="#4169E1"><a name="PetscPartitionerCreate_Shell"></a>PETSC_EXTERN <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> PetscPartitionerCreate_Shell(<a href="../../../../../docs/manualpages/DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</a> part)</font></strong>
+<a name="line140">140: </a>{
+<a name="line141">141: </a>  PetscPartitioner_Shell *p;
+<a name="line142">142: </a>  <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>          ierr;
+
+<a name="line146">146: </a>  <a href="../../../../../docs/manualpages/Sys/PetscNewLog.html#PetscNewLog">PetscNewLog</a>(part, &amp;p);
+<a name="line147">147: </a>  part-&gt;data = p;
+
+<a name="line149">149: </a>  PetscPartitionerInitialize_Shell(part);
+<a name="line150">150: </a>  p-&gt;random = <a href="../../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line151">151: </a>  <font color="#4169E1">return</font>(0);
+<a name="line152">152: </a>}
+
+<a name="line154">154: </a><font color="#B22222">/*@C</font>
+<a name="line155">155: </a><font color="#B22222">  <a href="../../../../../docs/manualpages/DM/PetscPartitionerShellSetPartition.html#PetscPartitionerShellSetPartition">PetscPartitionerShellSetPartition</a> - Set an artifical partition for a mesh</font>
+
+<a name="line157">157: </a><font color="#B22222">  Collective on <a href="../../../../../docs/manualpages/DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</a></font>
+
+<a name="line159">159: </a><font color="#B22222">  Input Parameters:</font>
+<a name="line160">160: </a><font color="#B22222">+ part   - The <a href="../../../../../docs/manualpages/DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</a></font>
+<a name="line161">161: </a><font color="#B22222">. size   - The number of partitions</font>
+<a name="line162">162: </a><font color="#B22222">. sizes  - array of length size (or NULL) providing the number of points in each partition</font>
+<a name="line163">163: </a><font color="#B22222">- points - array of length sum(sizes) (may be NULL iff sizes is NULL), a permutation of the points that groups those assigned to each partition in order (i.e., partition 0 first, partition 1 next, etc.)</font>
+
+<a name="line165">165: </a><font color="#B22222">  Level: developer</font>
+
+<a name="line167">167: </a><font color="#B22222">  Notes:</font>
+<a name="line168">168: </a><font color="#B22222">    It is safe to free the sizes and points arrays after use in this routine.</font>
+
+<a name="line170">170: </a><font color="#B22222">.seealso <a href="../../../../../docs/manualpages/DMPLEX/DMPlexDistribute.html#DMPlexDistribute">DMPlexDistribute</a>(), <a href="../../../../../docs/manualpages/DM/PetscPartitionerCreate.html#PetscPartitionerCreate">PetscPartitionerCreate</a>()</font>
+<a name="line171">171: </a><font color="#B22222">@*/</font>
+<a name="line172">172: </a><strong><font color="#4169E1"><a name="PetscPartitionerShellSetPartition"></a><a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../../../docs/manualpages/DM/PetscPartitionerShellSetPartition.html#PetscPartitionerShellSetPartition">PetscPartitionerShellSetPartition</a>(<a href="../../../../../docs/manualpages/DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</a> part, <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> size, const <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> sizes[], const <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> points[])</font></strong>
+<a name="line173">173: </a>{
+<a name="line174">174: </a>  PetscPartitioner_Shell *p = (PetscPartitioner_Shell *) part-&gt;data;
+<a name="line175">175: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>                proc, numPoints;
+<a name="line176">176: </a>  <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>          ierr;
+
+<a name="line182">182: </a>  <a href="../../../../../docs/manualpages/PetscSection/PetscSectionDestroy.html#PetscSectionDestroy">PetscSectionDestroy</a>(&amp;p-&gt;section);
+<a name="line183">183: </a>  <a href="../../../../../docs/manualpages/IS/ISDestroy.html#ISDestroy">ISDestroy</a>(&amp;p-&gt;partition);
+<a name="line184">184: </a>  <a href="../../../../../docs/manualpages/PetscSection/PetscSectionCreate.html#PetscSectionCreate">PetscSectionCreate</a>(<a href="../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>) part), &amp;p-&gt;section);
+<a name="line185">185: </a>  <a href="../../../../../docs/manualpages/PetscSection/PetscSectionSetChart.html#PetscSectionSetChart">PetscSectionSetChart</a>(p-&gt;section, 0, size);
+<a name="line186">186: </a>  <font color="#4169E1">if</font> (sizes) {
+<a name="line187">187: </a>    <font color="#4169E1">for</font> (proc = 0; proc &lt; size; ++proc) {
+<a name="line188">188: </a>      <a href="../../../../../docs/manualpages/PetscSection/PetscSectionSetDof.html#PetscSectionSetDof">PetscSectionSetDof</a>(p-&gt;section, proc, sizes[proc]);
+<a name="line189">189: </a>    }
+<a name="line190">190: </a>  }
+<a name="line191">191: </a>  <a href="../../../../../docs/manualpages/PetscSection/PetscSectionSetUp.html#PetscSectionSetUp">PetscSectionSetUp</a>(p-&gt;section);
+<a name="line192">192: </a>  <a href="../../../../../docs/manualpages/PetscSection/PetscSectionGetStorageSize.html#PetscSectionGetStorageSize">PetscSectionGetStorageSize</a>(p-&gt;section, &amp;numPoints);
+<a name="line193">193: </a>  <a href="../../../../../docs/manualpages/IS/ISCreateGeneral.html#ISCreateGeneral">ISCreateGeneral</a>(<a href="../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>) part), numPoints, points, <a href="../../../../../docs/manualpages/Sys/PetscCopyMode.html#PetscCopyMode">PETSC_COPY_VALUES</a>, &amp;p-&gt;partition);
+<a name="line194">194: </a>  <font color="#4169E1">return</font>(0);
+<a name="line195">195: </a>}
+
+<a name="line197">197: </a><font color="#B22222">/*@</font>
+<a name="line198">198: </a><font color="#B22222">  <a href="../../../../../docs/manualpages/DM/PetscPartitionerShellSetRandom.html#PetscPartitionerShellSetRandom">PetscPartitionerShellSetRandom</a> - Set the flag to use a random partition</font>
+
+<a name="line200">200: </a><font color="#B22222">  Collective on <a href="../../../../../docs/manualpages/DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</a></font>
+
+<a name="line202">202: </a><font color="#B22222">  Input Parameters:</font>
+<a name="line203">203: </a><font color="#B22222">+ part   - The <a href="../../../../../docs/manualpages/DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</a></font>
+<a name="line204">204: </a><font color="#B22222">- random - The flag to use a random partition</font>
+
+<a name="line206">206: </a><font color="#B22222">  Level: intermediate</font>
+
+<a name="line208">208: </a><font color="#B22222">.seealso <a href="../../../../../docs/manualpages/DM/PetscPartitionerShellGetRandom.html#PetscPartitionerShellGetRandom">PetscPartitionerShellGetRandom</a>(), <a href="../../../../../docs/manualpages/DM/PetscPartitionerCreate.html#PetscPartitionerCreate">PetscPartitionerCreate</a>()</font>
+<a name="line209">209: </a><font color="#B22222">@*/</font>
+<a name="line210">210: </a><strong><font color="#4169E1"><a name="PetscPartitionerShellSetRandom"></a><a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../../../docs/manualpages/DM/PetscPartitionerShellSetRandom.html#PetscPartitionerShellSetRandom">PetscPartitionerShellSetRandom</a>(<a href="../../../../../docs/manualpages/DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</a> part, <a href="../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> random)</font></strong>
+<a name="line211">211: </a>{
+<a name="line212">212: </a>  PetscPartitioner_Shell *p = (PetscPartitioner_Shell *) part-&gt;data;
+
+<a name="line216">216: </a>  p-&gt;random = random;
+<a name="line217">217: </a>  <font color="#4169E1">return</font>(0);
+<a name="line218">218: </a>}
+
+<a name="line220">220: </a><font color="#B22222">/*@</font>
+<a name="line221">221: </a><font color="#B22222">  <a href="../../../../../docs/manualpages/DM/PetscPartitionerShellGetRandom.html#PetscPartitionerShellGetRandom">PetscPartitionerShellGetRandom</a> - get the flag to use a random partition</font>
+
+<a name="line223">223: </a><font color="#B22222">  Collective on <a href="../../../../../docs/manualpages/DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</a></font>
+
+<a name="line225">225: </a><font color="#B22222">  Input Parameter:</font>
+<a name="line226">226: </a><font color="#B22222">. part   - The <a href="../../../../../docs/manualpages/DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</a></font>
+
+<a name="line228">228: </a><font color="#B22222">  Output Parameter:</font>
+<a name="line229">229: </a><font color="#B22222">. random - The flag to use a random partition</font>
+
+<a name="line231">231: </a><font color="#B22222">  Level: intermediate</font>
+
+<a name="line233">233: </a><font color="#B22222">.seealso <a href="../../../../../docs/manualpages/DM/PetscPartitionerShellSetRandom.html#PetscPartitionerShellSetRandom">PetscPartitionerShellSetRandom</a>(), <a href="../../../../../docs/manualpages/DM/PetscPartitionerCreate.html#PetscPartitionerCreate">PetscPartitionerCreate</a>()</font>
+<a name="line234">234: </a><font color="#B22222">@*/</font>
+<a name="line235">235: </a><strong><font color="#4169E1"><a name="PetscPartitionerShellGetRandom"></a><a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../../../docs/manualpages/DM/PetscPartitionerShellGetRandom.html#PetscPartitionerShellGetRandom">PetscPartitionerShellGetRandom</a>(<a href="../../../../../docs/manualpages/DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</a> part, <a href="../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> *random)</font></strong>
+<a name="line236">236: </a>{
+<a name="line237">237: </a>  PetscPartitioner_Shell *p = (PetscPartitioner_Shell *) part-&gt;data;
+
+<a name="line242">242: </a>  *random = p-&gt;random;
+<a name="line243">243: </a>  <font color="#4169E1">return</font>(0);
+<a name="line244">244: </a>}
+</pre>
+</body>
+
+</html>

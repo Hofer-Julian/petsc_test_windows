@@ -1,0 +1,156 @@
+<center><a href="ex79.c">Actual source code: ex79.c</a></center><br>
+
+<html>
+<head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/src/ksp/ksp/tutorials/ex79.c.html" />
+<title></title>
+<meta name="generator" content="c2html 0.9.4">
+<meta name="date" content="2021-03-30T16:51:31+00:00">
+</head>
+
+<body bgcolor="#FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 src/ksp/ksp/tutorials/ex79.c.html "><small>Report Typos and Errors</small></a></div>
+<pre width="80">
+<a name="line1">  1: </a>#include <A href="../../../../include/petsc.h.html">&lt;petsc.h&gt;</A>
+
+<a name="line3">  3: </a>static char help[] = <font color="#666666">"Solves a linear system with a block of right-hand sides, apply a preconditioner to the same block.\n\n"</font>;
+
+<a name="line5">  5: </a><strong><font color="#4169E1"><a name="MatApply"></a><a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatApply(<a href="../../../../docs/manualpages/PC/PC.html#PC">PC</a> pc, <a href="../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> X, <a href="../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> Y)</font></strong>
+<a name="line6">  6: </a>{
+
+<a name="line10"> 10: </a>  <a href="../../../../docs/manualpages/Mat/MatCopy.html#MatCopy">MatCopy</a>(X,Y,<a href="../../../../docs/manualpages/Mat/MatStructure.html#MatStructure">SAME_NONZERO_PATTERN</a>);
+<a name="line11"> 11: </a>  <font color="#4169E1">return</font>(0);
+<a name="line12"> 12: </a>}
+
+<a name="line14"> 14: </a><strong><font color="#4169E1"><a name="main"></a>int main(int argc,char **args)</font></strong>
+<a name="line15"> 15: </a>{
+<a name="line16"> 16: </a>  <a href="../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a>                X,B;         <font color="#B22222">/* computed solutions and RHS */</font>
+<a name="line17"> 17: </a>  <a href="../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a>                A;           <font color="#B22222">/* linear system matrix */</font>
+<a name="line18"> 18: </a>  <a href="../../../../docs/manualpages/KSP/KSP.html#KSP">KSP</a>                ksp;         <font color="#B22222">/* linear solver context */</font>
+<a name="line19"> 19: </a>  <a href="../../../../docs/manualpages/PC/PC.html#PC">PC</a>                 pc;          <font color="#B22222">/* preconditioner context */</font>
+<a name="line20"> 20: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>           m = 10;
+<a name="line21"> 21: </a><font color="#A020F0">#if defined(PETSC_USE_LOG)</font>
+<a name="line22"> 22: </a>  <a href="../../../../docs/manualpages/Profiling/PetscLogEvent.html#PetscLogEvent">PetscLogEvent</a>      event;
+<a name="line23"> 23: </a><font color="#A020F0">#endif</font>
+<a name="line24"> 24: </a>  PetscEventPerfInfo info;
+<a name="line25"> 25: </a>  <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>     ierr;
+
+<a name="line27"> 27: </a>  <a href="../../../../docs/manualpages/Sys/PetscInitialize.html#PetscInitialize">PetscInitialize</a>(&amp;argc,&amp;args,NULL,help);<font color="#4169E1">if</font> (ierr) <font color="#4169E1">return</font> ierr;
+<a name="line28"> 28: </a>  <a href="../../../../docs/manualpages/Profiling/PetscLogDefaultBegin.html#PetscLogDefaultBegin">PetscLogDefaultBegin</a>();
+<a name="line29"> 29: </a>  <a href="../../../../docs/manualpages/Sys/PetscOptionsGetInt.html#PetscOptionsGetInt">PetscOptionsGetInt</a>(NULL,NULL,<font color="#666666">"-m"</font>,&amp;m,NULL);
+<a name="line30"> 30: </a>  <a href="../../../../docs/manualpages/Mat/MatCreateAIJ.html#MatCreateAIJ">MatCreateAIJ</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,m,m,<a href="../../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a>,<a href="../../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a>,m,NULL,m,NULL,&amp;A);
+<a name="line31"> 31: </a>  <a href="../../../../docs/manualpages/Mat/MatCreateDense.html#MatCreateDense">MatCreateDense</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,m,<a href="../../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a>,<a href="../../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a>,m,NULL,&amp;B);
+<a name="line32"> 32: </a>  <a href="../../../../docs/manualpages/Mat/MatCreateDense.html#MatCreateDense">MatCreateDense</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,m,<a href="../../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a>,<a href="../../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a>,m,NULL,&amp;X);
+<a name="line33"> 33: </a>  <a href="../../../../docs/manualpages/Mat/MatSetRandom.html#MatSetRandom">MatSetRandom</a>(A,NULL);
+<a name="line34"> 34: </a>  <a href="../../../../docs/manualpages/Mat/MatSetOption.html#MatSetOption">MatSetOption</a>(A,<a href="../../../../docs/manualpages/Mat/MatOption.html#MatOption">MAT_NEW_NONZERO_ALLOCATION_ERR</a>,<a href="../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>);
+<a name="line35"> 35: </a>  <a href="../../../../docs/manualpages/Mat/MatShift.html#MatShift">MatShift</a>(A,10.0);
+<a name="line36"> 36: </a>  <a href="../../../../docs/manualpages/Mat/MatSetRandom.html#MatSetRandom">MatSetRandom</a>(B,NULL);
+<a name="line37"> 37: </a>  <a href="../../../../docs/manualpages/KSP/KSPCreate.html#KSPCreate">KSPCreate</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a>,&amp;ksp);
+<a name="line38"> 38: </a>  <a href="../../../../docs/manualpages/KSP/KSPSetOperators.html#KSPSetOperators">KSPSetOperators</a>(ksp,A,A);
+<a name="line39"> 39: </a>  <a href="../../../../docs/manualpages/KSP/KSPSetFromOptions.html#KSPSetFromOptions">KSPSetFromOptions</a>(ksp);
+<a name="line40"> 40: </a>  <a href="../../../../docs/manualpages/KSP/KSPGetPC.html#KSPGetPC">KSPGetPC</a>(ksp,&amp;pc);
+<a name="line41"> 41: </a>  <a href="../../../../docs/manualpages/PC/PCShellSetMatApply.html#PCShellSetMatApply">PCShellSetMatApply</a>(pc,MatApply);
+<a name="line42"> 42: </a>  <a href="../../../../docs/manualpages/KSP/KSPMatSolve.html#KSPMatSolve">KSPMatSolve</a>(ksp,B,X);
+<a name="line43"> 43: </a>  <a href="../../../../docs/manualpages/PC/PCMatApply.html#PCMatApply">PCMatApply</a>(pc,B,X);
+<a name="line44"> 44: </a>  <a href="../../../../docs/manualpages/Mat/MatDestroy.html#MatDestroy">MatDestroy</a>(&amp;X);
+<a name="line45"> 45: </a>  <a href="../../../../docs/manualpages/Mat/MatDestroy.html#MatDestroy">MatDestroy</a>(&amp;B);
+<a name="line46"> 46: </a>  <a href="../../../../docs/manualpages/Mat/MatDestroy.html#MatDestroy">MatDestroy</a>(&amp;A);
+<a name="line47"> 47: </a>  <a href="../../../../docs/manualpages/KSP/KSPDestroy.html#KSPDestroy">KSPDestroy</a>(&amp;ksp);
+<a name="line48"> 48: </a>  <a href="../../../../docs/manualpages/Profiling/PetscLogEventRegister.html#PetscLogEventRegister">PetscLogEventRegister</a>(<font color="#666666">"<a href="../../../../docs/manualpages/PC/PCApply.html#PCApply">PCApply</a>"</font>,PC_CLASSID,&amp;event);
+<a name="line49"> 49: </a>  <a href="../../../../docs/manualpages/Profiling/PetscLogEventGetPerfInfo.html#PetscLogEventGetPerfInfo">PetscLogEventGetPerfInfo</a>(<a href="../../../../docs/manualpages/Sys/PETSC_DETERMINE.html#PETSC_DETERMINE">PETSC_DETERMINE</a>,event,&amp;info);
+<a name="line50"> 50: </a>  <font color="#4169E1">if</font> (<a href="../../../../docs/manualpages/Sys/PetscDefined.html#PetscDefined">PetscDefined</a>(USE_LOG) &amp;&amp; m &gt; 1 &amp;&amp; info.count) <a href="../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)ksp),PETSC_ERR_PLIB,<font color="#666666">"<a href="../../../../docs/manualpages/PC/PCApply.html#PCApply">PCApply</a>() called %d times"</font>,info.count);
+<a name="line51"> 51: </a>  <a href="../../../../docs/manualpages/Profiling/PetscLogEventRegister.html#PetscLogEventRegister">PetscLogEventRegister</a>(<font color="#666666">"<a href="../../../../docs/manualpages/PC/PCMatApply.html#PCMatApply">PCMatApply</a>"</font>,PC_CLASSID,&amp;event);
+<a name="line52"> 52: </a>  <a href="../../../../docs/manualpages/Profiling/PetscLogEventGetPerfInfo.html#PetscLogEventGetPerfInfo">PetscLogEventGetPerfInfo</a>(<a href="../../../../docs/manualpages/Sys/PETSC_DETERMINE.html#PETSC_DETERMINE">PETSC_DETERMINE</a>,event,&amp;info);
+<a name="line53"> 53: </a>  <font color="#4169E1">if</font> (<a href="../../../../docs/manualpages/Sys/PetscDefined.html#PetscDefined">PetscDefined</a>(USE_LOG) &amp;&amp; m &gt; 1 &amp;&amp; !info.count) <a href="../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)ksp),PETSC_ERR_PLIB,<font color="#666666">"<a href="../../../../docs/manualpages/PC/PCMatApply.html#PCMatApply">PCMatApply</a>() never called"</font>);
+<a name="line54"> 54: </a>  <a href="../../../../docs/manualpages/Sys/PetscFinalize.html#PetscFinalize">PetscFinalize</a>();
+<a name="line55"> 55: </a>  <font color="#4169E1">return</font> ierr;
+<a name="line56"> 56: </a>}
+
+<a name="line58"> 58: </a><font color="#B22222">/*TEST</font>
+<a name="line59"> 59: </a><font color="#B22222">   # <a href="../../../../docs/manualpages/KSP/KSPHPDDM.html#KSPHPDDM">KSPHPDDM</a> does either pseudo-blocking or "true" blocking, all tests should succeed with other -ksp_hpddm_type</font>
+<a name="line60"> 60: </a><font color="#B22222">   testset:</font>
+<a name="line61"> 61: </a><font color="#B22222">      nsize: 1</font>
+<a name="line62"> 62: </a><font color="#B22222">      args: -pc_type {{bjacobi lu ilu mat cholesky icc none shell asm gasm}shared output}</font>
+<a name="line63"> 63: </a><font color="#B22222">      test:</font>
+<a name="line64"> 64: </a><font color="#B22222">         suffix: 1</font>
+<a name="line65"> 65: </a><font color="#B22222">         output_file: output/ex77_preonly.out</font>
+<a name="line66"> 66: </a><font color="#B22222">         args: -ksp_type preonly</font>
+<a name="line67"> 67: </a><font color="#B22222">      test:</font>
+<a name="line68"> 68: </a><font color="#B22222">         suffix: 1_hpddm</font>
+<a name="line69"> 69: </a><font color="#B22222">         output_file: output/ex77_preonly.out</font>
+<a name="line70"> 70: </a><font color="#B22222">         requires: hpddm</font>
+<a name="line71"> 71: </a><font color="#B22222">         args: -ksp_type hpddm -ksp_hpddm_type preonly</font>
+
+<a name="line73"> 73: </a><font color="#B22222">   testset:</font>
+<a name="line74"> 74: </a><font color="#B22222">      nsize: 1</font>
+<a name="line75"> 75: </a><font color="#B22222">      args: -pc_type ksp</font>
+<a name="line76"> 76: </a><font color="#B22222">      test:</font>
+<a name="line77"> 77: </a><font color="#B22222">         suffix: 2</font>
+<a name="line78"> 78: </a><font color="#B22222">         output_file: output/ex77_preonly.out</font>
+<a name="line79"> 79: </a><font color="#B22222">         args: -ksp_ksp_type preonly -ksp_type preonly</font>
+<a name="line80"> 80: </a><font color="#B22222">      test:</font>
+<a name="line81"> 81: </a><font color="#B22222">         suffix: 2_hpddm</font>
+<a name="line82"> 82: </a><font color="#B22222">         output_file: output/ex77_preonly.out</font>
+<a name="line83"> 83: </a><font color="#B22222">         requires: hpddm</font>
+<a name="line84"> 84: </a><font color="#B22222">         args: -ksp_ksp_type hpddm -ksp_type hpddm -ksp_hpddm_type preonly -ksp_ksp_hpddm_type preonly</font>
+
+<a name="line86"> 86: </a><font color="#B22222">   testset:</font>
+<a name="line87"> 87: </a><font color="#B22222">      nsize: 1</font>
+<a name="line88"> 88: </a><font color="#B22222">      requires: hara</font>
+<a name="line89"> 89: </a><font color="#B22222">      args: -pc_type hara</font>
+<a name="line90"> 90: </a><font color="#B22222">      test:</font>
+<a name="line91"> 91: </a><font color="#B22222">         suffix: 3</font>
+<a name="line92"> 92: </a><font color="#B22222">         output_file: output/ex77_preonly.out</font>
+<a name="line93"> 93: </a><font color="#B22222">         args: -ksp_type preonly</font>
+<a name="line94"> 94: </a><font color="#B22222">      test:</font>
+<a name="line95"> 95: </a><font color="#B22222">         suffix: 3_hpddm</font>
+<a name="line96"> 96: </a><font color="#B22222">         output_file: output/ex77_preonly.out</font>
+<a name="line97"> 97: </a><font color="#B22222">         requires: hpddm</font>
+<a name="line98"> 98: </a><font color="#B22222">         args: -ksp_type hpddm -ksp_hpddm_type preonly</font>
+
+<a name="line100">100: </a><font color="#B22222">   testset:</font>
+<a name="line101">101: </a><font color="#B22222">      nsize: 1</font>
+<a name="line102">102: </a><font color="#B22222">      requires: spai</font>
+<a name="line103">103: </a><font color="#B22222">      args: -pc_type spai</font>
+<a name="line104">104: </a><font color="#B22222">      test:</font>
+<a name="line105">105: </a><font color="#B22222">         suffix: 4</font>
+<a name="line106">106: </a><font color="#B22222">         output_file: output/ex77_preonly.out</font>
+<a name="line107">107: </a><font color="#B22222">         args: -ksp_type preonly</font>
+<a name="line108">108: </a><font color="#B22222">      test:</font>
+<a name="line109">109: </a><font color="#B22222">         suffix: 4_hpddm</font>
+<a name="line110">110: </a><font color="#B22222">         output_file: output/ex77_preonly.out</font>
+<a name="line111">111: </a><font color="#B22222">         requires: hpddm</font>
+<a name="line112">112: </a><font color="#B22222">         args: -ksp_type hpddm -ksp_hpddm_type preonly</font>
+<a name="line113">113: </a><font color="#B22222">   # special code path in PCApplyMat() for <a href="../../../../docs/manualpages/PC/PCBJACOBI.html#PCBJACOBI">PCBJACOBI</a> when a block is shared by multiple processes</font>
+<a name="line114">114: </a><font color="#B22222">   testset:</font>
+<a name="line115">115: </a><font color="#B22222">      nsize: 2</font>
+<a name="line116">116: </a><font color="#B22222">      args: -pc_type bjacobi -pc_bjacobi_blocks 1 -sub_pc_type none</font>
+<a name="line117">117: </a><font color="#B22222">      test:</font>
+<a name="line118">118: </a><font color="#B22222">         suffix: 5</font>
+<a name="line119">119: </a><font color="#B22222">         output_file: output/ex77_preonly.out</font>
+<a name="line120">120: </a><font color="#B22222">         args: -ksp_type preonly -sub_ksp_type preonly</font>
+<a name="line121">121: </a><font color="#B22222">      test:</font>
+<a name="line122">122: </a><font color="#B22222">         suffix: 5_hpddm</font>
+<a name="line123">123: </a><font color="#B22222">         output_file: output/ex77_preonly.out</font>
+<a name="line124">124: </a><font color="#B22222">         requires: hpddm</font>
+<a name="line125">125: </a><font color="#B22222">         args: -ksp_type hpddm -ksp_hpddm_type preonly -sub_ksp_type hpddm</font>
+<a name="line126">126: </a><font color="#B22222">   # special code path in PCApplyMat() for <a href="../../../../docs/manualpages/PC/PCGASM.html#PCGASM">PCGASM</a> when a block is shared by multiple processes</font>
+<a name="line127">127: </a><font color="#B22222">   testset:</font>
+<a name="line128">128: </a><font color="#B22222">      nsize: 2</font>
+<a name="line129">129: </a><font color="#B22222">      args: -pc_type gasm -pc_gasm_total_subdomains 1 -sub_pc_type none</font>
+<a name="line130">130: </a><font color="#B22222">      test:</font>
+<a name="line131">131: </a><font color="#B22222">         suffix: 6</font>
+<a name="line132">132: </a><font color="#B22222">         output_file: output/ex77_preonly.out</font>
+<a name="line133">133: </a><font color="#B22222">         args: -ksp_type preonly -sub_ksp_type preonly</font>
+<a name="line134">134: </a><font color="#B22222">      test:</font>
+<a name="line135">135: </a><font color="#B22222">         suffix: 6_hpddm</font>
+<a name="line136">136: </a><font color="#B22222">         output_file: output/ex77_preonly.out</font>
+<a name="line137">137: </a><font color="#B22222">         requires: hpddm</font>
+<a name="line138">138: </a><font color="#B22222">         args: -ksp_type hpddm -ksp_hpddm_type preonly -sub_ksp_type hpddm</font>
+
+
+<a name="line141">141: </a><font color="#B22222">TEST*/</font>
+</pre>
+</body>
+
+</html>

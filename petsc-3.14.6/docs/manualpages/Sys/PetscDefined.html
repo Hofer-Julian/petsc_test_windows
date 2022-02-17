@@ -1,0 +1,61 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscDefined.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>PetscDefined</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/Sys/PetscDefined.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="PetscDefined"><H1>PetscDefined</H1></A>
+determine whether a boolean macro is defined 
+<H3><FONT COLOR="#CC3333">Notes</FONT></H3>
+The prefix "PETSC_" is added to the argument.
+<P>
+Typical usage is within normal code,
+<P>
+<pre>
+  if (<A HREF="../Sys/PetscDefined.html#PetscDefined">PetscDefined</A>(USE_DEBUG)) { ... }
+</pre>
+<P>
+but can also be used in the preprocessor,
+<P>
+<pre>
+  #if <A HREF="../Sys/PetscDefined.html#PetscDefined">PetscDefined</A>(USE_DEBUG)
+</pre>
+<pre>
+    ...
+</pre>
+<pre>
+  #else
+</pre>
+<P>
+Either way, it evaluates true if PETSC_USE_DEBUG is defined (merely defined or defined to 1), and false if PETSC_USE_DEBUG is undefined.  This macro
+should not be used if its argument may be defined to a non-empty value other than 1.
+<P>
+To avoid prepending "PETSC_", say to add custom checks in user code, one can use e.g.
+<P>
+<pre>
+ #define FooDefined(d) PetscDefined_(FOO_ ## d)
+</pre>
+<P>
+<H3><FONT COLOR="#CC3333">Developer Notes</FONT></H3>
+Getting something that works in C and CPP for an arg that may or may not be defined is tricky.  Here, if we have
+"#define PETSC_HAVE_BOOGER 1" we match on the placeholder define, insert the "0," for arg1 and generate the triplet
+(0, 1, 0).  Then the last step cherry picks the 2nd arg (a one).  When PETSC_HAVE_BOOGER is not defined, we generate
+a (... 1, 0) pair, and when the last step cherry picks the 2nd arg, we get a zero.
+<P>
+Our extra expansion via PetscDefined__take_second_expand() is needed with MSVC, which has a nonconforming
+implementation of variadic macros.
+<P>
+
+<P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>developer<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../include/petscsys.h.html#PetscDefined">include/petscsys.h</A>
+<P><H3><FONT COLOR="#CC3333">Examples</FONT></H3>
+<A HREF="../../../src/ksp/ksp/tutorials/ex79.c.html">src/ksp/ksp/tutorials/ex79.c.html</A><BR>
+<A HREF="../../../src/snes/tutorials/ex5.c.html">src/snes/tutorials/ex5.c.html</A><BR>
+<BR><A HREF="./index.html">Index of all Sys routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

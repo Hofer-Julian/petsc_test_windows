@@ -1,0 +1,20 @@
+Running check examples to verify correct installation
+Using PETSC_DIR=/cygdrive/c/checkouts/modflow/petsc-3.14.6 and PETSC_ARCH=arch-mswin-c-opt
+[1;31m*******************Error detected during compile or link!*******************
+See http://www.mcs.anl.gov/petsc/documentation/faq.html
+/cygdrive/c/checkouts/modflow/petsc-3.14.6/src/snes/tutorials ex19
+*********************************************************************************[0;39m[0;49m
+/cygdrive/c/checkouts/modflow/petsc-3.14.6/lib/petsc/bin/win32fe/win32fe cl -Qwd10161 -O2 -MD  -O2 -MD    -I/cygdrive/c/checkouts/modflow/petsc-3.14.6/include -I/cygdrive/c/checkouts/modflow/petsc-3.14.6/arch-mswin-c-opt/include -I/cygdrive/c/Progra~2/Intel/oneAPI/mpi/latest/include -I/cygdrive/c/Progra~2/Intel/oneAPI/mpi/latest/include/ilp64     ex19.c  -R/cygdrive/c/checkouts/modflow/petsc-3.14.6/arch-mswin-c-opt/lib -L/cygdrive/c/checkouts/modflow/petsc-3.14.6/arch-mswin-c-opt/lib -lpetsc /cygdrive/c/Progra~2/Intel/oneAPI/mkl/latest/lib/intel64/mkl_intel_lp64_dll.lib mkl_sequential_dll.lib mkl_core_dll.lib libiomp5md.lib /cygdrive/c/Progra~2/Intel/oneAPI/mpi/latest/lib/release/impi.lib /cygdrive/c/Progra~2/Intel/oneAPI/mpi/latest/lib/release/impicxx.lib Gdi32.lib User32.lib Advapi32.lib Kernel32.lib Ws2_32.lib -o ex19
+cl : Command line warning D9002 : ignoring unknown option '-Qwd10161'
+cl : Command line warning D9002 : ignoring unknown option '-R/cygdrive/c/checkouts/modflow/petsc-3.14.6/arch-mswin-c-opt/lib'
+ex19.c
+C/C++ example src/snes/tutorials/ex19 run successfully with 1 MPI process
+C/C++ example src/snes/tutorials/ex19 run successfully with 2 MPI processes
+[1;31m*******************Error detected during compile or link!*******************
+See http://www.mcs.anl.gov/petsc/documentation/faq.html
+/cygdrive/c/checkouts/modflow/petsc-3.14.6/src/snes/tutorials ex5f
+*********************************************************[0;39m[0;49m
+/cygdrive/c/checkouts/modflow/petsc-3.14.6/lib/petsc/bin/win32fe/win32fe ifort -MD -O3 -fpp  -MD -O3 -fpp   -I/cygdrive/c/checkouts/modflow/petsc-3.14.6/include -I/cygdrive/c/checkouts/modflow/petsc-3.14.6/arch-mswin-c-opt/include -I/cygdrive/c/Progra~2/Intel/oneAPI/mpi/latest/include -I/cygdrive/c/Progra~2/Intel/oneAPI/mpi/latest/include/ilp64     ex5f.F90  -R/cygdrive/c/checkouts/modflow/petsc-3.14.6/arch-mswin-c-opt/lib -L/cygdrive/c/checkouts/modflow/petsc-3.14.6/arch-mswin-c-opt/lib -lpetsc /cygdrive/c/Progra~2/Intel/oneAPI/mkl/latest/lib/intel64/mkl_intel_lp64_dll.lib mkl_sequential_dll.lib mkl_core_dll.lib libiomp5md.lib /cygdrive/c/Progra~2/Intel/oneAPI/mpi/latest/lib/release/impi.lib /cygdrive/c/Progra~2/Intel/oneAPI/mpi/latest/lib/release/impicxx.lib Gdi32.lib User32.lib Advapi32.lib Kernel32.lib Ws2_32.lib -o ex5f
+ifort: command line warning #10006: ignoring unknown option '/R/cygdrive/c/checkouts/modflow/petsc-3.14.6/arch-mswin-c-opt/lib'
+Fortran example src/snes/tutorials/ex5f run successfully with 1 MPI process
+Completed test examples

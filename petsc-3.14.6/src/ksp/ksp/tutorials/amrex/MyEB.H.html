@@ -1,0 +1,77 @@
+<center><a href="MyEB.H">Actual source code: MyEB.H</a></center><br>
+
+<html>
+<head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/src/ksp/ksp/tutorials/amrex/MyEB.H.html" />
+<title></title>
+<meta name="generator" content="c2html 0.9.4">
+<meta name="date" content="2021-03-30T16:51:34+00:00">
+</head>
+
+<body bgcolor="#FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 src/ksp/ksp/tutorials/amrex/MyEB.H.html "><small>Report Typos and Errors</small></a></div>
+<pre width="80">
+<a name="line1">  1: </a><font color="#A020F0">#ifndef MY_EB_H_</font>
+<a name="line2">  2: </a><strong><font color="#228B22">#define MY_EB_H_</font></strong>
+
+<a name="line4">  4: </a><font color="#A020F0">#include &lt;AMReX_Array.H&gt;</font>
+<a name="line5">  5: </a><font color="#A020F0">#include &lt;AMReX_EB2_IF_Base.H&gt;</font>
+
+<a name="line7">  7: </a><font color="#A020F0">#include &lt;cmath&gt;</font>
+<a name="line8">  8: </a><font color="#A020F0">#include &lt;algorithm&gt;</font>
+
+<a name="line10"> 10: </a>// For all implicit functions, &gt;0: body; =0: boundary; &lt;0: fluid
+
+<a name="line12"> 12: </a>class FlowerIF
+<a name="line13"> 13: </a>    : amrex::GPUable
+<a name="line14"> 14: </a>{
+<a name="line15"> 15: </a><strong><font color="#FF0000">public:</font></strong>
+
+<a name="line17"> 17: </a>    FlowerIF (amrex::Real a_radius, amrex::Real a_delta, int a_npetals,
+<a name="line18"> 18: </a>              const amrex::RealArray&amp; a_center, bool a_inside)
+<a name="line19"> 19: </a>        : m_r(a_radius),
+<a name="line20"> 20: </a>          m_dr(a_delta),
+<a name="line21"> 21: </a>          m_npetals(a_npetals),
+<a name="line22"> 22: </a>          m_center(amrex::makeXDim3(a_center)),
+<a name="line23"> 23: </a>          m_inside(a_inside),
+<a name="line24"> 24: </a>          m_sign(a_inside ? 1.0 : -1.0)
+<a name="line25"> 25: </a>        {}
+
+<a name="line27"> 27: </a>    ~FlowerIF () {}
+<a name="line28"> 28: </a>    
+<a name="line29"> 29: </a>    FlowerIF (const FlowerIF&amp; rhs) noexcept = <font color="#4169E1">default</font>;
+<a name="line30"> 30: </a>    FlowerIF (FlowerIF&amp;&amp; rhs) noexcept = <font color="#4169E1">default</font>;
+<a name="line31"> 31: </a>    FlowerIF&amp; operator= (const FlowerIF&amp; rhs) = delete;
+<a name="line32"> 32: </a>    FlowerIF&amp; operator= (FlowerIF&amp;&amp; rhs) = delete;
+
+<a name="line34"> 34: </a>    AMREX_GPU_HOST_DEVICE inline
+<a name="line35"> 35: </a><strong><font color="#FF0000">    amrex:</font></strong>:Real operator() (AMREX_D_DECL(amrex::Real x, amrex::Real y, amrex::Real z))
+<a name="line36"> 36: </a>        const noexcept
+<a name="line37"> 37: </a>    {
+<a name="line38"> 38: </a><strong><font color="#FF0000">        amrex:</font></strong>:Real posx = x - m_center.x;
+<a name="line39"> 39: </a><strong><font color="#FF0000">        amrex:</font></strong>:Real posy = y - m_center.y;
+<a name="line40"> 40: </a><strong><font color="#FF0000">        amrex:</font></strong>:Real r = std::hypot(posx, posy);
+<a name="line41"> 41: </a><strong><font color="#FF0000">        amrex:</font></strong>:Real theta = std::atan2(posy, posx);
+<a name="line42"> 42: </a>        <font color="#4169E1">return</font> m_sign*(r - m_r - m_dr * std::cos(m_npetals*theta));
+<a name="line43"> 43: </a>    }
+
+<a name="line45"> 45: </a>    inline amrex::Real operator() (const amrex::RealArray&amp; p) const noexcept
+<a name="line46"> 46: </a>    {
+<a name="line47"> 47: </a>        <font color="#4169E1">return</font> this-&gt;operator() (AMREX_D_DECL(p[0], p[1], p[2]));
+<a name="line48"> 48: </a>    }
+
+<a name="line50"> 50: </a><strong><font color="#FF0000">protected:</font></strong>
+<a name="line51"> 51: </a><strong><font color="#FF0000">    amrex:</font></strong>:Real      m_r;
+<a name="line52"> 52: </a><strong><font color="#FF0000">    amrex:</font></strong>:Real      m_dr;
+<a name="line53"> 53: </a><strong><font color="#FF0000">    amrex:</font></strong>:Real      m_npetals;
+<a name="line54"> 54: </a><strong><font color="#FF0000">    amrex:</font></strong>:XDim3     m_center;
+<a name="line55"> 55: </a>    bool             m_inside;
+<a name="line56"> 56: </a>    //
+<a name="line57"> 57: </a><strong><font color="#FF0000">    amrex:</font></strong>:Real      m_sign;
+<a name="line58"> 58: </a>};
+
+<a name="line60"> 60: </a><font color="#A020F0">#endif</font>
+</pre>
+</body>
+
+</html>

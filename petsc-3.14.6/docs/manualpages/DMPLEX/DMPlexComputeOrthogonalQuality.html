@@ -1,0 +1,72 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DMPLEX/DMPlexComputeOrthogonalQuality.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>DMPlexComputeOrthogonalQuality</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/DMPLEX/DMPlexComputeOrthogonalQuality.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="DMPlexComputeOrthogonalQuality"><H1>DMPlexComputeOrthogonalQuality</H1></A>
+Compute cell-wise orthogonal quality mesh statistic. Optionally tags all cells with orthogonal quality below given tolerance. 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscdmplex.h"   
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../DMPLEX/DMPlexComputeOrthogonalQuality.html#DMPlexComputeOrthogonalQuality">DMPlexComputeOrthogonalQuality</A>(<A HREF="../DM/DM.html#DM">DM</A> dm, <A HREF="../FV/PetscFV.html#PetscFV">PetscFV</A> fv, <A HREF="../Sys/PetscReal.html#PetscReal">PetscReal</A> atol, <A HREF="../Vec/Vec.html#Vec">Vec</A> *OrthQual, <A HREF="../DM/DMLabel.html#DMLabel">DMLabel</A> *OrthQualLabel)
+</PRE>
+Collective
+<P>
+<H3><FONT COLOR="#CC3333">Input Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>dm   </B></TD><TD>- The DMPlex object
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>fv   </B></TD><TD>- Optional <A HREF="../FV/PetscFV.html#PetscFV">PetscFV</A> object for pre-computed cell/face centroid information
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>atol </B></TD><TD>- [0, 1] Absolute tolerance for tagging cells.
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Output Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>OrthQual      </B></TD><TD>- <A HREF="../Vec/Vec.html#Vec">Vec</A> containing orthogonal quality per cell
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>OrthQualLabel </B></TD><TD>- <A HREF="../DM/DMLabel.html#DMLabel">DMLabel</A> tagging cells below atol with <A HREF="../DM/DMAdaptFlag.html#DMAdaptFlag">DM_ADAPT_REFINE</A>
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Options Database Keys</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>-dm_plex_orthogonal_quality_label_view </B></TD><TD>- view OrthQualLabel if label is requested. Currently only <A HREF="../Viewer/PETSCVIEWERASCII.html#PETSCVIEWERASCII">PETSCVIEWERASCII</A> is
+supported.
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>-dm_plex_orthogonal_quality_vec_view </B></TD><TD>- view OrthQual vector.
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Notes</FONT></H3>
+<H3><FONT COLOR="#CC3333">Orthogonal quality is given by the following formula</FONT></H3>
+<P>
+\min \left[ \frac{A_i \cdot f_i}{\|A_i\| \|f_i\|} , \frac{A_i \cdot c_i}{\|A_i\| \|c_i\|} \right]
+<P>
+Where A_i is the i'th face-normal vector, f_i is the vector from the cell centroid to the i'th face centroid, and c_i
+is the vector from the current cells centroid to the centroid of its i'th neighbor (which shares a face with the
+current cell). This computes the vector similarity between each cell face and its corresponding neighbor centroid by
+calculating the cosine of the angle between these vectors.
+<P>
+Orthogonal quality ranges from 1 (best) to 0 (worst).
+<P>
+This routine is mainly useful for FVM, however is not restricted to only FVM. The <A HREF="../FV/PetscFV.html#PetscFV">PetscFV</A> object is optionally used to check for
+pre-computed FVM cell data, but if it is not passed in then this data will be computed.
+<P>
+Cells are tagged if they have an orthogonal quality less than or equal to the absolute tolerance.
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../DMPLEX/DMPlexCheckCellShape.html#DMPlexCheckCellShape">DMPlexCheckCellShape</A>(), <A HREF="../DM/DMCreateLabel.html#DMCreateLabel">DMCreateLabel</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>intermediate<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/dm/impls/plex/plex.c.html#DMPlexComputeOrthogonalQuality">src/dm/impls/plex/plex.c</A>
+<P><H3><FONT COLOR="#CC3333">Examples</FONT></H3>
+<A HREF="../../../src/dm/impls/plex/tutorials/ex9.c.html">src/dm/impls/plex/tutorials/ex9.c.html</A><BR>
+<BR><A HREF="./index.html">Index of all DMPLEX routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

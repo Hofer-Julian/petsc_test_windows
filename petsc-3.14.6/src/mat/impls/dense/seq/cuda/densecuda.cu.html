@@ -1,0 +1,1328 @@
+<center><a href="densecuda.cu">Actual source code: densecuda.cu</a></center><br>
+
+<html>
+<head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/src/mat/impls/dense/seq/cuda/densecuda.cu.html" />
+<title></title>
+<meta name="generator" content="c2html 0.9.4">
+<meta name="date" content="2021-03-30T16:50:02+00:00">
+</head>
+
+<body bgcolor="#FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 src/mat/impls/dense/seq/cuda/densecuda.cu.html "><small>Report Typos and Errors</small></a></div>
+<pre width="80">
+<a name="line1">  1: </a><font color="#B22222">/*</font>
+<a name="line2">  2: </a><font color="#B22222">     Defines the matrix operations for sequential dense with CUDA</font>
+<a name="line3">  3: </a><font color="#B22222">*/</font>
+<a name="line4">  4: </a><font color="#A020F0">#include &lt;petscpkg_version.h&gt;</font>
+<a name="line5">  5: </a><strong><font color="#228B22">#define PETSC_SKIP_IMMINTRIN_H_CUDAWORKAROUND 1</font></strong>
+<a name="line6">  6: </a>#include <A href="../dense.h.html">&lt;../src/mat/impls/dense/seq/dense.h&gt;</A>
+<a name="line7">  7: </a>#include <A href="../../../../../../include/petsccublas.h.html">&lt;petsccublas.h&gt;</A>
+
+<a name="line9">  9: </a><font color="#B22222">/* cublas definitions are here */</font>
+<a name="line10"> 10: </a>#include <A href="../../../../../../include/petsc/private/cudavecimpl.h.html">&lt;petsc/private/cudavecimpl.h&gt;</A>
+
+<a name="line12"> 12: </a><font color="#A020F0">#if defined(PETSC_USE_COMPLEX)</font>
+<a name="line13"> 13: </a><font color="#A020F0">#if defined(PETSC_USE_REAL_SINGLE)</font>
+<a name="line14"> 14: </a><strong><font color="#228B22">#define cusolverDnXpotrf(a,b,c,d,e,f,g,h)        cusolverDnCpotrf((a),(b),(c),(cuComplex*)(d),(e),(cuComplex*)(f),(g),(h))</font></strong>
+<a name="line15"> 15: </a><strong><font color="#228B22">#define cusolverDnXpotrf_bufferSize(a,b,c,d,e,f) cusolverDnCpotrf_bufferSize((a),(b),(c),(cuComplex*)(d),(e),(f))</font></strong>
+<a name="line16"> 16: </a><strong><font color="#228B22">#define cusolverDnXpotrs(a,b,c,d,e,f,g,h,i)      cusolverDnCpotrs((a),(b),(c),(d),(cuComplex*)(e),(f),(cuComplex*)(g),(h),(i))</font></strong>
+<a name="line17"> 17: </a><strong><font color="#228B22">#define cusolverDnXpotri(a,b,c,d,e,f,g,h)        cusolverDnCpotri((a),(b),(c),(cuComplex*)(d),(e),(cuComplex*)(f),(g),(h))</font></strong>
+<a name="line18"> 18: </a><strong><font color="#228B22">#define cusolverDnXpotri_bufferSize(a,b,c,d,e,f) cusolverDnCpotri_bufferSize((a),(b),(c),(cuComplex*)(d),(e),(f))</font></strong>
+<a name="line19"> 19: </a><strong><font color="#228B22">#define cusolverDnXsytrf(a,b,c,d,e,f,g,h,i)      cusolverDnCsytrf((a),(b),(c),(cuComplex*)(d),(e),(f),(cuComplex*)(g),(h),(i))</font></strong>
+<a name="line20"> 20: </a><strong><font color="#228B22">#define cusolverDnXsytrf_bufferSize(a,b,c,d,e)   cusolverDnCsytrf_bufferSize((a),(b),(cuComplex*)(c),(d),(e))</font></strong>
+<a name="line21"> 21: </a><strong><font color="#228B22">#define cusolverDnXgetrf(a,b,c,d,e,f,g,h)        cusolverDnCgetrf((a),(b),(c),(cuComplex*)(d),(e),(cuComplex*)(f),(g),(h))</font></strong>
+<a name="line22"> 22: </a><strong><font color="#228B22">#define cusolverDnXgetrf_bufferSize(a,b,c,d,e,f) cusolverDnCgetrf_bufferSize((a),(b),(c),(cuComplex*)(d),(e),(f))</font></strong>
+<a name="line23"> 23: </a><strong><font color="#228B22">#define cusolverDnXgetrs(a,b,c,d,e,f,g,h,i,j)    cusolverDnCgetrs((a),(b),(c),(d),(cuComplex*)(e),(f),(g),(cuComplex*)(h),(i),(j))</font></strong>
+<a name="line24"> 24: </a><font color="#A020F0">#else </font><font color="#B22222">/* complex double */</font><font color="#A020F0"></font>
+<a name="line25"> 25: </a><strong><font color="#228B22">#define cusolverDnXpotrf(a,b,c,d,e,f,g,h)        cusolverDnZpotrf((a),(b),(c),(cuDoubleComplex*)(d),(e),(cuDoubleComplex*)(f),(g),(h))</font></strong>
+<a name="line26"> 26: </a><strong><font color="#228B22">#define cusolverDnXpotrf_bufferSize(a,b,c,d,e,f) cusolverDnZpotrf_bufferSize((a),(b),(c),(cuDoubleComplex*)(d),(e),(f))</font></strong>
+<a name="line27"> 27: </a><strong><font color="#228B22">#define cusolverDnXpotrs(a,b,c,d,e,f,g,h,i)      cusolverDnZpotrs((a),(b),(c),(d),(cuDoubleComplex*)(e),(f),(cuDoubleComplex*)(g),(h),(i))</font></strong>
+<a name="line28"> 28: </a><strong><font color="#228B22">#define cusolverDnXpotri(a,b,c,d,e,f,g,h)        cusolverDnZpotri((a),(b),(c),(cuDoubleComplex*)(d),(e),(cuDoubleComplex*)(f),(g),(h))</font></strong>
+<a name="line29"> 29: </a><strong><font color="#228B22">#define cusolverDnXpotri_bufferSize(a,b,c,d,e,f) cusolverDnZpotri_bufferSize((a),(b),(c),(cuDoubleComplex*)(d),(e),(f))</font></strong>
+<a name="line30"> 30: </a><strong><font color="#228B22">#define cusolverDnXsytrf(a,b,c,d,e,f,g,h,i)      cusolverDnZsytrf((a),(b),(c),(cuDoubleComplex*)(d),(e),(f),(cuDoubleComplex*)(g),(h),(i))</font></strong>
+<a name="line31"> 31: </a><strong><font color="#228B22">#define cusolverDnXsytrf_bufferSize(a,b,c,d,e)   cusolverDnZsytrf_bufferSize((a),(b),(cuDoubleComplex*)(c),(d),(e))</font></strong>
+<a name="line32"> 32: </a><strong><font color="#228B22">#define cusolverDnXgetrf(a,b,c,d,e,f,g,h)        cusolverDnZgetrf((a),(b),(c),(cuDoubleComplex*)(d),(e),(cuDoubleComplex*)(f),(g),(h))</font></strong>
+<a name="line33"> 33: </a><strong><font color="#228B22">#define cusolverDnXgetrf_bufferSize(a,b,c,d,e,f) cusolverDnZgetrf_bufferSize((a),(b),(c),(cuDoubleComplex*)(d),(e),(f))</font></strong>
+<a name="line34"> 34: </a><strong><font color="#228B22">#define cusolverDnXgetrs(a,b,c,d,e,f,g,h,i,j)    cusolverDnZgetrs((a),(b),(c),(d),(cuDoubleComplex*)(e),(f),(g),(cuDoubleComplex*)(h),(i),(j))</font></strong>
+<a name="line35"> 35: </a><font color="#A020F0">#endif</font>
+<a name="line36"> 36: </a><font color="#A020F0">#else </font><font color="#B22222">/* real single */</font><font color="#A020F0"></font>
+<a name="line37"> 37: </a><font color="#A020F0">#if defined(PETSC_USE_REAL_SINGLE)</font>
+<a name="line38"> 38: </a><strong><font color="#228B22">#define cusolverDnXpotrf(a,b,c,d,e,f,g,h)        cusolverDnSpotrf((a),(b),(c),(d),(e),(f),(g),(h))</font></strong>
+<a name="line39"> 39: </a><strong><font color="#228B22">#define cusolverDnXpotrf_bufferSize(a,b,c,d,e,f) cusolverDnSpotrf_bufferSize((a),(b),(c),(d),(e),(f))</font></strong>
+<a name="line40"> 40: </a><strong><font color="#228B22">#define cusolverDnXpotrs(a,b,c,d,e,f,g,h,i)      cusolverDnSpotrs((a),(b),(c),(d),(e),(f),(g),(h),(i))</font></strong>
+<a name="line41"> 41: </a><strong><font color="#228B22">#define cusolverDnXpotri(a,b,c,d,e,f,g,h)        cusolverDnSpotri((a),(b),(c),(d),(e),(f),(g),(h))</font></strong>
+<a name="line42"> 42: </a><strong><font color="#228B22">#define cusolverDnXpotri_bufferSize(a,b,c,d,e,f) cusolverDnSpotri_bufferSize((a),(b),(c),(d),(e),(f))</font></strong>
+<a name="line43"> 43: </a><strong><font color="#228B22">#define cusolverDnXsytrf(a,b,c,d,e,f,g,h,i)      cusolverDnSsytrf((a),(b),(c),(d),(e),(f),(g),(h),(i))</font></strong>
+<a name="line44"> 44: </a><strong><font color="#228B22">#define cusolverDnXsytrf_bufferSize(a,b,c,d,e)   cusolverDnSsytrf_bufferSize((a),(b),(c),(d),(e))</font></strong>
+<a name="line45"> 45: </a><strong><font color="#228B22">#define cusolverDnXgetrf(a,b,c,d,e,f,g,h)        cusolverDnSgetrf((a),(b),(c),(d),(e),(f),(g),(h))</font></strong>
+<a name="line46"> 46: </a><strong><font color="#228B22">#define cusolverDnXgetrf_bufferSize(a,b,c,d,e,f) cusolverDnSgetrf_bufferSize((a),(b),(c),(d),(e),(f))</font></strong>
+<a name="line47"> 47: </a><strong><font color="#228B22">#define cusolverDnXgetrs(a,b,c,d,e,f,g,h,i,j)    cusolverDnSgetrs((a),(b),(c),(d),(e),(f),(g),(h),(i),(j))</font></strong>
+<a name="line48"> 48: </a><font color="#A020F0">#else </font><font color="#B22222">/* real double */</font><font color="#A020F0"></font>
+<a name="line49"> 49: </a><strong><font color="#228B22">#define cusolverDnXpotrf(a,b,c,d,e,f,g,h)        cusolverDnDpotrf((a),(b),(c),(d),(e),(f),(g),(h))</font></strong>
+<a name="line50"> 50: </a><strong><font color="#228B22">#define cusolverDnXpotrf_bufferSize(a,b,c,d,e,f) cusolverDnDpotrf_bufferSize((a),(b),(c),(d),(e),(f))</font></strong>
+<a name="line51"> 51: </a><strong><font color="#228B22">#define cusolverDnXpotrs(a,b,c,d,e,f,g,h,i)      cusolverDnDpotrs((a),(b),(c),(d),(e),(f),(g),(h),(i))</font></strong>
+<a name="line52"> 52: </a><strong><font color="#228B22">#define cusolverDnXpotri(a,b,c,d,e,f,g,h)        cusolverDnDpotri((a),(b),(c),(d),(e),(f),(g),(h))</font></strong>
+<a name="line53"> 53: </a><strong><font color="#228B22">#define cusolverDnXpotri_bufferSize(a,b,c,d,e,f) cusolverDnDpotri_bufferSize((a),(b),(c),(d),(e),(f))</font></strong>
+<a name="line54"> 54: </a><strong><font color="#228B22">#define cusolverDnXsytrf(a,b,c,d,e,f,g,h,i)      cusolverDnDsytrf((a),(b),(c),(d),(e),(f),(g),(h),(i))</font></strong>
+<a name="line55"> 55: </a><strong><font color="#228B22">#define cusolverDnXsytrf_bufferSize(a,b,c,d,e)   cusolverDnDsytrf_bufferSize((a),(b),(c),(d),(e))</font></strong>
+<a name="line56"> 56: </a><strong><font color="#228B22">#define cusolverDnXgetrf(a,b,c,d,e,f,g,h)        cusolverDnDgetrf((a),(b),(c),(d),(e),(f),(g),(h))</font></strong>
+<a name="line57"> 57: </a><strong><font color="#228B22">#define cusolverDnXgetrf_bufferSize(a,b,c,d,e,f) cusolverDnDgetrf_bufferSize((a),(b),(c),(d),(e),(f))</font></strong>
+<a name="line58"> 58: </a><strong><font color="#228B22">#define cusolverDnXgetrs(a,b,c,d,e,f,g,h,i,j)    cusolverDnDgetrs((a),(b),(c),(d),(e),(f),(g),(h),(i),(j))</font></strong>
+<a name="line59"> 59: </a><font color="#A020F0">#endif</font>
+<a name="line60"> 60: </a><font color="#A020F0">#endif</font>
+
+<a name="line62"> 62: </a><font color="#4169E1">typedef</font> <font color="#4169E1">struct</font> {
+<a name="line63"> 63: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> *d_v; <font color="#B22222">/* pointer to the matrix on the GPU */</font>
+<a name="line64"> 64: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>   user_alloc;
+<a name="line65"> 65: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> *unplacedarray; <font color="#B22222">/* if one called MatCUDADensePlaceArray(), this is where it stashed the original */</font>
+<a name="line66"> 66: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>   unplaced_user_alloc;
+<a name="line67"> 67: </a>  <font color="#B22222">/* factorization support */</font>
+<a name="line68"> 68: </a>  int         *d_fact_ipiv; <font color="#B22222">/* device pivots */</font>
+<a name="line69"> 69: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> *d_fact_work; <font color="#B22222">/* device workspace */</font>
+<a name="line70"> 70: </a>  int         fact_lwork;
+<a name="line71"> 71: </a>  int         *d_fact_info; <font color="#B22222">/* device info */</font>
+<a name="line72"> 72: </a>  <font color="#B22222">/* workspace */</font>
+<a name="line73"> 73: </a>  <a href="../../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a>         workvec;
+<a name="line74"> 74: </a>} Mat_SeqDenseCUDA;
+
+<a name="line76"> 76: </a><strong><font color="#4169E1"><a name="MatSeqDenseCUDASetPreallocation"></a><a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatSeqDenseCUDASetPreallocation(<a href="../../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> A, <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> *d_data)</font></strong>
+<a name="line77"> 77: </a>{
+<a name="line78"> 78: </a>  Mat_SeqDense     *cA = (Mat_SeqDense*)A-&gt;data;
+<a name="line79"> 79: </a>  Mat_SeqDenseCUDA *dA = (Mat_SeqDenseCUDA*)A-&gt;spptr;
+<a name="line80"> 80: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>   ierr;
+<a name="line81"> 81: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>        iscuda;
+<a name="line82"> 82: </a>  cudaError_t      cerr;
+
+<a name="line85"> 85: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscObjectTypeCompare.html#PetscObjectTypeCompare">PetscObjectTypeCompare</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)A,<a href="../../../../../../docs/manualpages/Mat/MATSEQDENSECUDA.html#MATSEQDENSECUDA">MATSEQDENSECUDA</a>,&amp;iscuda);
+<a name="line86"> 86: </a>  <font color="#4169E1">if</font> (!iscuda) <font color="#4169E1">return</font>(0);
+<a name="line87"> 87: </a>  <font color="#B22222">/* it may happen CPU preallocation has not been performed */</font>
+<a name="line88"> 88: </a>  <a href="../../../../../../docs/manualpages/IS/PetscLayoutSetUp.html#PetscLayoutSetUp">PetscLayoutSetUp</a>(A-&gt;rmap);
+<a name="line89"> 89: </a>  <a href="../../../../../../docs/manualpages/IS/PetscLayoutSetUp.html#PetscLayoutSetUp">PetscLayoutSetUp</a>(A-&gt;cmap);
+<a name="line90"> 90: </a>  <font color="#4169E1">if</font> (cA-&gt;lda &lt;= 0) cA-&gt;lda = A-&gt;rmap-&gt;n;
+<a name="line91"> 91: </a>  <font color="#4169E1">if</font> (!dA-&gt;user_alloc) { cerr = cudaFree(dA-&gt;d_v);CHKERRCUDA(cerr); }
+<a name="line92"> 92: </a>  <font color="#4169E1">if</font> (!d_data) { <font color="#B22222">/* petsc-allocated storage */</font>
+<a name="line93"> 93: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscIntMultError.html#PetscIntMultError">PetscIntMultError</a>(cA-&gt;lda,A-&gt;cmap-&gt;n,NULL);
+<a name="line94"> 94: </a>    cerr = cudaMalloc((void**)&amp;dA-&gt;d_v,cA-&gt;lda*A-&gt;cmap-&gt;n*<font color="#4169E1">sizeof</font>(<a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>));CHKERRCUDA(cerr);
+<a name="line95"> 95: </a>    dA-&gt;user_alloc = <a href="../../../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line96"> 96: </a>  } <font color="#4169E1">else</font> { <font color="#B22222">/* user-allocated storage */</font>
+<a name="line97"> 97: </a>    dA-&gt;d_v        = d_data;
+<a name="line98"> 98: </a>    dA-&gt;user_alloc = <a href="../../../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>;
+<a name="line99"> 99: </a>    A-&gt;offloadmask = <a href="../../../../../../docs/manualpages/Vec/PetscOffloadMask.html#PetscOffloadMask">PETSC_OFFLOAD_GPU</a>;
+<a name="line100">100: </a>  }
+<a name="line101">101: </a>  A-&gt;preallocated = <a href="../../../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>;
+<a name="line102">102: </a>  A-&gt;assembled = <a href="../../../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>;
+<a name="line103">103: </a>  <font color="#4169E1">return</font>(0);
+<a name="line104">104: </a>}
+
+<a name="line106">106: </a><strong><font color="#4169E1"><a name="MatSeqDenseCUDACopyFromGPU"></a><a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatSeqDenseCUDACopyFromGPU(<a href="../../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> A)</font></strong>
+<a name="line107">107: </a>{
+<a name="line108">108: </a>  Mat_SeqDense     *cA = (Mat_SeqDense*)A-&gt;data;
+<a name="line109">109: </a>  Mat_SeqDenseCUDA *dA = (Mat_SeqDenseCUDA*)A-&gt;spptr;
+<a name="line110">110: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>   ierr;
+<a name="line111">111: </a>  cudaError_t      cerr;
+
+<a name="line115">115: </a>  PetscInfo3(A,<font color="#666666">"%s matrix %d x %d\n"</font>,A-&gt;offloadmask == <a href="../../../../../../docs/manualpages/Vec/PetscOffloadMask.html#PetscOffloadMask">PETSC_OFFLOAD_GPU</a> ? <font color="#666666">"Copy"</font> : <font color="#666666">"Reusing"</font>,A-&gt;rmap-&gt;n,A-&gt;cmap-&gt;n);
+<a name="line116">116: </a>  <font color="#4169E1">if</font> (A-&gt;offloadmask == <a href="../../../../../../docs/manualpages/Vec/PetscOffloadMask.html#PetscOffloadMask">PETSC_OFFLOAD_GPU</a>) {
+<a name="line117">117: </a>    <font color="#4169E1">if</font> (!cA-&gt;v) { <font color="#B22222">/* <a href="../../../../../../docs/manualpages/Mat/MatCreateSeqDenseCUDA.html#MatCreateSeqDenseCUDA">MatCreateSeqDenseCUDA</a> may not allocate CPU memory. Allocate if needed */</font>
+<a name="line118">118: </a>      <a href="../../../../../../docs/manualpages/Mat/MatSeqDenseSetPreallocation.html#MatSeqDenseSetPreallocation">MatSeqDenseSetPreallocation</a>(A,NULL);
+<a name="line119">119: </a>    }
+<a name="line120">120: </a>    <a href="../../../../../../docs/manualpages/Profiling/PetscLogEventBegin.html#PetscLogEventBegin">PetscLogEventBegin</a>(MAT_DenseCopyFromGPU,A,0,0,0);
+<a name="line121">121: </a>    <font color="#4169E1">if</font> (cA-&gt;lda &gt; A-&gt;rmap-&gt;n) {
+<a name="line122">122: </a>      <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> j,m = A-&gt;rmap-&gt;n;
+
+<a name="line124">124: </a>      <font color="#4169E1">for</font> (j=0; j&lt;A-&gt;cmap-&gt;n; j++) { <font color="#B22222">/* TODO: it can be done better */</font>
+<a name="line125">125: </a>        cerr = cudaMemcpy(cA-&gt;v + j*cA-&gt;lda,dA-&gt;d_v + j*cA-&gt;lda,m*<font color="#4169E1">sizeof</font>(<a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>),cudaMemcpyDeviceToHost);CHKERRCUDA(cerr);
+<a name="line126">126: </a>      }
+<a name="line127">127: </a>    } <font color="#4169E1">else</font> {
+<a name="line128">128: </a>      cerr = cudaMemcpy(cA-&gt;v,dA-&gt;d_v,cA-&gt;lda*<font color="#4169E1">sizeof</font>(<a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>)*A-&gt;cmap-&gt;n,cudaMemcpyDeviceToHost);CHKERRCUDA(cerr);
+<a name="line129">129: </a>    }
+<a name="line130">130: </a>    PetscLogGpuToCpu(cA-&gt;lda*<font color="#4169E1">sizeof</font>(<a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>)*A-&gt;cmap-&gt;n);
+<a name="line131">131: </a>    <a href="../../../../../../docs/manualpages/Profiling/PetscLogEventEnd.html#PetscLogEventEnd">PetscLogEventEnd</a>(MAT_DenseCopyFromGPU,A,0,0,0);
+
+<a name="line133">133: </a>    A-&gt;offloadmask = <a href="../../../../../../docs/manualpages/Vec/PetscOffloadMask.html#PetscOffloadMask">PETSC_OFFLOAD_BOTH</a>;
+<a name="line134">134: </a>  }
+<a name="line135">135: </a>  <font color="#4169E1">return</font>(0);
+<a name="line136">136: </a>}
+
+<a name="line138">138: </a><strong><font color="#4169E1"><a name="MatSeqDenseCUDACopyToGPU"></a><a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatSeqDenseCUDACopyToGPU(<a href="../../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> A)</font></strong>
+<a name="line139">139: </a>{
+<a name="line140">140: </a>  Mat_SeqDense     *cA = (Mat_SeqDense*)A-&gt;data;
+<a name="line141">141: </a>  Mat_SeqDenseCUDA *dA = (Mat_SeqDenseCUDA*)A-&gt;spptr;
+<a name="line142">142: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>        copy;
+<a name="line143">143: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>   ierr;
+<a name="line144">144: </a>  cudaError_t      cerr;
+
+<a name="line148">148: </a>  <font color="#4169E1">if</font> (A-&gt;boundtocpu) <font color="#4169E1">return</font>(0);
+<a name="line149">149: </a>  copy = (<a href="../../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>)(A-&gt;offloadmask == <a href="../../../../../../docs/manualpages/Vec/PetscOffloadMask.html#PetscOffloadMask">PETSC_OFFLOAD_CPU</a> || A-&gt;offloadmask == <a href="../../../../../../docs/manualpages/Vec/PetscOffloadMask.html#PetscOffloadMask">PETSC_OFFLOAD_UNALLOCATED</a>);
+<a name="line150">150: </a>  PetscInfo3(A,<font color="#666666">"%s matrix %d x %d\n"</font>,copy ? <font color="#666666">"Copy"</font> : <font color="#666666">"Reusing"</font>,A-&gt;rmap-&gt;n,A-&gt;cmap-&gt;n);
+<a name="line151">151: </a>  <font color="#4169E1">if</font> (copy) {
+<a name="line152">152: </a>    <font color="#4169E1">if</font> (!dA-&gt;d_v) { <font color="#B22222">/* Allocate GPU memory if not present */</font>
+<a name="line153">153: </a>      MatSeqDenseCUDASetPreallocation(A,NULL);
+<a name="line154">154: </a>    }
+<a name="line155">155: </a>    <a href="../../../../../../docs/manualpages/Profiling/PetscLogEventBegin.html#PetscLogEventBegin">PetscLogEventBegin</a>(MAT_DenseCopyToGPU,A,0,0,0);
+<a name="line156">156: </a>    <font color="#4169E1">if</font> (cA-&gt;lda &gt; A-&gt;rmap-&gt;n) {
+<a name="line157">157: </a>      <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> j,m = A-&gt;rmap-&gt;n;
+
+<a name="line159">159: </a>      <font color="#4169E1">for</font> (j=0; j&lt;A-&gt;cmap-&gt;n; j++) { <font color="#B22222">/* TODO: it can be done better */</font>
+<a name="line160">160: </a>        cerr = cudaMemcpy(dA-&gt;d_v + j*cA-&gt;lda,cA-&gt;v + j*cA-&gt;lda,m*<font color="#4169E1">sizeof</font>(<a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>),cudaMemcpyHostToDevice);CHKERRCUDA(cerr);
+<a name="line161">161: </a>      }
+<a name="line162">162: </a>    } <font color="#4169E1">else</font> {
+<a name="line163">163: </a>      cerr = cudaMemcpy(dA-&gt;d_v,cA-&gt;v,cA-&gt;lda*<font color="#4169E1">sizeof</font>(<a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>)*A-&gt;cmap-&gt;n,cudaMemcpyHostToDevice);CHKERRCUDA(cerr);
+<a name="line164">164: </a>    }
+<a name="line165">165: </a>    PetscLogCpuToGpu(cA-&gt;lda*<font color="#4169E1">sizeof</font>(<a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>)*A-&gt;cmap-&gt;n);
+<a name="line166">166: </a>    <a href="../../../../../../docs/manualpages/Profiling/PetscLogEventEnd.html#PetscLogEventEnd">PetscLogEventEnd</a>(MAT_DenseCopyToGPU,A,0,0,0);
+
+<a name="line168">168: </a>    A-&gt;offloadmask = <a href="../../../../../../docs/manualpages/Vec/PetscOffloadMask.html#PetscOffloadMask">PETSC_OFFLOAD_BOTH</a>;
+<a name="line169">169: </a>  }
+<a name="line170">170: </a>  <font color="#4169E1">return</font>(0);
+<a name="line171">171: </a>}
+
+<a name="line173">173: </a><strong><font color="#4169E1"><a name="MatDenseCUDAPlaceArray_SeqDenseCUDA"></a>static <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatDenseCUDAPlaceArray_SeqDenseCUDA(<a href="../../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> A, const <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> *a)</font></strong>
+<a name="line174">174: </a>{
+<a name="line175">175: </a>  Mat_SeqDense     *aa = (Mat_SeqDense*)A-&gt;data;
+<a name="line176">176: </a>  Mat_SeqDenseCUDA *dA = (Mat_SeqDenseCUDA*)A-&gt;spptr;
+<a name="line177">177: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>   ierr;
+
+<a name="line180">180: </a>  <font color="#4169E1">if</font> (aa-&gt;vecinuse) <a href="../../../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_ORDER,<font color="#666666">"Need to call <a href="../../../../../../docs/manualpages/Mat/MatDenseRestoreColumnVec.html#MatDenseRestoreColumnVec">MatDenseRestoreColumnVec</a>() first"</font>);
+<a name="line181">181: </a>  <font color="#4169E1">if</font> (aa-&gt;matinuse) <a href="../../../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_ORDER,<font color="#666666">"Need to call <a href="../../../../../../docs/manualpages/Mat/MatDenseRestoreSubMatrix.html#MatDenseRestoreSubMatrix">MatDenseRestoreSubMatrix</a>() first"</font>);
+<a name="line182">182: </a>  <font color="#4169E1">if</font> (dA-&gt;unplacedarray) <a href="../../../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_ORDER,<font color="#666666">"<a href="../../../../../../docs/manualpages/Mat/MatDenseCUDAResetArray.html#MatDenseCUDAResetArray">MatDenseCUDAResetArray</a>() must be called first"</font>);
+<a name="line183">183: </a>  <font color="#4169E1">if</font> (aa-&gt;v) { MatSeqDenseCUDACopyToGPU(A); }
+<a name="line184">184: </a>  dA-&gt;unplacedarray = dA-&gt;d_v;
+<a name="line185">185: </a>  dA-&gt;unplaced_user_alloc = dA-&gt;user_alloc;
+<a name="line186">186: </a>  dA-&gt;d_v = (<a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>*)a;
+<a name="line187">187: </a>  dA-&gt;user_alloc = <a href="../../../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>;
+<a name="line188">188: </a>  <font color="#4169E1">return</font>(0);
+<a name="line189">189: </a>}
+
+<a name="line191">191: </a><strong><font color="#4169E1"><a name="MatDenseCUDAResetArray_SeqDenseCUDA"></a>static <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatDenseCUDAResetArray_SeqDenseCUDA(<a href="../../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> A)</font></strong>
+<a name="line192">192: </a>{
+<a name="line193">193: </a>  Mat_SeqDense     *a = (Mat_SeqDense*)A-&gt;data;
+<a name="line194">194: </a>  Mat_SeqDenseCUDA *dA = (Mat_SeqDenseCUDA*)A-&gt;spptr;
+<a name="line195">195: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>   ierr;
+
+<a name="line198">198: </a>  <font color="#4169E1">if</font> (a-&gt;vecinuse) <a href="../../../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_ORDER,<font color="#666666">"Need to call <a href="../../../../../../docs/manualpages/Mat/MatDenseRestoreColumnVec.html#MatDenseRestoreColumnVec">MatDenseRestoreColumnVec</a>() first"</font>);
+<a name="line199">199: </a>  <font color="#4169E1">if</font> (a-&gt;matinuse) <a href="../../../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_ORDER,<font color="#666666">"Need to call <a href="../../../../../../docs/manualpages/Mat/MatDenseRestoreSubMatrix.html#MatDenseRestoreSubMatrix">MatDenseRestoreSubMatrix</a>() first"</font>);
+<a name="line200">200: </a>  <font color="#4169E1">if</font> (a-&gt;v) { MatSeqDenseCUDACopyToGPU(A); }
+<a name="line201">201: </a>  dA-&gt;d_v = dA-&gt;unplacedarray;
+<a name="line202">202: </a>  dA-&gt;user_alloc = dA-&gt;unplaced_user_alloc;
+<a name="line203">203: </a>  dA-&gt;unplacedarray = NULL;
+<a name="line204">204: </a>  <font color="#4169E1">return</font>(0);
+<a name="line205">205: </a>}
+
+<a name="line207">207: </a><strong><font color="#4169E1"><a name="MatDenseCUDAReplaceArray_SeqDenseCUDA"></a>static <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatDenseCUDAReplaceArray_SeqDenseCUDA(<a href="../../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> A, const <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> *a)</font></strong>
+<a name="line208">208: </a>{
+<a name="line209">209: </a>  Mat_SeqDense     *aa = (Mat_SeqDense*)A-&gt;data;
+<a name="line210">210: </a>  Mat_SeqDenseCUDA *dA = (Mat_SeqDenseCUDA*)A-&gt;spptr;
+<a name="line211">211: </a>  cudaError_t      cerr;
+
+<a name="line214">214: </a>  <font color="#4169E1">if</font> (aa-&gt;vecinuse) <a href="../../../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_ORDER,<font color="#666666">"Need to call <a href="../../../../../../docs/manualpages/Mat/MatDenseRestoreColumnVec.html#MatDenseRestoreColumnVec">MatDenseRestoreColumnVec</a>() first"</font>);
+<a name="line215">215: </a>  <font color="#4169E1">if</font> (aa-&gt;matinuse) <a href="../../../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_ORDER,<font color="#666666">"Need to call <a href="../../../../../../docs/manualpages/Mat/MatDenseRestoreSubMatrix.html#MatDenseRestoreSubMatrix">MatDenseRestoreSubMatrix</a>() first"</font>);
+<a name="line216">216: </a>  <font color="#4169E1">if</font> (dA-&gt;unplacedarray) <a href="../../../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_ORDER,<font color="#666666">"<a href="../../../../../../docs/manualpages/Mat/MatDenseCUDAResetArray.html#MatDenseCUDAResetArray">MatDenseCUDAResetArray</a>() must be called first"</font>);
+<a name="line217">217: </a>  <font color="#4169E1">if</font> (!dA-&gt;user_alloc) { cerr = cudaFree(dA-&gt;d_v);CHKERRCUDA(cerr); }
+<a name="line218">218: </a>  dA-&gt;d_v = (<a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>*)a;
+<a name="line219">219: </a>  dA-&gt;user_alloc = <a href="../../../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line220">220: </a>  <font color="#4169E1">return</font>(0);
+<a name="line221">221: </a>}
+
+<a name="line223">223: </a><strong><font color="#4169E1"><a name="MatDenseCUDAGetArrayWrite_SeqDenseCUDA"></a>static <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatDenseCUDAGetArrayWrite_SeqDenseCUDA(<a href="../../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> A, <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> **a)</font></strong>
+<a name="line224">224: </a>{
+<a name="line225">225: </a>  Mat_SeqDenseCUDA *dA = (Mat_SeqDenseCUDA*)A-&gt;spptr;
+<a name="line226">226: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>   ierr;
+
+<a name="line229">229: </a>  <font color="#4169E1">if</font> (!dA-&gt;d_v) {
+<a name="line230">230: </a>    MatSeqDenseCUDASetPreallocation(A,NULL);
+<a name="line231">231: </a>  }
+<a name="line232">232: </a>  *a = dA-&gt;d_v;
+<a name="line233">233: </a>  <font color="#4169E1">return</font>(0);
+<a name="line234">234: </a>}
+
+<a name="line236">236: </a><strong><font color="#4169E1"><a name="MatDenseCUDARestoreArrayWrite_SeqDenseCUDA"></a>static <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatDenseCUDARestoreArrayWrite_SeqDenseCUDA(<a href="../../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> A, <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> **a)</font></strong>
+<a name="line237">237: </a>{
+<a name="line239">239: </a>  *a = NULL;
+<a name="line240">240: </a>  <font color="#4169E1">return</font>(0);
+<a name="line241">241: </a>}
+
+<a name="line243">243: </a><strong><font color="#4169E1"><a name="MatDenseCUDAGetArrayRead_SeqDenseCUDA"></a>static <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatDenseCUDAGetArrayRead_SeqDenseCUDA(<a href="../../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> A, const <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> **a)</font></strong>
+<a name="line244">244: </a>{
+<a name="line245">245: </a>  Mat_SeqDenseCUDA *dA = (Mat_SeqDenseCUDA*)A-&gt;spptr;
+<a name="line246">246: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>   ierr;
+
+<a name="line249">249: </a>  MatSeqDenseCUDACopyToGPU(A);
+<a name="line250">250: </a>  *a   = dA-&gt;d_v;
+<a name="line251">251: </a>  <font color="#4169E1">return</font>(0);
+<a name="line252">252: </a>}
+
+<a name="line254">254: </a><strong><font color="#4169E1"><a name="MatDenseCUDARestoreArrayRead_SeqDenseCUDA"></a>static <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatDenseCUDARestoreArrayRead_SeqDenseCUDA(<a href="../../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> A, const <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> **a)</font></strong>
+<a name="line255">255: </a>{
+<a name="line257">257: </a>  *a = NULL;
+<a name="line258">258: </a>  <font color="#4169E1">return</font>(0);
+<a name="line259">259: </a>}
+
+<a name="line261">261: </a><strong><font color="#4169E1"><a name="MatDenseCUDAGetArray_SeqDenseCUDA"></a>static <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatDenseCUDAGetArray_SeqDenseCUDA(<a href="../../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> A, <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> **a)</font></strong>
+<a name="line262">262: </a>{
+<a name="line263">263: </a>  Mat_SeqDenseCUDA *dA = (Mat_SeqDenseCUDA*)A-&gt;spptr;
+<a name="line264">264: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>   ierr;
+
+<a name="line267">267: </a>  MatSeqDenseCUDACopyToGPU(A);
+<a name="line268">268: </a>  *a   = dA-&gt;d_v;
+<a name="line269">269: </a>  <font color="#4169E1">return</font>(0);
+<a name="line270">270: </a>}
+
+<a name="line272">272: </a><strong><font color="#4169E1"><a name="MatDenseCUDARestoreArray_SeqDenseCUDA"></a>static <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatDenseCUDARestoreArray_SeqDenseCUDA(<a href="../../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> A, <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> **a)</font></strong>
+<a name="line273">273: </a>{
+<a name="line275">275: </a>  *a = NULL;
+<a name="line276">276: </a>  <font color="#4169E1">return</font>(0);
+<a name="line277">277: </a>}
+
+<a name="line279">279: </a><strong><font color="#4169E1"><a name="MatSeqDenseCUDAInvertFactors_Private"></a>PETSC_EXTERN <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatSeqDenseCUDAInvertFactors_Private(<a href="../../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> A)</font></strong>
+<a name="line280">280: </a>{
+<a name="line281">281: </a><font color="#A020F0">#if PETSC_PKG_CUDA_VERSION_GE(10,1,0)</font>
+<a name="line282">282: </a>  Mat_SeqDense       *a = (Mat_SeqDense*)A-&gt;data;
+<a name="line283">283: </a>  Mat_SeqDenseCUDA   *dA = (Mat_SeqDenseCUDA*)A-&gt;spptr;
+<a name="line284">284: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>        *da;
+<a name="line285">285: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>     ierr;
+<a name="line286">286: </a>  cudaError_t        ccer;
+<a name="line287">287: </a>  cusolverStatus_t   cerr;
+<a name="line288">288: </a>  cusolverDnHandle_t handle;
+<a name="line289">289: </a>  int                n,lda;
+<a name="line290">290: </a><font color="#A020F0">#if defined(PETSC_USE_DEBUG)</font>
+<a name="line291">291: </a>  int                info;
+<a name="line292">292: </a><font color="#A020F0">#endif</font>
+
+<a name="line295">295: </a>  <font color="#4169E1">if</font> (!A-&gt;rmap-&gt;n || !A-&gt;cmap-&gt;n) <font color="#4169E1">return</font>(0);
+<a name="line296">296: </a>  PetscCUSOLVERDnGetHandle(&amp;handle);
+<a name="line297">297: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscMPIIntCast.html#PetscMPIIntCast">PetscMPIIntCast</a>(A-&gt;cmap-&gt;n,&amp;n);
+<a name="line298">298: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscMPIIntCast.html#PetscMPIIntCast">PetscMPIIntCast</a>(a-&gt;lda,&amp;lda);
+<a name="line299">299: </a>  <font color="#4169E1">if</font> (A-&gt;factortype == <a href="../../../../../../docs/manualpages/Mat/MatFactorType.html#MatFactorType">MAT_FACTOR_LU</a>) <a href="../../../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_LIB,<font color="#666666">"cusolverDngetri not implemented"</font>);
+<a name="line300">300: </a>  <font color="#4169E1">else</font> <font color="#4169E1">if</font> (A-&gt;factortype == <a href="../../../../../../docs/manualpages/Mat/MatFactorType.html#MatFactorType">MAT_FACTOR_CHOLESKY</a>) {
+<a name="line301">301: </a>    <font color="#4169E1">if</font> (!dA-&gt;d_fact_ipiv) { <font color="#B22222">/* spd */</font>
+<a name="line302">302: </a>      int il;
+
+<a name="line304">304: </a>      <a href="../../../../../../docs/manualpages/Mat/MatDenseCUDAGetArray.html#MatDenseCUDAGetArray">MatDenseCUDAGetArray</a>(A,&amp;da);
+<a name="line305">305: </a>      cerr = cusolverDnXpotri_bufferSize(handle,CUBLAS_FILL_MODE_LOWER,n,da,lda,&amp;il);CHKERRCUSOLVER(cerr);
+<a name="line306">306: </a>      <font color="#4169E1">if</font> (il &gt; dA-&gt;fact_lwork) {
+<a name="line307">307: </a>        dA-&gt;fact_lwork = il;
+
+<a name="line309">309: </a>        ccer = cudaFree(dA-&gt;d_fact_work);CHKERRCUDA(ccer);
+<a name="line310">310: </a>        ccer = cudaMalloc((void**)&amp;dA-&gt;d_fact_work,dA-&gt;fact_lwork*<font color="#4169E1">sizeof</font>(*dA-&gt;d_fact_work));CHKERRCUDA(ccer);
+<a name="line311">311: </a>      }
+<a name="line312">312: </a>      <a href="../../../../../../docs/manualpages/Profiling/PetscLogGpuTimeBegin.html#PetscLogGpuTimeBegin">PetscLogGpuTimeBegin</a>();
+<a name="line313">313: </a>      cerr = cusolverDnXpotri(handle,CUBLAS_FILL_MODE_LOWER,n,da,lda,dA-&gt;d_fact_work,dA-&gt;fact_lwork,dA-&gt;d_fact_info);CHKERRCUSOLVER(cerr);
+<a name="line314">314: </a>      ccer = WaitForCUDA();CHKERRCUDA(ccer);
+<a name="line315">315: </a>      <a href="../../../../../../docs/manualpages/Profiling/PetscLogGpuTimeEnd.html#PetscLogGpuTimeEnd">PetscLogGpuTimeEnd</a>();
+<a name="line316">316: </a>      <a href="../../../../../../docs/manualpages/Mat/MatDenseCUDARestoreArray.html#MatDenseCUDARestoreArray">MatDenseCUDARestoreArray</a>(A,&amp;da);
+<a name="line317">317: </a>      <font color="#B22222">/* TODO (write cuda kernel) */</font>
+<a name="line318">318: </a>      MatSeqDenseSymmetrize_Private(A,<a href="../../../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>);
+<a name="line319">319: </a>    } <font color="#4169E1">else</font> <a href="../../../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_LIB,<font color="#666666">"cusolverDnsytri not implemented"</font>);
+<a name="line320">320: </a>  }
+<a name="line321">321: </a><font color="#A020F0">#if defined(PETSC_USE_DEBUG)</font>
+<a name="line322">322: </a>  ccer = cudaMemcpy(&amp;info, dA-&gt;d_fact_info, <font color="#4169E1">sizeof</font>(int), cudaMemcpyDeviceToHost);CHKERRCUDA(ccer);
+<a name="line323">323: </a>  <font color="#4169E1">if</font> (info &gt; 0) <a href="../../../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_MAT_CH_ZRPVT,<font color="#666666">"Bad factorization: leading minor of order %d is zero"</font>,info);
+<a name="line324">324: </a>  <font color="#4169E1">else</font> <font color="#4169E1">if</font> (info &lt; 0) <a href="../../../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_PLIB,<font color="#666666">"Wrong argument to cuSolver %d"</font>,-info);
+<a name="line325">325: </a><font color="#A020F0">#endif</font>
+<a name="line326">326: </a>  <a href="../../../../../../docs/manualpages/Profiling/PetscLogGpuFlops.html#PetscLogGpuFlops">PetscLogGpuFlops</a>(1.0*n*n*n/3.0);
+<a name="line327">327: </a>  A-&gt;ops-&gt;solve          = NULL;
+<a name="line328">328: </a>  A-&gt;ops-&gt;solvetranspose = NULL;
+<a name="line329">329: </a>  A-&gt;ops-&gt;matsolve       = NULL;
+<a name="line330">330: </a>  A-&gt;factortype          = <a href="../../../../../../docs/manualpages/Mat/MatFactorType.html#MatFactorType">MAT_FACTOR_NONE</a>;
+
+<a name="line332">332: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(A-&gt;solvertype);
+<a name="line333">333: </a>  <font color="#4169E1">return</font>(0);
+<a name="line334">334: </a><font color="#A020F0">#else</font>
+<a name="line335">335: </a>  <a href="../../../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_SUP,<font color="#666666">"Upgrade to CUDA version 10.1.0 or higher"</font>);
+<a name="line336">336: </a><font color="#A020F0">#endif</font>
+<a name="line337">337: </a>}
+
+<a name="line339">339: </a><strong><font color="#4169E1"><a name="MatMatSolve_SeqDenseCUDA"></a>static <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatMatSolve_SeqDenseCUDA(<a href="../../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> A,<a href="../../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> B,<a href="../../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> X)</font></strong>
+<a name="line340">340: </a>{
+<a name="line341">341: </a>  Mat_SeqDense       *a = (Mat_SeqDense*)A-&gt;data;
+<a name="line342">342: </a>  Mat_SeqDense       *x = (Mat_SeqDense*)X-&gt;data;
+<a name="line343">343: </a>  Mat_SeqDenseCUDA   *dA = (Mat_SeqDenseCUDA*)A-&gt;spptr;
+<a name="line344">344: </a>  const <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>  *da;
+<a name="line345">345: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>        *dx;
+<a name="line346">346: </a>  cusolverDnHandle_t handle;
+<a name="line347">347: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>          iscuda;
+<a name="line348">348: </a>  int                nrhs,n,lda,ldx;
+<a name="line349">349: </a><font color="#A020F0">#if defined(PETSC_USE_DEBUG)</font>
+<a name="line350">350: </a>  int                info;
+<a name="line351">351: </a><font color="#A020F0">#endif</font>
+<a name="line352">352: </a>  cudaError_t        ccer;
+<a name="line353">353: </a>  cusolverStatus_t   cerr;
+<a name="line354">354: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>     ierr;
+
+<a name="line357">357: </a>  <font color="#4169E1">if</font> (A-&gt;factortype == <a href="../../../../../../docs/manualpages/Mat/MatFactorType.html#MatFactorType">MAT_FACTOR_NONE</a>) <a href="../../../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_ARG_WRONGSTATE,<font color="#666666">"Matrix must be factored to solve"</font>);
+<a name="line358">358: </a>  <font color="#4169E1">if</font> (!dA-&gt;d_fact_work) <a href="../../../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_ARG_WRONGSTATE,<font color="#666666">"Matrix must be factored to solve"</font>);
+<a name="line359">359: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscObjectTypeCompareAny.html#PetscObjectTypeCompareAny">PetscObjectTypeCompareAny</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)X,&amp;iscuda,<a href="../../../../../../docs/manualpages/Vec/VECSEQCUDA.html#VECSEQCUDA">VECSEQCUDA</a>,<a href="../../../../../../docs/manualpages/Vec/VECMPICUDA.html#VECMPICUDA">VECMPICUDA</a>,<font color="#666666">""</font>);
+<a name="line360">360: </a>  <font color="#4169E1">if</font> (X != B) {
+<a name="line361">361: </a>    <a href="../../../../../../docs/manualpages/Mat/MatCopy.html#MatCopy">MatCopy</a>(B,X,<a href="../../../../../../docs/manualpages/Mat/MatStructure.html#MatStructure">SAME_NONZERO_PATTERN</a>);
+<a name="line362">362: </a>  }
+<a name="line363">363: </a>  <a href="../../../../../../docs/manualpages/Mat/MatDenseCUDAGetArrayRead.html#MatDenseCUDAGetArrayRead">MatDenseCUDAGetArrayRead</a>(A,&amp;da);
+<a name="line364">364: </a>  <font color="#B22222">/* <a href="../../../../../../docs/manualpages/Mat/MatMatSolve.html#MatMatSolve">MatMatSolve</a> does not have a dispatching mechanism, we may end up with a <a href="../../../../../../docs/manualpages/Mat/MATSEQDENSE.html#MATSEQDENSE">MATSEQDENSE</a> here */</font>
+<a name="line365">365: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscObjectTypeCompare.html#PetscObjectTypeCompare">PetscObjectTypeCompare</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)X,<a href="../../../../../../docs/manualpages/Mat/MATSEQDENSECUDA.html#MATSEQDENSECUDA">MATSEQDENSECUDA</a>,&amp;iscuda);
+<a name="line366">366: </a>  <font color="#4169E1">if</font> (!iscuda) {
+<a name="line367">367: </a>    <a href="../../../../../../docs/manualpages/Mat/MatConvert.html#MatConvert">MatConvert</a>(X,<a href="../../../../../../docs/manualpages/Mat/MATSEQDENSECUDA.html#MATSEQDENSECUDA">MATSEQDENSECUDA</a>,<a href="../../../../../../docs/manualpages/Mat/MatReuse.html#MatReuse">MAT_INPLACE_MATRIX</a>,&amp;X);
+<a name="line368">368: </a>  }
+<a name="line369">369: </a>  <a href="../../../../../../docs/manualpages/Mat/MatDenseCUDAGetArray.html#MatDenseCUDAGetArray">MatDenseCUDAGetArray</a>(X,&amp;dx);
+<a name="line370">370: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscMPIIntCast.html#PetscMPIIntCast">PetscMPIIntCast</a>(A-&gt;rmap-&gt;n,&amp;n);
+<a name="line371">371: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscMPIIntCast.html#PetscMPIIntCast">PetscMPIIntCast</a>(X-&gt;cmap-&gt;n,&amp;nrhs);
+<a name="line372">372: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscMPIIntCast.html#PetscMPIIntCast">PetscMPIIntCast</a>(a-&gt;lda,&amp;lda);
+<a name="line373">373: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscMPIIntCast.html#PetscMPIIntCast">PetscMPIIntCast</a>(x-&gt;lda,&amp;ldx);
+<a name="line374">374: </a>  PetscCUSOLVERDnGetHandle(&amp;handle);
+<a name="line375">375: </a>  <a href="../../../../../../docs/manualpages/Profiling/PetscLogGpuTimeBegin.html#PetscLogGpuTimeBegin">PetscLogGpuTimeBegin</a>();
+<a name="line376">376: </a>  <font color="#4169E1">if</font> (A-&gt;factortype == <a href="../../../../../../docs/manualpages/Mat/MatFactorType.html#MatFactorType">MAT_FACTOR_LU</a>) {
+<a name="line377">377: </a>    PetscInfo2(A,<font color="#666666">"LU solve %d x %d on backend\n"</font>,n,n);
+<a name="line378">378: </a>    cerr = cusolverDnXgetrs(handle,CUBLAS_OP_N,n,nrhs,da,lda,dA-&gt;d_fact_ipiv,dx,ldx,dA-&gt;d_fact_info);CHKERRCUSOLVER(cerr);
+<a name="line379">379: </a>  } <font color="#4169E1">else</font> <font color="#4169E1">if</font> (A-&gt;factortype == <a href="../../../../../../docs/manualpages/Mat/MatFactorType.html#MatFactorType">MAT_FACTOR_CHOLESKY</a>) {
+<a name="line380">380: </a>    PetscInfo2(A,<font color="#666666">"Cholesky solve %d x %d on backend\n"</font>,n,n);
+<a name="line381">381: </a>    <font color="#4169E1">if</font> (!dA-&gt;d_fact_ipiv) { <font color="#B22222">/* spd */</font>
+<a name="line382">382: </a>      <font color="#B22222">/* ========= Program hit cudaErrorNotReady (error 34) due to "device not ready" on CUDA API call to cudaEventQuery. */</font>
+<a name="line383">383: </a>      cerr = cusolverDnXpotrs(handle,CUBLAS_FILL_MODE_LOWER,n,nrhs,da,lda,dx,ldx,dA-&gt;d_fact_info);CHKERRCUSOLVER(cerr);
+<a name="line384">384: </a>    } <font color="#4169E1">else</font> <a href="../../../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_LIB,<font color="#666666">"cusolverDnsytrs not implemented"</font>);
+<a name="line385">385: </a>  } <font color="#4169E1">else</font> <a href="../../../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_SUP,<font color="#666666">"Unknown factor type %d"</font>,A-&gt;factortype);
+<a name="line386">386: </a>  ccer = WaitForCUDA();CHKERRCUDA(ccer);
+<a name="line387">387: </a>  <a href="../../../../../../docs/manualpages/Profiling/PetscLogGpuTimeEnd.html#PetscLogGpuTimeEnd">PetscLogGpuTimeEnd</a>();
+<a name="line388">388: </a>  <a href="../../../../../../docs/manualpages/Mat/MatDenseCUDARestoreArrayRead.html#MatDenseCUDARestoreArrayRead">MatDenseCUDARestoreArrayRead</a>(A,&amp;da);
+<a name="line389">389: </a>  <a href="../../../../../../docs/manualpages/Mat/MatDenseCUDARestoreArray.html#MatDenseCUDARestoreArray">MatDenseCUDARestoreArray</a>(X,&amp;dx);
+<a name="line390">390: </a>  <font color="#4169E1">if</font> (!iscuda) {
+<a name="line391">391: </a>    <a href="../../../../../../docs/manualpages/Mat/MatConvert.html#MatConvert">MatConvert</a>(X,<a href="../../../../../../docs/manualpages/Mat/MATSEQDENSE.html#MATSEQDENSE">MATSEQDENSE</a>,<a href="../../../../../../docs/manualpages/Mat/MatReuse.html#MatReuse">MAT_INPLACE_MATRIX</a>,&amp;X);
+<a name="line392">392: </a>  }
+<a name="line393">393: </a><font color="#A020F0">#if defined(PETSC_USE_DEBUG)</font>
+<a name="line394">394: </a>  ccer = cudaMemcpy(&amp;info, dA-&gt;d_fact_info, <font color="#4169E1">sizeof</font>(int), cudaMemcpyDeviceToHost);CHKERRCUDA(ccer);
+<a name="line395">395: </a>  <font color="#4169E1">if</font> (info &gt; 0) <a href="../../../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_MAT_CH_ZRPVT,<font color="#666666">"Bad factorization: zero pivot in row %d"</font>,info-1);
+<a name="line396">396: </a>  <font color="#4169E1">else</font> <font color="#4169E1">if</font> (info &lt; 0) <a href="../../../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_PLIB,<font color="#666666">"Wrong argument to cuSolver %d"</font>,-info);
+<a name="line397">397: </a><font color="#A020F0">#endif</font>
+<a name="line398">398: </a>  <a href="../../../../../../docs/manualpages/Profiling/PetscLogGpuFlops.html#PetscLogGpuFlops">PetscLogGpuFlops</a>(nrhs*(2.0*n*n - n));
+<a name="line399">399: </a>  <font color="#4169E1">return</font>(0);
+<a name="line400">400: </a>}
+
+<a name="line402">402: </a><strong><font color="#4169E1"><a name="MatSolve_SeqDenseCUDA_Private"></a>static <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatSolve_SeqDenseCUDA_Private(<a href="../../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> A,<a href="../../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> xx,<a href="../../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> yy,<a href="../../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> trans)</font></strong>
+<a name="line403">403: </a>{
+<a name="line404">404: </a>  Mat_SeqDense       *a = (Mat_SeqDense*)A-&gt;data;
+<a name="line405">405: </a>  Mat_SeqDenseCUDA   *dA = (Mat_SeqDenseCUDA*)A-&gt;spptr;
+<a name="line406">406: </a>  const <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>  *da;
+<a name="line407">407: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>        *y;
+<a name="line408">408: </a>  cusolverDnHandle_t handle;
+<a name="line409">409: </a>  int                one = 1,n,lda;
+<a name="line410">410: </a><font color="#A020F0">#if defined(PETSC_USE_DEBUG)</font>
+<a name="line411">411: </a>  int                info;
+<a name="line412">412: </a><font color="#A020F0">#endif</font>
+<a name="line413">413: </a>  cudaError_t        ccer;
+<a name="line414">414: </a>  cusolverStatus_t   cerr;
+<a name="line415">415: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>          iscuda;
+<a name="line416">416: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>     ierr;
+
+<a name="line419">419: </a>  <font color="#4169E1">if</font> (A-&gt;factortype == <a href="../../../../../../docs/manualpages/Mat/MatFactorType.html#MatFactorType">MAT_FACTOR_NONE</a>) <a href="../../../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_ARG_WRONGSTATE,<font color="#666666">"Matrix must be factored to solve"</font>);
+<a name="line420">420: </a>  <font color="#4169E1">if</font> (!dA-&gt;d_fact_work) <a href="../../../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_ARG_WRONGSTATE,<font color="#666666">"Matrix must be factored to solve"</font>);
+<a name="line421">421: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscMPIIntCast.html#PetscMPIIntCast">PetscMPIIntCast</a>(A-&gt;rmap-&gt;n,&amp;n);
+<a name="line422">422: </a>  <font color="#B22222">/* <a href="../../../../../../docs/manualpages/Mat/MatSolve.html#MatSolve">MatSolve</a> does not have a dispatching mechanism, we may end up with a <a href="../../../../../../docs/manualpages/Vec/VECSTANDARD.html#VECSTANDARD">VECSTANDARD</a> here */</font>
+<a name="line423">423: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscObjectTypeCompareAny.html#PetscObjectTypeCompareAny">PetscObjectTypeCompareAny</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)yy,&amp;iscuda,<a href="../../../../../../docs/manualpages/Vec/VECSEQCUDA.html#VECSEQCUDA">VECSEQCUDA</a>,<a href="../../../../../../docs/manualpages/Vec/VECMPICUDA.html#VECMPICUDA">VECMPICUDA</a>,<font color="#666666">""</font>);
+<a name="line424">424: </a>  <font color="#4169E1">if</font> (iscuda) {
+<a name="line425">425: </a>    <a href="../../../../../../docs/manualpages/Vec/VecCopy.html#VecCopy">VecCopy</a>(xx,yy);
+<a name="line426">426: </a>    <a href="../../../../../../docs/manualpages/Vec/VecCUDAGetArray.html#VecCUDAGetArray">VecCUDAGetArray</a>(yy,&amp;y);
+<a name="line427">427: </a>  } <font color="#4169E1">else</font> {
+<a name="line428">428: </a>    <font color="#4169E1">if</font> (!dA-&gt;workvec) {
+<a name="line429">429: </a>      <a href="../../../../../../docs/manualpages/Mat/MatCreateVecs.html#MatCreateVecs">MatCreateVecs</a>(A,&amp;dA-&gt;workvec,NULL);
+<a name="line430">430: </a>    }
+<a name="line431">431: </a>    <a href="../../../../../../docs/manualpages/Vec/VecCopy.html#VecCopy">VecCopy</a>(xx,dA-&gt;workvec);
+<a name="line432">432: </a>    <a href="../../../../../../docs/manualpages/Vec/VecCUDAGetArray.html#VecCUDAGetArray">VecCUDAGetArray</a>(dA-&gt;workvec,&amp;y);
+<a name="line433">433: </a>  }
+<a name="line434">434: </a>  <a href="../../../../../../docs/manualpages/Mat/MatDenseCUDAGetArrayRead.html#MatDenseCUDAGetArrayRead">MatDenseCUDAGetArrayRead</a>(A,&amp;da);
+<a name="line435">435: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscMPIIntCast.html#PetscMPIIntCast">PetscMPIIntCast</a>(a-&gt;lda,&amp;lda);
+<a name="line436">436: </a>  PetscCUSOLVERDnGetHandle(&amp;handle);
+<a name="line437">437: </a>  <a href="../../../../../../docs/manualpages/Profiling/PetscLogGpuTimeBegin.html#PetscLogGpuTimeBegin">PetscLogGpuTimeBegin</a>();
+<a name="line438">438: </a>  <font color="#4169E1">if</font> (A-&gt;factortype == <a href="../../../../../../docs/manualpages/Mat/MatFactorType.html#MatFactorType">MAT_FACTOR_LU</a>) {
+<a name="line439">439: </a>    PetscInfo2(A,<font color="#666666">"LU solve %d x %d on backend\n"</font>,n,n);
+<a name="line440">440: </a>    cerr = cusolverDnXgetrs(handle,trans ? CUBLAS_OP_T : CUBLAS_OP_N,n,one,da,lda,dA-&gt;d_fact_ipiv,y,n,dA-&gt;d_fact_info);CHKERRCUSOLVER(cerr);
+<a name="line441">441: </a>  } <font color="#4169E1">else</font> <font color="#4169E1">if</font> (A-&gt;factortype == <a href="../../../../../../docs/manualpages/Mat/MatFactorType.html#MatFactorType">MAT_FACTOR_CHOLESKY</a>) {
+<a name="line442">442: </a>    PetscInfo2(A,<font color="#666666">"Cholesky solve %d x %d on backend\n"</font>,n,n);
+<a name="line443">443: </a>    <font color="#4169E1">if</font> (!dA-&gt;d_fact_ipiv) { <font color="#B22222">/* spd */</font>
+<a name="line444">444: </a>      <font color="#B22222">/* ========= Program hit cudaErrorNotReady (error 34) due to "device not ready" on CUDA API call to cudaEventQuery. */</font>
+<a name="line445">445: </a>      cerr = cusolverDnXpotrs(handle,CUBLAS_FILL_MODE_LOWER,n,one,da,lda,y,n,dA-&gt;d_fact_info);CHKERRCUSOLVER(cerr);
+<a name="line446">446: </a>    } <font color="#4169E1">else</font> <a href="../../../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_LIB,<font color="#666666">"cusolverDnsytrs not implemented"</font>);
+<a name="line447">447: </a>  } <font color="#4169E1">else</font> <a href="../../../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_SUP,<font color="#666666">"Unknown factor type %d"</font>,A-&gt;factortype);
+<a name="line448">448: </a>  ccer = WaitForCUDA();CHKERRCUDA(ccer);
+<a name="line449">449: </a>  <a href="../../../../../../docs/manualpages/Profiling/PetscLogGpuTimeEnd.html#PetscLogGpuTimeEnd">PetscLogGpuTimeEnd</a>();
+<a name="line450">450: </a>  <font color="#4169E1">if</font> (iscuda) {
+<a name="line451">451: </a>    <a href="../../../../../../docs/manualpages/Vec/VecCUDARestoreArray.html#VecCUDARestoreArray">VecCUDARestoreArray</a>(yy,&amp;y);
+<a name="line452">452: </a>  } <font color="#4169E1">else</font> {
+<a name="line453">453: </a>    <a href="../../../../../../docs/manualpages/Vec/VecCUDARestoreArray.html#VecCUDARestoreArray">VecCUDARestoreArray</a>(dA-&gt;workvec,&amp;y);
+<a name="line454">454: </a>    <a href="../../../../../../docs/manualpages/Vec/VecCopy.html#VecCopy">VecCopy</a>(dA-&gt;workvec,yy);
+<a name="line455">455: </a>  }
+<a name="line456">456: </a>  <a href="../../../../../../docs/manualpages/Mat/MatDenseCUDARestoreArrayRead.html#MatDenseCUDARestoreArrayRead">MatDenseCUDARestoreArrayRead</a>(A,&amp;da);
+<a name="line457">457: </a><font color="#A020F0">#if defined(PETSC_USE_DEBUG)</font>
+<a name="line458">458: </a>  ccer = cudaMemcpy(&amp;info, dA-&gt;d_fact_info, <font color="#4169E1">sizeof</font>(int), cudaMemcpyDeviceToHost);CHKERRCUDA(ccer);
+<a name="line459">459: </a>  <font color="#4169E1">if</font> (info &gt; 0) <a href="../../../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_MAT_CH_ZRPVT,<font color="#666666">"Bad factorization: zero pivot in row %d"</font>,info-1);
+<a name="line460">460: </a>  <font color="#4169E1">else</font> <font color="#4169E1">if</font> (info &lt; 0) <a href="../../../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_PLIB,<font color="#666666">"Wrong argument to cuSolver %d"</font>,-info);
+<a name="line461">461: </a><font color="#A020F0">#endif</font>
+<a name="line462">462: </a>  <a href="../../../../../../docs/manualpages/Profiling/PetscLogGpuFlops.html#PetscLogGpuFlops">PetscLogGpuFlops</a>(2.0*n*n - n);
+<a name="line463">463: </a>  <font color="#4169E1">return</font>(0);
+<a name="line464">464: </a>}
+
+<a name="line466">466: </a><strong><font color="#4169E1"><a name="MatSolve_SeqDenseCUDA"></a>static <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatSolve_SeqDenseCUDA(<a href="../../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> A,<a href="../../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> xx,<a href="../../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> yy)</font></strong>
+<a name="line467">467: </a>{
+<a name="line468">468: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>     ierr;
+
+<a name="line471">471: </a>  MatSolve_SeqDenseCUDA_Private(A,xx,yy,<a href="../../../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>);
+<a name="line472">472: </a>  <font color="#4169E1">return</font>(0);
+<a name="line473">473: </a>}
+
+<a name="line475">475: </a><strong><font color="#4169E1"><a name="MatSolveTranspose_SeqDenseCUDA"></a>static <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatSolveTranspose_SeqDenseCUDA(<a href="../../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> A,<a href="../../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> xx,<a href="../../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> yy)</font></strong>
+<a name="line476">476: </a>{
+<a name="line477">477: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>     ierr;
+
+<a name="line480">480: </a>  MatSolve_SeqDenseCUDA_Private(A,xx,yy,<a href="../../../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>);
+<a name="line481">481: </a>  <font color="#4169E1">return</font>(0);
+<a name="line482">482: </a>}
+
+<a name="line484">484: </a><strong><font color="#4169E1"><a name="MatLUFactor_SeqDenseCUDA"></a>static <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatLUFactor_SeqDenseCUDA(<a href="../../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> A,<a href="../../../../../../docs/manualpages/IS/IS.html#IS">IS</a> rperm,<a href="../../../../../../docs/manualpages/IS/IS.html#IS">IS</a> cperm,const <a href="../../../../../../docs/manualpages/Mat/MatFactorInfo.html#MatFactorInfo">MatFactorInfo</a> *factinfo)</font></strong>
+<a name="line485">485: </a>{
+<a name="line486">486: </a>  Mat_SeqDense       *a = (Mat_SeqDense*)A-&gt;data;
+<a name="line487">487: </a>  Mat_SeqDenseCUDA   *dA = (Mat_SeqDenseCUDA*)A-&gt;spptr;
+<a name="line488">488: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>        *da;
+<a name="line489">489: </a>  int                m,n,lda;
+<a name="line490">490: </a><font color="#A020F0">#if defined(PETSC_USE_DEBUG)</font>
+<a name="line491">491: </a>  int                info;
+<a name="line492">492: </a><font color="#A020F0">#endif</font>
+<a name="line493">493: </a>  cusolverStatus_t   cerr;
+<a name="line494">494: </a>  cusolverDnHandle_t handle;
+<a name="line495">495: </a>  cudaError_t        ccer;
+<a name="line496">496: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>     ierr;
+
+<a name="line499">499: </a>  <font color="#4169E1">if</font> (!A-&gt;rmap-&gt;n || !A-&gt;cmap-&gt;n) <font color="#4169E1">return</font>(0);
+<a name="line500">500: </a>  PetscCUSOLVERDnGetHandle(&amp;handle);
+<a name="line501">501: </a>  <a href="../../../../../../docs/manualpages/Mat/MatDenseCUDAGetArray.html#MatDenseCUDAGetArray">MatDenseCUDAGetArray</a>(A,&amp;da);
+<a name="line502">502: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscMPIIntCast.html#PetscMPIIntCast">PetscMPIIntCast</a>(A-&gt;cmap-&gt;n,&amp;n);
+<a name="line503">503: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscMPIIntCast.html#PetscMPIIntCast">PetscMPIIntCast</a>(A-&gt;rmap-&gt;n,&amp;m);
+<a name="line504">504: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscMPIIntCast.html#PetscMPIIntCast">PetscMPIIntCast</a>(a-&gt;lda,&amp;lda);
+<a name="line505">505: </a>  PetscInfo2(A,<font color="#666666">"LU factor %d x %d on backend\n"</font>,m,n);
+<a name="line506">506: </a>  <font color="#4169E1">if</font> (!dA-&gt;d_fact_ipiv) {
+<a name="line507">507: </a>    ccer = cudaMalloc((void**)&amp;dA-&gt;d_fact_ipiv,n*<font color="#4169E1">sizeof</font>(*dA-&gt;d_fact_ipiv));CHKERRCUDA(ccer);
+<a name="line508">508: </a>  }
+<a name="line509">509: </a>  <font color="#4169E1">if</font> (!dA-&gt;fact_lwork) {
+<a name="line510">510: </a>    cerr = cusolverDnXgetrf_bufferSize(handle,m,n,da,lda,&amp;dA-&gt;fact_lwork);CHKERRCUSOLVER(cerr);
+<a name="line511">511: </a>    ccer = cudaMalloc((void**)&amp;dA-&gt;d_fact_work,dA-&gt;fact_lwork*<font color="#4169E1">sizeof</font>(*dA-&gt;d_fact_work));CHKERRCUDA(ccer);
+<a name="line512">512: </a>  }
+<a name="line513">513: </a>  <font color="#4169E1">if</font> (!dA-&gt;d_fact_info) {
+<a name="line514">514: </a>    ccer = cudaMalloc((void**)&amp;dA-&gt;d_fact_info,<font color="#4169E1">sizeof</font>(*dA-&gt;d_fact_info));CHKERRCUDA(ccer);
+<a name="line515">515: </a>  }
+<a name="line516">516: </a>  <a href="../../../../../../docs/manualpages/Profiling/PetscLogGpuTimeBegin.html#PetscLogGpuTimeBegin">PetscLogGpuTimeBegin</a>();
+<a name="line517">517: </a>  cerr = cusolverDnXgetrf(handle,m,n,da,lda,dA-&gt;d_fact_work,dA-&gt;d_fact_ipiv,dA-&gt;d_fact_info);CHKERRCUSOLVER(cerr);
+<a name="line518">518: </a>  ccer = WaitForCUDA();CHKERRCUDA(ccer);
+<a name="line519">519: </a>  <a href="../../../../../../docs/manualpages/Profiling/PetscLogGpuTimeEnd.html#PetscLogGpuTimeEnd">PetscLogGpuTimeEnd</a>();
+<a name="line520">520: </a>  <a href="../../../../../../docs/manualpages/Mat/MatDenseCUDARestoreArray.html#MatDenseCUDARestoreArray">MatDenseCUDARestoreArray</a>(A,&amp;da);
+<a name="line521">521: </a><font color="#A020F0">#if defined(PETSC_USE_DEBUG)</font>
+<a name="line522">522: </a>  ccer = cudaMemcpy(&amp;info, dA-&gt;d_fact_info, <font color="#4169E1">sizeof</font>(int), cudaMemcpyDeviceToHost);CHKERRCUDA(ccer);
+<a name="line523">523: </a>  <font color="#4169E1">if</font> (info &gt; 0) <a href="../../../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_MAT_LU_ZRPVT,<font color="#666666">"Bad factorization: zero pivot in row %d"</font>,info-1);
+<a name="line524">524: </a>  <font color="#4169E1">else</font> <font color="#4169E1">if</font> (info &lt; 0) <a href="../../../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_PLIB,<font color="#666666">"Wrong argument to cuSolver %d"</font>,-info);
+<a name="line525">525: </a><font color="#A020F0">#endif</font>
+<a name="line526">526: </a>  A-&gt;factortype = <a href="../../../../../../docs/manualpages/Mat/MatFactorType.html#MatFactorType">MAT_FACTOR_LU</a>;
+<a name="line527">527: </a>  <a href="../../../../../../docs/manualpages/Profiling/PetscLogGpuFlops.html#PetscLogGpuFlops">PetscLogGpuFlops</a>(2.0*n*n*m/3.0);
+
+<a name="line529">529: </a>  A-&gt;ops-&gt;solve          = MatSolve_SeqDenseCUDA;
+<a name="line530">530: </a>  A-&gt;ops-&gt;solvetranspose = MatSolveTranspose_SeqDenseCUDA;
+<a name="line531">531: </a>  A-&gt;ops-&gt;matsolve       = MatMatSolve_SeqDenseCUDA;
+
+<a name="line533">533: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(A-&gt;solvertype);
+<a name="line534">534: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscStrallocpy.html#PetscStrallocpy">PetscStrallocpy</a>(MATSOLVERCUDA,&amp;A-&gt;solvertype);
+<a name="line535">535: </a>  <font color="#4169E1">return</font>(0);
+<a name="line536">536: </a>}
+
+<a name="line538">538: </a><strong><font color="#4169E1"><a name="MatCholeskyFactor_SeqDenseCUDA"></a>static <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatCholeskyFactor_SeqDenseCUDA(<a href="../../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> A,<a href="../../../../../../docs/manualpages/IS/IS.html#IS">IS</a> perm,const <a href="../../../../../../docs/manualpages/Mat/MatFactorInfo.html#MatFactorInfo">MatFactorInfo</a> *factinfo)</font></strong>
+<a name="line539">539: </a>{
+<a name="line540">540: </a>  Mat_SeqDense       *a = (Mat_SeqDense*)A-&gt;data;
+<a name="line541">541: </a>  Mat_SeqDenseCUDA   *dA = (Mat_SeqDenseCUDA*)A-&gt;spptr;
+<a name="line542">542: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>        *da;
+<a name="line543">543: </a>  int                n,lda;
+<a name="line544">544: </a><font color="#A020F0">#if defined(PETSC_USE_DEBUG)</font>
+<a name="line545">545: </a>  int                info;
+<a name="line546">546: </a><font color="#A020F0">#endif</font>
+<a name="line547">547: </a>  cusolverStatus_t   cerr;
+<a name="line548">548: </a>  cusolverDnHandle_t handle;
+<a name="line549">549: </a>  cudaError_t        ccer;
+<a name="line550">550: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>     ierr;
+
+<a name="line553">553: </a>  <font color="#4169E1">if</font> (!A-&gt;rmap-&gt;n || !A-&gt;cmap-&gt;n) <font color="#4169E1">return</font>(0);
+<a name="line554">554: </a>  PetscCUSOLVERDnGetHandle(&amp;handle);
+<a name="line555">555: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscMPIIntCast.html#PetscMPIIntCast">PetscMPIIntCast</a>(A-&gt;rmap-&gt;n,&amp;n);
+<a name="line556">556: </a>  PetscInfo2(A,<font color="#666666">"Cholesky factor %d x %d on backend\n"</font>,n,n);
+<a name="line557">557: </a>  <font color="#4169E1">if</font> (A-&gt;spd) {
+<a name="line558">558: </a>    <a href="../../../../../../docs/manualpages/Mat/MatDenseCUDAGetArray.html#MatDenseCUDAGetArray">MatDenseCUDAGetArray</a>(A,&amp;da);
+<a name="line559">559: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscMPIIntCast.html#PetscMPIIntCast">PetscMPIIntCast</a>(a-&gt;lda,&amp;lda);
+<a name="line560">560: </a>    <font color="#4169E1">if</font> (!dA-&gt;fact_lwork) {
+<a name="line561">561: </a>      cerr = cusolverDnXpotrf_bufferSize(handle,CUBLAS_FILL_MODE_LOWER,n,da,lda,&amp;dA-&gt;fact_lwork);CHKERRCUSOLVER(cerr);
+<a name="line562">562: </a>      ccer = cudaMalloc((void**)&amp;dA-&gt;d_fact_work,dA-&gt;fact_lwork*<font color="#4169E1">sizeof</font>(*dA-&gt;d_fact_work));CHKERRCUDA(ccer);
+<a name="line563">563: </a>    }
+<a name="line564">564: </a>    <font color="#4169E1">if</font> (!dA-&gt;d_fact_info) {
+<a name="line565">565: </a>      ccer = cudaMalloc((void**)&amp;dA-&gt;d_fact_info,<font color="#4169E1">sizeof</font>(*dA-&gt;d_fact_info));CHKERRCUDA(ccer);
+<a name="line566">566: </a>    }
+<a name="line567">567: </a>    <a href="../../../../../../docs/manualpages/Profiling/PetscLogGpuTimeBegin.html#PetscLogGpuTimeBegin">PetscLogGpuTimeBegin</a>();
+<a name="line568">568: </a>    cerr = cusolverDnXpotrf(handle,CUBLAS_FILL_MODE_LOWER,n,da,lda,dA-&gt;d_fact_work,dA-&gt;fact_lwork,dA-&gt;d_fact_info);CHKERRCUSOLVER(cerr);
+<a name="line569">569: </a>    ccer = WaitForCUDA();CHKERRCUDA(ccer);
+<a name="line570">570: </a>    <a href="../../../../../../docs/manualpages/Profiling/PetscLogGpuTimeEnd.html#PetscLogGpuTimeEnd">PetscLogGpuTimeEnd</a>();
+
+<a name="line572">572: </a>    <a href="../../../../../../docs/manualpages/Mat/MatDenseCUDARestoreArray.html#MatDenseCUDARestoreArray">MatDenseCUDARestoreArray</a>(A,&amp;da);
+<a name="line573">573: </a><font color="#A020F0">#if defined(PETSC_USE_DEBUG)</font>
+<a name="line574">574: </a>    ccer = cudaMemcpy(&amp;info, dA-&gt;d_fact_info, <font color="#4169E1">sizeof</font>(int), cudaMemcpyDeviceToHost);CHKERRCUDA(ccer);
+<a name="line575">575: </a>    <font color="#4169E1">if</font> (info &gt; 0) <a href="../../../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_MAT_CH_ZRPVT,<font color="#666666">"Bad factorization: zero pivot in row %d"</font>,info-1);
+<a name="line576">576: </a>    <font color="#4169E1">else</font> <font color="#4169E1">if</font> (info &lt; 0) <a href="../../../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_PLIB,<font color="#666666">"Wrong argument to cuSolver %d"</font>,-info);
+<a name="line577">577: </a><font color="#A020F0">#endif</font>
+<a name="line578">578: </a>    A-&gt;factortype = <a href="../../../../../../docs/manualpages/Mat/MatFactorType.html#MatFactorType">MAT_FACTOR_CHOLESKY</a>;
+<a name="line579">579: </a>    <a href="../../../../../../docs/manualpages/Profiling/PetscLogGpuFlops.html#PetscLogGpuFlops">PetscLogGpuFlops</a>(1.0*n*n*n/3.0);
+<a name="line580">580: </a>  } <font color="#4169E1">else</font> <a href="../../../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_SUP,<font color="#666666">"cusolverDnsytrs unavailable. Use <a href="../../../../../../docs/manualpages/Mat/MatFactorType.html#MatFactorType">MAT_FACTOR_LU</a>"</font>);
+<a name="line581">581: </a><font color="#A020F0">#if 0</font>
+<a name="line582">582: </a>    <font color="#B22222">/* at the time of writing this interface (cuda 10.0), cusolverDn does not implement *sytrs and *hetr* routines</font>
+<a name="line583">583: </a><font color="#B22222">       The code below should work, and it can be activated when *sytrs routines will be available */</font>
+<a name="line584">584: </a>    <font color="#4169E1">if</font> (!dA-&gt;d_fact_ipiv) {
+<a name="line585">585: </a>      ccer = cudaMalloc((void**)&amp;dA-&gt;d_fact_ipiv,n*<font color="#4169E1">sizeof</font>(*dA-&gt;d_fact_ipiv));CHKERRCUDA(ccer);
+<a name="line586">586: </a>    }
+<a name="line587">587: </a>    <font color="#4169E1">if</font> (!dA-&gt;fact_lwork) {
+<a name="line588">588: </a>      cerr = cusolverDnXsytrf_bufferSize(handle,n,da,lda,&amp;dA-&gt;fact_lwork);CHKERRCUSOLVER(cerr);
+<a name="line589">589: </a>      ccer = cudaMalloc((void**)&amp;dA-&gt;d_fact_work,dA-&gt;fact_lwork*<font color="#4169E1">sizeof</font>(*dA-&gt;d_fact_work));CHKERRCUDA(ccer);
+<a name="line590">590: </a>    }
+<a name="line591">591: </a>    <font color="#4169E1">if</font> (!dA-&gt;d_fact_info) {
+<a name="line592">592: </a>      ccer = cudaMalloc((void**)&amp;dA-&gt;d_fact_info,<font color="#4169E1">sizeof</font>(*dA-&gt;d_fact_info));CHKERRCUDA(ccer);
+<a name="line593">593: </a>    }
+<a name="line594">594: </a>    <a href="../../../../../../docs/manualpages/Profiling/PetscLogGpuTimeBegin.html#PetscLogGpuTimeBegin">PetscLogGpuTimeBegin</a>();
+<a name="line595">595: </a>    cerr = cusolverDnXsytrf(handle,CUBLAS_FILL_MODE_LOWER,n,da,lda,dA-&gt;d_fact_ipiv,dA-&gt;d_fact_work,dA-&gt;fact_lwork,dA-&gt;d_fact_info);CHKERRCUSOLVER(cerr);
+<a name="line596">596: </a>    <a href="../../../../../../docs/manualpages/Profiling/PetscLogGpuTimeEnd.html#PetscLogGpuTimeEnd">PetscLogGpuTimeEnd</a>();
+<a name="line597">597: </a><font color="#A020F0">#endif</font>
+
+<a name="line599">599: </a>  A-&gt;ops-&gt;solve          = MatSolve_SeqDenseCUDA;
+<a name="line600">600: </a>  A-&gt;ops-&gt;solvetranspose = MatSolveTranspose_SeqDenseCUDA;
+<a name="line601">601: </a>  A-&gt;ops-&gt;matsolve       = MatMatSolve_SeqDenseCUDA;
+
+<a name="line603">603: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(A-&gt;solvertype);
+<a name="line604">604: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscStrallocpy.html#PetscStrallocpy">PetscStrallocpy</a>(MATSOLVERCUDA,&amp;A-&gt;solvertype);
+<a name="line605">605: </a>  <font color="#4169E1">return</font>(0);
+<a name="line606">606: </a>}
+
+<a name="line608">608: </a><font color="#B22222">/* GEMM kernel: C = op(A)*op(B), tA, tB flag transposition */</font>
+<a name="line609">609: </a><strong><font color="#4169E1"><a name="MatMatMultNumeric_SeqDenseCUDA_SeqDenseCUDA_Private"></a>PETSC_INTERN <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatMatMultNumeric_SeqDenseCUDA_SeqDenseCUDA_Private(<a href="../../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> A,<a href="../../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> B,<a href="../../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> C,<a href="../../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> tA,<a href="../../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> tB)</font></strong>
+<a name="line610">610: </a>{
+<a name="line611">611: </a>  const <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> *da,*db;
+<a name="line612">612: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>       *dc;
+<a name="line613">613: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>       one=1.0,zero=0.0;
+<a name="line614">614: </a>  int               m,n,k;
+<a name="line615">615: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>          alda,blda,clda;
+<a name="line616">616: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>    ierr;
+<a name="line617">617: </a>  cublasHandle_t    cublasv2handle;
+<a name="line618">618: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>         Aiscuda,Biscuda;
+<a name="line619">619: </a>  cublasStatus_t    berr;
+<a name="line620">620: </a>  cudaError_t       cerr;
+
+<a name="line623">623: </a>  <font color="#B22222">/* we may end up with SEQDENSE as one of the arguments */</font>
+<a name="line624">624: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscObjectTypeCompare.html#PetscObjectTypeCompare">PetscObjectTypeCompare</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)A,<a href="../../../../../../docs/manualpages/Mat/MATSEQDENSECUDA.html#MATSEQDENSECUDA">MATSEQDENSECUDA</a>,&amp;Aiscuda);
+<a name="line625">625: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscObjectTypeCompare.html#PetscObjectTypeCompare">PetscObjectTypeCompare</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)B,<a href="../../../../../../docs/manualpages/Mat/MATSEQDENSECUDA.html#MATSEQDENSECUDA">MATSEQDENSECUDA</a>,&amp;Biscuda);
+<a name="line626">626: </a>  <font color="#4169E1">if</font> (!Aiscuda) {
+<a name="line627">627: </a>    <a href="../../../../../../docs/manualpages/Mat/MatConvert.html#MatConvert">MatConvert</a>(A,<a href="../../../../../../docs/manualpages/Mat/MATSEQDENSECUDA.html#MATSEQDENSECUDA">MATSEQDENSECUDA</a>,<a href="../../../../../../docs/manualpages/Mat/MatReuse.html#MatReuse">MAT_INPLACE_MATRIX</a>,&amp;A);
+<a name="line628">628: </a>  }
+<a name="line629">629: </a>  <font color="#4169E1">if</font> (!Biscuda) {
+<a name="line630">630: </a>    <a href="../../../../../../docs/manualpages/Mat/MatConvert.html#MatConvert">MatConvert</a>(B,<a href="../../../../../../docs/manualpages/Mat/MATSEQDENSECUDA.html#MATSEQDENSECUDA">MATSEQDENSECUDA</a>,<a href="../../../../../../docs/manualpages/Mat/MatReuse.html#MatReuse">MAT_INPLACE_MATRIX</a>,&amp;B);
+<a name="line631">631: </a>  }
+<a name="line632">632: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscMPIIntCast.html#PetscMPIIntCast">PetscMPIIntCast</a>(C-&gt;rmap-&gt;n,&amp;m);
+<a name="line633">633: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscMPIIntCast.html#PetscMPIIntCast">PetscMPIIntCast</a>(C-&gt;cmap-&gt;n,&amp;n);
+<a name="line634">634: </a>  <font color="#4169E1">if</font> (tA) {
+<a name="line635">635: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscMPIIntCast.html#PetscMPIIntCast">PetscMPIIntCast</a>(A-&gt;rmap-&gt;n,&amp;k);
+<a name="line636">636: </a>  } <font color="#4169E1">else</font> {
+<a name="line637">637: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscMPIIntCast.html#PetscMPIIntCast">PetscMPIIntCast</a>(A-&gt;cmap-&gt;n,&amp;k);
+<a name="line638">638: </a>  }
+<a name="line639">639: </a>  <font color="#4169E1">if</font> (!m || !n || !k) <font color="#4169E1">return</font>(0);
+<a name="line640">640: </a>  PetscInfo3(C,<font color="#666666">"Matrix-Matrix product %d x %d x %d on backend\n"</font>,m,k,n);
+<a name="line641">641: </a>  <a href="../../../../../../docs/manualpages/Mat/MatDenseCUDAGetArrayRead.html#MatDenseCUDAGetArrayRead">MatDenseCUDAGetArrayRead</a>(A,&amp;da);
+<a name="line642">642: </a>  <a href="../../../../../../docs/manualpages/Mat/MatDenseCUDAGetArrayRead.html#MatDenseCUDAGetArrayRead">MatDenseCUDAGetArrayRead</a>(B,&amp;db);
+<a name="line643">643: </a>  <a href="../../../../../../docs/manualpages/Mat/MatDenseCUDAGetArrayWrite.html#MatDenseCUDAGetArrayWrite">MatDenseCUDAGetArrayWrite</a>(C,&amp;dc);
+<a name="line644">644: </a>  <a href="../../../../../../docs/manualpages/Mat/MatDenseGetLDA.html#MatDenseGetLDA">MatDenseGetLDA</a>(A,&amp;alda);
+<a name="line645">645: </a>  <a href="../../../../../../docs/manualpages/Mat/MatDenseGetLDA.html#MatDenseGetLDA">MatDenseGetLDA</a>(B,&amp;blda);
+<a name="line646">646: </a>  <a href="../../../../../../docs/manualpages/Mat/MatDenseGetLDA.html#MatDenseGetLDA">MatDenseGetLDA</a>(C,&amp;clda);
+<a name="line647">647: </a>  PetscCUBLASGetHandle(&amp;cublasv2handle);
+<a name="line648">648: </a>  <a href="../../../../../../docs/manualpages/Profiling/PetscLogGpuTimeBegin.html#PetscLogGpuTimeBegin">PetscLogGpuTimeBegin</a>();
+<a name="line649">649: </a>  berr = cublasXgemm(cublasv2handle,tA ? CUBLAS_OP_T : CUBLAS_OP_N,tB ? CUBLAS_OP_T : CUBLAS_OP_N,
+<a name="line650">650: </a>                     m,n,k,&amp;one,da,alda,db,blda,&amp;zero,dc,clda);CHKERRCUBLAS(berr);
+<a name="line651">651: </a>  cerr = WaitForCUDA();CHKERRCUDA(cerr);
+<a name="line652">652: </a>  <a href="../../../../../../docs/manualpages/Profiling/PetscLogGpuTimeEnd.html#PetscLogGpuTimeEnd">PetscLogGpuTimeEnd</a>();
+<a name="line653">653: </a>  <a href="../../../../../../docs/manualpages/Profiling/PetscLogGpuFlops.html#PetscLogGpuFlops">PetscLogGpuFlops</a>(1.0*m*n*k + 1.0*m*n*(k-1));
+<a name="line654">654: </a>  <a href="../../../../../../docs/manualpages/Mat/MatDenseCUDARestoreArrayRead.html#MatDenseCUDARestoreArrayRead">MatDenseCUDARestoreArrayRead</a>(A,&amp;da);
+<a name="line655">655: </a>  <a href="../../../../../../docs/manualpages/Mat/MatDenseCUDARestoreArrayRead.html#MatDenseCUDARestoreArrayRead">MatDenseCUDARestoreArrayRead</a>(B,&amp;db);
+<a name="line656">656: </a>  <a href="../../../../../../docs/manualpages/Mat/MatDenseCUDARestoreArrayWrite.html#MatDenseCUDARestoreArrayWrite">MatDenseCUDARestoreArrayWrite</a>(C,&amp;dc);
+<a name="line657">657: </a>  <font color="#4169E1">if</font> (!Aiscuda) {
+<a name="line658">658: </a>    <a href="../../../../../../docs/manualpages/Mat/MatConvert.html#MatConvert">MatConvert</a>(A,<a href="../../../../../../docs/manualpages/Mat/MATSEQDENSE.html#MATSEQDENSE">MATSEQDENSE</a>,<a href="../../../../../../docs/manualpages/Mat/MatReuse.html#MatReuse">MAT_INPLACE_MATRIX</a>,&amp;A);
+<a name="line659">659: </a>  }
+<a name="line660">660: </a>  <font color="#4169E1">if</font> (!Biscuda) {
+<a name="line661">661: </a>    <a href="../../../../../../docs/manualpages/Mat/MatConvert.html#MatConvert">MatConvert</a>(B,<a href="../../../../../../docs/manualpages/Mat/MATSEQDENSE.html#MATSEQDENSE">MATSEQDENSE</a>,<a href="../../../../../../docs/manualpages/Mat/MatReuse.html#MatReuse">MAT_INPLACE_MATRIX</a>,&amp;B);
+<a name="line662">662: </a>  }
+<a name="line663">663: </a>  <font color="#4169E1">return</font>(0);
+<a name="line664">664: </a>}
+
+<a name="line666">666: </a><strong><font color="#4169E1"><a name="MatTransposeMatMultNumeric_SeqDenseCUDA_SeqDenseCUDA"></a><a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatTransposeMatMultNumeric_SeqDenseCUDA_SeqDenseCUDA(<a href="../../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> A,<a href="../../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> B,<a href="../../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> C)</font></strong>
+<a name="line667">667: </a>{
+
+<a name="line671">671: </a>  MatMatMultNumeric_SeqDenseCUDA_SeqDenseCUDA_Private(A,B,C,<a href="../../../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>,<a href="../../../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>);
+<a name="line672">672: </a>  <font color="#4169E1">return</font>(0);
+<a name="line673">673: </a>}
+
+<a name="line675">675: </a><strong><font color="#4169E1"><a name="MatMatMultNumeric_SeqDenseCUDA_SeqDenseCUDA"></a><a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatMatMultNumeric_SeqDenseCUDA_SeqDenseCUDA(<a href="../../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> A,<a href="../../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> B,<a href="../../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> C)</font></strong>
+<a name="line676">676: </a>{
+
+<a name="line680">680: </a>  MatMatMultNumeric_SeqDenseCUDA_SeqDenseCUDA_Private(A,B,C,<a href="../../../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>,<a href="../../../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>);
+<a name="line681">681: </a>  <font color="#4169E1">return</font>(0);
+<a name="line682">682: </a>}
+
+<a name="line684">684: </a><strong><font color="#4169E1"><a name="MatMatTransposeMultNumeric_SeqDenseCUDA_SeqDenseCUDA"></a><a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatMatTransposeMultNumeric_SeqDenseCUDA_SeqDenseCUDA(<a href="../../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> A,<a href="../../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> B,<a href="../../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> C)</font></strong>
+<a name="line685">685: </a>{
+
+<a name="line689">689: </a>  MatMatMultNumeric_SeqDenseCUDA_SeqDenseCUDA_Private(A,B,C,<a href="../../../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>,<a href="../../../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>);
+<a name="line690">690: </a>  <font color="#4169E1">return</font>(0);
+<a name="line691">691: </a>}
+
+<a name="line693">693: </a><strong><font color="#4169E1"><a name="MatProductSetFromOptions_SeqDenseCUDA"></a><a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatProductSetFromOptions_SeqDenseCUDA(<a href="../../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> C)</font></strong>
+<a name="line694">694: </a>{
+
+<a name="line698">698: </a>  MatProductSetFromOptions_SeqDense(C);
+<a name="line699">699: </a>  <font color="#4169E1">return</font>(0);
+<a name="line700">700: </a>}
+
+<a name="line702">702: </a><font color="#B22222">/* zz = op(A)*xx + yy</font>
+<a name="line703">703: </a><font color="#B22222">   if yy == NULL, only <a href="../../../../../../docs/manualpages/Mat/MatMult.html#MatMult">MatMult</a> */</font>
+<a name="line704">704: </a><strong><font color="#4169E1"><a name="MatMultAdd_SeqDenseCUDA_Private"></a>static <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatMultAdd_SeqDenseCUDA_Private(<a href="../../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> A,<a href="../../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> xx,<a href="../../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> yy,<a href="../../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> zz,<a href="../../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> trans)</font></strong>
+<a name="line705">705: </a>{
+<a name="line706">706: </a>  Mat_SeqDense      *mat = (Mat_SeqDense*)A-&gt;data;
+<a name="line707">707: </a>  const <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> *xarray,*da;
+<a name="line708">708: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>       *zarray;
+<a name="line709">709: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>       one=1.0,zero=0.0;
+<a name="line710">710: </a>  int               m, n, lda; <font color="#B22222">/* Use <a href="../../../../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a> as it is typedef'ed to int */</font>
+<a name="line711">711: </a>  cublasHandle_t    cublasv2handle;
+<a name="line712">712: </a>  cublasStatus_t    berr;
+<a name="line713">713: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>    ierr;
+
+<a name="line716">716: </a>  <font color="#4169E1">if</font> (yy &amp;&amp; yy != zz) { <font color="#B22222">/* mult add */</font>
+<a name="line717">717: </a>    VecCopy_SeqCUDA(yy,zz);
+<a name="line718">718: </a>  }
+<a name="line719">719: </a>  <font color="#4169E1">if</font> (!A-&gt;rmap-&gt;n || !A-&gt;cmap-&gt;n) {
+<a name="line720">720: </a>    <font color="#4169E1">if</font> (!yy) { <font color="#B22222">/* mult only */</font>
+<a name="line721">721: </a>      VecSet_SeqCUDA(zz,0.0);
+<a name="line722">722: </a>    }
+<a name="line723">723: </a>    <font color="#4169E1">return</font>(0);
+<a name="line724">724: </a>  }
+<a name="line725">725: </a>  PetscInfo2(A,<font color="#666666">"Matrix-vector product %d x %d on backend\n"</font>,A-&gt;rmap-&gt;n,A-&gt;cmap-&gt;n);
+<a name="line726">726: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscMPIIntCast.html#PetscMPIIntCast">PetscMPIIntCast</a>(A-&gt;rmap-&gt;n,&amp;m);
+<a name="line727">727: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscMPIIntCast.html#PetscMPIIntCast">PetscMPIIntCast</a>(A-&gt;cmap-&gt;n,&amp;n);
+<a name="line728">728: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscMPIIntCast.html#PetscMPIIntCast">PetscMPIIntCast</a>(mat-&gt;lda,&amp;lda);
+<a name="line729">729: </a>  PetscCUBLASGetHandle(&amp;cublasv2handle);
+<a name="line730">730: </a>  <a href="../../../../../../docs/manualpages/Mat/MatDenseCUDAGetArrayRead.html#MatDenseCUDAGetArrayRead">MatDenseCUDAGetArrayRead</a>(A,&amp;da);
+<a name="line731">731: </a>  <a href="../../../../../../docs/manualpages/Vec/VecCUDAGetArrayRead.html#VecCUDAGetArrayRead">VecCUDAGetArrayRead</a>(xx,&amp;xarray);
+<a name="line732">732: </a>  <a href="../../../../../../docs/manualpages/Vec/VecCUDAGetArray.html#VecCUDAGetArray">VecCUDAGetArray</a>(zz,&amp;zarray);
+<a name="line733">733: </a>  <a href="../../../../../../docs/manualpages/Profiling/PetscLogGpuTimeBegin.html#PetscLogGpuTimeBegin">PetscLogGpuTimeBegin</a>();
+<a name="line734">734: </a>  berr = cublasXgemv(cublasv2handle,trans ? CUBLAS_OP_T : CUBLAS_OP_N,
+<a name="line735">735: </a>                     m,n,&amp;one,da,lda,xarray,1,(yy ? &amp;one : &amp;zero),zarray,1);CHKERRCUBLAS(berr);
+<a name="line736">736: </a>  <a href="../../../../../../docs/manualpages/Profiling/PetscLogGpuTimeEnd.html#PetscLogGpuTimeEnd">PetscLogGpuTimeEnd</a>();
+<a name="line737">737: </a>  <a href="../../../../../../docs/manualpages/Profiling/PetscLogGpuFlops.html#PetscLogGpuFlops">PetscLogGpuFlops</a>(2.0*A-&gt;rmap-&gt;n*A-&gt;cmap-&gt;n - (yy ? 0 : A-&gt;rmap-&gt;n));
+<a name="line738">738: </a>  <a href="../../../../../../docs/manualpages/Vec/VecCUDARestoreArrayRead.html#VecCUDARestoreArrayRead">VecCUDARestoreArrayRead</a>(xx,&amp;xarray);
+<a name="line739">739: </a>  <a href="../../../../../../docs/manualpages/Vec/VecCUDARestoreArray.html#VecCUDARestoreArray">VecCUDARestoreArray</a>(zz,&amp;zarray);
+<a name="line740">740: </a>  <a href="../../../../../../docs/manualpages/Mat/MatDenseCUDARestoreArrayRead.html#MatDenseCUDARestoreArrayRead">MatDenseCUDARestoreArrayRead</a>(A,&amp;da);
+<a name="line741">741: </a>  <font color="#4169E1">return</font>(0);
+<a name="line742">742: </a>}
+
+<a name="line744">744: </a><strong><font color="#4169E1"><a name="MatMultAdd_SeqDenseCUDA"></a><a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatMultAdd_SeqDenseCUDA(<a href="../../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> A,<a href="../../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> xx,<a href="../../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> yy,<a href="../../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> zz)</font></strong>
+<a name="line745">745: </a>{
+
+<a name="line749">749: </a>  MatMultAdd_SeqDenseCUDA_Private(A,xx,yy,zz,<a href="../../../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>);
+<a name="line750">750: </a>  <font color="#4169E1">return</font>(0);
+<a name="line751">751: </a>}
+
+<a name="line753">753: </a><strong><font color="#4169E1"><a name="MatMultTransposeAdd_SeqDenseCUDA"></a><a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatMultTransposeAdd_SeqDenseCUDA(<a href="../../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> A,<a href="../../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> xx,<a href="../../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> yy,<a href="../../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> zz)</font></strong>
+<a name="line754">754: </a>{
+
+<a name="line758">758: </a>  MatMultAdd_SeqDenseCUDA_Private(A,xx,yy,zz,<a href="../../../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>);
+<a name="line759">759: </a>  <font color="#4169E1">return</font>(0);
+<a name="line760">760: </a>}
+
+<a name="line762">762: </a><strong><font color="#4169E1"><a name="MatMult_SeqDenseCUDA"></a><a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatMult_SeqDenseCUDA(<a href="../../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> A,<a href="../../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> xx,<a href="../../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> yy)</font></strong>
+<a name="line763">763: </a>{
+
+<a name="line767">767: </a>  MatMultAdd_SeqDenseCUDA_Private(A,xx,NULL,yy,<a href="../../../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>);
+<a name="line768">768: </a>  <font color="#4169E1">return</font>(0);
+<a name="line769">769: </a>}
+
+<a name="line771">771: </a><strong><font color="#4169E1"><a name="MatMultTranspose_SeqDenseCUDA"></a><a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatMultTranspose_SeqDenseCUDA(<a href="../../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> A,<a href="../../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> xx,<a href="../../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> yy)</font></strong>
+<a name="line772">772: </a>{
+
+<a name="line776">776: </a>  MatMultAdd_SeqDenseCUDA_Private(A,xx,NULL,yy,<a href="../../../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>);
+<a name="line777">777: </a>  <font color="#4169E1">return</font>(0);
+<a name="line778">778: </a>}
+
+<a name="line780">780: </a><strong><font color="#4169E1"><a name="MatDenseGetArrayRead_SeqDenseCUDA"></a>static <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatDenseGetArrayRead_SeqDenseCUDA(<a href="../../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> A,const <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> **array)</font></strong>
+<a name="line781">781: </a>{
+<a name="line782">782: </a>  Mat_SeqDense   *mat = (Mat_SeqDense*)A-&gt;data;
+
+<a name="line786">786: </a>  MatSeqDenseCUDACopyFromGPU(A);
+<a name="line787">787: </a>  *array = mat-&gt;v;
+<a name="line788">788: </a>  <font color="#4169E1">return</font>(0);
+<a name="line789">789: </a>}
+
+<a name="line791">791: </a><strong><font color="#4169E1"><a name="MatDenseGetArrayWrite_SeqDenseCUDA"></a>static <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatDenseGetArrayWrite_SeqDenseCUDA(<a href="../../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> A,<a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> **array)</font></strong>
+<a name="line792">792: </a>{
+<a name="line793">793: </a>  Mat_SeqDense   *mat = (Mat_SeqDense*)A-&gt;data;
+
+<a name="line797">797: </a>  <font color="#4169E1">if</font> (!mat-&gt;v) { <font color="#B22222">/* <a href="../../../../../../docs/manualpages/Mat/MatCreateSeqDenseCUDA.html#MatCreateSeqDenseCUDA">MatCreateSeqDenseCUDA</a> may not allocate CPU memory. Allocate if needed */</font>
+<a name="line798">798: </a>    <a href="../../../../../../docs/manualpages/Mat/MatSeqDenseSetPreallocation.html#MatSeqDenseSetPreallocation">MatSeqDenseSetPreallocation</a>(A,NULL);
+<a name="line799">799: </a>  }
+<a name="line800">800: </a>  *array = mat-&gt;v;
+<a name="line801">801: </a>  A-&gt;offloadmask = <a href="../../../../../../docs/manualpages/Vec/PetscOffloadMask.html#PetscOffloadMask">PETSC_OFFLOAD_CPU</a>;
+<a name="line802">802: </a>  <font color="#4169E1">return</font>(0);
+<a name="line803">803: </a>}
+
+<a name="line805">805: </a><strong><font color="#4169E1"><a name="MatDenseGetArray_SeqDenseCUDA"></a>static <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatDenseGetArray_SeqDenseCUDA(<a href="../../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> A,<a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> **array)</font></strong>
+<a name="line806">806: </a>{
+<a name="line807">807: </a>  Mat_SeqDense   *mat = (Mat_SeqDense*)A-&gt;data;
+
+<a name="line811">811: </a>  MatSeqDenseCUDACopyFromGPU(A);
+<a name="line812">812: </a>  *array = mat-&gt;v;
+<a name="line813">813: </a>  A-&gt;offloadmask = <a href="../../../../../../docs/manualpages/Vec/PetscOffloadMask.html#PetscOffloadMask">PETSC_OFFLOAD_CPU</a>;
+<a name="line814">814: </a>  <font color="#4169E1">return</font>(0);
+<a name="line815">815: </a>}
+
+<a name="line817">817: </a><strong><font color="#4169E1"><a name="MatScale_SeqDenseCUDA"></a><a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatScale_SeqDenseCUDA(<a href="../../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> Y,<a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> alpha)</font></strong>
+<a name="line818">818: </a>{
+<a name="line819">819: </a>  Mat_SeqDense   *y = (Mat_SeqDense*)Y-&gt;data;
+<a name="line820">820: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>    *dy;
+<a name="line821">821: </a>  int            j,N,m,lday,one = 1;
+<a name="line822">822: </a>  cublasHandle_t cublasv2handle;
+<a name="line823">823: </a>  cublasStatus_t berr;
+<a name="line825">825: </a>  cudaError_t    cerr;
+
+<a name="line828">828: </a>  PetscCUBLASGetHandle(&amp;cublasv2handle);
+<a name="line829">829: </a>  <a href="../../../../../../docs/manualpages/Mat/MatDenseCUDAGetArray.html#MatDenseCUDAGetArray">MatDenseCUDAGetArray</a>(Y,&amp;dy);
+<a name="line830">830: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscMPIIntCast.html#PetscMPIIntCast">PetscMPIIntCast</a>(Y-&gt;rmap-&gt;n*Y-&gt;cmap-&gt;n,&amp;N);
+<a name="line831">831: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscMPIIntCast.html#PetscMPIIntCast">PetscMPIIntCast</a>(Y-&gt;rmap-&gt;n,&amp;m);
+<a name="line832">832: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscMPIIntCast.html#PetscMPIIntCast">PetscMPIIntCast</a>(y-&gt;lda,&amp;lday);
+<a name="line833">833: </a>  PetscInfo2(Y,<font color="#666666">"Performing Scale %d x %d on backend\n"</font>,Y-&gt;rmap-&gt;n,Y-&gt;cmap-&gt;n);
+<a name="line834">834: </a>  <a href="../../../../../../docs/manualpages/Profiling/PetscLogGpuTimeBegin.html#PetscLogGpuTimeBegin">PetscLogGpuTimeBegin</a>();
+<a name="line835">835: </a>  <font color="#4169E1">if</font> (lday&gt;m) {
+<a name="line836">836: </a>    <font color="#4169E1">for</font> (j=0; j&lt;Y-&gt;cmap-&gt;n; j++) {
+<a name="line837">837: </a>      berr = cublasXscal(cublasv2handle,m,&amp;alpha,dy+lday*j,one);CHKERRCUBLAS(berr);
+<a name="line838">838: </a>    }
+<a name="line839">839: </a>  } <font color="#4169E1">else</font> {
+<a name="line840">840: </a>    berr = cublasXscal(cublasv2handle,N,&amp;alpha,dy,one);CHKERRCUBLAS(berr);
+<a name="line841">841: </a>  }
+<a name="line842">842: </a>  cerr = WaitForCUDA();CHKERRCUDA(cerr);
+<a name="line843">843: </a>  <a href="../../../../../../docs/manualpages/Profiling/PetscLogGpuTimeEnd.html#PetscLogGpuTimeEnd">PetscLogGpuTimeEnd</a>();
+<a name="line844">844: </a>  <a href="../../../../../../docs/manualpages/Profiling/PetscLogGpuFlops.html#PetscLogGpuFlops">PetscLogGpuFlops</a>(N);
+<a name="line845">845: </a>  <a href="../../../../../../docs/manualpages/Mat/MatDenseCUDARestoreArray.html#MatDenseCUDARestoreArray">MatDenseCUDARestoreArray</a>(Y,&amp;dy);
+<a name="line846">846: </a>  <font color="#4169E1">return</font>(0);
+<a name="line847">847: </a>}
+
+<a name="line849">849: </a><strong><font color="#4169E1"><a name="MatAXPY_SeqDenseCUDA"></a><a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatAXPY_SeqDenseCUDA(<a href="../../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> Y,<a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> alpha,<a href="../../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> X,<a href="../../../../../../docs/manualpages/Mat/MatStructure.html#MatStructure">MatStructure</a> str)</font></strong>
+<a name="line850">850: </a>{
+<a name="line851">851: </a>  Mat_SeqDense      *x = (Mat_SeqDense*)X-&gt;data;
+<a name="line852">852: </a>  Mat_SeqDense      *y = (Mat_SeqDense*)Y-&gt;data;
+<a name="line853">853: </a>  const <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> *dx;
+<a name="line854">854: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>       *dy;
+<a name="line855">855: </a>  int               j,N,m,ldax,lday,one = 1;
+<a name="line856">856: </a>  cublasHandle_t    cublasv2handle;
+<a name="line857">857: </a>  cublasStatus_t    berr;
+<a name="line858">858: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>    ierr;
+<a name="line859">859: </a>  cudaError_t       cerr;
+
+<a name="line862">862: </a>  <font color="#4169E1">if</font> (!X-&gt;rmap-&gt;n || !X-&gt;cmap-&gt;n) <font color="#4169E1">return</font>(0);
+<a name="line863">863: </a>  PetscCUBLASGetHandle(&amp;cublasv2handle);
+<a name="line864">864: </a>  <a href="../../../../../../docs/manualpages/Mat/MatDenseCUDAGetArrayRead.html#MatDenseCUDAGetArrayRead">MatDenseCUDAGetArrayRead</a>(X,&amp;dx);
+<a name="line865">865: </a>  <font color="#4169E1">if</font> (alpha != 0.0) {
+<a name="line866">866: </a>    <a href="../../../../../../docs/manualpages/Mat/MatDenseCUDAGetArray.html#MatDenseCUDAGetArray">MatDenseCUDAGetArray</a>(Y,&amp;dy);
+<a name="line867">867: </a>  } <font color="#4169E1">else</font> {
+<a name="line868">868: </a>    <a href="../../../../../../docs/manualpages/Mat/MatDenseCUDAGetArrayWrite.html#MatDenseCUDAGetArrayWrite">MatDenseCUDAGetArrayWrite</a>(Y,&amp;dy);
+<a name="line869">869: </a>  }
+<a name="line870">870: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscMPIIntCast.html#PetscMPIIntCast">PetscMPIIntCast</a>(X-&gt;rmap-&gt;n*X-&gt;cmap-&gt;n,&amp;N);
+<a name="line871">871: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscMPIIntCast.html#PetscMPIIntCast">PetscMPIIntCast</a>(X-&gt;rmap-&gt;n,&amp;m);
+<a name="line872">872: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscMPIIntCast.html#PetscMPIIntCast">PetscMPIIntCast</a>(x-&gt;lda,&amp;ldax);
+<a name="line873">873: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscMPIIntCast.html#PetscMPIIntCast">PetscMPIIntCast</a>(y-&gt;lda,&amp;lday);
+<a name="line874">874: </a>  PetscInfo2(Y,<font color="#666666">"Performing AXPY %d x %d on backend\n"</font>,Y-&gt;rmap-&gt;n,Y-&gt;cmap-&gt;n);
+<a name="line875">875: </a>  <a href="../../../../../../docs/manualpages/Profiling/PetscLogGpuTimeBegin.html#PetscLogGpuTimeBegin">PetscLogGpuTimeBegin</a>();
+<a name="line876">876: </a>  <font color="#4169E1">if</font> (ldax&gt;m || lday&gt;m) {
+<a name="line877">877: </a>    <font color="#4169E1">for</font> (j=0; j&lt;X-&gt;cmap-&gt;n; j++) {
+<a name="line878">878: </a>      berr = cublasXaxpy(cublasv2handle,m,&amp;alpha,dx+j*ldax,one,dy+j*lday,one);CHKERRCUBLAS(berr);
+<a name="line879">879: </a>    }
+<a name="line880">880: </a>  } <font color="#4169E1">else</font> {
+<a name="line881">881: </a>    berr = cublasXaxpy(cublasv2handle,N,&amp;alpha,dx,one,dy,one);CHKERRCUBLAS(berr);
+<a name="line882">882: </a>  }
+<a name="line883">883: </a>  cerr = WaitForCUDA();CHKERRCUDA(cerr);
+<a name="line884">884: </a>  <a href="../../../../../../docs/manualpages/Profiling/PetscLogGpuTimeEnd.html#PetscLogGpuTimeEnd">PetscLogGpuTimeEnd</a>();
+<a name="line885">885: </a>  <a href="../../../../../../docs/manualpages/Profiling/PetscLogGpuFlops.html#PetscLogGpuFlops">PetscLogGpuFlops</a>(<a href="../../../../../../docs/manualpages/Sys/PetscMax.html#PetscMax">PetscMax</a>(2.*N-1,0));
+<a name="line886">886: </a>  <a href="../../../../../../docs/manualpages/Mat/MatDenseCUDARestoreArrayRead.html#MatDenseCUDARestoreArrayRead">MatDenseCUDARestoreArrayRead</a>(X,&amp;dx);
+<a name="line887">887: </a>  <font color="#4169E1">if</font> (alpha != 0.0) {
+<a name="line888">888: </a>    <a href="../../../../../../docs/manualpages/Mat/MatDenseCUDARestoreArray.html#MatDenseCUDARestoreArray">MatDenseCUDARestoreArray</a>(Y,&amp;dy);
+<a name="line889">889: </a>  } <font color="#4169E1">else</font> {
+<a name="line890">890: </a>    <a href="../../../../../../docs/manualpages/Mat/MatDenseCUDARestoreArrayWrite.html#MatDenseCUDARestoreArrayWrite">MatDenseCUDARestoreArrayWrite</a>(Y,&amp;dy);
+<a name="line891">891: </a>  }
+<a name="line892">892: </a>  <font color="#4169E1">return</font>(0);
+<a name="line893">893: </a>}
+
+<a name="line895">895: </a><strong><font color="#4169E1"><a name="MatReset_SeqDenseCUDA"></a>static <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatReset_SeqDenseCUDA(<a href="../../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> A)</font></strong>
+<a name="line896">896: </a>{
+<a name="line897">897: </a>  Mat_SeqDenseCUDA *dA = (Mat_SeqDenseCUDA*)A-&gt;spptr;
+<a name="line898">898: </a>  cudaError_t      cerr;
+<a name="line899">899: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>   ierr;
+
+<a name="line902">902: </a>  <font color="#4169E1">if</font> (dA) {
+<a name="line903">903: </a>    <font color="#4169E1">if</font> (dA-&gt;unplacedarray) <a href="../../../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_ORDER,<font color="#666666">"<a href="../../../../../../docs/manualpages/Mat/MatDenseCUDAResetArray.html#MatDenseCUDAResetArray">MatDenseCUDAResetArray</a>() must be called first"</font>);
+<a name="line904">904: </a>    <font color="#4169E1">if</font> (!dA-&gt;user_alloc) { cerr = cudaFree(dA-&gt;d_v);CHKERRCUDA(cerr); }
+<a name="line905">905: </a>    cerr = cudaFree(dA-&gt;d_fact_ipiv);CHKERRCUDA(cerr);
+<a name="line906">906: </a>    cerr = cudaFree(dA-&gt;d_fact_info);CHKERRCUDA(cerr);
+<a name="line907">907: </a>    cerr = cudaFree(dA-&gt;d_fact_work);CHKERRCUDA(cerr);
+<a name="line908">908: </a>    <a href="../../../../../../docs/manualpages/Vec/VecDestroy.html#VecDestroy">VecDestroy</a>(&amp;dA-&gt;workvec);
+<a name="line909">909: </a>  }
+<a name="line910">910: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(A-&gt;spptr);
+<a name="line911">911: </a>  <font color="#4169E1">return</font>(0);
+<a name="line912">912: </a>}
+
+<a name="line914">914: </a><strong><font color="#4169E1"><a name="MatDestroy_SeqDenseCUDA"></a><a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatDestroy_SeqDenseCUDA(<a href="../../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> A)</font></strong>
+<a name="line915">915: </a>{
+<a name="line916">916: </a>  Mat_SeqDense   *a = (Mat_SeqDense*)A-&gt;data;
+
+<a name="line920">920: </a>  <font color="#B22222">/* prevent to copy back data if we own the data pointer */</font>
+<a name="line921">921: </a>  <font color="#4169E1">if</font> (!a-&gt;user_alloc) { A-&gt;offloadmask = <a href="../../../../../../docs/manualpages/Vec/PetscOffloadMask.html#PetscOffloadMask">PETSC_OFFLOAD_CPU</a>; }
+<a name="line922">922: </a>  MatConvert_SeqDenseCUDA_SeqDense(A,<a href="../../../../../../docs/manualpages/Mat/MATSEQDENSE.html#MATSEQDENSE">MATSEQDENSE</a>,<a href="../../../../../../docs/manualpages/Mat/MatReuse.html#MatReuse">MAT_INPLACE_MATRIX</a>,&amp;A);
+<a name="line923">923: </a>  MatDestroy_SeqDense(A);
+<a name="line924">924: </a>  <font color="#4169E1">return</font>(0);
+<a name="line925">925: </a>}
+
+<a name="line927">927: </a><strong><font color="#4169E1"><a name="MatDuplicate_SeqDenseCUDA"></a><a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatDuplicate_SeqDenseCUDA(<a href="../../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> A,<a href="../../../../../../docs/manualpages/Mat/MatDuplicateOption.html#MatDuplicateOption">MatDuplicateOption</a> cpvalues,<a href="../../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> *B)</font></strong>
+<a name="line928">928: </a>{
+
+<a name="line932">932: </a>  <a href="../../../../../../docs/manualpages/Mat/MatCreate.html#MatCreate">MatCreate</a>(<a href="../../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)A),B);
+<a name="line933">933: </a>  <a href="../../../../../../docs/manualpages/Mat/MatSetSizes.html#MatSetSizes">MatSetSizes</a>(*B,A-&gt;rmap-&gt;n,A-&gt;cmap-&gt;n,A-&gt;rmap-&gt;n,A-&gt;cmap-&gt;n);
+<a name="line934">934: </a>  <a href="../../../../../../docs/manualpages/Mat/MatSetType.html#MatSetType">MatSetType</a>(*B,((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)A)-&gt;type_name);
+<a name="line935">935: </a>  MatDuplicateNoCreate_SeqDense(*B,A,cpvalues);
+<a name="line936">936: </a>  <font color="#4169E1">if</font> (cpvalues == <a href="../../../../../../docs/manualpages/Mat/MatDuplicateOption.html#MatDuplicateOption">MAT_COPY_VALUES</a> &amp;&amp; A-&gt;offloadmask != <a href="../../../../../../docs/manualpages/Vec/PetscOffloadMask.html#PetscOffloadMask">PETSC_OFFLOAD_CPU</a>) {
+<a name="line937">937: </a>    Mat_SeqDense      *a = (Mat_SeqDense*)A-&gt;data;
+<a name="line938">938: </a>    const <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> *da;
+<a name="line939">939: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>       *db;
+<a name="line940">940: </a>    cudaError_t       cerr;
+<a name="line941">941: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>          ldb;
+
+<a name="line943">943: </a>    <a href="../../../../../../docs/manualpages/Mat/MatDenseCUDAGetArrayRead.html#MatDenseCUDAGetArrayRead">MatDenseCUDAGetArrayRead</a>(A,&amp;da);
+<a name="line944">944: </a>    <a href="../../../../../../docs/manualpages/Mat/MatDenseCUDAGetArrayWrite.html#MatDenseCUDAGetArrayWrite">MatDenseCUDAGetArrayWrite</a>(*B,&amp;db);
+<a name="line945">945: </a>    <a href="../../../../../../docs/manualpages/Mat/MatDenseGetLDA.html#MatDenseGetLDA">MatDenseGetLDA</a>(*B,&amp;ldb);
+<a name="line946">946: </a>    <font color="#4169E1">if</font> (a-&gt;lda &gt; A-&gt;rmap-&gt;n || ldb &gt; A-&gt;rmap-&gt;n) {
+<a name="line947">947: </a>      <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> j,m = A-&gt;rmap-&gt;n;
+
+<a name="line949">949: </a>      <font color="#4169E1">for</font> (j=0; j&lt;A-&gt;cmap-&gt;n; j++) { <font color="#B22222">/* it can be done better */</font>
+<a name="line950">950: </a>        cerr = cudaMemcpy(db+j*ldb,da+j*a-&gt;lda,m*<font color="#4169E1">sizeof</font>(<a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>),cudaMemcpyDeviceToDevice);CHKERRCUDA(cerr);
+<a name="line951">951: </a>      }
+<a name="line952">952: </a>    } <font color="#4169E1">else</font> {
+<a name="line953">953: </a>      cerr = cudaMemcpy(db,da,(<font color="#4169E1">sizeof</font>(<a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>)*A-&gt;cmap-&gt;n)*A-&gt;rmap-&gt;n,cudaMemcpyDeviceToDevice);CHKERRCUDA(cerr);
+<a name="line954">954: </a>    }
+<a name="line955">955: </a>    <a href="../../../../../../docs/manualpages/Mat/MatDenseCUDARestoreArrayRead.html#MatDenseCUDARestoreArrayRead">MatDenseCUDARestoreArrayRead</a>(A,&amp;da);
+<a name="line956">956: </a>    <a href="../../../../../../docs/manualpages/Mat/MatDenseCUDARestoreArrayWrite.html#MatDenseCUDARestoreArrayWrite">MatDenseCUDARestoreArrayWrite</a>(*B,&amp;db);
+<a name="line957">957: </a>    (*B)-&gt;offloadmask = <a href="../../../../../../docs/manualpages/Vec/PetscOffloadMask.html#PetscOffloadMask">PETSC_OFFLOAD_BOTH</a>;
+<a name="line958">958: </a>  }
+<a name="line959">959: </a>  <font color="#4169E1">return</font>(0);
+<a name="line960">960: </a>}
+
+<a name="line962">962: </a>#include <A href="../../../../../../include/petsc/private/vecimpl.h.html">&lt;petsc/private/vecimpl.h&gt;</A>
+
+<a name="line964">964: </a><strong><font color="#4169E1"><a name="MatGetColumnVector_SeqDenseCUDA"></a>static <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatGetColumnVector_SeqDenseCUDA(<a href="../../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> A,<a href="../../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> v,<a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> col)</font></strong>
+<a name="line965">965: </a>{
+<a name="line966">966: </a>  Mat_SeqDense     *a = (Mat_SeqDense*)A-&gt;data;
+<a name="line967">967: </a>  Mat_SeqDenseCUDA *dA = (Mat_SeqDenseCUDA*)A-&gt;spptr;
+<a name="line968">968: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>   ierr;
+<a name="line969">969: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>      *x;
+<a name="line970">970: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>        viscuda;
+<a name="line971">971: </a>  cudaError_t      cerr;
+
+<a name="line974">974: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscObjectTypeCompareAny.html#PetscObjectTypeCompareAny">PetscObjectTypeCompareAny</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)v,&amp;viscuda,<a href="../../../../../../docs/manualpages/Vec/VECSEQCUDA.html#VECSEQCUDA">VECSEQCUDA</a>,<a href="../../../../../../docs/manualpages/Vec/VECMPICUDA.html#VECMPICUDA">VECMPICUDA</a>,<a href="../../../../../../docs/manualpages/Vec/VECCUDA.html#VECCUDA">VECCUDA</a>,<font color="#666666">""</font>);
+<a name="line975">975: </a>  <font color="#4169E1">if</font> (viscuda &amp;&amp; !v-&gt;boundtocpu) { <font color="#B22222">/* update device data */</font>
+<a name="line976">976: </a>    <a href="../../../../../../docs/manualpages/Vec/VecCUDAGetArrayWrite.html#VecCUDAGetArrayWrite">VecCUDAGetArrayWrite</a>(v,&amp;x);
+<a name="line977">977: </a>    <font color="#4169E1">if</font> (A-&gt;offloadmask &amp; <a href="../../../../../../docs/manualpages/Vec/PetscOffloadMask.html#PetscOffloadMask">PETSC_OFFLOAD_GPU</a>) {
+<a name="line978">978: </a>      cerr = cudaMemcpy(x,dA-&gt;d_v + col*a-&gt;lda,A-&gt;rmap-&gt;n*<font color="#4169E1">sizeof</font>(<a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>),cudaMemcpyHostToHost);CHKERRCUDA(cerr);
+<a name="line979">979: </a>    } <font color="#4169E1">else</font> {
+<a name="line980">980: </a>      cerr = cudaMemcpy(x,a-&gt;v + col*a-&gt;lda,A-&gt;rmap-&gt;n*<font color="#4169E1">sizeof</font>(<a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>),cudaMemcpyHostToDevice);CHKERRCUDA(cerr);
+<a name="line981">981: </a>    }
+<a name="line982">982: </a>    <a href="../../../../../../docs/manualpages/Vec/VecCUDARestoreArrayWrite.html#VecCUDARestoreArrayWrite">VecCUDARestoreArrayWrite</a>(v,&amp;x);
+<a name="line983">983: </a>  } <font color="#4169E1">else</font> { <font color="#B22222">/* update host data */</font>
+<a name="line984">984: </a>    <a href="../../../../../../docs/manualpages/Vec/VecGetArrayWrite.html#VecGetArrayWrite">VecGetArrayWrite</a>(v,&amp;x);
+<a name="line985">985: </a>    <font color="#4169E1">if</font> (A-&gt;offloadmask &amp; <a href="../../../../../../docs/manualpages/Vec/PetscOffloadMask.html#PetscOffloadMask">PETSC_OFFLOAD_CPU</a>) {
+<a name="line986">986: </a>      <a href="../../../../../../docs/manualpages/Sys/PetscArraycpy.html#PetscArraycpy">PetscArraycpy</a>(x,a-&gt;v+col*a-&gt;lda,A-&gt;rmap-&gt;n);
+<a name="line987">987: </a>    } <font color="#4169E1">else</font> {
+<a name="line988">988: </a>      cerr = cudaMemcpy(x,dA-&gt;d_v + col*a-&gt;lda,A-&gt;rmap-&gt;n*<font color="#4169E1">sizeof</font>(<a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>),cudaMemcpyDeviceToHost);CHKERRCUDA(cerr);
+<a name="line989">989: </a>    }
+<a name="line990">990: </a>    <a href="../../../../../../docs/manualpages/Vec/VecRestoreArrayWrite.html#VecRestoreArrayWrite">VecRestoreArrayWrite</a>(v,&amp;x);
+<a name="line991">991: </a>  }
+<a name="line992">992: </a>  <font color="#4169E1">return</font>(0);
+<a name="line993">993: </a>}
+
+<a name="line995">995: </a><strong><font color="#4169E1"><a name="MatGetFactor_seqdense_cuda"></a>PETSC_INTERN <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatGetFactor_seqdense_cuda(<a href="../../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> A,<a href="../../../../../../docs/manualpages/Mat/MatFactorType.html#MatFactorType">MatFactorType</a> ftype,<a href="../../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> *fact)</font></strong>
+<a name="line996">996: </a>{
+
+<a name="line1000">1000: </a>  <a href="../../../../../../docs/manualpages/Mat/MatCreate.html#MatCreate">MatCreate</a>(<a href="../../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)A),fact);
+<a name="line1001">1001: </a>  <a href="../../../../../../docs/manualpages/Mat/MatSetSizes.html#MatSetSizes">MatSetSizes</a>(*fact,A-&gt;rmap-&gt;n,A-&gt;cmap-&gt;n,A-&gt;rmap-&gt;n,A-&gt;cmap-&gt;n);
+<a name="line1002">1002: </a>  <a href="../../../../../../docs/manualpages/Mat/MatSetType.html#MatSetType">MatSetType</a>(*fact,<a href="../../../../../../docs/manualpages/Mat/MATSEQDENSECUDA.html#MATSEQDENSECUDA">MATSEQDENSECUDA</a>);
+<a name="line1003">1003: </a>  <font color="#4169E1">if</font> (ftype == <a href="../../../../../../docs/manualpages/Mat/MatFactorType.html#MatFactorType">MAT_FACTOR_LU</a> || ftype == <a href="../../../../../../docs/manualpages/Mat/MatFactorType.html#MatFactorType">MAT_FACTOR_ILU</a>) {
+<a name="line1004">1004: </a>    (*fact)-&gt;ops-&gt;lufactorsymbolic = MatLUFactorSymbolic_SeqDense;
+<a name="line1005">1005: </a>  } <font color="#4169E1">else</font> {
+<a name="line1006">1006: </a>    (*fact)-&gt;ops-&gt;choleskyfactorsymbolic = MatCholeskyFactorSymbolic_SeqDense;
+<a name="line1007">1007: </a>  }
+<a name="line1008">1008: </a>  (*fact)-&gt;factortype = ftype;
+
+<a name="line1010">1010: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>((*fact)-&gt;solvertype);
+<a name="line1011">1011: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscStrallocpy.html#PetscStrallocpy">PetscStrallocpy</a>(MATSOLVERCUDA,&amp;(*fact)-&gt;solvertype);
+<a name="line1012">1012: </a>  <font color="#4169E1">return</font>(0);
+<a name="line1013">1013: </a>}
+
+<a name="line1015">1015: </a><strong><font color="#4169E1"><a name="MatDenseGetColumnVec_SeqDenseCUDA"></a>static <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatDenseGetColumnVec_SeqDenseCUDA(<a href="../../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> A,<a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> col,<a href="../../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> *v)</font></strong>
+<a name="line1016">1016: </a>{
+<a name="line1017">1017: </a>  Mat_SeqDense   *a = (Mat_SeqDense*)A-&gt;data;
+
+<a name="line1021">1021: </a>  <font color="#4169E1">if</font> (a-&gt;vecinuse) <a href="../../../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_ORDER,<font color="#666666">"Need to call <a href="../../../../../../docs/manualpages/Mat/MatDenseRestoreColumnVec.html#MatDenseRestoreColumnVec">MatDenseRestoreColumnVec</a>() first"</font>);
+<a name="line1022">1022: </a>  <font color="#4169E1">if</font> (a-&gt;matinuse) <a href="../../../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_ORDER,<font color="#666666">"Need to call <a href="../../../../../../docs/manualpages/Mat/MatDenseRestoreSubMatrix.html#MatDenseRestoreSubMatrix">MatDenseRestoreSubMatrix</a>() first"</font>);
+<a name="line1023">1023: </a>  <font color="#4169E1">if</font> (!a-&gt;cvec) {
+<a name="line1024">1024: </a>    <a href="../../../../../../docs/manualpages/Vec/VecCreateSeqCUDAWithArray.html#VecCreateSeqCUDAWithArray">VecCreateSeqCUDAWithArray</a>(<a href="../../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)A),A-&gt;rmap-&gt;bs,A-&gt;rmap-&gt;n,NULL,&amp;a-&gt;cvec);
+<a name="line1025">1025: </a>    PetscLogObjectParent((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)A,(<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)a-&gt;cvec);
+<a name="line1026">1026: </a>  }
+<a name="line1027">1027: </a>  a-&gt;vecinuse = col + 1;
+<a name="line1028">1028: </a>  <a href="../../../../../../docs/manualpages/Mat/MatDenseCUDAGetArray.html#MatDenseCUDAGetArray">MatDenseCUDAGetArray</a>(A,(<a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;a-&gt;ptrinuse);
+<a name="line1029">1029: </a>  <a href="../../../../../../docs/manualpages/Vec/VecCUDAPlaceArray.html#VecCUDAPlaceArray">VecCUDAPlaceArray</a>(a-&gt;cvec,a-&gt;ptrinuse + (size_t)col * (size_t)a-&gt;lda);
+<a name="line1030">1030: </a>  *v   = a-&gt;cvec;
+<a name="line1031">1031: </a>  <font color="#4169E1">return</font>(0);
+<a name="line1032">1032: </a>}
+
+<a name="line1034">1034: </a><strong><font color="#4169E1"><a name="MatDenseRestoreColumnVec_SeqDenseCUDA"></a>static <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatDenseRestoreColumnVec_SeqDenseCUDA(<a href="../../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> A,<a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> col,<a href="../../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> *v)</font></strong>
+<a name="line1035">1035: </a>{
+<a name="line1036">1036: </a>  Mat_SeqDense   *a = (Mat_SeqDense*)A-&gt;data;
+
+<a name="line1040">1040: </a>  <font color="#4169E1">if</font> (!a-&gt;vecinuse) <a href="../../../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_ORDER,<font color="#666666">"Need to call <a href="../../../../../../docs/manualpages/Mat/MatDenseGetColumnVec.html#MatDenseGetColumnVec">MatDenseGetColumnVec</a>() first"</font>);
+<a name="line1041">1041: </a>  <font color="#4169E1">if</font> (!a-&gt;cvec) <a href="../../../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_PLIB,<font color="#666666">"Missing internal column vector"</font>);
+<a name="line1042">1042: </a>  a-&gt;vecinuse = 0;
+<a name="line1043">1043: </a>  <a href="../../../../../../docs/manualpages/Mat/MatDenseCUDARestoreArray.html#MatDenseCUDARestoreArray">MatDenseCUDARestoreArray</a>(A,(<a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;a-&gt;ptrinuse);
+<a name="line1044">1044: </a>  <a href="../../../../../../docs/manualpages/Vec/VecCUDAResetArray.html#VecCUDAResetArray">VecCUDAResetArray</a>(a-&gt;cvec);
+<a name="line1045">1045: </a>  *v   = NULL;
+<a name="line1046">1046: </a>  <font color="#4169E1">return</font>(0);
+<a name="line1047">1047: </a>}
+
+<a name="line1049">1049: </a><strong><font color="#4169E1"><a name="MatDenseGetColumnVecRead_SeqDenseCUDA"></a>static <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatDenseGetColumnVecRead_SeqDenseCUDA(<a href="../../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> A,<a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> col,<a href="../../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> *v)</font></strong>
+<a name="line1050">1050: </a>{
+<a name="line1051">1051: </a>  Mat_SeqDense   *a = (Mat_SeqDense*)A-&gt;data;
+
+<a name="line1055">1055: </a>  <font color="#4169E1">if</font> (a-&gt;vecinuse) <a href="../../../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_ORDER,<font color="#666666">"Need to call <a href="../../../../../../docs/manualpages/Mat/MatDenseRestoreColumnVec.html#MatDenseRestoreColumnVec">MatDenseRestoreColumnVec</a>() first"</font>);
+<a name="line1056">1056: </a>  <font color="#4169E1">if</font> (a-&gt;matinuse) <a href="../../../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_ORDER,<font color="#666666">"Need to call <a href="../../../../../../docs/manualpages/Mat/MatDenseRestoreSubMatrix.html#MatDenseRestoreSubMatrix">MatDenseRestoreSubMatrix</a>() first"</font>);
+<a name="line1057">1057: </a>  <font color="#4169E1">if</font> (!a-&gt;cvec) {
+<a name="line1058">1058: </a>    <a href="../../../../../../docs/manualpages/Vec/VecCreateSeqCUDAWithArray.html#VecCreateSeqCUDAWithArray">VecCreateSeqCUDAWithArray</a>(<a href="../../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)A),A-&gt;rmap-&gt;bs,A-&gt;rmap-&gt;n,NULL,&amp;a-&gt;cvec);
+<a name="line1059">1059: </a>    PetscLogObjectParent((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)A,(<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)a-&gt;cvec);
+<a name="line1060">1060: </a>  }
+<a name="line1061">1061: </a>  a-&gt;vecinuse = col + 1;
+<a name="line1062">1062: </a>  <a href="../../../../../../docs/manualpages/Mat/MatDenseCUDAGetArrayRead.html#MatDenseCUDAGetArrayRead">MatDenseCUDAGetArrayRead</a>(A,&amp;a-&gt;ptrinuse);
+<a name="line1063">1063: </a>  <a href="../../../../../../docs/manualpages/Vec/VecCUDAPlaceArray.html#VecCUDAPlaceArray">VecCUDAPlaceArray</a>(a-&gt;cvec,a-&gt;ptrinuse + (size_t)col * (size_t)a-&gt;lda);
+<a name="line1064">1064: </a>  <a href="../../../../../../docs/manualpages/Vec/VecLockReadPush.html#VecLockReadPush">VecLockReadPush</a>(a-&gt;cvec);
+<a name="line1065">1065: </a>  *v   = a-&gt;cvec;
+<a name="line1066">1066: </a>  <font color="#4169E1">return</font>(0);
+<a name="line1067">1067: </a>}
+
+<a name="line1069">1069: </a><strong><font color="#4169E1"><a name="MatDenseRestoreColumnVecRead_SeqDenseCUDA"></a>static <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatDenseRestoreColumnVecRead_SeqDenseCUDA(<a href="../../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> A,<a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> col,<a href="../../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> *v)</font></strong>
+<a name="line1070">1070: </a>{
+<a name="line1071">1071: </a>  Mat_SeqDense   *a = (Mat_SeqDense*)A-&gt;data;
+
+<a name="line1075">1075: </a>  <font color="#4169E1">if</font> (!a-&gt;vecinuse) <a href="../../../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_ORDER,<font color="#666666">"Need to call <a href="../../../../../../docs/manualpages/Mat/MatDenseGetColumnVec.html#MatDenseGetColumnVec">MatDenseGetColumnVec</a>() first"</font>);
+<a name="line1076">1076: </a>  <font color="#4169E1">if</font> (!a-&gt;cvec) <a href="../../../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_PLIB,<font color="#666666">"Missing internal column vector"</font>);
+<a name="line1077">1077: </a>  a-&gt;vecinuse = 0;
+<a name="line1078">1078: </a>  <a href="../../../../../../docs/manualpages/Mat/MatDenseCUDARestoreArrayRead.html#MatDenseCUDARestoreArrayRead">MatDenseCUDARestoreArrayRead</a>(A,&amp;a-&gt;ptrinuse);
+<a name="line1079">1079: </a>  <a href="../../../../../../docs/manualpages/Vec/VecLockReadPop.html#VecLockReadPop">VecLockReadPop</a>(a-&gt;cvec);
+<a name="line1080">1080: </a>  <a href="../../../../../../docs/manualpages/Vec/VecCUDAResetArray.html#VecCUDAResetArray">VecCUDAResetArray</a>(a-&gt;cvec);
+<a name="line1081">1081: </a>  *v   = NULL;
+<a name="line1082">1082: </a>  <font color="#4169E1">return</font>(0);
+<a name="line1083">1083: </a>}
+
+<a name="line1085">1085: </a><strong><font color="#4169E1"><a name="MatDenseGetColumnVecWrite_SeqDenseCUDA"></a>static <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatDenseGetColumnVecWrite_SeqDenseCUDA(<a href="../../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> A,<a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> col,<a href="../../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> *v)</font></strong>
+<a name="line1086">1086: </a>{
+<a name="line1087">1087: </a>  Mat_SeqDense   *a = (Mat_SeqDense*)A-&gt;data;
+
+<a name="line1091">1091: </a>  <font color="#4169E1">if</font> (a-&gt;vecinuse) <a href="../../../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_ORDER,<font color="#666666">"Need to call <a href="../../../../../../docs/manualpages/Mat/MatDenseRestoreColumnVec.html#MatDenseRestoreColumnVec">MatDenseRestoreColumnVec</a>() first"</font>);
+<a name="line1092">1092: </a>  <font color="#4169E1">if</font> (a-&gt;matinuse) <a href="../../../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_ORDER,<font color="#666666">"Need to call <a href="../../../../../../docs/manualpages/Mat/MatDenseRestoreSubMatrix.html#MatDenseRestoreSubMatrix">MatDenseRestoreSubMatrix</a>() first"</font>);
+<a name="line1093">1093: </a>  <font color="#4169E1">if</font> (!a-&gt;cvec) {
+<a name="line1094">1094: </a>    <a href="../../../../../../docs/manualpages/Vec/VecCreateSeqCUDAWithArray.html#VecCreateSeqCUDAWithArray">VecCreateSeqCUDAWithArray</a>(<a href="../../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)A),A-&gt;rmap-&gt;bs,A-&gt;rmap-&gt;n,NULL,&amp;a-&gt;cvec);
+<a name="line1095">1095: </a>    PetscLogObjectParent((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)A,(<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)a-&gt;cvec);
+<a name="line1096">1096: </a>  }
+<a name="line1097">1097: </a>  a-&gt;vecinuse = col + 1;
+<a name="line1098">1098: </a>  <a href="../../../../../../docs/manualpages/Mat/MatDenseCUDAGetArrayWrite.html#MatDenseCUDAGetArrayWrite">MatDenseCUDAGetArrayWrite</a>(A,(<a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;a-&gt;ptrinuse);
+<a name="line1099">1099: </a>  <a href="../../../../../../docs/manualpages/Vec/VecCUDAPlaceArray.html#VecCUDAPlaceArray">VecCUDAPlaceArray</a>(a-&gt;cvec,a-&gt;ptrinuse + (size_t)col * (size_t)a-&gt;lda);
+<a name="line1100">1100: </a>  *v   = a-&gt;cvec;
+<a name="line1101">1101: </a>  <font color="#4169E1">return</font>(0);
+<a name="line1102">1102: </a>}
+
+<a name="line1104">1104: </a><strong><font color="#4169E1"><a name="MatDenseRestoreColumnVecWrite_SeqDenseCUDA"></a>static <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatDenseRestoreColumnVecWrite_SeqDenseCUDA(<a href="../../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> A,<a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> col,<a href="../../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> *v)</font></strong>
+<a name="line1105">1105: </a>{
+<a name="line1106">1106: </a>  Mat_SeqDense   *a = (Mat_SeqDense*)A-&gt;data;
+
+<a name="line1110">1110: </a>  <font color="#4169E1">if</font> (!a-&gt;vecinuse) <a href="../../../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_ORDER,<font color="#666666">"Need to call <a href="../../../../../../docs/manualpages/Mat/MatDenseGetColumnVec.html#MatDenseGetColumnVec">MatDenseGetColumnVec</a>() first"</font>);
+<a name="line1111">1111: </a>  <font color="#4169E1">if</font> (!a-&gt;cvec) <a href="../../../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_PLIB,<font color="#666666">"Missing internal column vector"</font>);
+<a name="line1112">1112: </a>  a-&gt;vecinuse = 0;
+<a name="line1113">1113: </a>  <a href="../../../../../../docs/manualpages/Mat/MatDenseCUDARestoreArrayWrite.html#MatDenseCUDARestoreArrayWrite">MatDenseCUDARestoreArrayWrite</a>(A,(<a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;a-&gt;ptrinuse);
+<a name="line1114">1114: </a>  <a href="../../../../../../docs/manualpages/Vec/VecCUDAResetArray.html#VecCUDAResetArray">VecCUDAResetArray</a>(a-&gt;cvec);
+<a name="line1115">1115: </a>  *v   = NULL;
+<a name="line1116">1116: </a>  <font color="#4169E1">return</font>(0);
+<a name="line1117">1117: </a>}
+
+<a name="line1119">1119: </a><strong><font color="#4169E1"><a name="MatDenseGetSubMatrix_SeqDenseCUDA"></a>static <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatDenseGetSubMatrix_SeqDenseCUDA(<a href="../../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> A,<a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> cbegin,<a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> cend,<a href="../../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> *v)</font></strong>
+<a name="line1120">1120: </a>{
+<a name="line1121">1121: </a>  Mat_SeqDense     *a = (Mat_SeqDense*)A-&gt;data;
+<a name="line1122">1122: </a>  Mat_SeqDenseCUDA *dA = (Mat_SeqDenseCUDA*)A-&gt;spptr;
+<a name="line1123">1123: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>   ierr;
+
+<a name="line1126">1126: </a>  <font color="#4169E1">if</font> (a-&gt;vecinuse) <a href="../../../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_ORDER,<font color="#666666">"Need to call <a href="../../../../../../docs/manualpages/Mat/MatDenseRestoreColumnVec.html#MatDenseRestoreColumnVec">MatDenseRestoreColumnVec</a>() first"</font>);
+<a name="line1127">1127: </a>  <font color="#4169E1">if</font> (a-&gt;matinuse) <a href="../../../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_ORDER,<font color="#666666">"Need to call <a href="../../../../../../docs/manualpages/Mat/MatDenseRestoreSubMatrix.html#MatDenseRestoreSubMatrix">MatDenseRestoreSubMatrix</a>() first"</font>);
+<a name="line1128">1128: </a>  <font color="#4169E1">if</font> (a-&gt;cmat &amp;&amp; cend-cbegin != a-&gt;cmat-&gt;cmap-&gt;N) {
+<a name="line1129">1129: </a>    <a href="../../../../../../docs/manualpages/Mat/MatDestroy.html#MatDestroy">MatDestroy</a>(&amp;a-&gt;cmat);
+<a name="line1130">1130: </a>  }
+<a name="line1131">1131: </a>  MatSeqDenseCUDACopyToGPU(A);
+<a name="line1132">1132: </a>  <font color="#4169E1">if</font> (!a-&gt;cmat) {
+<a name="line1133">1133: </a>    <a href="../../../../../../docs/manualpages/Mat/MatCreateDenseCUDA.html#MatCreateDenseCUDA">MatCreateDenseCUDA</a>(<a href="../../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)A),A-&gt;rmap-&gt;n,<a href="../../../../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a>,A-&gt;rmap-&gt;N,cend-cbegin,dA-&gt;d_v + (size_t)cbegin * (size_t)a-&gt;lda,&amp;a-&gt;cmat);
+<a name="line1134">1134: </a>    PetscLogObjectParent((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)A,(<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)a-&gt;cmat);
+<a name="line1135">1135: </a>  } <font color="#4169E1">else</font> {
+<a name="line1136">1136: </a>    <a href="../../../../../../docs/manualpages/Mat/MatDenseCUDAPlaceArray.html#MatDenseCUDAPlaceArray">MatDenseCUDAPlaceArray</a>(a-&gt;cmat,dA-&gt;d_v + (size_t)cbegin * (size_t)a-&gt;lda);
+<a name="line1137">1137: </a>  }
+<a name="line1138">1138: </a>  <a href="../../../../../../docs/manualpages/Mat/MatDenseSetLDA.html#MatDenseSetLDA">MatDenseSetLDA</a>(a-&gt;cmat,a-&gt;lda);
+<a name="line1139">1139: </a>  <font color="#4169E1">if</font> (a-&gt;v) { <a href="../../../../../../docs/manualpages/Mat/MatDensePlaceArray.html#MatDensePlaceArray">MatDensePlaceArray</a>(a-&gt;cmat,a-&gt;v + (size_t)cbegin * (size_t)a-&gt;lda); }
+<a name="line1140">1140: </a>  a-&gt;cmat-&gt;offloadmask = A-&gt;offloadmask;
+<a name="line1141">1141: </a>  a-&gt;matinuse = cbegin + 1;
+<a name="line1142">1142: </a>  *v = a-&gt;cmat;
+<a name="line1143">1143: </a>  <font color="#4169E1">return</font>(0);
+<a name="line1144">1144: </a>}
+
+<a name="line1146">1146: </a><strong><font color="#4169E1"><a name="MatDenseRestoreSubMatrix_SeqDenseCUDA"></a>static <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatDenseRestoreSubMatrix_SeqDenseCUDA(<a href="../../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> A,<a href="../../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> *v)</font></strong>
+<a name="line1147">1147: </a>{
+<a name="line1148">1148: </a>  Mat_SeqDense   *a = (Mat_SeqDense*)A-&gt;data;
+
+<a name="line1152">1152: </a>  <font color="#4169E1">if</font> (!a-&gt;matinuse) <a href="../../../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_ORDER,<font color="#666666">"Need to call <a href="../../../../../../docs/manualpages/Mat/MatDenseGetSubMatrix.html#MatDenseGetSubMatrix">MatDenseGetSubMatrix</a>() first"</font>);
+<a name="line1153">1153: </a>  <font color="#4169E1">if</font> (!a-&gt;cmat) <a href="../../../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_PLIB,<font color="#666666">"Missing internal column matrix"</font>);
+<a name="line1154">1154: </a>  <font color="#4169E1">if</font> (*v != a-&gt;cmat) <a href="../../../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_ARG_WRONG,<font color="#666666">"Not the matrix obtained from <a href="../../../../../../docs/manualpages/Mat/MatDenseGetSubMatrix.html#MatDenseGetSubMatrix">MatDenseGetSubMatrix</a>()"</font>);
+<a name="line1155">1155: </a>  a-&gt;matinuse = 0;
+<a name="line1156">1156: </a>  A-&gt;offloadmask = <a href="../../../../../../docs/manualpages/Vec/PetscOffloadMask.html#PetscOffloadMask">PETSC_OFFLOAD_GPU</a>;
+<a name="line1157">1157: </a>  <a href="../../../../../../docs/manualpages/Mat/MatDenseCUDAResetArray.html#MatDenseCUDAResetArray">MatDenseCUDAResetArray</a>(a-&gt;cmat);
+<a name="line1158">1158: </a>  <a href="../../../../../../docs/manualpages/Mat/MatDenseResetArray.html#MatDenseResetArray">MatDenseResetArray</a>(a-&gt;cmat);
+<a name="line1159">1159: </a>  *v = NULL;
+<a name="line1160">1160: </a>  <font color="#4169E1">return</font>(0);
+<a name="line1161">1161: </a>}
+
+<a name="line1163">1163: </a><strong><font color="#4169E1"><a name="MatDenseSetLDA_SeqDenseCUDA"></a>static <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  MatDenseSetLDA_SeqDenseCUDA(<a href="../../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> A,<a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> lda)</font></strong>
+<a name="line1164">1164: </a>{
+<a name="line1165">1165: </a>  Mat_SeqDense     *cA = (Mat_SeqDense*)A-&gt;data;
+<a name="line1166">1166: </a>  Mat_SeqDenseCUDA *dA = (Mat_SeqDenseCUDA*)A-&gt;spptr;
+<a name="line1167">1167: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>        data;
+
+<a name="line1170">1170: </a>  data = (<a href="../../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>)((A-&gt;rmap-&gt;n &gt; 0 &amp;&amp; A-&gt;cmap-&gt;n &gt; 0) ? (dA-&gt;d_v ? <a href="../../../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a> : <a href="../../../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>) : <a href="../../../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>);
+<a name="line1171">1171: </a>  <font color="#4169E1">if</font> (!dA-&gt;user_alloc &amp;&amp; data &amp;&amp; cA-&gt;lda!=lda) <a href="../../../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_ORDER,<font color="#666666">"LDA cannot be changed after allocation of internal storage"</font>);
+<a name="line1172">1172: </a>  <font color="#4169E1">if</font> (lda &lt; A-&gt;rmap-&gt;n) <a href="../../../../../../docs/manualpages/Sys/SETERRQ2.html#SETERRQ2">SETERRQ2</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_ARG_SIZ,<font color="#666666">"LDA %D must be at least matrix dimension %D"</font>,lda,A-&gt;rmap-&gt;n);
+<a name="line1173">1173: </a>  cA-&gt;lda = lda;
+<a name="line1174">1174: </a>  <font color="#4169E1">return</font>(0);
+<a name="line1175">1175: </a>}
+
+<a name="line1177">1177: </a><strong><font color="#4169E1"><a name="MatBindToCPU_SeqDenseCUDA"></a>static <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatBindToCPU_SeqDenseCUDA(<a href="../../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> A,<a href="../../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> flg)</font></strong>
+<a name="line1178">1178: </a>{
+<a name="line1179">1179: </a>  Mat_SeqDense   *a = (Mat_SeqDense*)A-&gt;data;
+
+<a name="line1183">1183: </a>  <font color="#4169E1">if</font> (a-&gt;vecinuse) <a href="../../../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_ORDER,<font color="#666666">"Need to call <a href="../../../../../../docs/manualpages/Mat/MatDenseRestoreColumnVec.html#MatDenseRestoreColumnVec">MatDenseRestoreColumnVec</a>() first"</font>);
+<a name="line1184">1184: </a>  <font color="#4169E1">if</font> (a-&gt;matinuse) <a href="../../../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_ORDER,<font color="#666666">"Need to call <a href="../../../../../../docs/manualpages/Mat/MatDenseRestoreSubMatrix.html#MatDenseRestoreSubMatrix">MatDenseRestoreSubMatrix</a>() first"</font>);
+<a name="line1185">1185: </a>  A-&gt;boundtocpu = flg;
+<a name="line1186">1186: </a>  <font color="#4169E1">if</font> (!flg) {
+<a name="line1187">1187: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> iscuda;
+
+<a name="line1189">1189: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscObjectTypeCompare.html#PetscObjectTypeCompare">PetscObjectTypeCompare</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)a-&gt;cvec,<a href="../../../../../../docs/manualpages/Vec/VECSEQCUDA.html#VECSEQCUDA">VECSEQCUDA</a>,&amp;iscuda);
+<a name="line1190">1190: </a>    <font color="#4169E1">if</font> (!iscuda) {
+<a name="line1191">1191: </a>      <a href="../../../../../../docs/manualpages/Vec/VecDestroy.html#VecDestroy">VecDestroy</a>(&amp;a-&gt;cvec);
+<a name="line1192">1192: </a>    }
+<a name="line1193">1193: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscObjectTypeCompare.html#PetscObjectTypeCompare">PetscObjectTypeCompare</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)a-&gt;cmat,<a href="../../../../../../docs/manualpages/Mat/MATSEQDENSECUDA.html#MATSEQDENSECUDA">MATSEQDENSECUDA</a>,&amp;iscuda);
+<a name="line1194">1194: </a>    <font color="#4169E1">if</font> (!iscuda) {
+<a name="line1195">1195: </a>      <a href="../../../../../../docs/manualpages/Mat/MatDestroy.html#MatDestroy">MatDestroy</a>(&amp;a-&gt;cmat);
+<a name="line1196">1196: </a>    }
+<a name="line1197">1197: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscObjectComposeFunction.html#PetscObjectComposeFunction">PetscObjectComposeFunction</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)A,<font color="#666666">"MatDenseGetArray_C"</font>,MatDenseGetArray_SeqDenseCUDA);
+<a name="line1198">1198: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscObjectComposeFunction.html#PetscObjectComposeFunction">PetscObjectComposeFunction</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)A,<font color="#666666">"MatDenseGetArrayRead_C"</font>,MatDenseGetArrayRead_SeqDenseCUDA);
+<a name="line1199">1199: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscObjectComposeFunction.html#PetscObjectComposeFunction">PetscObjectComposeFunction</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)A,<font color="#666666">"MatDenseGetArrayWrite_C"</font>,MatDenseGetArrayWrite_SeqDenseCUDA);
+<a name="line1200">1200: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscObjectComposeFunction.html#PetscObjectComposeFunction">PetscObjectComposeFunction</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)A,<font color="#666666">"MatDenseGetColumnVec_C"</font>,MatDenseGetColumnVec_SeqDenseCUDA);
+<a name="line1201">1201: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscObjectComposeFunction.html#PetscObjectComposeFunction">PetscObjectComposeFunction</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)A,<font color="#666666">"MatDenseRestoreColumnVec_C"</font>,MatDenseRestoreColumnVec_SeqDenseCUDA);
+<a name="line1202">1202: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscObjectComposeFunction.html#PetscObjectComposeFunction">PetscObjectComposeFunction</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)A,<font color="#666666">"MatDenseGetColumnVecRead_C"</font>,MatDenseGetColumnVecRead_SeqDenseCUDA);
+<a name="line1203">1203: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscObjectComposeFunction.html#PetscObjectComposeFunction">PetscObjectComposeFunction</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)A,<font color="#666666">"MatDenseRestoreColumnVecRead_C"</font>,MatDenseRestoreColumnVecRead_SeqDenseCUDA);
+<a name="line1204">1204: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscObjectComposeFunction.html#PetscObjectComposeFunction">PetscObjectComposeFunction</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)A,<font color="#666666">"MatDenseGetColumnVecWrite_C"</font>,MatDenseGetColumnVecWrite_SeqDenseCUDA);
+<a name="line1205">1205: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscObjectComposeFunction.html#PetscObjectComposeFunction">PetscObjectComposeFunction</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)A,<font color="#666666">"MatDenseRestoreColumnVecWrite_C"</font>,MatDenseRestoreColumnVecWrite_SeqDenseCUDA);
+<a name="line1206">1206: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscObjectComposeFunction.html#PetscObjectComposeFunction">PetscObjectComposeFunction</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)A,<font color="#666666">"MatDenseGetSubMatrix_C"</font>,MatDenseGetSubMatrix_SeqDenseCUDA);
+<a name="line1207">1207: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscObjectComposeFunction.html#PetscObjectComposeFunction">PetscObjectComposeFunction</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)A,<font color="#666666">"MatDenseRestoreSubMatrix_C"</font>,MatDenseRestoreSubMatrix_SeqDenseCUDA);
+<a name="line1208">1208: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscObjectComposeFunction.html#PetscObjectComposeFunction">PetscObjectComposeFunction</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)A,<font color="#666666">"MatDenseSetLDA_C"</font>,MatDenseSetLDA_SeqDenseCUDA);
+
+<a name="line1210">1210: </a>    A-&gt;ops-&gt;duplicate               = MatDuplicate_SeqDenseCUDA;
+<a name="line1211">1211: </a>    A-&gt;ops-&gt;mult                    = MatMult_SeqDenseCUDA;
+<a name="line1212">1212: </a>    A-&gt;ops-&gt;multadd                 = MatMultAdd_SeqDenseCUDA;
+<a name="line1213">1213: </a>    A-&gt;ops-&gt;multtranspose           = MatMultTranspose_SeqDenseCUDA;
+<a name="line1214">1214: </a>    A-&gt;ops-&gt;multtransposeadd        = MatMultTransposeAdd_SeqDenseCUDA;
+<a name="line1215">1215: </a>    A-&gt;ops-&gt;matmultnumeric          = MatMatMultNumeric_SeqDenseCUDA_SeqDenseCUDA;
+<a name="line1216">1216: </a>    A-&gt;ops-&gt;mattransposemultnumeric = MatMatTransposeMultNumeric_SeqDenseCUDA_SeqDenseCUDA;
+<a name="line1217">1217: </a>    A-&gt;ops-&gt;transposematmultnumeric = MatTransposeMatMultNumeric_SeqDenseCUDA_SeqDenseCUDA;
+<a name="line1218">1218: </a>    A-&gt;ops-&gt;axpy                    = MatAXPY_SeqDenseCUDA;
+<a name="line1219">1219: </a>    A-&gt;ops-&gt;choleskyfactor          = MatCholeskyFactor_SeqDenseCUDA;
+<a name="line1220">1220: </a>    A-&gt;ops-&gt;lufactor                = MatLUFactor_SeqDenseCUDA;
+<a name="line1221">1221: </a>    A-&gt;ops-&gt;productsetfromoptions   = MatProductSetFromOptions_SeqDenseCUDA;
+<a name="line1222">1222: </a>    A-&gt;ops-&gt;getcolumnvector         = MatGetColumnVector_SeqDenseCUDA;
+<a name="line1223">1223: </a>    A-&gt;ops-&gt;scale                   = MatScale_SeqDenseCUDA;
+<a name="line1224">1224: </a>  } <font color="#4169E1">else</font> {
+<a name="line1225">1225: </a>    <font color="#B22222">/* make sure we have an up-to-date copy on the CPU */</font>
+<a name="line1226">1226: </a>    MatSeqDenseCUDACopyFromGPU(A);
+<a name="line1227">1227: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscObjectComposeFunction.html#PetscObjectComposeFunction">PetscObjectComposeFunction</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)A,<font color="#666666">"MatDenseGetArray_C"</font>,MatDenseGetArray_SeqDense);
+<a name="line1228">1228: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscObjectComposeFunction.html#PetscObjectComposeFunction">PetscObjectComposeFunction</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)A,<font color="#666666">"MatDenseGetArrayRead_C"</font>,MatDenseGetArray_SeqDense);
+<a name="line1229">1229: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscObjectComposeFunction.html#PetscObjectComposeFunction">PetscObjectComposeFunction</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)A,<font color="#666666">"MatDenseGetArrayWrite_C"</font>,MatDenseGetArray_SeqDense);
+<a name="line1230">1230: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscObjectComposeFunction.html#PetscObjectComposeFunction">PetscObjectComposeFunction</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)A,<font color="#666666">"MatDenseGetColumnVec_C"</font>,MatDenseGetColumnVec_SeqDense);
+<a name="line1231">1231: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscObjectComposeFunction.html#PetscObjectComposeFunction">PetscObjectComposeFunction</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)A,<font color="#666666">"MatDenseRestoreColumnVec_C"</font>,MatDenseRestoreColumnVec_SeqDense);
+<a name="line1232">1232: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscObjectComposeFunction.html#PetscObjectComposeFunction">PetscObjectComposeFunction</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)A,<font color="#666666">"MatDenseGetColumnVecRead_C"</font>,MatDenseGetColumnVecRead_SeqDense);
+<a name="line1233">1233: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscObjectComposeFunction.html#PetscObjectComposeFunction">PetscObjectComposeFunction</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)A,<font color="#666666">"MatDenseRestoreColumnVecRead_C"</font>,MatDenseRestoreColumnVecRead_SeqDense);
+<a name="line1234">1234: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscObjectComposeFunction.html#PetscObjectComposeFunction">PetscObjectComposeFunction</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)A,<font color="#666666">"MatDenseGetColumnVecWrite_C"</font>,MatDenseGetColumnVecWrite_SeqDense);
+<a name="line1235">1235: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscObjectComposeFunction.html#PetscObjectComposeFunction">PetscObjectComposeFunction</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)A,<font color="#666666">"MatDenseRestoreColumnVecWrite_C"</font>,MatDenseRestoreColumnVecWrite_SeqDense);
+<a name="line1236">1236: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscObjectComposeFunction.html#PetscObjectComposeFunction">PetscObjectComposeFunction</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)A,<font color="#666666">"MatDenseGetSubMatrix_C"</font>,MatDenseGetSubMatrix_SeqDense);
+<a name="line1237">1237: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscObjectComposeFunction.html#PetscObjectComposeFunction">PetscObjectComposeFunction</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)A,<font color="#666666">"MatDenseRestoreSubMatrix_C"</font>,MatDenseRestoreSubMatrix_SeqDense);
+<a name="line1238">1238: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscObjectComposeFunction.html#PetscObjectComposeFunction">PetscObjectComposeFunction</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)A,<font color="#666666">"MatDenseSetLDA_C"</font>,MatDenseSetLDA_SeqDense);
+
+<a name="line1240">1240: </a>    A-&gt;ops-&gt;duplicate               = MatDuplicate_SeqDense;
+<a name="line1241">1241: </a>    A-&gt;ops-&gt;mult                    = MatMult_SeqDense;
+<a name="line1242">1242: </a>    A-&gt;ops-&gt;multadd                 = MatMultAdd_SeqDense;
+<a name="line1243">1243: </a>    A-&gt;ops-&gt;multtranspose           = MatMultTranspose_SeqDense;
+<a name="line1244">1244: </a>    A-&gt;ops-&gt;multtransposeadd        = MatMultTransposeAdd_SeqDense;
+<a name="line1245">1245: </a>    A-&gt;ops-&gt;productsetfromoptions   = MatProductSetFromOptions_SeqDense;
+<a name="line1246">1246: </a>    A-&gt;ops-&gt;matmultnumeric          = MatMatMultNumeric_SeqDense_SeqDense;
+<a name="line1247">1247: </a>    A-&gt;ops-&gt;mattransposemultnumeric = MatMatTransposeMultNumeric_SeqDense_SeqDense;
+<a name="line1248">1248: </a>    A-&gt;ops-&gt;transposematmultnumeric = MatTransposeMatMultNumeric_SeqDense_SeqDense;
+<a name="line1249">1249: </a>    A-&gt;ops-&gt;axpy                    = MatAXPY_SeqDense;
+<a name="line1250">1250: </a>    A-&gt;ops-&gt;choleskyfactor          = MatCholeskyFactor_SeqDense;
+<a name="line1251">1251: </a>    A-&gt;ops-&gt;lufactor                = MatLUFactor_SeqDense;
+<a name="line1252">1252: </a>    A-&gt;ops-&gt;productsetfromoptions   = MatProductSetFromOptions_SeqDense;
+<a name="line1253">1253: </a>    A-&gt;ops-&gt;getcolumnvector         = MatGetColumnVector_SeqDense;
+<a name="line1254">1254: </a>    A-&gt;ops-&gt;scale                   = MatScale_SeqDense;
+<a name="line1255">1255: </a>  }
+<a name="line1256">1256: </a>  <font color="#4169E1">if</font> (a-&gt;cmat) {
+<a name="line1257">1257: </a>    <a href="../../../../../../docs/manualpages/Mat/MatBindToCPU.html#MatBindToCPU">MatBindToCPU</a>(a-&gt;cmat,flg);
+<a name="line1258">1258: </a>  }
+<a name="line1259">1259: </a>  <font color="#4169E1">return</font>(0);
+<a name="line1260">1260: </a>}
+
+<a name="line1262">1262: </a><strong><font color="#4169E1"><a name="MatConvert_SeqDenseCUDA_SeqDense"></a><a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatConvert_SeqDenseCUDA_SeqDense(<a href="../../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> M,<a href="../../../../../../docs/manualpages/Mat/MatType.html#MatType">MatType</a> type,<a href="../../../../../../docs/manualpages/Mat/MatReuse.html#MatReuse">MatReuse</a> reuse,<a href="../../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> *newmat)</font></strong>
+<a name="line1263">1263: </a>{
+<a name="line1264">1264: </a>  <a href="../../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a>              B;
+<a name="line1265">1265: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>   ierr;
+
+<a name="line1268">1268: </a>  <font color="#4169E1">if</font> (reuse == <a href="../../../../../../docs/manualpages/Mat/MatReuse.html#MatReuse">MAT_REUSE_MATRIX</a> || reuse == <a href="../../../../../../docs/manualpages/Mat/MatReuse.html#MatReuse">MAT_INITIAL_MATRIX</a>) {
+<a name="line1269">1269: </a>    <font color="#B22222">/* TODO these cases should be optimized */</font>
+<a name="line1270">1270: </a>    MatConvert_Basic(M,type,reuse,newmat);
+<a name="line1271">1271: </a>    <font color="#4169E1">return</font>(0);
+<a name="line1272">1272: </a>  }
+
+<a name="line1274">1274: </a>  B    = *newmat;
+<a name="line1275">1275: </a>  MatBindToCPU_SeqDenseCUDA(B,<a href="../../../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>);
+<a name="line1276">1276: </a>  MatReset_SeqDenseCUDA(B);
+<a name="line1277">1277: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(B-&gt;defaultvectype);
+<a name="line1278">1278: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscStrallocpy.html#PetscStrallocpy">PetscStrallocpy</a>(<a href="../../../../../../docs/manualpages/Vec/VECSTANDARD.html#VECSTANDARD">VECSTANDARD</a>,&amp;B-&gt;defaultvectype);
+<a name="line1279">1279: </a>  PetscObjectChangeTypeName((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)B,<a href="../../../../../../docs/manualpages/Mat/MATSEQDENSE.html#MATSEQDENSE">MATSEQDENSE</a>);
+<a name="line1280">1280: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscObjectComposeFunction.html#PetscObjectComposeFunction">PetscObjectComposeFunction</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)B,<font color="#666666">"MatConvert_seqdensecuda_seqdense_C"</font>,NULL);
+<a name="line1281">1281: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscObjectComposeFunction.html#PetscObjectComposeFunction">PetscObjectComposeFunction</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)B,<font color="#666666">"MatDenseCUDAGetArray_C"</font>,NULL);
+<a name="line1282">1282: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscObjectComposeFunction.html#PetscObjectComposeFunction">PetscObjectComposeFunction</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)B,<font color="#666666">"MatDenseCUDAGetArrayRead_C"</font>,NULL);
+<a name="line1283">1283: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscObjectComposeFunction.html#PetscObjectComposeFunction">PetscObjectComposeFunction</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)B,<font color="#666666">"MatDenseCUDAGetArrayWrite_C"</font>,NULL);
+<a name="line1284">1284: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscObjectComposeFunction.html#PetscObjectComposeFunction">PetscObjectComposeFunction</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)B,<font color="#666666">"MatDenseCUDARestoreArray_C"</font>,NULL);
+<a name="line1285">1285: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscObjectComposeFunction.html#PetscObjectComposeFunction">PetscObjectComposeFunction</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)B,<font color="#666666">"MatDenseCUDARestoreArrayRead_C"</font>,NULL);
+<a name="line1286">1286: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscObjectComposeFunction.html#PetscObjectComposeFunction">PetscObjectComposeFunction</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)B,<font color="#666666">"MatDenseCUDARestoreArrayWrite_C"</font>,NULL);
+<a name="line1287">1287: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscObjectComposeFunction.html#PetscObjectComposeFunction">PetscObjectComposeFunction</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)B,<font color="#666666">"MatDenseCUDAPlaceArray_C"</font>,NULL);
+<a name="line1288">1288: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscObjectComposeFunction.html#PetscObjectComposeFunction">PetscObjectComposeFunction</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)B,<font color="#666666">"MatDenseCUDAResetArray_C"</font>,NULL);
+<a name="line1289">1289: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscObjectComposeFunction.html#PetscObjectComposeFunction">PetscObjectComposeFunction</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)B,<font color="#666666">"MatDenseCUDAReplaceArray_C"</font>,NULL);
+<a name="line1290">1290: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscObjectComposeFunction.html#PetscObjectComposeFunction">PetscObjectComposeFunction</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)B,<font color="#666666">"MatProductSetFromOptions_seqaij_seqdensecuda_C"</font>,NULL);
+
+<a name="line1292">1292: </a>  B-&gt;ops-&gt;bindtocpu = NULL;
+<a name="line1293">1293: </a>  B-&gt;ops-&gt;destroy = MatDestroy_SeqDense;
+<a name="line1294">1294: </a>  B-&gt;offloadmask = <a href="../../../../../../docs/manualpages/Vec/PetscOffloadMask.html#PetscOffloadMask">PETSC_OFFLOAD_CPU</a>;
+<a name="line1295">1295: </a>  <font color="#4169E1">return</font>(0);
+<a name="line1296">1296: </a>}
+
+<a name="line1298">1298: </a><strong><font color="#4169E1"><a name="MatConvert_SeqDense_SeqDenseCUDA"></a><a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatConvert_SeqDense_SeqDenseCUDA(<a href="../../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> M,<a href="../../../../../../docs/manualpages/Mat/MatType.html#MatType">MatType</a> type,<a href="../../../../../../docs/manualpages/Mat/MatReuse.html#MatReuse">MatReuse</a> reuse,<a href="../../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> *newmat)</font></strong>
+<a name="line1299">1299: </a>{
+<a name="line1300">1300: </a>  Mat_SeqDenseCUDA *dB;
+<a name="line1301">1301: </a>  <a href="../../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a>              B;
+<a name="line1302">1302: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>   ierr;
+
+<a name="line1305">1305: </a>  <font color="#4169E1">if</font> (reuse == <a href="../../../../../../docs/manualpages/Mat/MatReuse.html#MatReuse">MAT_REUSE_MATRIX</a> || reuse == <a href="../../../../../../docs/manualpages/Mat/MatReuse.html#MatReuse">MAT_INITIAL_MATRIX</a>) {
+<a name="line1306">1306: </a>    <font color="#B22222">/* TODO these cases should be optimized */</font>
+<a name="line1307">1307: </a>    MatConvert_Basic(M,type,reuse,newmat);
+<a name="line1308">1308: </a>    <font color="#4169E1">return</font>(0);
+<a name="line1309">1309: </a>  }
+
+<a name="line1311">1311: </a>  B    = *newmat;
+<a name="line1312">1312: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(B-&gt;defaultvectype);
+<a name="line1313">1313: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscStrallocpy.html#PetscStrallocpy">PetscStrallocpy</a>(<a href="../../../../../../docs/manualpages/Vec/VECCUDA.html#VECCUDA">VECCUDA</a>,&amp;B-&gt;defaultvectype);
+<a name="line1314">1314: </a>  PetscObjectChangeTypeName((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)B,<a href="../../../../../../docs/manualpages/Mat/MATSEQDENSECUDA.html#MATSEQDENSECUDA">MATSEQDENSECUDA</a>);
+<a name="line1315">1315: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscObjectComposeFunction.html#PetscObjectComposeFunction">PetscObjectComposeFunction</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)B,<font color="#666666">"MatConvert_seqdensecuda_seqdense_C"</font>,            MatConvert_SeqDenseCUDA_SeqDense);
+<a name="line1316">1316: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscObjectComposeFunction.html#PetscObjectComposeFunction">PetscObjectComposeFunction</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)B,<font color="#666666">"MatDenseCUDAGetArray_C"</font>,                        MatDenseCUDAGetArray_SeqDenseCUDA);
+<a name="line1317">1317: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscObjectComposeFunction.html#PetscObjectComposeFunction">PetscObjectComposeFunction</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)B,<font color="#666666">"MatDenseCUDAGetArrayRead_C"</font>,                    MatDenseCUDAGetArrayRead_SeqDenseCUDA);
+<a name="line1318">1318: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscObjectComposeFunction.html#PetscObjectComposeFunction">PetscObjectComposeFunction</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)B,<font color="#666666">"MatDenseCUDAGetArrayWrite_C"</font>,                   MatDenseCUDAGetArrayWrite_SeqDenseCUDA);
+<a name="line1319">1319: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscObjectComposeFunction.html#PetscObjectComposeFunction">PetscObjectComposeFunction</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)B,<font color="#666666">"MatDenseCUDARestoreArray_C"</font>,                    MatDenseCUDARestoreArray_SeqDenseCUDA);
+<a name="line1320">1320: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscObjectComposeFunction.html#PetscObjectComposeFunction">PetscObjectComposeFunction</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)B,<font color="#666666">"MatDenseCUDARestoreArrayRead_C"</font>,                MatDenseCUDARestoreArrayRead_SeqDenseCUDA);
+<a name="line1321">1321: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscObjectComposeFunction.html#PetscObjectComposeFunction">PetscObjectComposeFunction</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)B,<font color="#666666">"MatDenseCUDARestoreArrayWrite_C"</font>,               MatDenseCUDARestoreArrayWrite_SeqDenseCUDA);
+<a name="line1322">1322: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscObjectComposeFunction.html#PetscObjectComposeFunction">PetscObjectComposeFunction</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)B,<font color="#666666">"MatDenseCUDAPlaceArray_C"</font>,                      MatDenseCUDAPlaceArray_SeqDenseCUDA);
+<a name="line1323">1323: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscObjectComposeFunction.html#PetscObjectComposeFunction">PetscObjectComposeFunction</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)B,<font color="#666666">"MatDenseCUDAResetArray_C"</font>,                      MatDenseCUDAResetArray_SeqDenseCUDA);
+<a name="line1324">1324: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscObjectComposeFunction.html#PetscObjectComposeFunction">PetscObjectComposeFunction</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)B,<font color="#666666">"MatDenseCUDAReplaceArray_C"</font>,                    MatDenseCUDAReplaceArray_SeqDenseCUDA);
+<a name="line1325">1325: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscObjectComposeFunction.html#PetscObjectComposeFunction">PetscObjectComposeFunction</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)B,<font color="#666666">"MatProductSetFromOptions_seqaij_seqdensecuda_C"</font>,MatProductSetFromOptions_SeqAIJ_SeqDense);
+
+<a name="line1327">1327: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscNewLog.html#PetscNewLog">PetscNewLog</a>(B,&amp;dB);
+<a name="line1328">1328: </a>  B-&gt;spptr = dB;
+
+<a name="line1330">1330: </a>  B-&gt;offloadmask = <a href="../../../../../../docs/manualpages/Vec/PetscOffloadMask.html#PetscOffloadMask">PETSC_OFFLOAD_UNALLOCATED</a>;
+
+<a name="line1332">1332: </a>  MatBindToCPU_SeqDenseCUDA(B,<a href="../../../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>);
+<a name="line1333">1333: </a>  B-&gt;ops-&gt;bindtocpu = MatBindToCPU_SeqDenseCUDA;
+<a name="line1334">1334: </a>  B-&gt;ops-&gt;destroy  = MatDestroy_SeqDenseCUDA;
+<a name="line1335">1335: </a>  <font color="#4169E1">return</font>(0);
+<a name="line1336">1336: </a>}
+
+<a name="line1338">1338: </a><font color="#B22222">/*@C</font>
+<a name="line1339">1339: </a><font color="#B22222">   <a href="../../../../../../docs/manualpages/Mat/MatCreateSeqDenseCUDA.html#MatCreateSeqDenseCUDA">MatCreateSeqDenseCUDA</a> - Creates a sequential matrix in dense format using CUDA.</font>
+
+<a name="line1341">1341: </a><font color="#B22222">   Collective</font>
+
+<a name="line1343">1343: </a><font color="#B22222">   Input Parameters:</font>
+<a name="line1344">1344: </a><font color="#B22222">+  comm - MPI communicator</font>
+<a name="line1345">1345: </a><font color="#B22222">.  m - number of rows</font>
+<a name="line1346">1346: </a><font color="#B22222">.  n - number of columns</font>
+<a name="line1347">1347: </a><font color="#B22222">-  data - optional location of GPU matrix data.  Set data=NULL for PETSc</font>
+<a name="line1348">1348: </a><font color="#B22222">   to control matrix memory allocation.</font>
+
+<a name="line1350">1350: </a><font color="#B22222">   Output Parameter:</font>
+<a name="line1351">1351: </a><font color="#B22222">.  A - the matrix</font>
+
+<a name="line1353">1353: </a><font color="#B22222">   Notes:</font>
+
+<a name="line1355">1355: </a><font color="#B22222">   Level: intermediate</font>
+
+<a name="line1357">1357: </a><font color="#B22222">.seealso: <a href="../../../../../../docs/manualpages/Mat/MatCreate.html#MatCreate">MatCreate</a>(), <a href="../../../../../../docs/manualpages/Mat/MatCreateSeqDense.html#MatCreateSeqDense">MatCreateSeqDense</a>()</font>
+<a name="line1358">1358: </a><font color="#B22222">@*/</font>
+<a name="line1359">1359: </a><strong><font color="#4169E1"><a name="MatCreateSeqDenseCUDA"></a><a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  <a href="../../../../../../docs/manualpages/Mat/MatCreateSeqDenseCUDA.html#MatCreateSeqDenseCUDA">MatCreateSeqDenseCUDA</a>(<a href="../../../../../../docs/manualpages/Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</a> comm,<a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> m,<a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> n,<a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> *data,<a href="../../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> *A)</font></strong>
+<a name="line1360">1360: </a>{
+<a name="line1362">1362: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a>    size;
+
+<a name="line1365">1365: </a>  <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_size.html#MPI_Comm_size">MPI_Comm_size</a>(comm,&amp;size);
+<a name="line1366">1366: </a>  <font color="#4169E1">if</font> (size &gt; 1) <a href="../../../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(comm,PETSC_ERR_ARG_WRONG,<font color="#666666">"Invalid communicator size %d"</font>,size);
+<a name="line1367">1367: </a>  <a href="../../../../../../docs/manualpages/Mat/MatCreate.html#MatCreate">MatCreate</a>(comm,A);
+<a name="line1368">1368: </a>  <a href="../../../../../../docs/manualpages/Mat/MatSetSizes.html#MatSetSizes">MatSetSizes</a>(*A,m,n,m,n);
+<a name="line1369">1369: </a>  <a href="../../../../../../docs/manualpages/Mat/MatSetType.html#MatSetType">MatSetType</a>(*A,<a href="../../../../../../docs/manualpages/Mat/MATSEQDENSECUDA.html#MATSEQDENSECUDA">MATSEQDENSECUDA</a>);
+<a name="line1370">1370: </a>  MatSeqDenseCUDASetPreallocation(*A,data);
+<a name="line1371">1371: </a>  <font color="#4169E1">return</font>(0);
+<a name="line1372">1372: </a>}
+
+<a name="line1374">1374: </a><font color="#B22222">/*MC</font>
+<a name="line1375">1375: </a><font color="#B22222">   <a href="../../../../../../docs/manualpages/Mat/MATSEQDENSECUDA.html#MATSEQDENSECUDA">MATSEQDENSECUDA</a> - <a href="../../../../../../docs/manualpages/Mat/MATSEQDENSECUDA.html#MATSEQDENSECUDA">MATSEQDENSECUDA</a> = "seqdensecuda" - A matrix type to be used for sequential dense matrices on GPUs.</font>
+
+<a name="line1377">1377: </a><font color="#B22222">   Options Database Keys:</font>
+<a name="line1378">1378: </a><font color="#B22222">. -mat_type seqdensecuda - sets the matrix type to "seqdensecuda" during a call to <a href="../../../../../../docs/manualpages/Mat/MatSetFromOptions.html#MatSetFromOptions">MatSetFromOptions</a>()</font>
+
+<a name="line1380">1380: </a><font color="#B22222">  Level: beginner</font>
+<a name="line1381">1381: </a><font color="#B22222">M*/</font>
+<a name="line1382">1382: </a><strong><font color="#4169E1"><a name="MatCreate_SeqDenseCUDA"></a>PETSC_EXTERN <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatCreate_SeqDenseCUDA(<a href="../../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> B)</font></strong>
+<a name="line1383">1383: </a>{
+
+<a name="line1387">1387: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscCUDAInitializeCheck.html#PetscCUDAInitializeCheck">PetscCUDAInitializeCheck</a>();
+<a name="line1388">1388: </a>  MatCreate_SeqDense(B);
+<a name="line1389">1389: </a>  MatConvert_SeqDense_SeqDenseCUDA(B,<a href="../../../../../../docs/manualpages/Mat/MATSEQDENSECUDA.html#MATSEQDENSECUDA">MATSEQDENSECUDA</a>,<a href="../../../../../../docs/manualpages/Mat/MatReuse.html#MatReuse">MAT_INPLACE_MATRIX</a>,&amp;B);
+<a name="line1390">1390: </a>  <font color="#4169E1">return</font>(0);
+<a name="line1391">1391: </a>}
+</pre>
+</body>
+
+</html>

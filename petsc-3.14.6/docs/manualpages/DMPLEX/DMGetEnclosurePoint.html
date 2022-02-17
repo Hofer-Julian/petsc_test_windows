@@ -1,0 +1,44 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DMPLEX/DMGetEnclosurePoint.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>DMGetEnclosurePoint</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/DMPLEX/DMGetEnclosurePoint.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="DMGetEnclosurePoint"><H1>DMGetEnclosurePoint</H1></A>
+Get the point pA in dmA which corresponds to the point pB in dmB 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscdmplex.h"    
+#include "petscdmlabel.h"   
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../DMPLEX/DMGetEnclosurePoint.html#DMGetEnclosurePoint">DMGetEnclosurePoint</A>(<A HREF="../DM/DM.html#DM">DM</A> dmA, <A HREF="../DM/DM.html#DM">DM</A> dmB, <A HREF="../DM/DMEnclosureType.html#DMEnclosureType">DMEnclosureType</A> etype, <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> pB, <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> *pA)
+</PRE>
+<H3><FONT COLOR="#CC3333">Input Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>dmA   </B></TD><TD>- The first <A HREF="../DM/DM.html#DM">DM</A>
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>dmB   </B></TD><TD>- The second <A HREF="../DM/DM.html#DM">DM</A>
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>etype </B></TD><TD>- The type of enclosure relation that dmA has to dmB
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>pB    </B></TD><TD>- A point of dmB
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Output Parameter</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>pA    </B></TD><TD>- The corresponding point of dmA
+</TD></TR></TABLE>
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../DMPLEX/DMGetEnclosureRelation.html#DMGetEnclosureRelation">DMGetEnclosureRelation</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>intermediate<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/dm/impls/plex/plexsubmesh.c.html#DMGetEnclosurePoint">src/dm/impls/plex/plexsubmesh.c</A>
+<BR><A HREF="./index.html">Index of all DMPLEX routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

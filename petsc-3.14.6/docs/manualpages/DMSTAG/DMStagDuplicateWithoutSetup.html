@@ -1,0 +1,49 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DMSTAG/DMStagDuplicateWithoutSetup.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>DMStagDuplicateWithoutSetup</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/DMSTAG/DMStagDuplicateWithoutSetup.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="DMStagDuplicateWithoutSetup"><H1>DMStagDuplicateWithoutSetup</H1></A>
+duplicate a DMStag object without setting it up 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../DMSTAG/DMStagDuplicateWithoutSetup.html#DMStagDuplicateWithoutSetup">DMStagDuplicateWithoutSetup</A>(<A HREF="../DM/DM.html#DM">DM</A> dm, <A HREF="../Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</A> comm, <A HREF="../DM/DM.html#DM">DM</A> *newdm)
+</PRE>
+Collective
+<P>
+<H3><FONT COLOR="#CC3333">Input Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>dm </B></TD><TD>- The original <A HREF="../DM/DM.html#DM">DM</A> object
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>comm </B></TD><TD>- the MPI communicator for the new <A HREF="../DM/DM.html#DM">DM</A> (MPI_COMM_NULL to use the same communicator as dm)
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Output Parameter</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>newdm  </B></TD><TD>- The new <A HREF="../DM/DM.html#DM">DM</A> object
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Developer Notes</FONT></H3>
+Copies over all of the state for a DMStag object, except that which is
+populated during <A HREF="../DM/DMSetUp.html#DMSetUp">DMSetUp</A>().  This function is used within (all) other
+functions that require an un-setup clone, which is common when duplicating,
+coarsening, refining, or creating compatible DMs with different fields.  For
+this reason it also accepts an MPI communicator as an argument (though note
+that at the time of this writing, implementations of <A HREF="../DM/DMCoarsen.html#DMCoarsen">DMCoarsen</A> and <A HREF="../DM/DMRefine.html#DMRefine">DMRefine</A>
+don't usually seem to respect their "comm" arguments). This function could be
+pushed up to the general <A HREF="../DM/DM.html#DM">DM</A> API (and perhaps given a different name).
+<P>
+
+<P>
+.seealso: <A HREF="../DM/DMClone.html#DMClone">DMClone</A>(), <A HREF="../DMSTAG/DMStagCreateCompatibleDMStag.html#DMStagCreateCompatibleDMStag">DMStagCreateCompatibleDMStag</A>(), <A HREF="../DM/DMCoarsen.html#DMCoarsen">DMCoarsen</A>(), <A HREF="../DM/DMRefine.html#DMRefine">DMRefine</A>()
+<P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>developer<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/dm/impls/stag/stagintern.c.html#DMStagDuplicateWithoutSetup">src/dm/impls/stag/stagintern.c</A>
+<BR><A HREF="./index.html">Index of all DMSTAG routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

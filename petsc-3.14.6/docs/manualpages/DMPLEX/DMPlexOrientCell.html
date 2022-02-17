@@ -1,0 +1,41 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DMPLEX/DMPlexOrientCell.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>DMPlexOrientCell</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/DMPLEX/DMPlexOrientCell.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="DMPlexOrientCell"><H1>DMPlexOrientCell</H1></A>
+Set the desired order of cone points of this DAG point, and fix orientations accordingly. 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscdmplex.h"   
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../DMPLEX/DMPlexOrientCell.html#DMPlexOrientCell">DMPlexOrientCell</A>(<A HREF="../DM/DM.html#DM">DM</A> dm, <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> p, <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> masterConeSize, const <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> masterCone[])
+</PRE>
+Not Collective
+<P>
+<H3><FONT COLOR="#CC3333">Input Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>dm              </B></TD><TD>- The <A HREF="../DM/DM.html#DM">DM</A>
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>p               </B></TD><TD>- The DAG point (from interval given by <A HREF="../DMPLEX/DMPlexGetChart.html#DMPlexGetChart">DMPlexGetChart</A>())
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>masterConeSize  </B></TD><TD>- Number of specified cone points (at least 2)
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>masterCone      </B></TD><TD>- Specified cone points, i.e. ordered subset of current cone in DAG numbering (not cone-local numbering)
+</TD></TR></TABLE>
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../DMPLEX/DMPlexOrient.html#DMPlexOrient">DMPlexOrient</A>(), <A HREF="../DMPLEX/DMPlexGetCone.html#DMPlexGetCone">DMPlexGetCone</A>(), <A HREF="../DMPLEX/DMPlexGetConeOrientation.html#DMPlexGetConeOrientation">DMPlexGetConeOrientation</A>(), <A HREF="../DMPLEX/DMPlexInterpolate.html#DMPlexInterpolate">DMPlexInterpolate</A>(), <A HREF="../DMPLEX/DMPlexGetChart.html#DMPlexGetChart">DMPlexGetChart</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>intermediate<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/dm/impls/plex/plexorient.c.html#DMPlexOrientCell">src/dm/impls/plex/plexorient.c</A>
+<P><H3><FONT COLOR="CC3333">Implementations</FONT></H3><A HREF="../../../src/dm/impls/plex/plexorient.c.html#DMPlexOrientCell_Internal">DMPlexOrientCell_Internal in src/dm/impls/plex/plexorient.c</A><BR>
+<BR><A HREF="./index.html">Index of all DMPLEX routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

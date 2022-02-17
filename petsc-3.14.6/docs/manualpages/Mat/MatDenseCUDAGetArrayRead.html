@@ -1,0 +1,44 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatDenseCUDAGetArrayRead.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>MatDenseCUDAGetArrayRead</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/Mat/MatDenseCUDAGetArrayRead.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="MatDenseCUDAGetArrayRead"><H1>MatDenseCUDAGetArrayRead</H1></A>
+Provides read-only access to the CUDA buffer inside a dense matrix. The array must be restored with <A HREF="../Mat/MatDenseCUDARestoreArrayRead.html#MatDenseCUDARestoreArrayRead">MatDenseCUDARestoreArrayRead</A>() when no longer needed. 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscmat.h"  
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../Mat/MatDenseCUDAGetArrayRead.html#MatDenseCUDAGetArrayRead">MatDenseCUDAGetArrayRead</A>(<A HREF="../Mat/Mat.html#Mat">Mat</A> A, const <A HREF="../Sys/PetscScalar.html#PetscScalar">PetscScalar</A> **a)
+</PRE>
+Not Collective
+<P>
+<H3><FONT COLOR="#CC3333">Input Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>A </B></TD><TD>- the matrix
+</TD></TR></TABLE>
+<P>
+Output Parameters
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>array </B></TD><TD>- the GPU array in column major order
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Notes</FONT></H3>
+Data can be copied to the GPU due to operations done on the CPU. If you need write only access, use <A HREF="../Mat/MatDenseCUDAGetArrayWrite.html#MatDenseCUDAGetArrayWrite">MatDenseCUDAGetArrayWrite</A>().
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../Mat/MatDenseCUDAGetArray.html#MatDenseCUDAGetArray">MatDenseCUDAGetArray</A>(), <A HREF="../Mat/MatDenseCUDARestoreArray.html#MatDenseCUDARestoreArray">MatDenseCUDARestoreArray</A>(), <A HREF="../Mat/MatDenseCUDARestoreArrayWrite.html#MatDenseCUDARestoreArrayWrite">MatDenseCUDARestoreArrayWrite</A>(), <A HREF="../Mat/MatDenseCUDAGetArrayWrite.html#MatDenseCUDAGetArrayWrite">MatDenseCUDAGetArrayWrite</A>(), <A HREF="../Mat/MatDenseCUDARestoreArrayRead.html#MatDenseCUDARestoreArrayRead">MatDenseCUDARestoreArrayRead</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>developer<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/mat/impls/dense/mpi/mpidense.c.html#MatDenseCUDAGetArrayRead">src/mat/impls/dense/mpi/mpidense.c</A>
+<P><H3><FONT COLOR="CC3333">Implementations</FONT></H3><A HREF="../../../src/mat/impls/dense/mpi/mpidense.c.html#MatDenseCUDAGetArrayRead_MPIDenseCUDA">MatDenseCUDAGetArrayRead_MPIDenseCUDA in src/mat/impls/dense/mpi/mpidense.c</A><BR>
+<A HREF="../../../src/mat/impls/dense/seq/cuda/densecuda.cu.html#MatDenseCUDAGetArrayRead_SeqDenseCUDA">MatDenseCUDAGetArrayRead_SeqDenseCUDA in src/mat/impls/dense/seq/cuda/densecuda.cu</A><BR>
+<BR><A HREF="./index.html">Index of all Mat routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

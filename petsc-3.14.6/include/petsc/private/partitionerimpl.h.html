@@ -1,0 +1,51 @@
+<center><a href="partitionerimpl.h">Actual source code: partitionerimpl.h</a></center><br>
+
+<html>
+<head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/include/petsc/private/partitionerimpl.h.html" />
+<title></title>
+<meta name="generator" content="c2html 0.9.4">
+<meta name="date" content="2021-03-30T16:52:16+00:00">
+</head>
+
+<body bgcolor="#FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 include/petsc/private/partitionerimpl.h.html "><small>Report Typos and Errors</small></a></div>
+<pre width="80">
+<a name="line1">  1: </a><font color="#A020F0">#if !defined(PARTITIONERIMPL_H)</font>
+<a name="line2">  2: </a><strong><font color="#228B22">#define PARTITIONERIMPL_H</font></strong>
+
+<a name="line4">  4: </a>#include <A href="../../petscviewer.h.html">&lt;petscviewer.h&gt;</A>
+<a name="line5">  5: </a>#include <A href="../../petscpartitioner.h.html">&lt;petscpartitioner.h&gt;</A>
+<a name="line6">  6: </a>#include <A href="petscimpl.h.html">&lt;petsc/private/petscimpl.h&gt;</A>
+
+<a name="line8">  8: </a>PETSC_EXTERN <a href="../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>      PetscPartitionerRegisterAllCalled;
+<a name="line9">  9: </a><strong><font color="#4169E1">PETSC_EXTERN <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../docs/manualpages/DM/PetscPartitionerRegisterAll.html#PetscPartitionerRegisterAll">PetscPartitionerRegisterAll</a>(void)</font></strong>;
+
+<a name="line11"> 11: </a><font color="#4169E1">typedef struct _PetscPartitionerOps *PetscPartitionerOps;</font>
+<a name="line12"> 12: </a><font color="#4169E1"><a name="_PetscPartitionerOps"></a>struct _PetscPartitionerOps </font>{
+<a name="line13"> 13: </a>  <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> (*setfromoptions)(PetscOptionItems*, <a href="../../../docs/manualpages/DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</a>);
+<a name="line14"> 14: </a>  <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> (*setup)(<a href="../../../docs/manualpages/DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</a>);
+<a name="line15"> 15: </a>  <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> (*reset)(<a href="../../../docs/manualpages/DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</a>);
+<a name="line16"> 16: </a>  <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> (*view)(<a href="../../../docs/manualpages/DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</a>, <a href="../../../docs/manualpages/Viewer/PetscViewer.html#PetscViewer">PetscViewer</a>);
+<a name="line17"> 17: </a>  <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> (*destroy)(<a href="../../../docs/manualpages/DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</a>);
+<a name="line18"> 18: </a>  <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> (*partition)(<a href="../../../docs/manualpages/DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</a>, <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>, <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>, <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>[], <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>[], <a href="../../../docs/manualpages/PetscSection/PetscSection.html#PetscSection">PetscSection</a>, <a href="../../../docs/manualpages/PetscSection/PetscSection.html#PetscSection">PetscSection</a>, <a href="../../../docs/manualpages/PetscSection/PetscSection.html#PetscSection">PetscSection</a>, <a href="../../../docs/manualpages/IS/IS.html#IS">IS</a>*);
+<a name="line19"> 19: </a>};
+
+<a name="line21"> 21: </a><font color="#4169E1"><a name="_p_PetscPartitioner"></a>struct _p_PetscPartitioner </font>{
+<a name="line22"> 22: </a>  PETSCHEADER(<font color="#4169E1">struct _PetscPartitionerOps</font>);
+<a name="line23"> 23: </a>  void        *data;            <font color="#B22222">/* Implementation object */</font>
+<a name="line24"> 24: </a>  <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>    height;           <font color="#B22222">/* Height of points to partition into non-overlapping subsets */</font>
+<a name="line25"> 25: </a>  <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>    edgeCut;          <font color="#B22222">/* The number of edge cut by the partition */</font>
+<a name="line26"> 26: </a>  <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>   balance;          <font color="#B22222">/* The maximum partition size divided by the minimum size */</font>
+<a name="line27"> 27: </a>  <a href="../../../docs/manualpages/Viewer/PetscViewer.html#PetscViewer">PetscViewer</a> viewer;
+<a name="line28"> 28: </a>  <a href="../../../docs/manualpages/Viewer/PetscViewer.html#PetscViewer">PetscViewer</a> viewerGraph;
+<a name="line29"> 29: </a>  <a href="../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>   viewGraph;
+<a name="line30"> 30: </a>  <a href="../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>   noGraph;          <font color="#B22222">/* if true, the partitioner does not need the connectivity graph, only the number of local vertices */</font>
+<a name="line31"> 31: </a>  <a href="../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>   usevwgt;          <font color="#B22222">/* if true, the partitioner looks at the local section vertSection to weight the vertices of the graph */</font>
+<a name="line32"> 32: </a>};
+
+<a name="line34"> 34: </a><font color="#A020F0">#endif</font>
+</pre>
+</body>
+
+</html>

@@ -1,0 +1,38 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatPropagateSymmetryOptions.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>MatPropagateSymmetryOptions</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/Mat/MatPropagateSymmetryOptions.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="MatPropagateSymmetryOptions"><H1>MatPropagateSymmetryOptions</H1></A>
+Propagates symmetry options set on a matrix to another matrix 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscmat.h" 
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../Mat/MatPropagateSymmetryOptions.html#MatPropagateSymmetryOptions">MatPropagateSymmetryOptions</A>(<A HREF="../Mat/Mat.html#Mat">Mat</A> A, <A HREF="../Mat/Mat.html#Mat">Mat</A> B)
+</PRE>
+Not Collective
+<P>
+<H3><FONT COLOR="#CC3333">Input Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>A </B></TD><TD>- the matrix we wish to propagate options from
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>B </B></TD><TD>- the matrix we wish to propagate options to
+</TD></TR></TABLE>
+<P>
+
+<P>
+Notes: Propagates the options associated to <A HREF="../Mat/MatOption.html#MatOption">MAT_SYMMETRY_ETERNAL</A>, <A HREF="../Mat/MatOption.html#MatOption">MAT_STRUCTURALLY_SYMMETRIC</A>, <A HREF="../Mat/MatOption.html#MatOption">MAT_HERMITIAN</A>, <A HREF="../Mat/MatOption.html#MatOption">MAT_SPD</A> and <A HREF="../Mat/MatOption.html#MatOption">MAT_SYMMETRIC</A>
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../Mat/MatSetOption.html#MatSetOption">MatSetOption</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>beginner<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/mat/interface/matrix.c.html#MatPropagateSymmetryOptions">src/mat/interface/matrix.c</A>
+<BR><A HREF="./index.html">Index of all Mat routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

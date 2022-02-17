@@ -1,0 +1,362 @@
+<center><a href="landaucu.cu">Actual source code: landaucu.cu</a></center><br>
+
+<html>
+<head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/src/ts/utils/dmplexlandau/cuda/landaucu.cu.html" />
+<title></title>
+<meta name="generator" content="c2html 0.9.4">
+<meta name="date" content="2021-03-30T16:52:01+00:00">
+</head>
+
+<body bgcolor="#FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 src/ts/utils/dmplexlandau/cuda/landaucu.cu.html "><small>Report Typos and Errors</small></a></div>
+<pre width="80">
+<a name="line1">  1: </a><font color="#B22222">/*</font>
+<a name="line2">  2: </a><font color="#B22222">   Implements the Landau kernel</font>
+<a name="line3">  3: </a><font color="#B22222">*/</font>
+<a name="line4">  4: </a><font color="#A020F0">#include &lt;petscconf.h&gt;</font>
+<a name="line5">  5: </a>#include <A href="../../../../../include/petsc/private/dmpleximpl.h.html">&lt;petsc/private/dmpleximpl.h&gt;</A>
+<a name="line6">  6: </a>#include <A href="../../../../../include/petsclandau.h.html">&lt;petsclandau.h&gt;</A>
+<a name="line7">  7: </a><strong><font color="#228B22">#define PETSC_SKIP_IMMINTRIN_H_CUDAWORKAROUND 1</font></strong>
+<a name="line8">  8: </a>#include <A href="../../../../mat/impls/aij/seq/aij.h.html">&lt;../src/mat/impls/aij/seq/aij.h&gt;</A>
+<a name="line9">  9: </a>#include <A href="../../../../../include/petsc/private/kernels/petscaxpy.h.html">&lt;petsc/private/kernels/petscaxpy.h&gt;</A>
+
+<a name="line11"> 11: </a><strong><font color="#228B22">#define PETSC_THREAD_SYNC __syncthreads()</font></strong>
+<a name="line12"> 12: </a><strong><font color="#228B22">#define PETSC_DEVICE_FUNC_DECL __device__</font></strong>
+<a name="line13"> 13: </a><font color="#A020F0">#include </font><font color="#666666">"../land_kernel.h"</font><font color="#A020F0"></font>
+
+<a name="line15"> 15: </a>// Macro to catch CUDA errors in CUDA runtime calls
+<a name="line16"> 16: </a><strong><font color="#228B22">#define CUDA_SAFE_CALL(call)                                          \</font></strong>
+<a name="line17"> 17: </a><strong><font color="#228B22">do {                                                                  \</font></strong>
+<a name="line18"> 18: </a><strong><font color="#228B22">    cudaError_t err = call;                                           \</font></strong>
+<a name="line19"> 19: </a><strong><font color="#228B22">    if (cudaSuccess != err) {                                         \</font></strong>
+<a name="line20"> 20: </a><strong><font color="#228B22">        fprintf (stderr, </font><font color="#666666">"Cuda error in file '%s' in line %i : %s.\n"</font><font color="#228B22">,\</font></strong>
+<a name="line21"> 21: </a><strong><font color="#228B22">                 __FILE__, __LINE__, cudaGetErrorString(err));        \</font></strong>
+<a name="line22"> 22: </a><strong><font color="#228B22">        exit(EXIT_FAILURE);                                           \</font></strong>
+<a name="line23"> 23: </a><strong><font color="#228B22">    }                                                                 \</font></strong>
+<a name="line24"> 24: </a><strong><font color="#228B22">} while (0)</font></strong>
+<a name="line25"> 25: </a>// Macro to catch CUDA errors in kernel launches
+<a name="line26"> 26: </a><strong><font color="#228B22">#define CHECK_LAUNCH_ERROR()                                          \</font></strong>
+<a name="line27"> 27: </a><strong><font color="#228B22">do {                                                                  \</font></strong>
+<a name="line28"> 28: </a><strong><font color="#228B22">    </font><font color="#B22222">/* Check synchronous errors, i.e. pre-launch */</font><font color="#228B22">                   \</font></strong>
+<a name="line29"> 29: </a><strong><font color="#228B22">    cudaError_t err = cudaGetLastError();                             \</font></strong>
+<a name="line30"> 30: </a><strong><font color="#228B22">    if (cudaSuccess != err) {                                         \</font></strong>
+<a name="line31"> 31: </a><strong><font color="#228B22">        fprintf (stderr, </font><font color="#666666">"Cuda error in file '%s' in line %i : %s.\n"</font><font color="#228B22">,\</font></strong>
+<a name="line32"> 32: </a><strong><font color="#228B22">                 __FILE__, __LINE__, cudaGetErrorString(err));        \</font></strong>
+<a name="line33"> 33: </a><strong><font color="#228B22">        exit(EXIT_FAILURE);                                           \</font></strong>
+<a name="line34"> 34: </a><strong><font color="#228B22">    }                                                                 \</font></strong>
+<a name="line35"> 35: </a><strong><font color="#228B22">    </font><font color="#B22222">/* Check asynchronous errors, i.e. kernel failed (ULF) */</font><font color="#228B22">         \</font></strong>
+<a name="line36"> 36: </a><strong><font color="#228B22">    err = cudaDeviceSynchronize();                                    \</font></strong>
+<a name="line37"> 37: </a><strong><font color="#228B22">    if (cudaSuccess != err) {                                         \</font></strong>
+<a name="line38"> 38: </a><strong><font color="#228B22">        fprintf (stderr, </font><font color="#666666">"Cuda error in file '%s' in line %i : %s.\n"</font><font color="#228B22">,\</font></strong>
+<a name="line39"> 39: </a><strong><font color="#228B22">                 __FILE__, __LINE__, cudaGetErrorString( err));       \</font></strong>
+<a name="line40"> 40: </a><strong><font color="#228B22">        exit(EXIT_FAILURE);                                           \</font></strong>
+<a name="line41"> 41: </a><strong><font color="#228B22">    }                                                                 \</font></strong>
+<a name="line42"> 42: </a><strong><font color="#228B22">} while (0)</font></strong>
+
+<a name="line44"> 44: </a><strong><font color="#228B22">#define LANDAU_USE_SHARED_GPU_MEM</font></strong>
+<a name="line45"> 45: </a>//j
+<a name="line46"> 46: </a>// The GPU Landau kernel
+<a name="line47"> 47: </a>//
+<a name="line48"> 48: </a>__global__
+<a name="line49"> 49: </a>void landau_kernel(const <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> nip, const <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> dim, const <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> totDim, const <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> Nf, const <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> Nb, const <a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> invJj[],
+<a name="line50"> 50: </a>                   const <a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> nu_alpha[], const <a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> nu_beta[], const <a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> invMass[], const <a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> Eq_m[],
+<a name="line51"> 51: </a>                   const <a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> * const BB, const <a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> * const DD, const <a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> * const IPDataGlobal, const <a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> wiGlobal[],
+<a name="line52"> 52: </a><font color="#A020F0">#if !defined(LANDAU_USE_SHARED_GPU_MEM)</font>
+<a name="line53"> 53: </a>                   <a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> *g2arr, <a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> *g3arr,
+<a name="line54"> 54: </a><font color="#A020F0">#endif</font>
+<a name="line55"> 55: </a>                   <a href="../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> quarter3DDomain, <a href="../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> elemMats_out[])
+<a name="line56"> 56: </a>{
+<a name="line57"> 57: </a>  const <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>  Nq = blockDim.x, myelem = blockIdx.x;
+<a name="line58"> 58: </a><font color="#A020F0">#if defined(LANDAU_USE_SHARED_GPU_MEM)</font>
+<a name="line59"> 59: </a>  extern __shared__ <a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> g2_g3_qi[]; // Nq * { [NSubBlocks][Nf][dim] ; [NSubBlocks][Nf][dim][dim] }
+<a name="line60"> 60: </a>  <a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>       (*g2)[LANDAU_MAX_NQ][LANDAU_MAX_SUB_THREAD_BLOCKS][LANDAU_MAX_SPECIES][LANDAU_DIM]         = (<a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> (*)[LANDAU_MAX_NQ][LANDAU_MAX_SUB_THREAD_BLOCKS][LANDAU_MAX_SPECIES][LANDAU_DIM])         &amp;g2_g3_qi[0];
+<a name="line61"> 61: </a>  <a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>       (*g3)[LANDAU_MAX_NQ][LANDAU_MAX_SUB_THREAD_BLOCKS][LANDAU_MAX_SPECIES][LANDAU_DIM][LANDAU_DIM] = (<a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> (*)[LANDAU_MAX_NQ][LANDAU_MAX_SUB_THREAD_BLOCKS][LANDAU_MAX_SPECIES][LANDAU_DIM][LANDAU_DIM]) &amp;g2_g3_qi[LANDAU_MAX_SUB_THREAD_BLOCKS*LANDAU_MAX_NQ*LANDAU_MAX_SPECIES*LANDAU_DIM];
+<a name="line62"> 62: </a><font color="#A020F0">#else</font>
+<a name="line63"> 63: </a>  <a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>       (*g2)[LANDAU_MAX_NQ][LANDAU_MAX_SUB_THREAD_BLOCKS][LANDAU_MAX_SPECIES][LANDAU_DIM]         = (<a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> (*)[LANDAU_MAX_NQ][LANDAU_MAX_SUB_THREAD_BLOCKS][LANDAU_MAX_SPECIES][LANDAU_DIM])         &amp;g2arr[myelem*LANDAU_MAX_SUB_THREAD_BLOCKS*LANDAU_MAX_NQ*LANDAU_MAX_SPECIES*LANDAU_DIM       ];
+<a name="line64"> 64: </a>  <a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>       (*g3)[LANDAU_MAX_NQ][LANDAU_MAX_SUB_THREAD_BLOCKS][LANDAU_MAX_SPECIES][LANDAU_DIM][LANDAU_DIM] = (<a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> (*)[LANDAU_MAX_NQ][LANDAU_MAX_SUB_THREAD_BLOCKS][LANDAU_MAX_SPECIES][LANDAU_DIM][LANDAU_DIM]) &amp;g3arr[myelem*LANDAU_MAX_SUB_THREAD_BLOCKS*LANDAU_MAX_NQ*LANDAU_MAX_SPECIES*LANDAU_DIM*LANDAU_DIM];
+<a name="line65"> 65: </a><font color="#A020F0">#endif</font>
+<a name="line66"> 66: </a>  const <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>  myQi = threadIdx.x, mySubBlk = threadIdx.y, nSubBlks = blockDim.y;
+<a name="line67"> 67: </a>  const <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>  jpidx = myQi + myelem * Nq;
+<a name="line68"> 68: </a>  const <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>  subblocksz = nip/nSubBlks + !!(nip%nSubBlks), ip_start = mySubBlk*subblocksz, ip_end = (mySubBlk+1)*subblocksz &gt; nip ? nip : (mySubBlk+1)*subblocksz; <font color="#B22222">/* this could be wrong with very few global IPs */</font>
+<a name="line69"> 69: </a>  <a href="../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>     *elemMat  = &amp;elemMats_out[myelem*totDim*totDim]; <font color="#B22222">/* my output */</font>
+
+<a name="line71"> 71: </a>  <font color="#4169E1">if</font> (threadIdx.x==0 &amp;&amp; threadIdx.y==0) {
+<a name="line72"> 72: </a>    memset(elemMat, 0, totDim*totDim*<font color="#4169E1">sizeof</font>(<a href="../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>));
+<a name="line73"> 73: </a>  }
+<a name="line74"> 74: </a>  __syncthreads();
+<a name="line75"> 75: </a>  landau_inner_integral(myQi, Nq, mySubBlk, nSubBlks, ip_start, ip_end, 1,        jpidx, Nf, dim, IPDataGlobal, wiGlobal, &amp;invJj[jpidx*dim*dim], nu_alpha, nu_beta, invMass, Eq_m, quarter3DDomain, Nq, Nb, 0, Nq, BB, DD, elemMat, *g2, *g3, myelem); <font color="#B22222">/* compact */</font>
+<a name="line76"> 76: </a>  // landau_inner_integral(myQi, Nq, mySubBlk, nSubBlks, mySubBlk,    nip, nSubBlks, jpidx, Nf, dim, IPDataGlobal, wiGlobal, &amp;invJj[jpidx*dim*dim], nu_alpha, nu_beta, invMass, Eq_m, quarter3DDomain, Nq, Nb, 0, Nq, BB, DD, elemMat, *g2, *g3, myelem); <font color="#B22222">/* spread */</font>
+<a name="line77"> 77: </a>}
+<a name="line78"> 78: </a><strong><font color="#4169E1">static <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> LandauAssembleCuda(<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> cStart, <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> cEnd, <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> totDim, <a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> plex, <a href="../../../../docs/manualpages/PetscSection/PetscSection.html#PetscSection">PetscSection</a> section, <a href="../../../../docs/manualpages/PetscSection/PetscSection.html#PetscSection">PetscSection</a> globalSection, <a href="../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> JacP, <a href="../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> elemMats[], <a href="../../../../docs/manualpages/Sys/PetscContainer.html#PetscContainer">PetscContainer</a> container, const <a href="../../../../docs/manualpages/Profiling/PetscLogEvent.html#PetscLogEvent">PetscLogEvent</a> events[])</font></strong>;
+<a name="line79"> 79: </a><strong><font color="#4169E1">__global__ void assemble_kernel(const <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> nidx_arr[], <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *idx_arr[], <a href="../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> *el_mats[], const ISColoringValue colors[], Mat_SeqAIJ mats[])</font></strong>;
+<a name="line80"> 80: </a><strong><font color="#4169E1"><a name="LandauCUDAJacobian"></a><a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> LandauCUDAJacobian(<a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> plex, const <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> Nq, const <a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> nu_alpha[],const <a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> nu_beta[],</font></strong>
+<a name="line81"> 81: </a><strong><font color="#4169E1">                                  const <a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> invMass[], const <a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> Eq_m[], const <a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> * const IPDataGlobal,</font></strong>
+<a name="line82"> 82: </a><strong><font color="#4169E1">                                  const <a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> wiGlobal[], const <a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> invJj[], const <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> num_sub_blocks, const <a href="../../../../docs/manualpages/Profiling/PetscLogEvent.html#PetscLogEvent">PetscLogEvent</a> events[], <a href="../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> quarter3DDomain,</font></strong>
+<a name="line83"> 83: </a><strong><font color="#4169E1">                                  <a href="../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> JacP)</font></strong>
+<a name="line84"> 84: </a>{
+<a name="line85"> 85: </a>  <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>    ierr;
+<a name="line86"> 86: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>          ii,ej,*Nbf,Nb,nip_dim2,cStart,cEnd,Nf,dim,numGCells,totDim,nip,szf=<font color="#4169E1">sizeof</font>(<a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>);
+<a name="line87"> 87: </a>  <a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>         *d_BB,*d_DD,*d_invJj,*d_wiGlobal,*d_nu_alpha,*d_nu_beta,*d_invMass,*d_Eq_m;
+<a name="line88"> 88: </a>  <a href="../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>       *elemMats,*d_elemMats;
+<a name="line89"> 89: </a>  <a href="../../../../docs/manualpages/Sys/PetscLogDouble.html#PetscLogDouble">PetscLogDouble</a>    flops;
+<a name="line90"> 90: </a>  PetscTabulation   *Tf;
+<a name="line91"> 91: </a>  <a href="../../../../docs/manualpages/DM/PetscDS.html#PetscDS">PetscDS</a>           prob;
+<a name="line92"> 92: </a>  <a href="../../../../docs/manualpages/PetscSection/PetscSection.html#PetscSection">PetscSection</a>      section, globalSection;
+<a name="line93"> 93: </a>  <a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>        *d_IPDataGlobal;
+<a name="line94"> 94: </a>  <a href="../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>         cuda_assemble = <a href="../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+
+<a name="line97"> 97: </a>  <a href="../../../../docs/manualpages/Profiling/PetscLogEventBegin.html#PetscLogEventBegin">PetscLogEventBegin</a>(events[3],0,0,0,0);
+<a name="line98"> 98: </a>  <a href="../../../../docs/manualpages/DM/DMGetDimension.html#DMGetDimension">DMGetDimension</a>(plex, &amp;dim);
+<a name="line99"> 99: </a>  <font color="#4169E1">if</font> (dim!=LANDAU_DIM) <a href="../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, PETSC_ERR_PLIB, <font color="#666666">"LANDAU_DIM != dim"</font>);
+<a name="line100">100: </a>  <a href="../../../../docs/manualpages/DMPLEX/DMPlexGetHeightStratum.html#DMPlexGetHeightStratum">DMPlexGetHeightStratum</a>(plex,0,&amp;cStart,&amp;cEnd);
+<a name="line101">101: </a>  numGCells = cEnd - cStart;
+<a name="line102">102: </a>  nip  = numGCells*Nq; <font color="#B22222">/* length of inner global iteration */</font>
+<a name="line103">103: </a>  <a href="../../../../docs/manualpages/DM/DMGetDS.html#DMGetDS">DMGetDS</a>(plex, &amp;prob);
+<a name="line104">104: </a>  <a href="../../../../docs/manualpages/DT/PetscDSGetNumFields.html#PetscDSGetNumFields">PetscDSGetNumFields</a>(prob, &amp;Nf);
+<a name="line105">105: </a>  <a href="../../../../docs/manualpages/DT/PetscDSGetDimensions.html#PetscDSGetDimensions">PetscDSGetDimensions</a>(prob, &amp;Nbf); Nb = Nbf[0];
+<a name="line106">106: </a>  <font color="#4169E1">if</font> (Nq != Nb) <a href="../../../../docs/manualpages/Sys/SETERRQ2.html#SETERRQ2">SETERRQ2</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, PETSC_ERR_PLIB, <font color="#666666">"Nq != Nb. %D  %D"</font>,Nq,Nb);
+<a name="line107">107: </a>  <a href="../../../../docs/manualpages/DT/PetscDSGetTotalDimension.html#PetscDSGetTotalDimension">PetscDSGetTotalDimension</a>(prob, &amp;totDim);
+<a name="line108">108: </a>  <a href="../../../../docs/manualpages/DT/PetscDSGetTabulation.html#PetscDSGetTabulation">PetscDSGetTabulation</a>(prob, &amp;Tf);
+<a name="line109">109: </a>  <a href="../../../../docs/manualpages/DM/DMGetLocalSection.html#DMGetLocalSection">DMGetLocalSection</a>(plex, &amp;section);
+<a name="line110">110: </a>  <a href="../../../../docs/manualpages/DM/DMGetGlobalSection.html#DMGetGlobalSection">DMGetGlobalSection</a>(plex, &amp;globalSection);
+<a name="line111">111: </a>  // create data
+<a name="line112">112: </a>  CUDA_SAFE_CALL(cudaMalloc((void **)&amp;d_IPDataGlobal, nip*(dim + Nf*(dim+1))*szf)); // kernel input
+<a name="line113">113: </a>  CUDA_SAFE_CALL(cudaMalloc((void **)&amp;d_nu_alpha, Nf*szf)); // kernel input
+<a name="line114">114: </a>  CUDA_SAFE_CALL(cudaMalloc((void **)&amp;d_nu_beta,  Nf*szf)); // kernel input
+<a name="line115">115: </a>  CUDA_SAFE_CALL(cudaMalloc((void **)&amp;d_invMass,  Nf*szf)); // kernel input
+<a name="line116">116: </a>  CUDA_SAFE_CALL(cudaMalloc((void **)&amp;d_Eq_m,     Nf*szf)); // kernel input
+<a name="line117">117: </a>  CUDA_SAFE_CALL(cudaMemcpy(d_IPDataGlobal, IPDataGlobal, nip*(dim + Nf*(dim+1))*szf, cudaMemcpyHostToDevice));
+<a name="line118">118: </a>  CUDA_SAFE_CALL(cudaMemcpy(d_nu_alpha, nu_alpha, Nf*szf,                             cudaMemcpyHostToDevice));
+<a name="line119">119: </a>  CUDA_SAFE_CALL(cudaMemcpy(d_nu_beta,  nu_beta,  Nf*szf,                             cudaMemcpyHostToDevice));
+<a name="line120">120: </a>  CUDA_SAFE_CALL(cudaMemcpy(d_invMass,  invMass,  Nf*szf,                             cudaMemcpyHostToDevice));
+<a name="line121">121: </a>  CUDA_SAFE_CALL(cudaMemcpy(d_Eq_m,     Eq_m,     Nf*szf,                             cudaMemcpyHostToDevice));
+<a name="line122">122: </a>  CUDA_SAFE_CALL(cudaMalloc((void **)&amp;d_BB,              Nq*Nb*szf));     // kernel input
+<a name="line123">123: </a>  CUDA_SAFE_CALL(cudaMemcpy(          d_BB, Tf[0]-&gt;T[0], Nq*Nb*szf,   cudaMemcpyHostToDevice));
+<a name="line124">124: </a>  CUDA_SAFE_CALL(cudaMalloc((void **)&amp;d_DD,              Nq*Nb*dim*szf)); // kernel input
+<a name="line125">125: </a>  CUDA_SAFE_CALL(cudaMemcpy(          d_DD, Tf[0]-&gt;T[1], Nq*Nb*dim*szf,   cudaMemcpyHostToDevice));
+<a name="line126">126: </a>  CUDA_SAFE_CALL(cudaMalloc((void **)&amp;d_wiGlobal,           Nq*numGCells*szf)); // kernel input
+<a name="line127">127: </a>  CUDA_SAFE_CALL(cudaMemcpy(          d_wiGlobal, wiGlobal, Nq*numGCells*szf,   cudaMemcpyHostToDevice));
+<a name="line128">128: </a>  // collect geometry
+<a name="line129">129: </a>  flops = (<a href="../../../../docs/manualpages/Sys/PetscLogDouble.html#PetscLogDouble">PetscLogDouble</a>)numGCells*(<a href="../../../../docs/manualpages/Sys/PetscLogDouble.html#PetscLogDouble">PetscLogDouble</a>)Nq*(<a href="../../../../docs/manualpages/Sys/PetscLogDouble.html#PetscLogDouble">PetscLogDouble</a>)(5.*dim*dim*Nf*Nf + 165.);
+<a name="line130">130: </a>  nip_dim2 = Nq*numGCells*dim*dim;
+<a name="line131">131: </a>  CUDA_SAFE_CALL(cudaMalloc((void **)&amp;d_invJj, nip_dim2*szf)); // kernel input
+<a name="line132">132: </a>  CUDA_SAFE_CALL(cudaMemcpy(d_invJj, invJj, nip_dim2*szf,       cudaMemcpyHostToDevice));
+<a name="line133">133: </a>  <a href="../../../../docs/manualpages/Profiling/PetscLogEventEnd.html#PetscLogEventEnd">PetscLogEventEnd</a>(events[3],0,0,0,0);
+
+<a name="line135">135: </a>  <a href="../../../../docs/manualpages/Profiling/PetscLogEventBegin.html#PetscLogEventBegin">PetscLogEventBegin</a>(events[4],0,0,0,0);
+<a name="line136">136: </a>  <a href="../../../../docs/manualpages/Profiling/PetscLogGpuFlops.html#PetscLogGpuFlops">PetscLogGpuFlops</a>(flops*nip);
+<a name="line137">137: </a>  {
+<a name="line138">138: </a>    dim3 dimBlock(Nq,num_sub_blocks);
+<a name="line139">139: </a>    CUDA_SAFE_CALL(cudaMalloc((void **)&amp;d_elemMats, totDim*totDim*numGCells*<font color="#4169E1">sizeof</font>(<a href="../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>))); // kernel output
+<a name="line140">140: </a>    ii = LANDAU_MAX_NQ*LANDAU_MAX_SPECIES*LANDAU_DIM*(1+LANDAU_DIM)*LANDAU_MAX_SUB_THREAD_BLOCKS;
+<a name="line141">141: </a><font color="#A020F0">#if defined(LANDAU_USE_SHARED_GPU_MEM)</font>
+<a name="line142">142: </a>    // <a href="../../../../docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,<font color="#666666">"Call land_kernel with %D kB shared memory\n"</font>,ii*8/1024);
+<a name="line143">143: </a>    landau_kernel&lt;&lt;&lt;numGCells,dimBlock,ii*szf&gt;&gt;&gt;(nip,dim,totDim,Nf,Nb,d_invJj,d_nu_alpha,d_nu_beta,d_invMass,d_Eq_m,
+<a name="line144">144: </a>                                                 d_BB, d_DD, d_IPDataGlobal, d_wiGlobal, quarter3DDomain, d_elemMats);
+<a name="line145">145: </a>    CHECK_LAUNCH_ERROR();
+<a name="line146">146: </a><font color="#A020F0">#else</font>
+<a name="line147">147: </a>    <a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>  *d_g2g3;
+<a name="line148">148: </a>    CUDA_SAFE_CALL(cudaMalloc((void **)&amp;d_g2g3, ii*szf*numGCells)); // kernel input
+<a name="line149">149: </a>    <a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>  *g2 = &amp;d_g2g3[0];
+<a name="line150">150: </a>    <a href="../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>  *g3 = &amp;d_g2g3[LANDAU_MAX_SUB_THREAD_BLOCKS*LANDAU_MAX_NQ*LANDAU_MAX_SPECIES*LANDAU_DIM*numGCells];
+<a name="line151">151: </a>    landau_kernel&lt;&lt;&lt;numGCells,dimBlock&gt;&gt;&gt;(nip,dim,totDim,Nf,Nb,d_invJj,d_nu_alpha,d_nu_beta,d_invMass,d_Eq_m,
+<a name="line152">152: </a>                                          d_BB, d_DD, d_IPDataGlobal, d_wiGlobal, g2, g3, quarter3DDomain, d_elemMats);
+<a name="line153">153: </a>    CHECK_LAUNCH_ERROR();
+<a name="line154">154: </a>    CUDA_SAFE_CALL (cudaDeviceSynchronize());
+<a name="line155">155: </a>    CUDA_SAFE_CALL(cudaFree(d_g2g3));
+<a name="line156">156: </a><font color="#A020F0">#endif</font>
+<a name="line157">157: </a>  }
+<a name="line158">158: </a>  <a href="../../../../docs/manualpages/Profiling/PetscLogEventEnd.html#PetscLogEventEnd">PetscLogEventEnd</a>(events[4],0,0,0,0);
+<a name="line159">159: </a>  // delete device data
+<a name="line160">160: </a>  <a href="../../../../docs/manualpages/Profiling/PetscLogEventBegin.html#PetscLogEventBegin">PetscLogEventBegin</a>(events[5],0,0,0,0);
+<a name="line161">161: </a>  CUDA_SAFE_CALL(cudaFree(d_IPDataGlobal));
+<a name="line162">162: </a>  CUDA_SAFE_CALL(cudaFree(d_invJj));
+<a name="line163">163: </a>  CUDA_SAFE_CALL(cudaFree(d_wiGlobal));
+<a name="line164">164: </a>  CUDA_SAFE_CALL(cudaFree(d_nu_alpha));
+<a name="line165">165: </a>  CUDA_SAFE_CALL(cudaFree(d_nu_beta));
+<a name="line166">166: </a>  CUDA_SAFE_CALL(cudaFree(d_invMass));
+<a name="line167">167: </a>  CUDA_SAFE_CALL(cudaFree(d_Eq_m));
+<a name="line168">168: </a>  CUDA_SAFE_CALL(cudaFree(d_BB));
+<a name="line169">169: </a>  CUDA_SAFE_CALL(cudaFree(d_DD));
+<a name="line170">170: </a>  <a href="../../../../docs/manualpages/Sys/PetscMalloc1.html#PetscMalloc1">PetscMalloc1</a>(totDim*totDim*numGCells,&amp;elemMats);
+<a name="line171">171: </a>  CUDA_SAFE_CALL(cudaMemcpy(elemMats, d_elemMats, totDim*totDim*numGCells*<font color="#4169E1">sizeof</font>(<a href="../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>), cudaMemcpyDeviceToHost));
+<a name="line172">172: </a>  CUDA_SAFE_CALL(cudaFree(d_elemMats));
+<a name="line173">173: </a>  <a href="../../../../docs/manualpages/Profiling/PetscLogEventEnd.html#PetscLogEventEnd">PetscLogEventEnd</a>(events[5],0,0,0,0);
+
+<a name="line175">175: </a>  <a href="../../../../docs/manualpages/Profiling/PetscLogEventBegin.html#PetscLogEventBegin">PetscLogEventBegin</a>(events[6],0,0,0,0);
+<a name="line176">176: </a>  <font color="#4169E1">if</font> (!cuda_assemble) {
+<a name="line177">177: </a>    <a href="../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> *elMat;
+<a name="line178">178: </a>    <font color="#4169E1">for</font> (ej = cStart, elMat = elemMats ; ej &lt; cEnd; ++ej, elMat += totDim*totDim) {
+<a name="line179">179: </a>      <a href="../../../../docs/manualpages/DMPLEX/DMPlexMatSetClosure.html#DMPlexMatSetClosure">DMPlexMatSetClosure</a>(plex, section, globalSection, JacP, ej, elMat, <a href="../../../../docs/manualpages/Sys/ADD_VALUES.html#ADD_VALUES">ADD_VALUES</a>);
+<a name="line180">180: </a>      <font color="#4169E1">if</font> (ej==-1) {
+<a name="line181">181: </a>        int d,f;
+<a name="line182">182: </a>        printf(<font color="#666666">"GPU Element matrix\n"</font>);
+<a name="line183">183: </a>        <font color="#4169E1">for</font> (d = 0; d &lt; totDim; ++d) {
+<a name="line184">184: </a>          <font color="#4169E1">for</font> (f = 0; f &lt; totDim; ++f) printf(<font color="#666666">" %17.10e"</font>,  <a href="../../../../docs/manualpages/Sys/PetscRealPart.html#PetscRealPart">PetscRealPart</a>(elMat[d*totDim + f]));
+<a name="line185">185: </a>          printf(<font color="#666666">"\n"</font>);
+<a name="line186">186: </a>        }
+<a name="line187">187: </a>        exit(12);
+<a name="line188">188: </a>      }
+<a name="line189">189: </a>    }
+<a name="line190">190: </a>  } <font color="#4169E1">else</font> {
+<a name="line191">191: </a>    <a href="../../../../docs/manualpages/Sys/PetscContainer.html#PetscContainer">PetscContainer</a> container = NULL;
+<a name="line192">192: </a>    <a href="../../../../docs/manualpages/Sys/PetscObjectQuery.html#PetscObjectQuery">PetscObjectQuery</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)JacP,<font color="#666666">"coloring"</font>,(<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>*)&amp;container);
+<a name="line193">193: </a>    <font color="#4169E1">if</font> (!container) {
+<a name="line194">194: </a>      <a href="../../../../docs/manualpages/Profiling/PetscLogEventBegin.html#PetscLogEventBegin">PetscLogEventBegin</a>(events[8],0,0,0,0);
+<a name="line195">195: </a>      <a href="../../../../docs/manualpages/LANDAU/LandauCreateColoring.html#LandauCreateColoring">LandauCreateColoring</a>(JacP, plex, &amp;container);
+<a name="line196">196: </a>      <a href="../../../../docs/manualpages/Profiling/PetscLogEventEnd.html#PetscLogEventEnd">PetscLogEventEnd</a>(events[8],0,0,0,0);
+<a name="line197">197: </a>    }
+<a name="line198">198: </a>    LandauAssembleCuda(cStart, cEnd, totDim, plex, section, globalSection, JacP, elemMats, container, events);
+<a name="line199">199: </a>  }
+<a name="line200">200: </a>  <a href="../../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(elemMats);
+<a name="line201">201: </a>  <a href="../../../../docs/manualpages/Profiling/PetscLogEventEnd.html#PetscLogEventEnd">PetscLogEventEnd</a>(events[6],0,0,0,0);
+
+<a name="line203">203: </a>  <font color="#4169E1">return</font>(0);
+<a name="line204">204: </a>}
+
+<a name="line206">206: </a><strong><font color="#4169E1"><a name="assemble_kernel"></a>__global__</font></strong>
+<a name="line207">207: </a><strong><font color="#4169E1">void assemble_kernel(const <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> nidx_arr[], <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *idx_arr[], <a href="../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> *el_mats[], const ISColoringValue colors[], Mat_SeqAIJ mats[])</font></strong>
+<a name="line208">208: </a>{
+<a name="line209">209: </a>  const <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>     myelem = (gridDim.x==1) ? threadIdx.x : blockIdx.x;
+<a name="line210">210: </a>  Mat_SeqAIJ         a = mats[colors[myelem]]; <font color="#B22222">/* copy to GPU */</font>
+<a name="line211">211: </a>  const <a href="../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> *v = el_mats[myelem];
+<a name="line212">212: </a>  const <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>    *in = idx_arr[myelem], *im = idx_arr[myelem], n = nidx_arr[myelem], m = nidx_arr[myelem];
+<a name="line213">213: </a>  <font color="#B22222">/* mat set values */</font>
+<a name="line214">214: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>          *rp,k,low,high,t,row,nrow,i,col,l;
+<a name="line215">215: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>          *ai = a.i,*ailen = a.ilen;
+<a name="line216">216: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>          *aj = a.j,lastcol = -1;
+<a name="line217">217: </a>  MatScalar         *ap=NULL,value=0.0,*aa = a.a;
+<a name="line218">218: </a>  <font color="#4169E1">for</font> (k=0; k&lt;m; k++) { <font color="#B22222">/* loop over added rows */</font>
+<a name="line219">219: </a>    row = im[k];
+<a name="line220">220: </a>    <font color="#4169E1">if</font> (row &lt; 0) <font color="#4169E1">continue</font>;
+<a name="line221">221: </a>    rp   = aj + ai[row];
+<a name="line222">222: </a>    ap = aa + ai[row];
+<a name="line223">223: </a>    nrow = ailen[row];
+<a name="line224">224: </a>    low  = 0;
+<a name="line225">225: </a>    high = nrow;
+<a name="line226">226: </a>    <font color="#4169E1">for</font> (l=0; l&lt;n; l++) { <font color="#B22222">/* loop over added columns */</font>
+<a name="line227">227: </a>      <font color="#B22222">/* if (in[l] &lt; 0) { */</font>
+<a name="line228">228: </a>      <font color="#B22222">/*   printf("\t\tin[l] &lt; 0 ?????\n"); */</font>
+<a name="line229">229: </a>      <font color="#B22222">/*   continue; */</font>
+<a name="line230">230: </a>      <font color="#B22222">/* } */</font>
+<a name="line231">231: </a>      <font color="#4169E1">while</font> (l&lt;n &amp;&amp; (value = v[l + k*n], PetscAbsScalar(value)==0.0)) l++;
+<a name="line232">232: </a>      <font color="#4169E1">if</font> (l==n) <font color="#4169E1">break</font>;
+<a name="line233">233: </a>      col = in[l];
+<a name="line234">234: </a>      <font color="#4169E1">if</font> (col &lt;= lastcol) low = 0;
+<a name="line235">235: </a>      <font color="#4169E1">else</font> high = nrow;
+<a name="line236">236: </a>      lastcol = col;
+<a name="line237">237: </a>      <font color="#4169E1">while</font> (high-low &gt; 5) {
+<a name="line238">238: </a>        t = (low+high)/2;
+<a name="line239">239: </a>        <font color="#4169E1">if</font> (rp[t] &gt; col) high = t;
+<a name="line240">240: </a>        <font color="#4169E1">else</font> low = t;
+<a name="line241">241: </a>      }
+<a name="line242">242: </a>      <font color="#4169E1">for</font> (i=low; i&lt;high; i++) {
+<a name="line243">243: </a>        // <font color="#4169E1">if</font> (rp[i] &gt; col) <font color="#4169E1">break</font>;
+<a name="line244">244: </a>        <font color="#4169E1">if</font> (rp[i] == col) {
+<a name="line245">245: </a>          ap[i] += value;
+<a name="line246">246: </a>          low = i + 1;
+<a name="line247">247: </a>          <font color="#4169E1">goto</font> noinsert;
+<a name="line248">248: </a>        }
+<a name="line249">249: </a>      }
+<a name="line250">250: </a>      printf(<font color="#666666">"\t\t\t ERROR in assemble_kernel\n"</font>);
+<a name="line251">251: </a><strong><font color="#FF0000">    noinsert:</font></strong>;
+<a name="line252">252: </a>    }
+<a name="line253">253: </a>  }
+<a name="line254">254: </a>}
+
+<a name="line256">256: </a><strong><font color="#4169E1"><a name="LandauAssembleCuda"></a>static <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> LandauAssembleCuda(<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> cStart, <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> cEnd, <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> totDim, <a href="../../../../docs/manualpages/DM/DM.html#DM">DM</a> plex, <a href="../../../../docs/manualpages/PetscSection/PetscSection.html#PetscSection">PetscSection</a> section, <a href="../../../../docs/manualpages/PetscSection/PetscSection.html#PetscSection">PetscSection</a> globalSection, <a href="../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> JacP, <a href="../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> elemMats[], <a href="../../../../docs/manualpages/Sys/PetscContainer.html#PetscContainer">PetscContainer</a> container, const <a href="../../../../docs/manualpages/Profiling/PetscLogEvent.html#PetscLogEvent">PetscLogEvent</a> events[])</font></strong>
+<a name="line257">257: </a>{
+<a name="line258">258: </a>  <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>    ierr;
+<a name="line259">259: </a><strong><font color="#228B22">#define LANDAU_MAX_COLORS 16</font></strong>
+<a name="line260">260: </a><strong><font color="#228B22">#define LANDAU_MAX_ELEMS 512</font></strong>
+<a name="line261">261: </a>  Mat_SeqAIJ             h_mats[LANDAU_MAX_COLORS], *jaca = (Mat_SeqAIJ *)JacP-&gt;data, *d_mats;
+<a name="line262">262: </a>  const <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>         nelems = cEnd - cStart, nnz = jaca-&gt;i[JacP-&gt;rmap-&gt;n], N = JacP-&gt;rmap-&gt;n;  <font color="#B22222">/* serial */</font>
+<a name="line263">263: </a>  const ISColoringValue *colors;
+<a name="line264">264: </a>  ISColoringValue       *d_colors,colour;
+<a name="line265">265: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>              *h_idx_arr[LANDAU_MAX_ELEMS], h_nidx_arr[LANDAU_MAX_ELEMS], *d_nidx_arr, **d_idx_arr,nc,ej,j,cell;
+<a name="line266">266: </a>  <a href="../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>           *h_new_el_mats[LANDAU_MAX_ELEMS], *val_buf, **d_new_el_mats;
+<a name="line267">267: </a>  <a href="../../../../docs/manualpages/IS/ISColoring.html#ISColoring">ISColoring</a>             iscoloring;
+<a name="line268">268: </a>  <a href="../../../../docs/manualpages/Sys/PetscContainerGetPointer.html#PetscContainerGetPointer">PetscContainerGetPointer</a>(container,(void**)&amp;iscoloring);
+<a name="line269">269: </a>  <font color="#B22222">/* get colors */</font>
+<a name="line270">270: </a>  <a href="../../../../docs/manualpages/IS/ISColoringGetColors.html#ISColoringGetColors">ISColoringGetColors</a>(iscoloring, &amp;j, &amp;nc, &amp;colors);
+<a name="line271">271: </a>  <font color="#4169E1">if</font> (nelems&gt;LANDAU_MAX_ELEMS) <a href="../../../../docs/manualpages/Sys/SETERRQ2.html#SETERRQ2">SETERRQ2</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, PETSC_ERR_PLIB, <font color="#666666">"too many elements. %D &gt; %D"</font>,nelems,LANDAU_MAX_ELEMS);
+<a name="line272">272: </a>  <font color="#4169E1">if</font> (nc&gt;LANDAU_MAX_COLORS) <a href="../../../../docs/manualpages/Sys/SETERRQ2.html#SETERRQ2">SETERRQ2</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, PETSC_ERR_PLIB, <font color="#666666">"too many colors. %D &gt; %D"</font>,nc,LANDAU_MAX_COLORS);
+<a name="line273">273: </a>  <font color="#B22222">/* colors for kernel */</font>
+<a name="line274">274: </a>  CUDA_SAFE_CALL(cudaMalloc((void **)&amp;d_colors,         nelems*<font color="#4169E1">sizeof</font>(ISColoringValue))); // kernel input
+<a name="line275">275: </a>  CUDA_SAFE_CALL(cudaMemcpy(          d_colors, colors, nelems*<font color="#4169E1">sizeof</font>(ISColoringValue), cudaMemcpyHostToDevice));
+<a name="line276">276: </a>  <font color="#B22222">/* get indices and element matrices */</font>
+<a name="line277">277: </a>  <font color="#4169E1">for</font> (cell = cStart, ej = 0 ; cell &lt; cEnd; ++cell, ++ej) {
+<a name="line278">278: </a>    <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> numindices,*indices;
+<a name="line279">279: </a>    <a href="../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> *elMat = &amp;elemMats[ej*totDim*totDim];
+<a name="line280">280: </a>    <a href="../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> *valuesOrig = elMat;
+<a name="line281">281: </a>    <a href="../../../../docs/manualpages/DMPLEX/DMPlexGetClosureIndices.html#DMPlexGetClosureIndices">DMPlexGetClosureIndices</a>(plex, section, globalSection, cell, <a href="../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>, &amp;numindices, &amp;indices, NULL, (<a href="../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> **) &amp;elMat);
+<a name="line282">282: </a>    h_nidx_arr[ej] = numindices;
+<a name="line283">283: </a>    CUDA_SAFE_CALL(cudaMalloc((void **)&amp;h_idx_arr[ej],            numindices*<font color="#4169E1">sizeof</font>(<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>))); // kernel input
+<a name="line284">284: </a>    CUDA_SAFE_CALL(cudaMemcpy(          h_idx_arr[ej],   indices, numindices*<font color="#4169E1">sizeof</font>(<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>), cudaMemcpyHostToDevice));
+<a name="line285">285: </a>    CUDA_SAFE_CALL(cudaMalloc((void **)&amp;h_new_el_mats[ej],        numindices*numindices*<font color="#4169E1">sizeof</font>(<a href="../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>))); // kernel input
+<a name="line286">286: </a>    CUDA_SAFE_CALL(cudaMemcpy(          h_new_el_mats[ej], elMat, numindices*numindices*<font color="#4169E1">sizeof</font>(<a href="../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>), cudaMemcpyHostToDevice));
+<a name="line287">287: </a>    <a href="../../../../docs/manualpages/DMPLEX/DMPlexRestoreClosureIndices.html#DMPlexRestoreClosureIndices">DMPlexRestoreClosureIndices</a>(plex, section, globalSection, cell, <a href="../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>, &amp;numindices, &amp;indices, NULL, (<a href="../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> **) &amp;elMat);
+<a name="line288">288: </a>    <font color="#4169E1">if</font> (elMat != valuesOrig) {<a href="../../../../docs/manualpages/DM/DMRestoreWorkArray.html#DMRestoreWorkArray">DMRestoreWorkArray</a>(plex, numindices*numindices, <a href="../../../../docs/manualpages/Sys/MPIU_SCALAR.html#MPIU_SCALAR">MPIU_SCALAR</a>, &amp;elMat);}
+<a name="line289">289: </a>  }
+<a name="line290">290: </a>  CUDA_SAFE_CALL(cudaMalloc((void **)&amp;d_nidx_arr,                  nelems*<font color="#4169E1">sizeof</font>(<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>))); // kernel input
+<a name="line291">291: </a>  CUDA_SAFE_CALL(cudaMemcpy(          d_nidx_arr,    h_nidx_arr,   nelems*<font color="#4169E1">sizeof</font>(<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>), cudaMemcpyHostToDevice));
+<a name="line292">292: </a>  CUDA_SAFE_CALL(cudaMalloc((void **)&amp;d_idx_arr,                   nelems*<font color="#4169E1">sizeof</font>(<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>*))); // kernel input
+<a name="line293">293: </a>  CUDA_SAFE_CALL(cudaMemcpy(          d_idx_arr,     h_idx_arr,    nelems*<font color="#4169E1">sizeof</font>(<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>*), cudaMemcpyHostToDevice));
+<a name="line294">294: </a>  CUDA_SAFE_CALL(cudaMalloc((void **)&amp;d_new_el_mats,               nelems*<font color="#4169E1">sizeof</font>(<a href="../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>*))); // kernel input
+<a name="line295">295: </a>  CUDA_SAFE_CALL(cudaMemcpy(          d_new_el_mats, h_new_el_mats,nelems*<font color="#4169E1">sizeof</font>(<a href="../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>*), cudaMemcpyHostToDevice));
+<a name="line296">296: </a>  <font color="#B22222">/* make matrix buffers */</font>
+<a name="line297">297: </a>  <font color="#4169E1">for</font> (colour=0; colour&lt;nc; colour++) {
+<a name="line298">298: </a>    Mat_SeqAIJ *a = &amp;h_mats[colour];
+<a name="line299">299: </a>    <font color="#B22222">/* create on GPU and copy to GPU */</font>
+<a name="line300">300: </a>    CUDA_SAFE_CALL(cudaMalloc((void **)&amp;a-&gt;i,               (N+1)*<font color="#4169E1">sizeof</font>(<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>))); // kernel input
+<a name="line301">301: </a>    CUDA_SAFE_CALL(cudaMemcpy(          a-&gt;i,    jaca-&gt;i,   (N+1)*<font color="#4169E1">sizeof</font>(<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>), cudaMemcpyHostToDevice));
+<a name="line302">302: </a>    CUDA_SAFE_CALL(cudaMalloc((void **)&amp;a-&gt;ilen,            (N)*<font color="#4169E1">sizeof</font>(<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>))); // kernel input
+<a name="line303">303: </a>    CUDA_SAFE_CALL(cudaMemcpy(          a-&gt;ilen, jaca-&gt;ilen,(N)*<font color="#4169E1">sizeof</font>(<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>), cudaMemcpyHostToDevice));
+<a name="line304">304: </a>    CUDA_SAFE_CALL(cudaMalloc((void **)&amp;a-&gt;j,               (nnz)*<font color="#4169E1">sizeof</font>(<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>))); // kernel input
+<a name="line305">305: </a>    CUDA_SAFE_CALL(cudaMemcpy(          a-&gt;j,    jaca-&gt;j,   (nnz)*<font color="#4169E1">sizeof</font>(<a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>), cudaMemcpyHostToDevice));
+<a name="line306">306: </a>    CUDA_SAFE_CALL(cudaMalloc((void **)&amp;a-&gt;a,               (nnz)*<font color="#4169E1">sizeof</font>(<a href="../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>))); // kernel output
+<a name="line307">307: </a>    CUDA_SAFE_CALL(cudaMemset(          a-&gt;a, 0,            (nnz)*<font color="#4169E1">sizeof</font>(<a href="../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>)));
+<a name="line308">308: </a>  }
+<a name="line309">309: </a>  CUDA_SAFE_CALL(cudaMalloc(&amp;d_mats,         nc*<font color="#4169E1">sizeof</font>(Mat_SeqAIJ))); // kernel input
+<a name="line310">310: </a>  CUDA_SAFE_CALL(cudaMemcpy( d_mats, h_mats, nc*<font color="#4169E1">sizeof</font>(Mat_SeqAIJ), cudaMemcpyHostToDevice));
+<a name="line311">311: </a>  <font color="#B22222">/* do it */</font>
+<a name="line312">312: </a>  assemble_kernel&lt;&lt;&lt;nelems,1&gt;&gt;&gt;(d_nidx_arr, d_idx_arr, d_new_el_mats, d_colors, d_mats);
+<a name="line313">313: </a>  CHECK_LAUNCH_ERROR();
+<a name="line314">314: </a>  <font color="#B22222">/* cleanup */</font>
+<a name="line315">315: </a>  CUDA_SAFE_CALL(cudaFree(d_colors));
+<a name="line316">316: </a>  CUDA_SAFE_CALL(cudaFree(d_nidx_arr));
+<a name="line317">317: </a>  <font color="#4169E1">for</font> (ej = cStart ; ej &lt; nelems; ++ej) {
+<a name="line318">318: </a>    CUDA_SAFE_CALL(cudaFree(h_idx_arr[ej]));
+<a name="line319">319: </a>    CUDA_SAFE_CALL(cudaFree(h_new_el_mats[ej]));
+<a name="line320">320: </a>  }
+<a name="line321">321: </a>  CUDA_SAFE_CALL(cudaFree(d_idx_arr));
+<a name="line322">322: </a>  CUDA_SAFE_CALL(cudaFree(d_new_el_mats));
+<a name="line323">323: </a>  <font color="#B22222">/* copy &amp; add <a href="../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> data back to CPU to JacP */</font>
+
+<a name="line325">325: </a>  <a href="../../../../docs/manualpages/Profiling/PetscLogEventBegin.html#PetscLogEventBegin">PetscLogEventBegin</a>(events[2],0,0,0,0);
+<a name="line326">326: </a>  <a href="../../../../docs/manualpages/Sys/PetscMalloc1.html#PetscMalloc1">PetscMalloc1</a>(nnz,&amp;val_buf);
+<a name="line327">327: </a>  <a href="../../../../docs/manualpages/Sys/PetscMemzero.html#PetscMemzero">PetscMemzero</a>(jaca-&gt;a,nnz*<font color="#4169E1">sizeof</font>(<a href="../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>));
+<a name="line328">328: </a>  <font color="#4169E1">for</font> (colour=0; colour&lt;nc; colour++) {
+<a name="line329">329: </a>    Mat_SeqAIJ *a = &amp;h_mats[colour];
+<a name="line330">330: </a>    CUDA_SAFE_CALL(cudaMemcpy(val_buf, a-&gt;a, (nnz)*<font color="#4169E1">sizeof</font>(<a href="../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>), cudaMemcpyDeviceToHost));
+<a name="line331">331: </a>    PetscKernelAXPY(jaca-&gt;a,1.0,val_buf,nnz);
+<a name="line332">332: </a>  }
+<a name="line333">333: </a>  <a href="../../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(val_buf);
+<a name="line334">334: </a>  <a href="../../../../docs/manualpages/Profiling/PetscLogEventEnd.html#PetscLogEventEnd">PetscLogEventEnd</a>(events[2],0,0,0,0);
+
+<a name="line336">336: </a>  <font color="#4169E1">for</font> (colour=0; colour&lt;nc; colour++) {
+<a name="line337">337: </a>    Mat_SeqAIJ *a = &amp;h_mats[colour];
+<a name="line338">338: </a>    <font color="#B22222">/* destroy mat */</font>
+<a name="line339">339: </a>    CUDA_SAFE_CALL(cudaFree(a-&gt;i));
+<a name="line340">340: </a>    CUDA_SAFE_CALL(cudaFree(a-&gt;ilen));
+<a name="line341">341: </a>    CUDA_SAFE_CALL(cudaFree(a-&gt;j));
+<a name="line342">342: </a>    CUDA_SAFE_CALL(cudaFree(a-&gt;a));
+<a name="line343">343: </a>  }
+<a name="line344">344: </a>  CUDA_SAFE_CALL(cudaFree(d_mats));
+<a name="line345">345: </a>  <font color="#4169E1">return</font>(0);
+<a name="line346">346: </a>}
+</pre>
+</body>
+
+</html>

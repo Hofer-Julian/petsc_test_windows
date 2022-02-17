@@ -1,0 +1,502 @@
+<center><a href="axpy.c">Actual source code: axpy.c</a></center><br>
+
+<html>
+<head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/src/mat/utils/axpy.c.html" />
+<title></title>
+<meta name="generator" content="c2html 0.9.4">
+<meta name="date" content="2021-03-30T16:50:36+00:00">
+</head>
+
+<body bgcolor="#FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 src/mat/utils/axpy.c.html "><small>Report Typos and Errors</small></a></div>
+<pre width="80">
+
+<a name="line2">  2: </a>#include <A href="../../../include/petsc/private/matimpl.h.html">&lt;petsc/private/matimpl.h&gt;</A>
+
+<a name="line4">  4: </a><strong><font color="#4169E1"><a name="MatTransposeAXPY_Private"></a>static <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatTransposeAXPY_Private(<a href="../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> Y,<a href="../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> a,<a href="../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> X,<a href="../../../docs/manualpages/Mat/MatStructure.html#MatStructure">MatStructure</a> str,<a href="../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> T)</font></strong>
+<a name="line5">  5: </a>{
+<a name="line6">  6: </a>  <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> ierr,(*f)(<a href="../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a>,<a href="../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a>*);
+<a name="line7">  7: </a>  <a href="../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a>            A,F;
+
+<a name="line10"> 10: </a>  <a href="../../../docs/manualpages/Sys/PetscObjectQueryFunction.html#PetscObjectQueryFunction">PetscObjectQueryFunction</a>((<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)T,<font color="#666666">"MatTransposeGetMat_C"</font>,&amp;f);
+<a name="line11"> 11: </a>  <font color="#4169E1">if</font> (f) {
+<a name="line12"> 12: </a>    <a href="../../../docs/manualpages/Mat/MatTransposeGetMat.html#MatTransposeGetMat">MatTransposeGetMat</a>(T,&amp;A);
+<a name="line13"> 13: </a>    <font color="#4169E1">if</font> (T == X) {
+<a name="line14"> 14: </a>      <a href="../../../docs/manualpages/Profiling/PetscInfo.html#PetscInfo">PetscInfo</a>(NULL,<font color="#666666">"Explicitly transposing X of type MATTRANSPOSEMAT to perform <a href="../../../docs/manualpages/Mat/MatAXPY.html#MatAXPY">MatAXPY</a>()\n"</font>);
+<a name="line15"> 15: </a>      <a href="../../../docs/manualpages/Mat/MatTranspose.html#MatTranspose">MatTranspose</a>(A,<a href="../../../docs/manualpages/Mat/MatReuse.html#MatReuse">MAT_INITIAL_MATRIX</a>,&amp;F);
+<a name="line16"> 16: </a>      A = Y;
+<a name="line17"> 17: </a>    } <font color="#4169E1">else</font> {
+<a name="line18"> 18: </a>      <a href="../../../docs/manualpages/Profiling/PetscInfo.html#PetscInfo">PetscInfo</a>(NULL,<font color="#666666">"Transposing X because Y of type MATTRANSPOSEMAT to perform <a href="../../../docs/manualpages/Mat/MatAXPY.html#MatAXPY">MatAXPY</a>()\n"</font>);
+<a name="line19"> 19: </a>      <a href="../../../docs/manualpages/Mat/MatTranspose.html#MatTranspose">MatTranspose</a>(X,<a href="../../../docs/manualpages/Mat/MatReuse.html#MatReuse">MAT_INITIAL_MATRIX</a>,&amp;F);
+<a name="line20"> 20: </a>    }
+<a name="line21"> 21: </a>  } <font color="#4169E1">else</font> {
+<a name="line22"> 22: </a>    <a href="../../../docs/manualpages/Mat/MatHermitianTransposeGetMat.html#MatHermitianTransposeGetMat">MatHermitianTransposeGetMat</a>(T,&amp;A);
+<a name="line23"> 23: </a>    <font color="#4169E1">if</font> (T == X) {
+<a name="line24"> 24: </a>      <a href="../../../docs/manualpages/Profiling/PetscInfo.html#PetscInfo">PetscInfo</a>(NULL,<font color="#666666">"Explicitly Hermitian transposing X of type MATTRANSPOSEMAT to perform <a href="../../../docs/manualpages/Mat/MatAXPY.html#MatAXPY">MatAXPY</a>()\n"</font>);
+<a name="line25"> 25: </a>      <a href="../../../docs/manualpages/Mat/MatHermitianTranspose.html#MatHermitianTranspose">MatHermitianTranspose</a>(A,<a href="../../../docs/manualpages/Mat/MatReuse.html#MatReuse">MAT_INITIAL_MATRIX</a>,&amp;F);
+<a name="line26"> 26: </a>      A = Y;
+<a name="line27"> 27: </a>    } <font color="#4169E1">else</font> {
+<a name="line28"> 28: </a>      <a href="../../../docs/manualpages/Profiling/PetscInfo.html#PetscInfo">PetscInfo</a>(NULL,<font color="#666666">"Hermitian transposing X because Y of type MATTRANSPOSEMAT to perform <a href="../../../docs/manualpages/Mat/MatAXPY.html#MatAXPY">MatAXPY</a>()\n"</font>);
+<a name="line29"> 29: </a>      <a href="../../../docs/manualpages/Mat/MatHermitianTranspose.html#MatHermitianTranspose">MatHermitianTranspose</a>(X,<a href="../../../docs/manualpages/Mat/MatReuse.html#MatReuse">MAT_INITIAL_MATRIX</a>,&amp;F);
+<a name="line30"> 30: </a>    }
+<a name="line31"> 31: </a>  }
+<a name="line32"> 32: </a>  <a href="../../../docs/manualpages/Mat/MatAXPY.html#MatAXPY">MatAXPY</a>(A,a,F,str);
+<a name="line33"> 33: </a>  <a href="../../../docs/manualpages/Mat/MatDestroy.html#MatDestroy">MatDestroy</a>(&amp;F);
+<a name="line34"> 34: </a>  <font color="#4169E1">return</font>(0);
+<a name="line35"> 35: </a>}
+
+<a name="line37"> 37: </a><font color="#B22222">/*@</font>
+<a name="line38"> 38: </a><font color="#B22222">   <a href="../../../docs/manualpages/Mat/MatAXPY.html#MatAXPY">MatAXPY</a> - Computes Y = a*X + Y.</font>
+
+<a name="line40"> 40: </a><font color="#B22222">   Logically  Collective on <a href="../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a></font>
+
+<a name="line42"> 42: </a><font color="#B22222">   Input Parameters:</font>
+<a name="line43"> 43: </a><font color="#B22222">+  a - the scalar multiplier</font>
+<a name="line44"> 44: </a><font color="#B22222">.  X - the first matrix</font>
+<a name="line45"> 45: </a><font color="#B22222">.  Y - the second matrix</font>
+<a name="line46"> 46: </a><font color="#B22222">-  str - either <a href="../../../docs/manualpages/Mat/MatStructure.html#MatStructure">SAME_NONZERO_PATTERN</a>, <a href="../../../docs/manualpages/Mat/MatStructure.html#MatStructure">DIFFERENT_NONZERO_PATTERN</a></font>
+<a name="line47"> 47: </a><font color="#B22222">         or <a href="../../../docs/manualpages/Mat/MatStructure.html#MatStructure">SUBSET_NONZERO_PATTERN</a> (nonzeros of X is a subset of Y's)</font>
+
+<a name="line49"> 49: </a><font color="#B22222">   Notes: No operation is performed when a is zero.</font>
+
+<a name="line51"> 51: </a><font color="#B22222">   Level: intermediate</font>
+
+<a name="line53"> 53: </a><font color="#B22222">.seealso: <a href="../../../docs/manualpages/Mat/MatAYPX.html#MatAYPX">MatAYPX</a>()</font>
+<a name="line54"> 54: </a><font color="#B22222"> @*/</font>
+<a name="line55"> 55: </a><strong><font color="#4169E1"><a name="MatAXPY"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../docs/manualpages/Mat/MatAXPY.html#MatAXPY">MatAXPY</a>(<a href="../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> Y,<a href="../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> a,<a href="../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> X,<a href="../../../docs/manualpages/Mat/MatStructure.html#MatStructure">MatStructure</a> str)</font></strong>
+<a name="line56"> 56: </a>{
+<a name="line58"> 58: </a>  <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       M1,M2,N1,N2;
+<a name="line59"> 59: </a>  <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       m1,m2,n1,n2;
+<a name="line60"> 60: </a>  <a href="../../../docs/manualpages/Mat/MatType.html#MatType">MatType</a>        t1,t2;
+<a name="line61"> 61: </a>  <a href="../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>      sametype,transpose;
+
+<a name="line68"> 68: </a>  <a href="../../../docs/manualpages/Mat/MatGetSize.html#MatGetSize">MatGetSize</a>(X,&amp;M1,&amp;N1);
+<a name="line69"> 69: </a>  <a href="../../../docs/manualpages/Mat/MatGetSize.html#MatGetSize">MatGetSize</a>(Y,&amp;M2,&amp;N2);
+<a name="line70"> 70: </a>  <a href="../../../docs/manualpages/Mat/MatGetLocalSize.html#MatGetLocalSize">MatGetLocalSize</a>(X,&amp;m1,&amp;n1);
+<a name="line71"> 71: </a>  <a href="../../../docs/manualpages/Mat/MatGetLocalSize.html#MatGetLocalSize">MatGetLocalSize</a>(Y,&amp;m2,&amp;n2);
+<a name="line72"> 72: </a>  <font color="#4169E1">if</font> (M1 != M2 || N1 != N2) <a href="../../../docs/manualpages/Sys/SETERRQ4.html#SETERRQ4">SETERRQ4</a>(<a href="../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)Y),PETSC_ERR_ARG_SIZ,<font color="#666666">"Non conforming matrix add: global sizes %D x %D, %D x %D"</font>,M1,M2,N1,N2);
+<a name="line73"> 73: </a>  <font color="#4169E1">if</font> (m1 != m2 || n1 != n2) <a href="../../../docs/manualpages/Sys/SETERRQ4.html#SETERRQ4">SETERRQ4</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_ARG_SIZ,<font color="#666666">"Non conforming matrix add: local sizes %D x %D, %D x %D"</font>,m1,m2,n1,n2);
+<a name="line74"> 74: </a>  <font color="#4169E1">if</font> (!Y-&gt;assembled) <a href="../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)Y),PETSC_ERR_ARG_WRONGSTATE,<font color="#666666">"Not for unassembled matrix (Y)"</font>);
+<a name="line75"> 75: </a>  <font color="#4169E1">if</font> (!X-&gt;assembled) <a href="../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)X),PETSC_ERR_ARG_WRONGSTATE,<font color="#666666">"Not for unassembled matrix (X)"</font>);
+<a name="line76"> 76: </a>  <font color="#4169E1">if</font> (a == (<a href="../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>)0.0) <font color="#4169E1">return</font>(0);
+<a name="line77"> 77: </a>  <font color="#4169E1">if</font> (Y == X) {
+<a name="line78"> 78: </a>    <a href="../../../docs/manualpages/Mat/MatScale.html#MatScale">MatScale</a>(Y,1.0 + a);
+<a name="line79"> 79: </a>    <font color="#4169E1">return</font>(0);
+<a name="line80"> 80: </a>  }
+<a name="line81"> 81: </a>  <a href="../../../docs/manualpages/Mat/MatGetType.html#MatGetType">MatGetType</a>(X,&amp;t1);
+<a name="line82"> 82: </a>  <a href="../../../docs/manualpages/Mat/MatGetType.html#MatGetType">MatGetType</a>(Y,&amp;t2);
+<a name="line83"> 83: </a>  <a href="../../../docs/manualpages/Sys/PetscStrcmp.html#PetscStrcmp">PetscStrcmp</a>(t1,t2,&amp;sametype);
+<a name="line84"> 84: </a>  <a href="../../../docs/manualpages/Profiling/PetscLogEventBegin.html#PetscLogEventBegin">PetscLogEventBegin</a>(MAT_AXPY,Y,0,0,0);
+<a name="line85"> 85: </a>  <font color="#4169E1">if</font> (Y-&gt;ops-&gt;axpy &amp;&amp; (sametype || X-&gt;ops-&gt;axpy == Y-&gt;ops-&gt;axpy)) {
+<a name="line86"> 86: </a>    (*Y-&gt;ops-&gt;axpy)(Y,a,X,str);
+<a name="line87"> 87: </a>  } <font color="#4169E1">else</font> {
+<a name="line88"> 88: </a>    <a href="../../../docs/manualpages/Sys/PetscStrcmp.html#PetscStrcmp">PetscStrcmp</a>(t1,MATTRANSPOSEMAT,&amp;transpose);
+<a name="line89"> 89: </a>    <font color="#4169E1">if</font> (transpose) {
+<a name="line90"> 90: </a>      MatTransposeAXPY_Private(Y,a,X,str,X);
+<a name="line91"> 91: </a>    } <font color="#4169E1">else</font> {
+<a name="line92"> 92: </a>      <a href="../../../docs/manualpages/Sys/PetscStrcmp.html#PetscStrcmp">PetscStrcmp</a>(t2,MATTRANSPOSEMAT,&amp;transpose);
+<a name="line93"> 93: </a>      <font color="#4169E1">if</font> (transpose) {
+<a name="line94"> 94: </a>        MatTransposeAXPY_Private(Y,a,X,str,Y);
+<a name="line95"> 95: </a>      } <font color="#4169E1">else</font> {
+<a name="line96"> 96: </a>        MatAXPY_Basic(Y,a,X,str);
+<a name="line97"> 97: </a>      }
+<a name="line98"> 98: </a>    }
+<a name="line99"> 99: </a>  }
+<a name="line100">100: </a>  <a href="../../../docs/manualpages/Profiling/PetscLogEventEnd.html#PetscLogEventEnd">PetscLogEventEnd</a>(MAT_AXPY,Y,0,0,0);
+<a name="line101">101: </a>  <font color="#4169E1">return</font>(0);
+<a name="line102">102: </a>}
+
+<a name="line104">104: </a><strong><font color="#4169E1"><a name="MatAXPY_Basic_Preallocate"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatAXPY_Basic_Preallocate(<a href="../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> Y, <a href="../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> X, <a href="../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> *B)</font></strong>
+<a name="line105">105: </a>{
+<a name="line107">107: </a>  <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> (*preall)(<a href="../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a>,<a href="../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a>,<a href="../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a>*) = NULL;
+
+<a name="line110">110: </a>  <font color="#B22222">/* look for any available faster alternative to the general preallocator */</font>
+<a name="line111">111: </a>  <a href="../../../docs/manualpages/Sys/PetscObjectQueryFunction.html#PetscObjectQueryFunction">PetscObjectQueryFunction</a>((<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)Y,<font color="#666666">"MatAXPYGetPreallocation_C"</font>,&amp;preall);
+<a name="line112">112: </a>  <font color="#4169E1">if</font> (preall) {
+<a name="line113">113: </a>    (*preall)(Y,X,B);
+<a name="line114">114: </a>  } <font color="#4169E1">else</font> { <font color="#B22222">/* Use MatPrellocator, assumes same row-col distribution */</font>
+<a name="line115">115: </a>    <a href="../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a>      preallocator;
+<a name="line116">116: </a>    <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> r,rstart,rend;
+<a name="line117">117: </a>    <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> m,n,M,N;
+
+<a name="line119">119: </a>    <a href="../../../docs/manualpages/Mat/MatGetRowUpperTriangular.html#MatGetRowUpperTriangular">MatGetRowUpperTriangular</a>(Y);
+<a name="line120">120: </a>    <a href="../../../docs/manualpages/Mat/MatGetRowUpperTriangular.html#MatGetRowUpperTriangular">MatGetRowUpperTriangular</a>(X);
+<a name="line121">121: </a>    <a href="../../../docs/manualpages/Mat/MatGetSize.html#MatGetSize">MatGetSize</a>(Y,&amp;M,&amp;N);
+<a name="line122">122: </a>    <a href="../../../docs/manualpages/Mat/MatGetLocalSize.html#MatGetLocalSize">MatGetLocalSize</a>(Y,&amp;m,&amp;n);
+<a name="line123">123: </a>    <a href="../../../docs/manualpages/Mat/MatCreate.html#MatCreate">MatCreate</a>(<a href="../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)Y),&amp;preallocator);
+<a name="line124">124: </a>    <a href="../../../docs/manualpages/Mat/MatSetType.html#MatSetType">MatSetType</a>(preallocator,<a href="../../../docs/manualpages/Mat/MATPREALLOCATOR.html#MATPREALLOCATOR">MATPREALLOCATOR</a>);
+<a name="line125">125: </a>    <a href="../../../docs/manualpages/Mat/MatSetSizes.html#MatSetSizes">MatSetSizes</a>(preallocator,m,n,M,N);
+<a name="line126">126: </a>    <a href="../../../docs/manualpages/Mat/MatSetUp.html#MatSetUp">MatSetUp</a>(preallocator);
+<a name="line127">127: </a>    <a href="../../../docs/manualpages/Mat/MatGetOwnershipRange.html#MatGetOwnershipRange">MatGetOwnershipRange</a>(preallocator,&amp;rstart,&amp;rend);
+<a name="line128">128: </a>    <font color="#4169E1">for</font> (r = rstart; r &lt; rend; ++r) {
+<a name="line129">129: </a>      <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>          ncols;
+<a name="line130">130: </a>      const <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>    *row;
+<a name="line131">131: </a>      const <a href="../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> *vals;
+
+<a name="line133">133: </a>      <a href="../../../docs/manualpages/Mat/MatGetRow.html#MatGetRow">MatGetRow</a>(Y,r,&amp;ncols,&amp;row,&amp;vals);
+<a name="line134">134: </a>      <a href="../../../docs/manualpages/Mat/MatSetValues.html#MatSetValues">MatSetValues</a>(preallocator,1,&amp;r,ncols,row,vals,<a href="../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>);
+<a name="line135">135: </a>      <a href="../../../docs/manualpages/Mat/MatRestoreRow.html#MatRestoreRow">MatRestoreRow</a>(Y,r,&amp;ncols,&amp;row,&amp;vals);
+<a name="line136">136: </a>      <a href="../../../docs/manualpages/Mat/MatGetRow.html#MatGetRow">MatGetRow</a>(X,r,&amp;ncols,&amp;row,&amp;vals);
+<a name="line137">137: </a>      <a href="../../../docs/manualpages/Mat/MatSetValues.html#MatSetValues">MatSetValues</a>(preallocator,1,&amp;r,ncols,row,vals,<a href="../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>);
+<a name="line138">138: </a>      <a href="../../../docs/manualpages/Mat/MatRestoreRow.html#MatRestoreRow">MatRestoreRow</a>(X,r,&amp;ncols,&amp;row,&amp;vals);
+<a name="line139">139: </a>    }
+<a name="line140">140: </a>    <a href="../../../docs/manualpages/Mat/MatAssemblyBegin.html#MatAssemblyBegin">MatAssemblyBegin</a>(preallocator,<a href="../../../docs/manualpages/Mat/MatAssemblyType.html#MatAssemblyType">MAT_FINAL_ASSEMBLY</a>);
+<a name="line141">141: </a>    <a href="../../../docs/manualpages/Mat/MatAssemblyEnd.html#MatAssemblyEnd">MatAssemblyEnd</a>(preallocator,<a href="../../../docs/manualpages/Mat/MatAssemblyType.html#MatAssemblyType">MAT_FINAL_ASSEMBLY</a>);
+<a name="line142">142: </a>    <a href="../../../docs/manualpages/Mat/MatRestoreRowUpperTriangular.html#MatRestoreRowUpperTriangular">MatRestoreRowUpperTriangular</a>(Y);
+<a name="line143">143: </a>    <a href="../../../docs/manualpages/Mat/MatRestoreRowUpperTriangular.html#MatRestoreRowUpperTriangular">MatRestoreRowUpperTriangular</a>(X);
+
+<a name="line145">145: </a>    <a href="../../../docs/manualpages/Mat/MatCreate.html#MatCreate">MatCreate</a>(<a href="../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)Y),B);
+<a name="line146">146: </a>    <a href="../../../docs/manualpages/Mat/MatSetType.html#MatSetType">MatSetType</a>(*B,((<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)Y)-&gt;type_name);
+<a name="line147">147: </a>    <a href="../../../docs/manualpages/Mat/MatSetSizes.html#MatSetSizes">MatSetSizes</a>(*B,m,n,M,N);
+<a name="line148">148: </a>    <a href="../../../docs/manualpages/Mat/MatPreallocatorPreallocate.html#MatPreallocatorPreallocate">MatPreallocatorPreallocate</a>(preallocator,<a href="../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>,*B);
+<a name="line149">149: </a>    <a href="../../../docs/manualpages/Mat/MatDestroy.html#MatDestroy">MatDestroy</a>(&amp;preallocator);
+<a name="line150">150: </a>  }
+<a name="line151">151: </a>  <font color="#4169E1">return</font>(0);
+<a name="line152">152: </a>}
+
+<a name="line154">154: </a><strong><font color="#4169E1"><a name="MatAXPY_Basic"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatAXPY_Basic(<a href="../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> Y,<a href="../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> a,<a href="../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> X,<a href="../../../docs/manualpages/Mat/MatStructure.html#MatStructure">MatStructure</a> str)</font></strong>
+<a name="line155">155: </a>{
+<a name="line157">157: </a>  <a href="../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>      isshell,isdense;
+
+<a name="line160">160: </a>  <a href="../../../docs/manualpages/Sys/PetscObjectTypeCompare.html#PetscObjectTypeCompare">PetscObjectTypeCompare</a>((<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)Y,<a href="../../../docs/manualpages/Mat/MATSHELL.html#MATSHELL">MATSHELL</a>,&amp;isshell);
+<a name="line161">161: </a>  <font color="#4169E1">if</font> (isshell) { <font color="#B22222">/* MatShell has special support for AXPY */</font>
+<a name="line162">162: </a>    <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> (*f)(<a href="../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a>,<a href="../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>,<a href="../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a>,<a href="../../../docs/manualpages/Mat/MatStructure.html#MatStructure">MatStructure</a>);
+
+<a name="line164">164: </a>    <a href="../../../docs/manualpages/Mat/MatGetOperation.html#MatGetOperation">MatGetOperation</a>(Y,MATOP_AXPY,(void (**)(void))&amp;f);
+<a name="line165">165: </a>    <font color="#4169E1">if</font> (f) {
+<a name="line166">166: </a>      (*f)(Y,a,X,str);
+<a name="line167">167: </a>      <font color="#4169E1">return</font>(0);
+<a name="line168">168: </a>    }
+<a name="line169">169: </a>  }
+<a name="line170">170: </a>  <font color="#B22222">/* no need to preallocate if Y is dense */</font>
+<a name="line171">171: </a>  <a href="../../../docs/manualpages/Sys/PetscObjectBaseTypeCompareAny.html#PetscObjectBaseTypeCompareAny">PetscObjectBaseTypeCompareAny</a>((<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)Y,&amp;isdense,<a href="../../../docs/manualpages/Mat/MATSEQDENSE.html#MATSEQDENSE">MATSEQDENSE</a>,<a href="../../../docs/manualpages/Mat/MATMPIDENSE.html#MATMPIDENSE">MATMPIDENSE</a>,<font color="#666666">""</font>);
+<a name="line172">172: </a>  <font color="#4169E1">if</font> (isdense &amp;&amp; str == <a href="../../../docs/manualpages/Mat/MatStructure.html#MatStructure">DIFFERENT_NONZERO_PATTERN</a>) str = <a href="../../../docs/manualpages/Mat/MatStructure.html#MatStructure">SUBSET_NONZERO_PATTERN</a>;
+<a name="line173">173: </a>  <font color="#4169E1">if</font> (str != <a href="../../../docs/manualpages/Mat/MatStructure.html#MatStructure">DIFFERENT_NONZERO_PATTERN</a>) {
+<a name="line174">174: </a>    <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>          i,start,end,j,ncols,m,n;
+<a name="line175">175: </a>    const <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>    *row;
+<a name="line176">176: </a>    <a href="../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>       *val;
+<a name="line177">177: </a>    const <a href="../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> *vals;
+
+<a name="line179">179: </a>    <a href="../../../docs/manualpages/Mat/MatGetSize.html#MatGetSize">MatGetSize</a>(X,&amp;m,&amp;n);
+<a name="line180">180: </a>    <a href="../../../docs/manualpages/Mat/MatGetOwnershipRange.html#MatGetOwnershipRange">MatGetOwnershipRange</a>(X,&amp;start,&amp;end);
+<a name="line181">181: </a>    <a href="../../../docs/manualpages/Mat/MatGetRowUpperTriangular.html#MatGetRowUpperTriangular">MatGetRowUpperTriangular</a>(X);
+<a name="line182">182: </a>    <font color="#4169E1">if</font> (a == 1.0) {
+<a name="line183">183: </a>      <font color="#4169E1">for</font> (i = start; i &lt; end; i++) {
+<a name="line184">184: </a>        <a href="../../../docs/manualpages/Mat/MatGetRow.html#MatGetRow">MatGetRow</a>(X,i,&amp;ncols,&amp;row,&amp;vals);
+<a name="line185">185: </a>        <a href="../../../docs/manualpages/Mat/MatSetValues.html#MatSetValues">MatSetValues</a>(Y,1,&amp;i,ncols,row,vals,<a href="../../../docs/manualpages/Sys/ADD_VALUES.html#ADD_VALUES">ADD_VALUES</a>);
+<a name="line186">186: </a>        <a href="../../../docs/manualpages/Mat/MatRestoreRow.html#MatRestoreRow">MatRestoreRow</a>(X,i,&amp;ncols,&amp;row,&amp;vals);
+<a name="line187">187: </a>      }
+<a name="line188">188: </a>    } <font color="#4169E1">else</font> {
+<a name="line189">189: </a>      <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> vs = 100;
+<a name="line190">190: </a>      <font color="#B22222">/* realloc if needed, as this function may be used in parallel */</font>
+<a name="line191">191: </a>      <a href="../../../docs/manualpages/Sys/PetscMalloc1.html#PetscMalloc1">PetscMalloc1</a>(vs,&amp;val);
+<a name="line192">192: </a>      <font color="#4169E1">for</font> (i=start; i&lt;end; i++) {
+<a name="line193">193: </a>        <a href="../../../docs/manualpages/Mat/MatGetRow.html#MatGetRow">MatGetRow</a>(X,i,&amp;ncols,&amp;row,&amp;vals);
+<a name="line194">194: </a>        <font color="#4169E1">if</font> (vs &lt; ncols) {
+<a name="line195">195: </a>          vs   = <a href="../../../docs/manualpages/Sys/PetscMin.html#PetscMin">PetscMin</a>(2*ncols,n);
+<a name="line196">196: </a>          <a href="../../../docs/manualpages/Sys/PetscRealloc.html#PetscRealloc">PetscRealloc</a>(vs*<font color="#4169E1">sizeof</font>(*val),&amp;val);
+<a name="line197">197: </a>        }
+<a name="line198">198: </a>        <font color="#4169E1">for</font> (j=0; j&lt;ncols; j++) val[j] = a*vals[j];
+<a name="line199">199: </a>        <a href="../../../docs/manualpages/Mat/MatSetValues.html#MatSetValues">MatSetValues</a>(Y,1,&amp;i,ncols,row,val,<a href="../../../docs/manualpages/Sys/ADD_VALUES.html#ADD_VALUES">ADD_VALUES</a>);
+<a name="line200">200: </a>        <a href="../../../docs/manualpages/Mat/MatRestoreRow.html#MatRestoreRow">MatRestoreRow</a>(X,i,&amp;ncols,&amp;row,&amp;vals);
+<a name="line201">201: </a>      }
+<a name="line202">202: </a>      <a href="../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(val);
+<a name="line203">203: </a>    }
+<a name="line204">204: </a>    <a href="../../../docs/manualpages/Mat/MatRestoreRowUpperTriangular.html#MatRestoreRowUpperTriangular">MatRestoreRowUpperTriangular</a>(X);
+<a name="line205">205: </a>    <a href="../../../docs/manualpages/Mat/MatAssemblyBegin.html#MatAssemblyBegin">MatAssemblyBegin</a>(Y,<a href="../../../docs/manualpages/Mat/MatAssemblyType.html#MatAssemblyType">MAT_FINAL_ASSEMBLY</a>);
+<a name="line206">206: </a>    <a href="../../../docs/manualpages/Mat/MatAssemblyEnd.html#MatAssemblyEnd">MatAssemblyEnd</a>(Y,<a href="../../../docs/manualpages/Mat/MatAssemblyType.html#MatAssemblyType">MAT_FINAL_ASSEMBLY</a>);
+<a name="line207">207: </a>  } <font color="#4169E1">else</font> {
+<a name="line208">208: </a>    <a href="../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> B;
+
+<a name="line210">210: </a>    MatAXPY_Basic_Preallocate(Y,X,&amp;B);
+<a name="line211">211: </a>    MatAXPY_BasicWithPreallocation(B,Y,a,X,str);
+<a name="line212">212: </a>    <font color="#B22222">/* TODO mat_tests-ex37_nsize-1_mat_type-baij_mat_block_size-2 fails with MatHeaderMerge */</font>
+<a name="line213">213: </a>    MatHeaderReplace(Y,&amp;B);
+<a name="line214">214: </a>  }
+<a name="line215">215: </a>  <font color="#4169E1">return</font>(0);
+<a name="line216">216: </a>}
+
+<a name="line218">218: </a><strong><font color="#4169E1"><a name="MatAXPY_BasicWithPreallocation"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatAXPY_BasicWithPreallocation(<a href="../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> B,<a href="../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> Y,<a href="../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> a,<a href="../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> X,<a href="../../../docs/manualpages/Mat/MatStructure.html#MatStructure">MatStructure</a> str)</font></strong>
+<a name="line219">219: </a>{
+<a name="line220">220: </a>  <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>          i,start,end,j,ncols,m,n;
+<a name="line221">221: </a>  <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>    ierr;
+<a name="line222">222: </a>  const <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>    *row;
+<a name="line223">223: </a>  <a href="../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>       *val;
+<a name="line224">224: </a>  const <a href="../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> *vals;
+
+<a name="line227">227: </a>  <a href="../../../docs/manualpages/Mat/MatGetSize.html#MatGetSize">MatGetSize</a>(X,&amp;m,&amp;n);
+<a name="line228">228: </a>  <a href="../../../docs/manualpages/Mat/MatGetOwnershipRange.html#MatGetOwnershipRange">MatGetOwnershipRange</a>(X,&amp;start,&amp;end);
+<a name="line229">229: </a>  <a href="../../../docs/manualpages/Mat/MatGetRowUpperTriangular.html#MatGetRowUpperTriangular">MatGetRowUpperTriangular</a>(Y);
+<a name="line230">230: </a>  <a href="../../../docs/manualpages/Mat/MatGetRowUpperTriangular.html#MatGetRowUpperTriangular">MatGetRowUpperTriangular</a>(X);
+<a name="line231">231: </a>  <font color="#4169E1">if</font> (a == 1.0) {
+<a name="line232">232: </a>    <font color="#4169E1">for</font> (i = start; i &lt; end; i++) {
+<a name="line233">233: </a>      <a href="../../../docs/manualpages/Mat/MatGetRow.html#MatGetRow">MatGetRow</a>(Y,i,&amp;ncols,&amp;row,&amp;vals);
+<a name="line234">234: </a>      <a href="../../../docs/manualpages/Mat/MatSetValues.html#MatSetValues">MatSetValues</a>(B,1,&amp;i,ncols,row,vals,<a href="../../../docs/manualpages/Sys/ADD_VALUES.html#ADD_VALUES">ADD_VALUES</a>);
+<a name="line235">235: </a>      <a href="../../../docs/manualpages/Mat/MatRestoreRow.html#MatRestoreRow">MatRestoreRow</a>(Y,i,&amp;ncols,&amp;row,&amp;vals);
+
+<a name="line237">237: </a>      <a href="../../../docs/manualpages/Mat/MatGetRow.html#MatGetRow">MatGetRow</a>(X,i,&amp;ncols,&amp;row,&amp;vals);
+<a name="line238">238: </a>      <a href="../../../docs/manualpages/Mat/MatSetValues.html#MatSetValues">MatSetValues</a>(B,1,&amp;i,ncols,row,vals,<a href="../../../docs/manualpages/Sys/ADD_VALUES.html#ADD_VALUES">ADD_VALUES</a>);
+<a name="line239">239: </a>      <a href="../../../docs/manualpages/Mat/MatRestoreRow.html#MatRestoreRow">MatRestoreRow</a>(X,i,&amp;ncols,&amp;row,&amp;vals);
+<a name="line240">240: </a>    }
+<a name="line241">241: </a>  } <font color="#4169E1">else</font> {
+<a name="line242">242: </a>    <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> vs = 100;
+<a name="line243">243: </a>    <font color="#B22222">/* realloc if needed, as this function may be used in parallel */</font>
+<a name="line244">244: </a>    <a href="../../../docs/manualpages/Sys/PetscMalloc1.html#PetscMalloc1">PetscMalloc1</a>(vs,&amp;val);
+<a name="line245">245: </a>    <font color="#4169E1">for</font> (i=start; i&lt;end; i++) {
+<a name="line246">246: </a>      <a href="../../../docs/manualpages/Mat/MatGetRow.html#MatGetRow">MatGetRow</a>(Y,i,&amp;ncols,&amp;row,&amp;vals);
+<a name="line247">247: </a>      <a href="../../../docs/manualpages/Mat/MatSetValues.html#MatSetValues">MatSetValues</a>(B,1,&amp;i,ncols,row,vals,<a href="../../../docs/manualpages/Sys/ADD_VALUES.html#ADD_VALUES">ADD_VALUES</a>);
+<a name="line248">248: </a>      <a href="../../../docs/manualpages/Mat/MatRestoreRow.html#MatRestoreRow">MatRestoreRow</a>(Y,i,&amp;ncols,&amp;row,&amp;vals);
+
+<a name="line250">250: </a>      <a href="../../../docs/manualpages/Mat/MatGetRow.html#MatGetRow">MatGetRow</a>(X,i,&amp;ncols,&amp;row,&amp;vals);
+<a name="line251">251: </a>      <font color="#4169E1">if</font> (vs &lt; ncols) {
+<a name="line252">252: </a>        vs   = <a href="../../../docs/manualpages/Sys/PetscMin.html#PetscMin">PetscMin</a>(2*ncols,n);
+<a name="line253">253: </a>        <a href="../../../docs/manualpages/Sys/PetscRealloc.html#PetscRealloc">PetscRealloc</a>(vs*<font color="#4169E1">sizeof</font>(*val),&amp;val);
+<a name="line254">254: </a>      }
+<a name="line255">255: </a>      <font color="#4169E1">for</font> (j=0; j&lt;ncols; j++) val[j] = a*vals[j];
+<a name="line256">256: </a>      <a href="../../../docs/manualpages/Mat/MatSetValues.html#MatSetValues">MatSetValues</a>(B,1,&amp;i,ncols,row,val,<a href="../../../docs/manualpages/Sys/ADD_VALUES.html#ADD_VALUES">ADD_VALUES</a>);
+<a name="line257">257: </a>      <a href="../../../docs/manualpages/Mat/MatRestoreRow.html#MatRestoreRow">MatRestoreRow</a>(X,i,&amp;ncols,&amp;row,&amp;vals);
+<a name="line258">258: </a>    }
+<a name="line259">259: </a>    <a href="../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(val);
+<a name="line260">260: </a>  }
+<a name="line261">261: </a>  <a href="../../../docs/manualpages/Mat/MatRestoreRowUpperTriangular.html#MatRestoreRowUpperTriangular">MatRestoreRowUpperTriangular</a>(Y);
+<a name="line262">262: </a>  <a href="../../../docs/manualpages/Mat/MatRestoreRowUpperTriangular.html#MatRestoreRowUpperTriangular">MatRestoreRowUpperTriangular</a>(X);
+<a name="line263">263: </a>  <a href="../../../docs/manualpages/Mat/MatAssemblyBegin.html#MatAssemblyBegin">MatAssemblyBegin</a>(B,<a href="../../../docs/manualpages/Mat/MatAssemblyType.html#MatAssemblyType">MAT_FINAL_ASSEMBLY</a>);
+<a name="line264">264: </a>  <a href="../../../docs/manualpages/Mat/MatAssemblyEnd.html#MatAssemblyEnd">MatAssemblyEnd</a>(B,<a href="../../../docs/manualpages/Mat/MatAssemblyType.html#MatAssemblyType">MAT_FINAL_ASSEMBLY</a>);
+<a name="line265">265: </a>  <font color="#4169E1">return</font>(0);
+<a name="line266">266: </a>}
+
+<a name="line268">268: </a><font color="#B22222">/*@</font>
+<a name="line269">269: </a><font color="#B22222">   <a href="../../../docs/manualpages/Mat/MatShift.html#MatShift">MatShift</a> - Computes Y =  Y + a I, where a is a <a href="../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> and I is the identity matrix.</font>
+
+<a name="line271">271: </a><font color="#B22222">   Neighbor-wise Collective on <a href="../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a></font>
+
+<a name="line273">273: </a><font color="#B22222">   Input Parameters:</font>
+<a name="line274">274: </a><font color="#B22222">+  Y - the matrices</font>
+<a name="line275">275: </a><font color="#B22222">-  a - the <a href="../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a></font>
+
+<a name="line277">277: </a><font color="#B22222">   Level: intermediate</font>
+
+<a name="line279">279: </a><font color="#B22222">   Notes:</font>
+<a name="line280">280: </a><font color="#B22222">    If the matrix Y is missing some diagonal entries this routine can be very slow. To make it fast one should initially</font>
+<a name="line281">281: </a><font color="#B22222">   fill the matrix so that all diagonal entries have a value (with a value of zero for those locations that would not have an</font>
+<a name="line282">282: </a><font color="#B22222">   entry). No operation is performed when a is zero.</font>
+
+<a name="line284">284: </a><font color="#B22222">   To form Y = Y + diag(V) use <a href="../../../docs/manualpages/Mat/MatDiagonalSet.html#MatDiagonalSet">MatDiagonalSet</a>()</font>
+
+<a name="line286">286: </a><font color="#B22222">.seealso: <a href="../../../docs/manualpages/Mat/MatDiagonalSet.html#MatDiagonalSet">MatDiagonalSet</a>(), <a href="../../../docs/manualpages/Mat/MatScale.html#MatScale">MatScale</a>(), <a href="../../../docs/manualpages/Mat/MatDiagonalScale.html#MatDiagonalScale">MatDiagonalScale</a>()</font>
+<a name="line287">287: </a><font color="#B22222"> @*/</font>
+<a name="line288">288: </a><strong><font color="#4169E1"><a name="MatShift"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  <a href="../../../docs/manualpages/Mat/MatShift.html#MatShift">MatShift</a>(<a href="../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> Y,<a href="../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> a)</font></strong>
+<a name="line289">289: </a>{
+
+<a name="line294">294: </a>  <font color="#4169E1">if</font> (!Y-&gt;assembled) <a href="../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)Y),PETSC_ERR_ARG_WRONGSTATE,<font color="#666666">"Not for unassembled matrix"</font>);
+<a name="line295">295: </a>  <font color="#4169E1">if</font> (Y-&gt;factortype) <a href="../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)Y),PETSC_ERR_ARG_WRONGSTATE,<font color="#666666">"Not for factored matrix"</font>);
+<a name="line296">296: </a>  MatCheckPreallocated(Y,1);
+<a name="line297">297: </a>  <font color="#4169E1">if</font> (a == 0.0) <font color="#4169E1">return</font>(0);
+
+<a name="line299">299: </a>  <font color="#4169E1">if</font> (Y-&gt;ops-&gt;shift) {
+<a name="line300">300: </a>    (*Y-&gt;ops-&gt;shift)(Y,a);
+<a name="line301">301: </a>  } <font color="#4169E1">else</font> {
+<a name="line302">302: </a>    MatShift_Basic(Y,a);
+<a name="line303">303: </a>  }
+
+<a name="line305">305: </a>  <a href="../../../docs/manualpages/Sys/PetscObjectStateIncrease.html#PetscObjectStateIncrease">PetscObjectStateIncrease</a>((<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)Y);
+<a name="line306">306: </a>  <font color="#4169E1">return</font>(0);
+<a name="line307">307: </a>}
+
+<a name="line309">309: </a><strong><font color="#4169E1"><a name="MatDiagonalSet_Default"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  MatDiagonalSet_Default(<a href="../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> Y,<a href="../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> D,<a href="../../../docs/manualpages/Sys/InsertMode.html#InsertMode">InsertMode</a> is)</font></strong>
+<a name="line310">310: </a>{
+<a name="line312">312: </a>  <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       i,start,end;
+<a name="line313">313: </a>  <a href="../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>    *v;
+
+<a name="line316">316: </a>  <a href="../../../docs/manualpages/Mat/MatGetOwnershipRange.html#MatGetOwnershipRange">MatGetOwnershipRange</a>(Y,&amp;start,&amp;end);
+<a name="line317">317: </a>  <a href="../../../docs/manualpages/Vec/VecGetArray.html#VecGetArray">VecGetArray</a>(D,&amp;v);
+<a name="line318">318: </a>  <font color="#4169E1">for</font> (i=start; i&lt;end; i++) {
+<a name="line319">319: </a>    <a href="../../../docs/manualpages/Mat/MatSetValues.html#MatSetValues">MatSetValues</a>(Y,1,&amp;i,1,&amp;i,v+i-start,is);
+<a name="line320">320: </a>  }
+<a name="line321">321: </a>  <a href="../../../docs/manualpages/Vec/VecRestoreArray.html#VecRestoreArray">VecRestoreArray</a>(D,&amp;v);
+<a name="line322">322: </a>  <a href="../../../docs/manualpages/Mat/MatAssemblyBegin.html#MatAssemblyBegin">MatAssemblyBegin</a>(Y,<a href="../../../docs/manualpages/Mat/MatAssemblyType.html#MatAssemblyType">MAT_FINAL_ASSEMBLY</a>);
+<a name="line323">323: </a>  <a href="../../../docs/manualpages/Mat/MatAssemblyEnd.html#MatAssemblyEnd">MatAssemblyEnd</a>(Y,<a href="../../../docs/manualpages/Mat/MatAssemblyType.html#MatAssemblyType">MAT_FINAL_ASSEMBLY</a>);
+<a name="line324">324: </a>  <font color="#4169E1">return</font>(0);
+<a name="line325">325: </a>}
+
+<a name="line327">327: </a><font color="#B22222">/*@</font>
+<a name="line328">328: </a><font color="#B22222">   <a href="../../../docs/manualpages/Mat/MatDiagonalSet.html#MatDiagonalSet">MatDiagonalSet</a> - Computes Y = Y + D, where D is a diagonal matrix</font>
+<a name="line329">329: </a><font color="#B22222">   that is represented as a vector. Or Y[i,i] = D[i] if <a href="../../../docs/manualpages/Sys/InsertMode.html#InsertMode">InsertMode</a> is</font>
+<a name="line330">330: </a><font color="#B22222">   <a href="../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>.</font>
+
+<a name="line332">332: </a><font color="#B22222">   Neighbor-wise Collective on <a href="../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a></font>
+
+<a name="line334">334: </a><font color="#B22222">   Input Parameters:</font>
+<a name="line335">335: </a><font color="#B22222">+  Y - the input matrix</font>
+<a name="line336">336: </a><font color="#B22222">.  D - the diagonal matrix, represented as a vector</font>
+<a name="line337">337: </a><font color="#B22222">-  i - <a href="../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a> or <a href="../../../docs/manualpages/Sys/ADD_VALUES.html#ADD_VALUES">ADD_VALUES</a></font>
+
+<a name="line339">339: </a><font color="#B22222">   Notes:</font>
+<a name="line340">340: </a><font color="#B22222">    If the matrix Y is missing some diagonal entries this routine can be very slow. To make it fast one should initially</font>
+<a name="line341">341: </a><font color="#B22222">   fill the matrix so that all diagonal entries have a value (with a value of zero for those locations that would not have an</font>
+<a name="line342">342: </a><font color="#B22222">   entry).</font>
+
+<a name="line344">344: </a><font color="#B22222">   Level: intermediate</font>
+
+<a name="line346">346: </a><font color="#B22222">.seealso: <a href="../../../docs/manualpages/Mat/MatShift.html#MatShift">MatShift</a>(), <a href="../../../docs/manualpages/Mat/MatScale.html#MatScale">MatScale</a>(), <a href="../../../docs/manualpages/Mat/MatDiagonalScale.html#MatDiagonalScale">MatDiagonalScale</a>()</font>
+<a name="line347">347: </a><font color="#B22222">@*/</font>
+<a name="line348">348: </a><strong><font color="#4169E1"><a name="MatDiagonalSet"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  <a href="../../../docs/manualpages/Mat/MatDiagonalSet.html#MatDiagonalSet">MatDiagonalSet</a>(<a href="../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> Y,<a href="../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> D,<a href="../../../docs/manualpages/Sys/InsertMode.html#InsertMode">InsertMode</a> is)</font></strong>
+<a name="line349">349: </a>{
+<a name="line351">351: </a>  <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       matlocal,veclocal;
+
+<a name="line356">356: </a>  <a href="../../../docs/manualpages/Mat/MatGetLocalSize.html#MatGetLocalSize">MatGetLocalSize</a>(Y,&amp;matlocal,NULL);
+<a name="line357">357: </a>  <a href="../../../docs/manualpages/Vec/VecGetLocalSize.html#VecGetLocalSize">VecGetLocalSize</a>(D,&amp;veclocal);
+<a name="line358">358: </a>  <font color="#4169E1">if</font> (matlocal != veclocal) <a href="../../../docs/manualpages/Sys/SETERRQ2.html#SETERRQ2">SETERRQ2</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_ARG_INCOMP,<font color="#666666">"Number local rows of matrix %D does not match that of vector for diagonal %D"</font>,matlocal,veclocal);
+<a name="line359">359: </a>  <font color="#4169E1">if</font> (Y-&gt;ops-&gt;diagonalset) {
+<a name="line360">360: </a>    (*Y-&gt;ops-&gt;diagonalset)(Y,D,is);
+<a name="line361">361: </a>  } <font color="#4169E1">else</font> {
+<a name="line362">362: </a>    MatDiagonalSet_Default(Y,D,is);
+<a name="line363">363: </a>  }
+<a name="line364">364: </a>  <a href="../../../docs/manualpages/Sys/PetscObjectStateIncrease.html#PetscObjectStateIncrease">PetscObjectStateIncrease</a>((<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)Y);
+<a name="line365">365: </a>  <font color="#4169E1">return</font>(0);
+<a name="line366">366: </a>}
+
+<a name="line368">368: </a><font color="#B22222">/*@</font>
+<a name="line369">369: </a><font color="#B22222">   <a href="../../../docs/manualpages/Mat/MatAYPX.html#MatAYPX">MatAYPX</a> - Computes Y = a*Y + X.</font>
+
+<a name="line371">371: </a><font color="#B22222">   Logically on <a href="../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a></font>
+
+<a name="line373">373: </a><font color="#B22222">   Input Parameters:</font>
+<a name="line374">374: </a><font color="#B22222">+  a - the <a href="../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> multiplier</font>
+<a name="line375">375: </a><font color="#B22222">.  Y - the first matrix</font>
+<a name="line376">376: </a><font color="#B22222">.  X - the second matrix</font>
+<a name="line377">377: </a><font color="#B22222">-  str - either <a href="../../../docs/manualpages/Mat/MatStructure.html#MatStructure">SAME_NONZERO_PATTERN</a>, <a href="../../../docs/manualpages/Mat/MatStructure.html#MatStructure">DIFFERENT_NONZERO_PATTERN</a> or <a href="../../../docs/manualpages/Mat/MatStructure.html#MatStructure">SUBSET_NONZERO_PATTERN</a></font>
+
+<a name="line379">379: </a><font color="#B22222">   Level: intermediate</font>
+
+<a name="line381">381: </a><font color="#B22222">.seealso: <a href="../../../docs/manualpages/Mat/MatAXPY.html#MatAXPY">MatAXPY</a>()</font>
+<a name="line382">382: </a><font color="#B22222"> @*/</font>
+<a name="line383">383: </a><strong><font color="#4169E1"><a name="MatAYPX"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  <a href="../../../docs/manualpages/Mat/MatAYPX.html#MatAYPX">MatAYPX</a>(<a href="../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> Y,<a href="../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> a,<a href="../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> X,<a href="../../../docs/manualpages/Mat/MatStructure.html#MatStructure">MatStructure</a> str)</font></strong>
+<a name="line384">384: </a>{
+<a name="line385">385: </a>  <a href="../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>    one = 1.0;
+<a name="line387">387: </a>  <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       mX,mY,nX,nY;
+
+<a name="line393">393: </a>  <a href="../../../docs/manualpages/Mat/MatGetSize.html#MatGetSize">MatGetSize</a>(X,&amp;mX,&amp;nX);
+<a name="line394">394: </a>  <a href="../../../docs/manualpages/Mat/MatGetSize.html#MatGetSize">MatGetSize</a>(X,&amp;mY,&amp;nY);
+<a name="line395">395: </a>  <font color="#4169E1">if</font> (mX != mY || nX != nY) <a href="../../../docs/manualpages/Sys/SETERRQ4.html#SETERRQ4">SETERRQ4</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_ARG_SIZ,<font color="#666666">"Non conforming matrices: %D %D first %D %D second"</font>,mX,mY,nX,nY);
+<a name="line396">396: </a>  <a href="../../../docs/manualpages/Mat/MatScale.html#MatScale">MatScale</a>(Y,a);
+<a name="line397">397: </a>  <a href="../../../docs/manualpages/Mat/MatAXPY.html#MatAXPY">MatAXPY</a>(Y,one,X,str);
+<a name="line398">398: </a>  <font color="#4169E1">return</font>(0);
+<a name="line399">399: </a>}
+
+<a name="line401">401: </a><font color="#B22222">/*@</font>
+<a name="line402">402: </a><font color="#B22222">    <a href="../../../docs/manualpages/Mat/MatComputeOperator.html#MatComputeOperator">MatComputeOperator</a> - Computes the explicit matrix</font>
+
+<a name="line404">404: </a><font color="#B22222">    Collective on <a href="../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a></font>
+
+<a name="line406">406: </a><font color="#B22222">    Input Parameter:</font>
+<a name="line407">407: </a><font color="#B22222">+   inmat - the matrix</font>
+<a name="line408">408: </a><font color="#B22222">-   mattype - the matrix type for the explicit operator</font>
+
+<a name="line410">410: </a><font color="#B22222">    Output Parameter:</font>
+<a name="line411">411: </a><font color="#B22222">.   mat - the explict  operator</font>
+
+<a name="line413">413: </a><font color="#B22222">    Notes:</font>
+<a name="line414">414: </a><font color="#B22222">    This computation is done by applying the operators to columns of the identity matrix.</font>
+<a name="line415">415: </a><font color="#B22222">    This routine is costly in general, and is recommended for use only with relatively small systems.</font>
+<a name="line416">416: </a><font color="#B22222">    Currently, this routine uses a dense matrix format if mattype == NULL.</font>
+
+<a name="line418">418: </a><font color="#B22222">    Level: advanced</font>
+
+<a name="line420">420: </a><font color="#B22222">@*/</font>
+<a name="line421">421: </a><strong><font color="#4169E1"><a name="MatComputeOperator"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  <a href="../../../docs/manualpages/Mat/MatComputeOperator.html#MatComputeOperator">MatComputeOperator</a>(<a href="../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> inmat,<a href="../../../docs/manualpages/Mat/MatType.html#MatType">MatType</a> mattype,<a href="../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> *mat)</font></strong>
+<a name="line422">422: </a>{
+
+<a name="line428">428: </a>  MatConvert_Shell(inmat,mattype ? mattype : <a href="../../../docs/manualpages/Mat/MATDENSE.html#MATDENSE">MATDENSE</a>,<a href="../../../docs/manualpages/Mat/MatReuse.html#MatReuse">MAT_INITIAL_MATRIX</a>,mat);
+<a name="line429">429: </a>  <font color="#4169E1">return</font>(0);
+<a name="line430">430: </a>}
+
+<a name="line432">432: </a><font color="#B22222">/*@</font>
+<a name="line433">433: </a><font color="#B22222">    <a href="../../../docs/manualpages/Mat/MatComputeOperatorTranspose.html#MatComputeOperatorTranspose">MatComputeOperatorTranspose</a> - Computes the explicit matrix representation of</font>
+<a name="line434">434: </a><font color="#B22222">        a give matrix that can apply <a href="../../../docs/manualpages/Mat/MatMultTranspose.html#MatMultTranspose">MatMultTranspose</a>()</font>
+
+<a name="line436">436: </a><font color="#B22222">    Collective on <a href="../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a></font>
+
+<a name="line438">438: </a><font color="#B22222">    Input Parameter:</font>
+<a name="line439">439: </a><font color="#B22222">.   inmat - the matrix</font>
+
+<a name="line441">441: </a><font color="#B22222">    Output Parameter:</font>
+<a name="line442">442: </a><font color="#B22222">.   mat - the explict  operator transposed</font>
+
+<a name="line444">444: </a><font color="#B22222">    Notes:</font>
+<a name="line445">445: </a><font color="#B22222">    This computation is done by applying the transpose of the operator to columns of the identity matrix.</font>
+<a name="line446">446: </a><font color="#B22222">    This routine is costly in general, and is recommended for use only with relatively small systems.</font>
+<a name="line447">447: </a><font color="#B22222">    Currently, this routine uses a dense matrix format if mattype == NULL.</font>
+
+<a name="line449">449: </a><font color="#B22222">    Level: advanced</font>
+
+<a name="line451">451: </a><font color="#B22222">@*/</font>
+<a name="line452">452: </a><strong><font color="#4169E1"><a name="MatComputeOperatorTranspose"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  <a href="../../../docs/manualpages/Mat/MatComputeOperatorTranspose.html#MatComputeOperatorTranspose">MatComputeOperatorTranspose</a>(<a href="../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> inmat,<a href="../../../docs/manualpages/Mat/MatType.html#MatType">MatType</a> mattype,<a href="../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> *mat)</font></strong>
+<a name="line453">453: </a>{
+<a name="line454">454: </a>  <a href="../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a>            A;
+
+<a name="line460">460: </a>  <a href="../../../docs/manualpages/Mat/MatCreateTranspose.html#MatCreateTranspose">MatCreateTranspose</a>(inmat,&amp;A);
+<a name="line461">461: </a>  MatConvert_Shell(A,mattype ? mattype : <a href="../../../docs/manualpages/Mat/MATDENSE.html#MATDENSE">MATDENSE</a>,<a href="../../../docs/manualpages/Mat/MatReuse.html#MatReuse">MAT_INITIAL_MATRIX</a>,mat);
+<a name="line462">462: </a>  <a href="../../../docs/manualpages/Mat/MatDestroy.html#MatDestroy">MatDestroy</a>(&amp;A);
+<a name="line463">463: </a>  <font color="#4169E1">return</font>(0);
+<a name="line464">464: </a>}
+
+<a name="line466">466: </a><font color="#B22222">/*@</font>
+<a name="line467">467: </a><font color="#B22222">  <a href="../../../docs/manualpages/Mat/MatChop.html#MatChop">MatChop</a> - Set all values in the matrix less than the tolerance to zero</font>
+
+<a name="line469">469: </a><font color="#B22222">  Input Parameters:</font>
+<a name="line470">470: </a><font color="#B22222">+ A   - The matrix</font>
+<a name="line471">471: </a><font color="#B22222">- tol - The zero tolerance</font>
+
+<a name="line473">473: </a><font color="#B22222">  Output Parameters:</font>
+<a name="line474">474: </a><font color="#B22222">. A - The chopped matrix</font>
+
+<a name="line476">476: </a><font color="#B22222">  Level: intermediate</font>
+
+<a name="line478">478: </a><font color="#B22222">.seealso: <a href="../../../docs/manualpages/Mat/MatCreate.html#MatCreate">MatCreate</a>(), <a href="../../../docs/manualpages/Mat/MatZeroEntries.html#MatZeroEntries">MatZeroEntries</a>()</font>
+<a name="line479">479: </a><font color="#B22222"> @*/</font>
+<a name="line480">480: </a><strong><font color="#4169E1"><a name="MatChop"></a><a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../docs/manualpages/Mat/MatChop.html#MatChop">MatChop</a>(<a href="../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> A, <a href="../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> tol)</font></strong>
+<a name="line481">481: </a>{
+<a name="line482">482: </a>  <a href="../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>    *newVals;
+<a name="line483">483: </a>  <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       *newCols;
+<a name="line484">484: </a>  <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       rStart, rEnd, numRows, maxRows, r, colMax = 0;
+
+<a name="line488">488: </a>  <a href="../../../docs/manualpages/Mat/MatGetOwnershipRange.html#MatGetOwnershipRange">MatGetOwnershipRange</a>(A, &amp;rStart, &amp;rEnd);
+<a name="line489">489: </a>  <a href="../../../docs/manualpages/Mat/MatGetRowUpperTriangular.html#MatGetRowUpperTriangular">MatGetRowUpperTriangular</a>(A);
+<a name="line490">490: </a>  <font color="#4169E1">for</font> (r = rStart; r &lt; rEnd; ++r) {
+<a name="line491">491: </a>    <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> ncols;
+
+<a name="line493">493: </a>    <a href="../../../docs/manualpages/Mat/MatGetRow.html#MatGetRow">MatGetRow</a>(A, r, &amp;ncols, NULL, NULL);
+<a name="line494">494: </a>    colMax = <a href="../../../docs/manualpages/Sys/PetscMax.html#PetscMax">PetscMax</a>(colMax, ncols);
+<a name="line495">495: </a>    <a href="../../../docs/manualpages/Mat/MatRestoreRow.html#MatRestoreRow">MatRestoreRow</a>(A, r, &amp;ncols, NULL, NULL);
+<a name="line496">496: </a>  }
+<a name="line497">497: </a>  numRows = rEnd - rStart;
+<a name="line498">498: </a>  <a href="../../../docs/manualpages/Sys/MPIU_Allreduce.html#MPIU_Allreduce">MPIU_Allreduce</a>(&amp;numRows, &amp;maxRows, 1, <a href="../../../docs/manualpages/Sys/MPIU_INT.html#MPIU_INT">MPIU_INT</a>, MPI_MAX, <a href="../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)A));
+<a name="line499">499: </a>  <a href="../../../docs/manualpages/Sys/PetscMalloc2.html#PetscMalloc2">PetscMalloc2</a>(colMax,&amp;newCols,colMax,&amp;newVals);
+<a name="line500">500: </a>  <font color="#4169E1">for</font> (r = rStart; r &lt; rStart+maxRows; ++r) {
+<a name="line501">501: </a>    const <a href="../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> *vals;
+<a name="line502">502: </a>    const <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>    *cols;
+<a name="line503">503: </a>    <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>           ncols, newcols, c;
+
+<a name="line505">505: </a>    <font color="#4169E1">if</font> (r &lt; rEnd) {
+<a name="line506">506: </a>      <a href="../../../docs/manualpages/Mat/MatGetRow.html#MatGetRow">MatGetRow</a>(A, r, &amp;ncols, &amp;cols, &amp;vals);
+<a name="line507">507: </a>      <font color="#4169E1">for</font> (c = 0; c &lt; ncols; ++c) {
+<a name="line508">508: </a>        newCols[c] = cols[c];
+<a name="line509">509: </a>        newVals[c] = PetscAbsScalar(vals[c]) &lt; tol ? 0.0 : vals[c];
+<a name="line510">510: </a>      }
+<a name="line511">511: </a>      newcols = ncols;
+<a name="line512">512: </a>      <a href="../../../docs/manualpages/Mat/MatRestoreRow.html#MatRestoreRow">MatRestoreRow</a>(A, r, &amp;ncols, &amp;cols, &amp;vals);
+<a name="line513">513: </a>      <a href="../../../docs/manualpages/Mat/MatSetValues.html#MatSetValues">MatSetValues</a>(A, 1, &amp;r, newcols, newCols, newVals, <a href="../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>);
+<a name="line514">514: </a>    }
+<a name="line515">515: </a>    <a href="../../../docs/manualpages/Mat/MatAssemblyBegin.html#MatAssemblyBegin">MatAssemblyBegin</a>(A, <a href="../../../docs/manualpages/Mat/MatAssemblyType.html#MatAssemblyType">MAT_FINAL_ASSEMBLY</a>);
+<a name="line516">516: </a>    <a href="../../../docs/manualpages/Mat/MatAssemblyEnd.html#MatAssemblyEnd">MatAssemblyEnd</a>(A, <a href="../../../docs/manualpages/Mat/MatAssemblyType.html#MatAssemblyType">MAT_FINAL_ASSEMBLY</a>);
+<a name="line517">517: </a>  }
+<a name="line518">518: </a>  <a href="../../../docs/manualpages/Mat/MatRestoreRowUpperTriangular.html#MatRestoreRowUpperTriangular">MatRestoreRowUpperTriangular</a>(A);
+<a name="line519">519: </a>  <a href="../../../docs/manualpages/Sys/PetscFree2.html#PetscFree2">PetscFree2</a>(newCols,newVals);
+<a name="line520">520: </a>  <font color="#4169E1">return</font>(0);
+<a name="line521">521: </a>}
+</pre>
+</body>
+
+</html>

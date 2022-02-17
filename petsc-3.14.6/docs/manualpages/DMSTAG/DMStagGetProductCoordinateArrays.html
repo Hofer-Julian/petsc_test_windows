@@ -1,0 +1,52 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DMSTAG/DMStagGetProductCoordinateArrays.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>DMStagGetProductCoordinateArrays</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/DMSTAG/DMStagGetProductCoordinateArrays.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="DMStagGetProductCoordinateArrays"><H1>DMStagGetProductCoordinateArrays</H1></A>
+extract local product coordinate arrays, one per dimension 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../DMSTAG/DMStagGetProductCoordinateArrays.html#DMStagGetProductCoordinateArrays">DMStagGetProductCoordinateArrays</A>(<A HREF="../DM/DM.html#DM">DM</A> dm,void* arrX,void* arrY,void* arrZ)
+</PRE>
+Logically Collective
+<P>
+A high-level helper function to quickly extract local coordinate arrays.
+<P>
+Note that 2-dimensional arrays are returned. See
+<A HREF="../DMSTAG/DMStagVecGetArray.html#DMStagVecGetArray">DMStagVecGetArray</A>(), which is called internally to produce these arrays
+representing coordinates on elements and vertices (element boundaries)
+for a 1-dimensional DMStag in each coordinate direction.
+<P>
+One should use DMStagGetProductCoordinateSlot() to determine appropriate
+indices for the second dimension in these returned arrays. This function
+checks that the coordinate array is a suitable product of 1-dimensional
+DMStag objects.
+<P>
+<H3><FONT COLOR="#CC3333">Input Parameter</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>dm </B></TD><TD>- the DMStag object
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Output Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>arrX,arrY,arrZ </B></TD><TD>- local 1D coordinate arrays
+</TD></TR></TABLE>
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../DMSTAG/DMSTAG.html#DMSTAG">DMSTAG</A>, <A HREF="../DMPRODUCT/DMPRODUCT.html#DMPRODUCT">DMPRODUCT</A>, <A HREF="../DMSTAG/DMStagGetProductCoordinateArraysRead.html#DMStagGetProductCoordinateArraysRead">DMStagGetProductCoordinateArraysRead</A>(), <A HREF="../DMSTAG/DMStagSetUniformCoordinates.html#DMStagSetUniformCoordinates">DMStagSetUniformCoordinates</A>(), <A HREF="../DMSTAG/DMStagSetUniformCoordinatesProduct.html#DMStagSetUniformCoordinatesProduct">DMStagSetUniformCoordinatesProduct</A>(), <A HREF="../DMSTAG/DMStagGetProductCoordinateLocationSlot.html#DMStagGetProductCoordinateLocationSlot">DMStagGetProductCoordinateLocationSlot</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>intermediate<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/dm/impls/stag/stagutils.c.html#DMStagGetProductCoordinateArrays">src/dm/impls/stag/stagutils.c</A>
+<P><H3><FONT COLOR="#CC3333">Examples</FONT></H3>
+<A HREF="../../../src/dm/impls/stag/tutorials/ex6.c.html">src/dm/impls/stag/tutorials/ex6.c.html</A><BR>
+<BR><A HREF="./index.html">Index of all DMSTAG routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

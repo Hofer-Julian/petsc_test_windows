@@ -1,0 +1,513 @@
+<center><a href="veccuda.c">Actual source code: veccuda.c</a></center><br>
+
+<html>
+<head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/src/vec/vec/impls/seq/seqcuda/veccuda.c.html" />
+<title></title>
+<meta name="generator" content="c2html 0.9.4">
+<meta name="date" content="2021-03-30T16:49:42+00:00">
+</head>
+
+<body bgcolor="#FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 src/vec/vec/impls/seq/seqcuda/veccuda.c.html "><small>Report Typos and Errors</small></a></div>
+<pre width="80">
+<a name="line1">  1: </a><font color="#B22222">/*</font>
+<a name="line2">  2: </a><font color="#B22222"> Implementation of the sequential cuda vectors.</font>
+
+<a name="line4">  4: </a><font color="#B22222"> This file contains the code that can be compiled with a C</font>
+<a name="line5">  5: </a><font color="#B22222"> compiler.  The companion file veccuda2.cu contains the code that</font>
+<a name="line6">  6: </a><font color="#B22222"> must be compiled with nvcc or a C++ compiler.</font>
+<a name="line7">  7: </a><font color="#B22222"> */</font>
+
+<a name="line9">  9: </a><strong><font color="#228B22">#define PETSC_SKIP_SPINLOCK</font></strong>
+
+<a name="line11"> 11: </a><font color="#A020F0">#include &lt;petscconf.h&gt;</font>
+<a name="line12"> 12: </a>#include <A href="../../../../../../include/petsc/private/vecimpl.h.html">&lt;petsc/private/vecimpl.h&gt;</A>
+<a name="line13"> 13: </a>#include <A href="../../dvecimpl.h.html">&lt;../src/vec/vec/impls/dvecimpl.h&gt;</A>
+<a name="line14"> 14: </a>#include <A href="../../../../../../include/petsc/private/cudavecimpl.h.html">&lt;petsc/private/cudavecimpl.h&gt;</A>
+
+<a name="line16"> 16: </a><strong><font color="#4169E1"><a name="VecCUDAGetArrays_Private"></a><a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> VecCUDAGetArrays_Private(<a href="../../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> v,const <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>** x,const <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>** x_d,<a href="../../../../../../docs/manualpages/Vec/PetscOffloadMask.html#PetscOffloadMask">PetscOffloadMask</a>* flg)</font></strong>
+<a name="line17"> 17: </a>{
+<a name="line20"> 20: </a>  <font color="#4169E1">if</font> (x) {
+<a name="line21"> 21: </a>    Vec_Seq *h = (Vec_Seq*)v-&gt;data;
+
+<a name="line23"> 23: </a>    *x = h-&gt;array;
+<a name="line24"> 24: </a>  }
+<a name="line25"> 25: </a>  <font color="#4169E1">if</font> (x_d) {
+<a name="line26"> 26: </a>    Vec_CUDA *d = (Vec_CUDA*)v-&gt;spptr;
+
+<a name="line28"> 28: </a>    *x_d = d ? d-&gt;GPUarray : NULL;
+<a name="line29"> 29: </a>  }
+<a name="line30"> 30: </a>  <font color="#4169E1">if</font> (flg) *flg = v-&gt;offloadmask;
+<a name="line31"> 31: </a>  <font color="#4169E1">return</font>(0);
+<a name="line32"> 32: </a>}
+
+<a name="line34"> 34: </a><font color="#B22222">/*</font>
+<a name="line35"> 35: </a><font color="#B22222">    Allocates space for the vector array on the Host if it does not exist.</font>
+<a name="line36"> 36: </a><font color="#B22222">    Does NOT change the PetscCUDAFlag for the vector</font>
+<a name="line37"> 37: </a><font color="#B22222">    Does NOT zero the CUDA array</font>
+<a name="line38"> 38: </a><font color="#B22222"> */</font>
+<a name="line39"> 39: </a><strong><font color="#4169E1"><a name="VecCUDAAllocateCheckHost"></a><a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> VecCUDAAllocateCheckHost(<a href="../../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> v)</font></strong>
+<a name="line40"> 40: </a>{
+<a name="line42"> 42: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>    *array;
+<a name="line43"> 43: </a>  Vec_Seq        *s = (Vec_Seq*)v-&gt;data;
+<a name="line44"> 44: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       n = v-&gt;map-&gt;n;
+
+<a name="line47"> 47: </a>  <font color="#4169E1">if</font> (!s) {
+<a name="line48"> 48: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscNewLog.html#PetscNewLog">PetscNewLog</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)v,&amp;s);
+<a name="line49"> 49: </a>    v-&gt;data = s;
+<a name="line50"> 50: </a>  }
+<a name="line51"> 51: </a>  <font color="#4169E1">if</font> (!s-&gt;array) {
+<a name="line52"> 52: </a>    <font color="#4169E1">if</font> (n*<font color="#4169E1">sizeof</font>(<a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>) &gt; v-&gt;minimum_bytes_pinned_memory) {
+<a name="line53"> 53: </a>      <a href="../../../../../../docs/manualpages/Sys/PetscMallocSetCUDAHost.html#PetscMallocSetCUDAHost">PetscMallocSetCUDAHost</a>();
+<a name="line54"> 54: </a>      v-&gt;pinned_memory = <a href="../../../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>;
+<a name="line55"> 55: </a>    }
+<a name="line56"> 56: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscMalloc1.html#PetscMalloc1">PetscMalloc1</a>(n,&amp;array);
+<a name="line57"> 57: </a>    <a href="../../../../../../docs/manualpages/Profiling/PetscLogObjectMemory.html#PetscLogObjectMemory">PetscLogObjectMemory</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)v,n*<font color="#4169E1">sizeof</font>(<a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>));
+<a name="line58"> 58: </a>    s-&gt;array           = array;
+<a name="line59"> 59: </a>    s-&gt;array_allocated = array;
+<a name="line60"> 60: </a>    <font color="#4169E1">if</font> (n*<font color="#4169E1">sizeof</font>(<a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>) &gt; v-&gt;minimum_bytes_pinned_memory) {
+<a name="line61"> 61: </a>      <a href="../../../../../../docs/manualpages/Sys/PetscMallocResetCUDAHost.html#PetscMallocResetCUDAHost">PetscMallocResetCUDAHost</a>();
+<a name="line62"> 62: </a>    }
+<a name="line63"> 63: </a>    <font color="#4169E1">if</font> (v-&gt;offloadmask == <a href="../../../../../../docs/manualpages/Vec/PetscOffloadMask.html#PetscOffloadMask">PETSC_OFFLOAD_UNALLOCATED</a>) {
+<a name="line64"> 64: </a>      v-&gt;offloadmask = <a href="../../../../../../docs/manualpages/Vec/PetscOffloadMask.html#PetscOffloadMask">PETSC_OFFLOAD_CPU</a>;
+<a name="line65"> 65: </a>    }
+<a name="line66"> 66: </a>  }
+<a name="line67"> 67: </a>  <font color="#4169E1">return</font>(0);
+<a name="line68"> 68: </a>}
+
+<a name="line70"> 70: </a><strong><font color="#4169E1"><a name="VecCopy_SeqCUDA_Private"></a><a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> VecCopy_SeqCUDA_Private(<a href="../../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> xin,<a href="../../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> yin)</font></strong>
+<a name="line71"> 71: </a>{
+<a name="line72"> 72: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>       *ya;
+<a name="line73"> 73: </a>  const <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> *xa;
+<a name="line74"> 74: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>    ierr;
+
+<a name="line77"> 77: </a>  VecCUDAAllocateCheckHost(xin);
+<a name="line78"> 78: </a>  VecCUDAAllocateCheckHost(yin);
+<a name="line79"> 79: </a>  <font color="#4169E1">if</font> (xin != yin) {
+<a name="line80"> 80: </a>    <a href="../../../../../../docs/manualpages/Vec/VecGetArrayRead.html#VecGetArrayRead">VecGetArrayRead</a>(xin,&amp;xa);
+<a name="line81"> 81: </a>    <a href="../../../../../../docs/manualpages/Vec/VecGetArray.html#VecGetArray">VecGetArray</a>(yin,&amp;ya);
+<a name="line82"> 82: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscArraycpy.html#PetscArraycpy">PetscArraycpy</a>(ya,xa,xin-&gt;map-&gt;n);
+<a name="line83"> 83: </a>    <a href="../../../../../../docs/manualpages/Vec/VecRestoreArrayRead.html#VecRestoreArrayRead">VecRestoreArrayRead</a>(xin,&amp;xa);
+<a name="line84"> 84: </a>    <a href="../../../../../../docs/manualpages/Vec/VecRestoreArray.html#VecRestoreArray">VecRestoreArray</a>(yin,&amp;ya);
+<a name="line85"> 85: </a>  }
+<a name="line86"> 86: </a>  <font color="#4169E1">return</font>(0);
+<a name="line87"> 87: </a>}
+
+<a name="line89"> 89: </a><strong><font color="#4169E1"><a name="VecSetRandom_SeqCUDA_Private"></a><a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> VecSetRandom_SeqCUDA_Private(<a href="../../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> xin,<a href="../../../../../../docs/manualpages/Sys/PetscRandom.html#PetscRandom">PetscRandom</a> r)</font></strong>
+<a name="line90"> 90: </a>{
+<a name="line92"> 92: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       n = xin-&gt;map-&gt;n,i;
+<a name="line93"> 93: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>    *xx;
+
+<a name="line96"> 96: </a>  <a href="../../../../../../docs/manualpages/Vec/VecGetArray.html#VecGetArray">VecGetArray</a>(xin,&amp;xx);
+<a name="line97"> 97: </a>  <font color="#4169E1">for</font> (i=0; i&lt;n; i++) { <a href="../../../../../../docs/manualpages/Sys/PetscRandomGetValue.html#PetscRandomGetValue">PetscRandomGetValue</a>(r,&amp;xx[i]); }
+<a name="line98"> 98: </a>  <a href="../../../../../../docs/manualpages/Vec/VecRestoreArray.html#VecRestoreArray">VecRestoreArray</a>(xin,&amp;xx);
+<a name="line99"> 99: </a>  <font color="#4169E1">return</font>(0);
+<a name="line100">100: </a>}
+
+<a name="line102">102: </a><strong><font color="#4169E1"><a name="VecDestroy_SeqCUDA_Private"></a><a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> VecDestroy_SeqCUDA_Private(<a href="../../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> v)</font></strong>
+<a name="line103">103: </a>{
+<a name="line104">104: </a>  Vec_Seq        *vs = (Vec_Seq*)v-&gt;data;
+
+<a name="line108">108: </a>  PetscObjectSAWsViewOff(v);
+<a name="line109">109: </a><font color="#A020F0">#if defined(PETSC_USE_LOG)</font>
+<a name="line110">110: </a>  PetscLogObjectState((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)v,<font color="#666666">"Length=%D"</font>,v-&gt;map-&gt;n);
+<a name="line111">111: </a><font color="#A020F0">#endif</font>
+<a name="line112">112: </a>  <font color="#4169E1">if</font> (vs) {
+<a name="line113">113: </a>    <font color="#4169E1">if</font> (vs-&gt;array_allocated) {
+<a name="line114">114: </a>      <font color="#4169E1">if</font> (v-&gt;pinned_memory) {
+<a name="line115">115: </a>        <a href="../../../../../../docs/manualpages/Sys/PetscMallocSetCUDAHost.html#PetscMallocSetCUDAHost">PetscMallocSetCUDAHost</a>();
+<a name="line116">116: </a>      }
+<a name="line117">117: </a>      <a href="../../../../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(vs-&gt;array_allocated);
+<a name="line118">118: </a>      <font color="#4169E1">if</font> (v-&gt;pinned_memory) {
+<a name="line119">119: </a>        <a href="../../../../../../docs/manualpages/Sys/PetscMallocResetCUDAHost.html#PetscMallocResetCUDAHost">PetscMallocResetCUDAHost</a>();
+<a name="line120">120: </a>        v-&gt;pinned_memory = <a href="../../../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line121">121: </a>      }
+<a name="line122">122: </a>    }
+<a name="line123">123: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(vs);
+<a name="line124">124: </a>  }
+<a name="line125">125: </a>  <font color="#4169E1">return</font>(0);
+<a name="line126">126: </a>}
+
+<a name="line128">128: </a><strong><font color="#4169E1"><a name="VecResetArray_SeqCUDA_Private"></a><a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> VecResetArray_SeqCUDA_Private(<a href="../../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> vin)</font></strong>
+<a name="line129">129: </a>{
+<a name="line130">130: </a>  Vec_Seq *v = (Vec_Seq*)vin-&gt;data;
+
+<a name="line133">133: </a>  v-&gt;array         = v-&gt;unplacedarray;
+<a name="line134">134: </a>  v-&gt;unplacedarray = 0;
+<a name="line135">135: </a>  <font color="#4169E1">return</font>(0);
+<a name="line136">136: </a>}
+
+<a name="line138">138: </a><strong><font color="#4169E1"><a name="VecCUDAAllocateCheck_Public"></a><a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> VecCUDAAllocateCheck_Public(<a href="../../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> v)</font></strong>
+<a name="line139">139: </a>{
+
+<a name="line143">143: </a>  VecCUDAAllocateCheck(v);
+<a name="line144">144: </a>  <font color="#4169E1">return</font>(0);
+<a name="line145">145: </a>}
+
+<a name="line147">147: </a><strong><font color="#4169E1"><a name="VecCUDACopyToGPU_Public"></a><a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> VecCUDACopyToGPU_Public(<a href="../../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> v)</font></strong>
+<a name="line148">148: </a>{
+
+<a name="line152">152: </a>  VecCUDACopyToGPU(v);
+<a name="line153">153: </a>  <font color="#4169E1">return</font>(0);
+<a name="line154">154: </a>}
+
+<a name="line156">156: </a><font color="#B22222">/*</font>
+<a name="line157">157: </a><font color="#B22222">    VecCUDACopyToGPUSome_Public - Copies certain entries down to the GPU from the CPU of a vector</font>
+
+<a name="line159">159: </a><font color="#B22222">   Input Parameters:</font>
+<a name="line160">160: </a><font color="#B22222"> +  v    - the vector</font>
+<a name="line161">161: </a><font color="#B22222"> .  ci   - the requested indices, this should be created with CUDAIndicesCreate()</font>
+<a name="line162">162: </a><font color="#B22222"> -  mode - vec scatter mode used in <a href="../../../../../../docs/manualpages/Vec/VecScatterBegin.html#VecScatterBegin">VecScatterBegin</a>/End</font>
+<a name="line163">163: </a><font color="#B22222">*/</font>
+<a name="line164">164: </a><strong><font color="#4169E1"><a name="VecCUDACopyToGPUSome_Public"></a><a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> VecCUDACopyToGPUSome_Public(<a href="../../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> v,PetscCUDAIndices ci,<a href="../../../../../../docs/manualpages/Vec/ScatterMode.html#ScatterMode">ScatterMode</a> mode)</font></strong>
+<a name="line165">165: </a>{
+
+<a name="line169">169: </a>  VecCUDACopyToGPUSome(v,ci,mode);
+<a name="line170">170: </a>  <font color="#4169E1">return</font>(0);
+<a name="line171">171: </a>}
+
+<a name="line173">173: </a><font color="#B22222">/*</font>
+<a name="line174">174: </a><font color="#B22222">  VecCUDACopyFromGPUSome_Public - Copies certain entries up to the CPU from the GPU of a vector</font>
+
+<a name="line176">176: </a><font color="#B22222">  Input Parameters:</font>
+<a name="line177">177: </a><font color="#B22222"> +  v    - the vector</font>
+<a name="line178">178: </a><font color="#B22222"> .  ci   - the requested indices, this should be created with CUDAIndicesCreate()</font>
+<a name="line179">179: </a><font color="#B22222"> -  mode - vec scatter mode used in <a href="../../../../../../docs/manualpages/Vec/VecScatterBegin.html#VecScatterBegin">VecScatterBegin</a>/End</font>
+<a name="line180">180: </a><font color="#B22222">*/</font>
+<a name="line181">181: </a><strong><font color="#4169E1"><a name="VecCUDACopyFromGPUSome_Public"></a><a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> VecCUDACopyFromGPUSome_Public(<a href="../../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> v,PetscCUDAIndices ci,<a href="../../../../../../docs/manualpages/Vec/ScatterMode.html#ScatterMode">ScatterMode</a> mode)</font></strong>
+<a name="line182">182: </a>{
+
+<a name="line186">186: </a>  VecCUDACopyFromGPUSome(v,ci,mode);
+<a name="line187">187: </a>  <font color="#4169E1">return</font>(0);
+<a name="line188">188: </a>}
+
+<a name="line190">190: </a><strong><font color="#4169E1"><a name="VecSetRandom_SeqCUDA"></a><a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> VecSetRandom_SeqCUDA(<a href="../../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> xin,<a href="../../../../../../docs/manualpages/Sys/PetscRandom.html#PetscRandom">PetscRandom</a> r)</font></strong>
+<a name="line191">191: </a>{
+
+<a name="line195">195: </a>  VecSetRandom_SeqCUDA_Private(xin,r);
+<a name="line196">196: </a>  xin-&gt;offloadmask = <a href="../../../../../../docs/manualpages/Vec/PetscOffloadMask.html#PetscOffloadMask">PETSC_OFFLOAD_CPU</a>;
+<a name="line197">197: </a>  <font color="#4169E1">return</font>(0);
+<a name="line198">198: </a>}
+
+<a name="line200">200: </a><strong><font color="#4169E1"><a name="VecResetArray_SeqCUDA"></a><a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> VecResetArray_SeqCUDA(<a href="../../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> vin)</font></strong>
+<a name="line201">201: </a>{
+
+<a name="line205">205: </a>  VecCUDACopyFromGPU(vin);
+<a name="line206">206: </a>  VecResetArray_SeqCUDA_Private(vin);
+<a name="line207">207: </a>  vin-&gt;offloadmask = <a href="../../../../../../docs/manualpages/Vec/PetscOffloadMask.html#PetscOffloadMask">PETSC_OFFLOAD_CPU</a>;
+<a name="line208">208: </a>  <font color="#4169E1">return</font>(0);
+<a name="line209">209: </a>}
+
+<a name="line211">211: </a><strong><font color="#4169E1"><a name="VecPlaceArray_SeqCUDA"></a><a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> VecPlaceArray_SeqCUDA(<a href="../../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> vin,const <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> *a)</font></strong>
+<a name="line212">212: </a>{
+
+<a name="line216">216: </a>  VecCUDACopyFromGPU(vin);
+<a name="line217">217: </a>  VecPlaceArray_Seq(vin,a);
+<a name="line218">218: </a>  vin-&gt;offloadmask = <a href="../../../../../../docs/manualpages/Vec/PetscOffloadMask.html#PetscOffloadMask">PETSC_OFFLOAD_CPU</a>;
+<a name="line219">219: </a>  <font color="#4169E1">return</font>(0);
+<a name="line220">220: </a>}
+
+<a name="line222">222: </a><strong><font color="#4169E1"><a name="VecReplaceArray_SeqCUDA"></a><a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> VecReplaceArray_SeqCUDA(<a href="../../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> vin,const <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> *a)</font></strong>
+<a name="line223">223: </a>{
+<a name="line225">225: </a>  Vec_Seq        *vs = (Vec_Seq*)vin-&gt;data;
+
+<a name="line228">228: </a>  <font color="#4169E1">if</font> (vs-&gt;array != vs-&gt;array_allocated) {
+<a name="line229">229: </a>    <font color="#B22222">/* make sure the users array has the latest values */</font>
+<a name="line230">230: </a>    VecCUDACopyFromGPU(vin);
+<a name="line231">231: </a>  }
+<a name="line232">232: </a>  <font color="#4169E1">if</font> (vs-&gt;array_allocated) {
+<a name="line233">233: </a>    <font color="#4169E1">if</font> (vin-&gt;pinned_memory) {
+<a name="line234">234: </a>      <a href="../../../../../../docs/manualpages/Sys/PetscMallocSetCUDAHost.html#PetscMallocSetCUDAHost">PetscMallocSetCUDAHost</a>();
+<a name="line235">235: </a>    }
+<a name="line236">236: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(vs-&gt;array_allocated);
+<a name="line237">237: </a>    <font color="#4169E1">if</font> (vin-&gt;pinned_memory) {
+<a name="line238">238: </a>      <a href="../../../../../../docs/manualpages/Sys/PetscMallocResetCUDAHost.html#PetscMallocResetCUDAHost">PetscMallocResetCUDAHost</a>();
+<a name="line239">239: </a>    }
+<a name="line240">240: </a>  }
+<a name="line241">241: </a>  vin-&gt;pinned_memory = <a href="../../../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line242">242: </a>  vs-&gt;array_allocated = vs-&gt;array = (<a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>*)a;
+<a name="line243">243: </a>  vin-&gt;offloadmask = <a href="../../../../../../docs/manualpages/Vec/PetscOffloadMask.html#PetscOffloadMask">PETSC_OFFLOAD_CPU</a>;
+<a name="line244">244: </a>  <font color="#4169E1">return</font>(0);
+<a name="line245">245: </a>}
+
+<a name="line247">247: </a><font color="#B22222">/*@</font>
+<a name="line248">248: </a><font color="#B22222"> <a href="../../../../../../docs/manualpages/Vec/VecCreateSeqCUDA.html#VecCreateSeqCUDA">VecCreateSeqCUDA</a> - Creates a standard, sequential array-style vector.</font>
+
+<a name="line250">250: </a><font color="#B22222"> Collective</font>
+
+<a name="line252">252: </a><font color="#B22222"> Input Parameter:</font>
+<a name="line253">253: </a><font color="#B22222"> +  comm - the communicator, should be <a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a></font>
+<a name="line254">254: </a><font color="#B22222"> -  n - the vector length</font>
+
+<a name="line256">256: </a><font color="#B22222"> Output Parameter:</font>
+<a name="line257">257: </a><font color="#B22222"> .  v - the vector</font>
+
+<a name="line259">259: </a><font color="#B22222"> Notes:</font>
+<a name="line260">260: </a><font color="#B22222"> Use <a href="../../../../../../docs/manualpages/Vec/VecDuplicate.html#VecDuplicate">VecDuplicate</a>() or <a href="../../../../../../docs/manualpages/Vec/VecDuplicateVecs.html#VecDuplicateVecs">VecDuplicateVecs</a>() to form additional vectors of the</font>
+<a name="line261">261: </a><font color="#B22222"> same type as an existing vector.</font>
+
+<a name="line263">263: </a><font color="#B22222"> Level: intermediate</font>
+
+<a name="line265">265: </a><font color="#B22222"> .seealso: <a href="../../../../../../docs/manualpages/Vec/VecCreateMPI.html#VecCreateMPI">VecCreateMPI</a>(), <a href="../../../../../../docs/manualpages/Vec/VecCreate.html#VecCreate">VecCreate</a>(), <a href="../../../../../../docs/manualpages/Vec/VecDuplicate.html#VecDuplicate">VecDuplicate</a>(), <a href="../../../../../../docs/manualpages/Vec/VecDuplicateVecs.html#VecDuplicateVecs">VecDuplicateVecs</a>(), <a href="../../../../../../docs/manualpages/Vec/VecCreateGhost.html#VecCreateGhost">VecCreateGhost</a>()</font>
+<a name="line266">266: </a><font color="#B22222"> @*/</font>
+<a name="line267">267: </a><strong><font color="#4169E1"><a name="VecCreateSeqCUDA"></a><a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> <a href="../../../../../../docs/manualpages/Vec/VecCreateSeqCUDA.html#VecCreateSeqCUDA">VecCreateSeqCUDA</a>(<a href="../../../../../../docs/manualpages/Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</a> comm,<a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> n,<a href="../../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> *v)</font></strong>
+<a name="line268">268: </a>{
+
+<a name="line272">272: </a>  <a href="../../../../../../docs/manualpages/Vec/VecCreate.html#VecCreate">VecCreate</a>(comm,v);
+<a name="line273">273: </a>  <a href="../../../../../../docs/manualpages/Vec/VecSetSizes.html#VecSetSizes">VecSetSizes</a>(*v,n,n);
+<a name="line274">274: </a>  <a href="../../../../../../docs/manualpages/Vec/VecSetType.html#VecSetType">VecSetType</a>(*v,<a href="../../../../../../docs/manualpages/Vec/VECSEQCUDA.html#VECSEQCUDA">VECSEQCUDA</a>);
+<a name="line275">275: </a>  <font color="#4169E1">return</font>(0);
+<a name="line276">276: </a>}
+
+<a name="line278">278: </a><strong><font color="#4169E1"><a name="VecDuplicate_SeqCUDA"></a><a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> VecDuplicate_SeqCUDA(<a href="../../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> win,<a href="../../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> *V)</font></strong>
+<a name="line279">279: </a>{
+
+<a name="line283">283: </a>  <a href="../../../../../../docs/manualpages/Vec/VecCreateSeqCUDA.html#VecCreateSeqCUDA">VecCreateSeqCUDA</a>(<a href="../../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)win),win-&gt;map-&gt;n,V);
+<a name="line284">284: </a>  <a href="../../../../../../docs/manualpages/IS/PetscLayoutReference.html#PetscLayoutReference">PetscLayoutReference</a>(win-&gt;map,&amp;(*V)-&gt;map);
+<a name="line285">285: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscObjectListDuplicate.html#PetscObjectListDuplicate">PetscObjectListDuplicate</a>(((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)win)-&gt;olist,&amp;((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)(*V))-&gt;olist);
+<a name="line286">286: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscFunctionListDuplicate.html#PetscFunctionListDuplicate">PetscFunctionListDuplicate</a>(((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)win)-&gt;qlist,&amp;((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)(*V))-&gt;qlist);
+<a name="line287">287: </a>  (*V)-&gt;stash.ignorenegidx = win-&gt;stash.ignorenegidx;
+<a name="line288">288: </a>  <font color="#4169E1">return</font>(0);
+<a name="line289">289: </a>}
+
+<a name="line291">291: </a><strong><font color="#4169E1"><a name="VecCreate_SeqCUDA"></a><a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> VecCreate_SeqCUDA(<a href="../../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> V)</font></strong>
+<a name="line292">292: </a>{
+
+<a name="line296">296: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscCUDAInitializeCheck.html#PetscCUDAInitializeCheck">PetscCUDAInitializeCheck</a>();
+<a name="line297">297: </a>  <a href="../../../../../../docs/manualpages/IS/PetscLayoutSetUp.html#PetscLayoutSetUp">PetscLayoutSetUp</a>(V-&gt;map);
+<a name="line298">298: </a>  VecCUDAAllocateCheck(V);
+<a name="line299">299: </a>  VecCreate_SeqCUDA_Private(V,((Vec_CUDA*)V-&gt;spptr)-&gt;GPUarray_allocated);
+<a name="line300">300: </a>  VecCUDAAllocateCheckHost(V);
+<a name="line301">301: </a>  <a href="../../../../../../docs/manualpages/Vec/VecSet.html#VecSet">VecSet</a>(V,0.0);
+<a name="line302">302: </a>  VecSet_Seq(V,0.0);
+<a name="line303">303: </a>  V-&gt;offloadmask = <a href="../../../../../../docs/manualpages/Vec/PetscOffloadMask.html#PetscOffloadMask">PETSC_OFFLOAD_BOTH</a>;
+<a name="line304">304: </a>  <font color="#4169E1">return</font>(0);
+<a name="line305">305: </a>}
+
+<a name="line307">307: </a><font color="#B22222">/*@C</font>
+<a name="line308">308: </a><font color="#B22222">   <a href="../../../../../../docs/manualpages/Vec/VecCreateSeqCUDAWithArray.html#VecCreateSeqCUDAWithArray">VecCreateSeqCUDAWithArray</a> - Creates a CUDA sequential array-style vector,</font>
+<a name="line309">309: </a><font color="#B22222">   where the user provides the array space to store the vector values. The array</font>
+<a name="line310">310: </a><font color="#B22222">   provided must be a GPU array.</font>
+
+<a name="line312">312: </a><font color="#B22222">   Collective</font>
+
+<a name="line314">314: </a><font color="#B22222">   Input Parameter:</font>
+<a name="line315">315: </a><font color="#B22222">+  comm - the communicator, should be <a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a></font>
+<a name="line316">316: </a><font color="#B22222">.  bs - the block size</font>
+<a name="line317">317: </a><font color="#B22222">.  n - the vector length</font>
+<a name="line318">318: </a><font color="#B22222">-  array - GPU memory where the vector elements are to be stored.</font>
+
+<a name="line320">320: </a><font color="#B22222">   Output Parameter:</font>
+<a name="line321">321: </a><font color="#B22222">.  V - the vector</font>
+
+<a name="line323">323: </a><font color="#B22222">   Notes:</font>
+<a name="line324">324: </a><font color="#B22222">   Use <a href="../../../../../../docs/manualpages/Vec/VecDuplicate.html#VecDuplicate">VecDuplicate</a>() or <a href="../../../../../../docs/manualpages/Vec/VecDuplicateVecs.html#VecDuplicateVecs">VecDuplicateVecs</a>() to form additional vectors of the</font>
+<a name="line325">325: </a><font color="#B22222">   same type as an existing vector.</font>
+
+<a name="line327">327: </a><font color="#B22222">   If the user-provided array is NULL, then <a href="../../../../../../docs/manualpages/Vec/VecCUDAPlaceArray.html#VecCUDAPlaceArray">VecCUDAPlaceArray</a>() can be used</font>
+<a name="line328">328: </a><font color="#B22222">   at a later stage to SET the array for storing the vector values.</font>
+
+<a name="line330">330: </a><font color="#B22222">   PETSc does NOT free the array when the vector is destroyed via <a href="../../../../../../docs/manualpages/Vec/VecDestroy.html#VecDestroy">VecDestroy</a>().</font>
+<a name="line331">331: </a><font color="#B22222">   The user should not free the array until the vector is destroyed.</font>
+
+<a name="line333">333: </a><font color="#B22222">   Level: intermediate</font>
+
+<a name="line335">335: </a><font color="#B22222">.seealso: <a href="../../../../../../docs/manualpages/Vec/VecCreateMPICUDAWithArray.html#VecCreateMPICUDAWithArray">VecCreateMPICUDAWithArray</a>(), <a href="../../../../../../docs/manualpages/Vec/VecCreate.html#VecCreate">VecCreate</a>(), <a href="../../../../../../docs/manualpages/Vec/VecDuplicate.html#VecDuplicate">VecDuplicate</a>(), <a href="../../../../../../docs/manualpages/Vec/VecDuplicateVecs.html#VecDuplicateVecs">VecDuplicateVecs</a>(),</font>
+<a name="line336">336: </a><font color="#B22222">          <a href="../../../../../../docs/manualpages/Vec/VecCreateGhost.html#VecCreateGhost">VecCreateGhost</a>(), <a href="../../../../../../docs/manualpages/Vec/VecCreateSeq.html#VecCreateSeq">VecCreateSeq</a>(), <a href="../../../../../../docs/manualpages/Vec/VecCUDAPlaceArray.html#VecCUDAPlaceArray">VecCUDAPlaceArray</a>(), <a href="../../../../../../docs/manualpages/Vec/VecCreateSeqWithArray.html#VecCreateSeqWithArray">VecCreateSeqWithArray</a>(),</font>
+<a name="line337">337: </a><font color="#B22222">          <a href="../../../../../../docs/manualpages/Vec/VecCreateMPIWithArray.html#VecCreateMPIWithArray">VecCreateMPIWithArray</a>()</font>
+<a name="line338">338: </a><font color="#B22222">@*/</font>
+<a name="line339">339: </a><strong><font color="#4169E1"><a name="VecCreateSeqCUDAWithArray"></a><a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  <a href="../../../../../../docs/manualpages/Vec/VecCreateSeqCUDAWithArray.html#VecCreateSeqCUDAWithArray">VecCreateSeqCUDAWithArray</a>(<a href="../../../../../../docs/manualpages/Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</a> comm,<a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> bs,<a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> n,const <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> array[],<a href="../../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> *V)</font></strong>
+<a name="line340">340: </a>{
+
+<a name="line344">344: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscCUDAInitializeCheck.html#PetscCUDAInitializeCheck">PetscCUDAInitializeCheck</a>();
+<a name="line345">345: </a>  <a href="../../../../../../docs/manualpages/Vec/VecCreate.html#VecCreate">VecCreate</a>(comm,V);
+<a name="line346">346: </a>  <a href="../../../../../../docs/manualpages/Vec/VecSetSizes.html#VecSetSizes">VecSetSizes</a>(*V,n,n);
+<a name="line347">347: </a>  <a href="../../../../../../docs/manualpages/Vec/VecSetBlockSize.html#VecSetBlockSize">VecSetBlockSize</a>(*V,bs);
+<a name="line348">348: </a>  VecCreate_SeqCUDA_Private(*V,array);
+<a name="line349">349: </a>  <font color="#4169E1">return</font>(0);
+<a name="line350">350: </a>}
+
+<a name="line352">352: </a><font color="#B22222">/*@C</font>
+<a name="line353">353: </a><font color="#B22222">   <a href="../../../../../../docs/manualpages/Vec/VecCreateSeqCUDAWithArrays.html#VecCreateSeqCUDAWithArrays">VecCreateSeqCUDAWithArrays</a> - Creates a CUDA sequential array-style vector,</font>
+<a name="line354">354: </a><font color="#B22222">   where the user provides the array space to store the vector values.</font>
+
+<a name="line356">356: </a><font color="#B22222">   Collective</font>
+
+<a name="line358">358: </a><font color="#B22222">   Input Parameter:</font>
+<a name="line359">359: </a><font color="#B22222">+  comm - the communicator, should be <a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a></font>
+<a name="line360">360: </a><font color="#B22222">.  bs - the block size</font>
+<a name="line361">361: </a><font color="#B22222">.  n - the vector length</font>
+<a name="line362">362: </a><font color="#B22222">-  cpuarray - CPU memory where the vector elements are to be stored.</font>
+<a name="line363">363: </a><font color="#B22222">-  gpuarray - GPU memory where the vector elements are to be stored.</font>
+
+<a name="line365">365: </a><font color="#B22222">   Output Parameter:</font>
+<a name="line366">366: </a><font color="#B22222">.  V - the vector</font>
+
+<a name="line368">368: </a><font color="#B22222">   Notes:</font>
+<a name="line369">369: </a><font color="#B22222">   If both cpuarray and gpuarray are provided, the caller must ensure that</font>
+<a name="line370">370: </a><font color="#B22222">   the provided arrays have identical values.</font>
+
+<a name="line372">372: </a><font color="#B22222">   PETSc does NOT free the provided arrays when the vector is destroyed via</font>
+<a name="line373">373: </a><font color="#B22222">   <a href="../../../../../../docs/manualpages/Vec/VecDestroy.html#VecDestroy">VecDestroy</a>(). The user should not free the array until the vector is</font>
+<a name="line374">374: </a><font color="#B22222">   destroyed.</font>
+
+<a name="line376">376: </a><font color="#B22222">   Level: intermediate</font>
+
+<a name="line378">378: </a><font color="#B22222">.seealso: <a href="../../../../../../docs/manualpages/Vec/VecCreateMPICUDAWithArrays.html#VecCreateMPICUDAWithArrays">VecCreateMPICUDAWithArrays</a>(), <a href="../../../../../../docs/manualpages/Vec/VecCreate.html#VecCreate">VecCreate</a>(), <a href="../../../../../../docs/manualpages/Vec/VecCreateSeqWithArray.html#VecCreateSeqWithArray">VecCreateSeqWithArray</a>(),</font>
+<a name="line379">379: </a><font color="#B22222">          <a href="../../../../../../docs/manualpages/Vec/VecCUDAPlaceArray.html#VecCUDAPlaceArray">VecCUDAPlaceArray</a>(), <a href="../../../../../../docs/manualpages/Vec/VecCreateSeqCUDAWithArray.html#VecCreateSeqCUDAWithArray">VecCreateSeqCUDAWithArray</a>(),</font>
+<a name="line380">380: </a><font color="#B22222">          VecCUDAAllocateCheckHost()</font>
+<a name="line381">381: </a><font color="#B22222">@*/</font>
+<a name="line382">382: </a><strong><font color="#4169E1"><a name="VecCreateSeqCUDAWithArrays"></a><a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  <a href="../../../../../../docs/manualpages/Vec/VecCreateSeqCUDAWithArrays.html#VecCreateSeqCUDAWithArrays">VecCreateSeqCUDAWithArrays</a>(<a href="../../../../../../docs/manualpages/Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</a> comm,<a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> bs,<a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> n,const <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> cpuarray[],const <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> gpuarray[],<a href="../../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> *V)</font></strong>
+<a name="line383">383: </a>{
+
+<a name="line387">387: </a>  // set V's gpuarray to be gpuarray, <font color="#4169E1">do</font> not allocate memory on host yet.
+<a name="line388">388: </a>  <a href="../../../../../../docs/manualpages/Vec/VecCreateSeqCUDAWithArray.html#VecCreateSeqCUDAWithArray">VecCreateSeqCUDAWithArray</a>(comm,bs,n,gpuarray,V);
+
+<a name="line390">390: </a>  <font color="#4169E1">if</font> (cpuarray &amp;&amp; gpuarray) {
+<a name="line391">391: </a>    Vec_Seq *s = (Vec_Seq*)((*V)-&gt;data);
+<a name="line392">392: </a>    s-&gt;array = (<a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>*)cpuarray;
+<a name="line393">393: </a>    (*V)-&gt;offloadmask = <a href="../../../../../../docs/manualpages/Vec/PetscOffloadMask.html#PetscOffloadMask">PETSC_OFFLOAD_BOTH</a>;
+<a name="line394">394: </a>  } <font color="#4169E1">else</font> <font color="#4169E1">if</font> (cpuarray) {
+<a name="line395">395: </a>    Vec_Seq *s = (Vec_Seq*)((*V)-&gt;data);
+<a name="line396">396: </a>    s-&gt;array = (<a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>*)cpuarray;
+<a name="line397">397: </a>    (*V)-&gt;offloadmask = <a href="../../../../../../docs/manualpages/Vec/PetscOffloadMask.html#PetscOffloadMask">PETSC_OFFLOAD_CPU</a>;
+<a name="line398">398: </a>  } <font color="#4169E1">else</font> <font color="#4169E1">if</font> (gpuarray) {
+<a name="line399">399: </a>    (*V)-&gt;offloadmask = <a href="../../../../../../docs/manualpages/Vec/PetscOffloadMask.html#PetscOffloadMask">PETSC_OFFLOAD_GPU</a>;
+<a name="line400">400: </a>  } <font color="#4169E1">else</font> {
+<a name="line401">401: </a>    (*V)-&gt;offloadmask = <a href="../../../../../../docs/manualpages/Vec/PetscOffloadMask.html#PetscOffloadMask">PETSC_OFFLOAD_UNALLOCATED</a>;
+<a name="line402">402: </a>  }
+
+<a name="line404">404: </a>  <font color="#4169E1">return</font>(0);
+<a name="line405">405: </a>}
+
+<a name="line407">407: </a><strong><font color="#4169E1"><a name="VecGetArrayWrite_SeqCUDA"></a><a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> VecGetArrayWrite_SeqCUDA(<a href="../../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> v,<a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> **vv)</font></strong>
+<a name="line408">408: </a>{
+
+<a name="line412">412: </a>  VecCUDAAllocateCheckHost(v);
+<a name="line413">413: </a>  v-&gt;offloadmask = <a href="../../../../../../docs/manualpages/Vec/PetscOffloadMask.html#PetscOffloadMask">PETSC_OFFLOAD_CPU</a>;
+<a name="line414">414: </a>  *vv = *((<a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)v-&gt;data);
+<a name="line415">415: </a>  <font color="#4169E1">return</font>(0);
+<a name="line416">416: </a>}
+
+<a name="line418">418: </a><strong><font color="#4169E1"><a name="VecBindToCPU_SeqCUDA"></a><a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> VecBindToCPU_SeqCUDA(<a href="../../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> V,<a href="../../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> pin)</font></strong>
+<a name="line419">419: </a>{
+
+<a name="line423">423: </a>  V-&gt;boundtocpu = pin;
+<a name="line424">424: </a>  <font color="#4169E1">if</font> (pin) {
+<a name="line425">425: </a>    VecCUDACopyFromGPU(V);
+<a name="line426">426: </a>    V-&gt;offloadmask                 = <a href="../../../../../../docs/manualpages/Vec/PetscOffloadMask.html#PetscOffloadMask">PETSC_OFFLOAD_CPU</a>; <font color="#B22222">/* since the CPU code will likely change values in the vector */</font>
+<a name="line427">427: </a>    V-&gt;ops-&gt;dot                    = VecDot_Seq;
+<a name="line428">428: </a>    V-&gt;ops-&gt;norm                   = VecNorm_Seq;
+<a name="line429">429: </a>    V-&gt;ops-&gt;tdot                   = VecTDot_Seq;
+<a name="line430">430: </a>    V-&gt;ops-&gt;scale                  = VecScale_Seq;
+<a name="line431">431: </a>    V-&gt;ops-&gt;copy                   = VecCopy_Seq;
+<a name="line432">432: </a>    V-&gt;ops-&gt;set                    = VecSet_Seq;
+<a name="line433">433: </a>    V-&gt;ops-&gt;swap                   = VecSwap_Seq;
+<a name="line434">434: </a>    V-&gt;ops-&gt;axpy                   = VecAXPY_Seq;
+<a name="line435">435: </a>    V-&gt;ops-&gt;axpby                  = VecAXPBY_Seq;
+<a name="line436">436: </a>    V-&gt;ops-&gt;axpbypcz               = VecAXPBYPCZ_Seq;
+<a name="line437">437: </a>    V-&gt;ops-&gt;pointwisemult          = VecPointwiseMult_Seq;
+<a name="line438">438: </a>    V-&gt;ops-&gt;pointwisedivide        = VecPointwiseDivide_Seq;
+<a name="line439">439: </a>    V-&gt;ops-&gt;setrandom              = VecSetRandom_Seq;
+<a name="line440">440: </a>    V-&gt;ops-&gt;dot_local              = VecDot_Seq;
+<a name="line441">441: </a>    V-&gt;ops-&gt;tdot_local             = VecTDot_Seq;
+<a name="line442">442: </a>    V-&gt;ops-&gt;norm_local             = VecNorm_Seq;
+<a name="line443">443: </a>    V-&gt;ops-&gt;mdot_local             = VecMDot_Seq;
+<a name="line444">444: </a>    V-&gt;ops-&gt;mtdot_local            = VecMTDot_Seq;
+<a name="line445">445: </a>    V-&gt;ops-&gt;maxpy                  = VecMAXPY_Seq;
+<a name="line446">446: </a>    V-&gt;ops-&gt;mdot                   = VecMDot_Seq;
+<a name="line447">447: </a>    V-&gt;ops-&gt;mtdot                  = VecMTDot_Seq;
+<a name="line448">448: </a>    V-&gt;ops-&gt;aypx                   = VecAYPX_Seq;
+<a name="line449">449: </a>    V-&gt;ops-&gt;waxpy                  = VecWAXPY_Seq;
+<a name="line450">450: </a>    V-&gt;ops-&gt;dotnorm2               = NULL;
+<a name="line451">451: </a>    V-&gt;ops-&gt;placearray             = VecPlaceArray_Seq;
+<a name="line452">452: </a>    V-&gt;ops-&gt;replacearray           = VecReplaceArray_SeqCUDA;
+<a name="line453">453: </a>    V-&gt;ops-&gt;resetarray             = VecResetArray_Seq;
+<a name="line454">454: </a>    V-&gt;ops-&gt;duplicate              = VecDuplicate_Seq;
+<a name="line455">455: </a>    V-&gt;ops-&gt;conjugate              = VecConjugate_Seq;
+<a name="line456">456: </a>    V-&gt;ops-&gt;getlocalvector         = NULL;
+<a name="line457">457: </a>    V-&gt;ops-&gt;restorelocalvector     = NULL;
+<a name="line458">458: </a>    V-&gt;ops-&gt;getlocalvectorread     = NULL;
+<a name="line459">459: </a>    V-&gt;ops-&gt;restorelocalvectorread = NULL;
+<a name="line460">460: </a>    V-&gt;ops-&gt;getarraywrite          = NULL;
+<a name="line461">461: </a>  } <font color="#4169E1">else</font> {
+<a name="line462">462: </a>    V-&gt;ops-&gt;dot                    = VecDot_SeqCUDA;
+<a name="line463">463: </a>    V-&gt;ops-&gt;norm                   = VecNorm_SeqCUDA;
+<a name="line464">464: </a>    V-&gt;ops-&gt;tdot                   = VecTDot_SeqCUDA;
+<a name="line465">465: </a>    V-&gt;ops-&gt;scale                  = VecScale_SeqCUDA;
+<a name="line466">466: </a>    V-&gt;ops-&gt;copy                   = VecCopy_SeqCUDA;
+<a name="line467">467: </a>    V-&gt;ops-&gt;set                    = VecSet_SeqCUDA;
+<a name="line468">468: </a>    V-&gt;ops-&gt;swap                   = VecSwap_SeqCUDA;
+<a name="line469">469: </a>    V-&gt;ops-&gt;axpy                   = VecAXPY_SeqCUDA;
+<a name="line470">470: </a>    V-&gt;ops-&gt;axpby                  = VecAXPBY_SeqCUDA;
+<a name="line471">471: </a>    V-&gt;ops-&gt;axpbypcz               = VecAXPBYPCZ_SeqCUDA;
+<a name="line472">472: </a>    V-&gt;ops-&gt;pointwisemult          = VecPointwiseMult_SeqCUDA;
+<a name="line473">473: </a>    V-&gt;ops-&gt;pointwisedivide        = VecPointwiseDivide_SeqCUDA;
+<a name="line474">474: </a>    V-&gt;ops-&gt;setrandom              = VecSetRandom_SeqCUDA;
+<a name="line475">475: </a>    V-&gt;ops-&gt;dot_local              = VecDot_SeqCUDA;
+<a name="line476">476: </a>    V-&gt;ops-&gt;tdot_local             = VecTDot_SeqCUDA;
+<a name="line477">477: </a>    V-&gt;ops-&gt;norm_local             = VecNorm_SeqCUDA;
+<a name="line478">478: </a>    V-&gt;ops-&gt;mdot_local             = VecMDot_SeqCUDA;
+<a name="line479">479: </a>    V-&gt;ops-&gt;maxpy                  = VecMAXPY_SeqCUDA;
+<a name="line480">480: </a>    V-&gt;ops-&gt;mdot                   = VecMDot_SeqCUDA;
+<a name="line481">481: </a>    V-&gt;ops-&gt;aypx                   = VecAYPX_SeqCUDA;
+<a name="line482">482: </a>    V-&gt;ops-&gt;waxpy                  = VecWAXPY_SeqCUDA;
+<a name="line483">483: </a>    V-&gt;ops-&gt;dotnorm2               = VecDotNorm2_SeqCUDA;
+<a name="line484">484: </a>    V-&gt;ops-&gt;placearray             = VecPlaceArray_SeqCUDA;
+<a name="line485">485: </a>    V-&gt;ops-&gt;replacearray           = VecReplaceArray_SeqCUDA;
+<a name="line486">486: </a>    V-&gt;ops-&gt;resetarray             = VecResetArray_SeqCUDA;
+<a name="line487">487: </a>    V-&gt;ops-&gt;destroy                = VecDestroy_SeqCUDA;
+<a name="line488">488: </a>    V-&gt;ops-&gt;duplicate              = VecDuplicate_SeqCUDA;
+<a name="line489">489: </a>    V-&gt;ops-&gt;conjugate              = VecConjugate_SeqCUDA;
+<a name="line490">490: </a>    V-&gt;ops-&gt;getlocalvector         = VecGetLocalVector_SeqCUDA;
+<a name="line491">491: </a>    V-&gt;ops-&gt;restorelocalvector     = VecRestoreLocalVector_SeqCUDA;
+<a name="line492">492: </a>    V-&gt;ops-&gt;getlocalvectorread     = VecGetLocalVector_SeqCUDA;
+<a name="line493">493: </a>    V-&gt;ops-&gt;restorelocalvectorread = VecRestoreLocalVector_SeqCUDA;
+<a name="line494">494: </a>    V-&gt;ops-&gt;getarraywrite          = VecGetArrayWrite_SeqCUDA;
+<a name="line495">495: </a>  }
+<a name="line496">496: </a>  <font color="#4169E1">return</font>(0);
+<a name="line497">497: </a>}
+
+<a name="line499">499: </a><strong><font color="#4169E1"><a name="VecCreate_SeqCUDA_Private"></a><a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> VecCreate_SeqCUDA_Private(<a href="../../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> V,const <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> *array)</font></strong>
+<a name="line500">500: </a>{
+<a name="line502">502: </a>  Vec_CUDA       *veccuda;
+<a name="line503">503: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a>    size;
+<a name="line504">504: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>      option_set;
+
+<a name="line507">507: </a>  <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_size.html#MPI_Comm_size">MPI_Comm_size</a>(<a href="../../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)V),&amp;size);
+<a name="line508">508: </a>  <font color="#4169E1">if</font> (size &gt; 1) <a href="../../../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_ARG_WRONG,<font color="#666666">"Cannot create <a href="../../../../../../docs/manualpages/Vec/VECSEQCUDA.html#VECSEQCUDA">VECSEQCUDA</a> on more than one process"</font>);
+<a name="line509">509: </a>  VecCreate_Seq_Private(V,0);
+<a name="line510">510: </a>  PetscObjectChangeTypeName((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)V,<a href="../../../../../../docs/manualpages/Vec/VECSEQCUDA.html#VECSEQCUDA">VECSEQCUDA</a>);
+<a name="line511">511: </a>  VecBindToCPU_SeqCUDA(V,<a href="../../../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>);
+<a name="line512">512: </a>  V-&gt;ops-&gt;bindtocpu = VecBindToCPU_SeqCUDA;
+
+<a name="line514">514: </a>  <font color="#B22222">/* Later, functions check for the Vec_CUDA structure existence, so do not create it without array */</font>
+<a name="line515">515: </a>  <font color="#4169E1">if</font> (array) {
+<a name="line516">516: </a>    <font color="#4169E1">if</font> (!V-&gt;spptr) {
+<a name="line517">517: </a>      <a href="../../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> pinned_memory_min;
+<a name="line518">518: </a>      <a href="../../../../../../docs/manualpages/Sys/PetscMalloc.html#PetscMalloc">PetscMalloc</a>(<font color="#4169E1">sizeof</font>(Vec_CUDA),&amp;V-&gt;spptr);
+<a name="line519">519: </a>      veccuda = (Vec_CUDA*)V-&gt;spptr;
+<a name="line520">520: </a>      veccuda-&gt;stream = 0; <font color="#B22222">/* using default stream */</font>
+<a name="line521">521: </a>      veccuda-&gt;GPUarray_allocated = 0;
+<a name="line522">522: </a>      V-&gt;offloadmask = <a href="../../../../../../docs/manualpages/Vec/PetscOffloadMask.html#PetscOffloadMask">PETSC_OFFLOAD_UNALLOCATED</a>;
+
+<a name="line524">524: </a>      pinned_memory_min = 0;
+<a name="line525">525: </a>      <font color="#B22222">/* Need to parse command line for minimum size to use for pinned memory allocations on host here.</font>
+<a name="line526">526: </a><font color="#B22222">         Note: This same code duplicated in VecCUDAAllocateCheck() and VecCreate_MPICUDA_Private(). Is there a good way to avoid this? */</font>
+<a name="line527">527: </a>      <a href="../../../../../../docs/manualpages/Sys/PetscOptionsBegin.html#PetscOptionsBegin">PetscOptionsBegin</a>(<a href="../../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)V),((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)V)-&gt;prefix,<font color="#666666">"<a href="../../../../../../docs/manualpages/Vec/VECCUDA.html#VECCUDA">VECCUDA</a> Options"</font>,<font color="#666666">"<a href="../../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a>"</font>);
+<a name="line528">528: </a>      <a href="../../../../../../docs/manualpages/Sys/PetscOptionsReal.html#PetscOptionsReal">PetscOptionsReal</a>(<font color="#666666">"-vec_pinned_memory_min"</font>,<font color="#666666">"Minimum size (in bytes) for an allocation to use pinned memory on host"</font>,<font color="#666666">"<a href="../../../../../../docs/manualpages/Vec/VecSetPinnedMemoryMin.html#VecSetPinnedMemoryMin">VecSetPinnedMemoryMin</a>"</font>,pinned_memory_min,&amp;pinned_memory_min,&amp;option_set);
+<a name="line529">529: </a>      <font color="#4169E1">if</font> (option_set) V-&gt;minimum_bytes_pinned_memory = pinned_memory_min;
+<a name="line530">530: </a>      <a href="../../../../../../docs/manualpages/Sys/PetscOptionsEnd.html#PetscOptionsEnd">PetscOptionsEnd</a>();
+<a name="line531">531: </a>    }
+<a name="line532">532: </a>    veccuda = (Vec_CUDA*)V-&gt;spptr;
+<a name="line533">533: </a>    veccuda-&gt;GPUarray = (<a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>*)array;
+<a name="line534">534: </a>    V-&gt;offloadmask = <a href="../../../../../../docs/manualpages/Vec/PetscOffloadMask.html#PetscOffloadMask">PETSC_OFFLOAD_GPU</a>;
+
+<a name="line536">536: </a>  }
+<a name="line537">537: </a>  <font color="#4169E1">return</font>(0);
+<a name="line538">538: </a>}
+</pre>
+</body>
+
+</html>

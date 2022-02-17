@@ -1,0 +1,41 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSPHPDDMGetDeflationSpace.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>KSPHPDDMGetDeflationSpace</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/KSP/KSPHPDDMGetDeflationSpace.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="KSPHPDDMGetDeflationSpace"><H1>KSPHPDDMGetDeflationSpace</H1></A>
+Gets the deflation space computed by Krylov methods with recycling or NULL if <A HREF="../KSP/KSPSolve.html#KSPSolve">KSPSolve</A>() has not been called yet. This space is viewed as a set of vectors stored in a <A HREF="../Mat/MATDENSE.html#MATDENSE">MATDENSE</A> (column major). It is the responsibility of the user to free the returned <A HREF="../Mat/Mat.html#Mat">Mat</A>. 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscksp.h" 
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../KSP/KSPHPDDMGetDeflationSpace.html#KSPHPDDMGetDeflationSpace">KSPHPDDMGetDeflationSpace</A>(<A HREF="../KSP/KSP.html#KSP">KSP</A> ksp, <A HREF="../Mat/Mat.html#Mat">Mat</A> *U)
+</PRE>
+<H3><FONT COLOR="#CC3333">Input Parameter</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>ksp </B></TD><TD>- iterative context
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Output Parameter</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>U </B></TD><TD>- deflation space generated during <A HREF="../KSP/KSPSolve.html#KSPSolve">KSPSolve</A>()
+</TD></TR></TABLE>
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+  <A HREF="../KSP/KSPCreate.html#KSPCreate">KSPCreate</A>(), <A HREF="../KSP/KSPType.html#KSPType">KSPType</A> (for list of available types), <A HREF="../KSP/KSPHPDDMSetDeflationSpace.html#KSPHPDDMSetDeflationSpace">KSPHPDDMSetDeflationSpace</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>intermediate<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/ksp/ksp/impls/hpddm/hpddm.cxx.html#KSPHPDDMGetDeflationSpace">src/ksp/ksp/impls/hpddm/hpddm.cxx</A>
+<P><H3><FONT COLOR="#CC3333">Examples</FONT></H3>
+<A HREF="../../../src/ksp/ksp/tutorials/ex75.c.html">src/ksp/ksp/tutorials/ex75.c.html</A><BR>
+<A HREF="../../../src/ksp/ksp/tutorials/ex75f.F90.html">src/ksp/ksp/tutorials/ex75f.F90.html</A><BR>
+<P><H3><FONT COLOR="CC3333">Implementations</FONT></H3><A HREF="../../../src/ksp/ksp/impls/hpddm/hpddm.cxx.html#KSPHPDDMGetDeflationSpace_HPDDM">KSPHPDDMGetDeflationSpace_HPDDM in src/ksp/ksp/impls/hpddm/hpddm.cxx</A><BR>
+<BR><A HREF="./index.html">Index of all KSP routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

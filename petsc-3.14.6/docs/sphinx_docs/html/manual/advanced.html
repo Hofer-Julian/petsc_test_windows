@@ -1,0 +1,372 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/sphinx_docs/html/manual/advanced.html" />
+    <meta charset="utf-8" />
+    <title>Unimportant and Advanced Features of Matrices and Solvers &#8212; PETSc 3.14.6 documentation</title>
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/katex-math.css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/contrib/auto-render.min.js"></script>
+    <script src="../_static/katex_autorenderer.js"></script>
+    <link rel="shortcut icon" href="../_static/PETSc_RGB-logo.png"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Running PETSc Tests" href="tests.html" />
+    <link rel="prev" title="Other PETSc Features" href="other.html" /> 
+  </head><body>
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/sphinx_docs/html/manual/advanced.html "><small>Report Typos and Errors</small></a></div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="tests.html" title="Running PETSc Tests"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="other.html" title="Other PETSc Features"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">PETSc 3.14.6 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >PETSc Users Manual</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="additional.html" accesskey="U">Additional Information</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/PETSc-TAO_RGB.svg" alt="Logo"/>
+            </a></p>
+  <h3><a href="../index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Unimportant and Advanced Features of Matrices and Solvers</a><ul>
+<li><a class="reference internal" href="#extracting-submatrices">Extracting Submatrices</a></li>
+<li><a class="reference internal" href="#matrix-factorization">Matrix Factorization</a></li>
+<li><a class="reference internal" href="#unimportant-details-of-ksp">Unimportant Details of KSP</a></li>
+<li><a class="reference internal" href="#unimportant-details-of-pc">Unimportant Details of PC</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="other.html"
+                        title="previous chapter">Other PETSc Features</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="tests.html"
+                        title="next chapter">Running PETSc Tests</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/manual/advanced.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="unimportant-and-advanced-features-of-matrices-and-solvers">
+<span id="ch-advanced"></span><h1>Unimportant and Advanced Features of Matrices and Solvers<a class="headerlink" href="#unimportant-and-advanced-features-of-matrices-and-solvers" title="Permalink to this headline">¶</a></h1>
+<p>This chapter introduces additional features of the PETSc matrices and
+solvers. Since most PETSc users should not need to use these features,
+we recommend skipping this chapter during an initial reading.</p>
+<div class="section" id="extracting-submatrices">
+<h2>Extracting Submatrices<a class="headerlink" href="#extracting-submatrices" title="Permalink to this headline">¶</a></h2>
+<p>One can extract a (parallel) submatrix from a given (parallel) using</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatCreateSubMatrix.html#MatCreateSubMatrix">MatCreateSubMatrix</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/Mat.html#Mat">Mat</a></span> <span class="n">A</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/IS/IS.html#IS">IS</a></span> <span class="n">rows</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/IS/IS.html#IS">IS</a></span> <span class="n">cols</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatReuse.html#MatReuse">MatReuse</a></span> <span class="n">call</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/Mat.html#Mat">Mat</a></span> <span class="o">*</span><span class="n">B</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>This extracts the <code class="docutils literal notranslate"><span class="pre">rows</span></code> and <code class="docutils literal notranslate"><span class="pre">col</span></code>umns of the matrix <code class="docutils literal notranslate"><span class="pre">A</span></code> into
+<code class="docutils literal notranslate"><span class="pre">B</span></code>. If call is <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatReuse.html#MatReuse">MAT_INITIAL_MATRIX</a></span></code> it will create the matrix
+<code class="docutils literal notranslate"><span class="pre">B</span></code>. If call is <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatReuse.html#MatReuse">MAT_REUSE_MATRIX</a></span></code> it will reuse the <code class="docutils literal notranslate"><span class="pre">B</span></code> created
+with a previous call.</p>
+</div>
+<div class="section" id="matrix-factorization">
+<span id="sec-matfactor"></span><h2>Matrix Factorization<a class="headerlink" href="#matrix-factorization" title="Permalink to this headline">¶</a></h2>
+<p>Normally, PETSc users will access the matrix solvers through the <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSP.html#KSP">KSP</a></span></code>
+interface, as discussed in <a class="reference internal" href="ksp.html#chapter-ksp"><span class="std std-ref">KSP: Linear System Solvers</span></a>, but the
+underlying factorization and triangular solve routines are also directly
+accessible to the user.</p>
+<p>The LU and Cholesky matrix factorizations are split into two or three
+stages depending on the user’s needs. The first stage is to calculate an
+ordering for the matrix. The ordering generally is done to reduce fill
+in a sparse factorization; it does not make much sense for a dense
+matrix.</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/MatOrderings/MatGetOrdering.html#MatGetOrdering">MatGetOrdering</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/Mat.html#Mat">Mat</a></span> <span class="n">matrix</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatOrderingType.html#MatOrderingType">MatOrderingType</a></span> <span class="n">type</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/IS/IS.html#IS">IS</a></span><span class="o">*</span> <span class="n">rowperm</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/IS/IS.html#IS">IS</a></span><span class="o">*</span> <span class="n">colperm</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>The currently available alternatives for the ordering <code class="docutils literal notranslate"><span class="pre">type</span></code> are</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">MATORDERINGNATURAL</span></code> - Natural</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">MATORDERINGND</span></code> - Nested Dissection</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">MATORDERING1WD</span></code> - One-way Dissection</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">MATORDERINGRCM</span></code> - Reverse Cuthill-McKee</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">MATORDERINGQMD</span></code> - Quotient Minimum Degree</p></li>
+</ul>
+<p>These orderings can also be set through the options database.</p>
+<p>Certain matrix formats may support only a subset of these; more options
+may be added. Check the manual pages for up-to-date information. All of
+these orderings are symmetric at the moment; ordering routines that are
+not symmetric may be added. Currently we support orderings only for
+sequential matrices.</p>
+<p>Users can add their own ordering routines by providing a function with
+the calling sequence</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span> <span class="nf">reorder</span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/Mat.html#Mat">Mat</a></span> <span class="n">A</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatOrderingType.html#MatOrderingType">MatOrderingType</a></span> <span class="n">type</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/IS/IS.html#IS">IS</a></span><span class="o">*</span> <span class="n">rowperm</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/IS/IS.html#IS">IS</a></span><span class="o">*</span> <span class="n">colperm</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Here <code class="docutils literal notranslate"><span class="pre">A</span></code> is the matrix for which we wish to generate a new ordering,
+<code class="docutils literal notranslate"><span class="pre">type</span></code> may be ignored and <code class="docutils literal notranslate"><span class="pre">rowperm</span></code> and <code class="docutils literal notranslate"><span class="pre">colperm</span></code> are the row and
+column permutations generated by the ordering routine. The user
+registers the ordering routine with the command</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/MatOrderings/MatOrderingRegister.html#MatOrderingRegister">MatOrderingRegister</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatOrderingType.html#MatOrderingType">MatOrderingType</a></span> <span class="n">ordname</span><span class="p">,</span><span class="kt">char</span> <span class="o">*</span><span class="n">path</span><span class="p">,</span><span class="kt">char</span> <span class="o">*</span><span class="n">sname</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a></span> <span class="p">(</span><span class="o">*</span><span class="n">reorder</span><span class="p">)(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/Mat.html#Mat">Mat</a></span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatOrderingType.html#MatOrderingType">MatOrderingType</a></span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/IS/IS.html#IS">IS</a></span><span class="o">*</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/IS/IS.html#IS">IS</a></span><span class="o">*</span><span class="p">)));</span>
+</pre></div>
+</div>
+<p>The input argument <code class="docutils literal notranslate"><span class="pre">ordname</span></code> is a string of the user’s choice,
+either an ordering defined in <code class="docutils literal notranslate"><span class="pre">petscmat.h</span></code> or the name
+of a new ordering introduced by the user. See the code in
+<code class="docutils literal notranslate"><span class="pre">src/mat/impls/order/sorder.c</span></code> and other files in that
+directory for examples on how the reordering routines may be written.</p>
+<p>Once the reordering routine has been registered, it can be selected for
+use at runtime with the command line option
+<code class="docutils literal notranslate"><span class="pre">-pc_factor_mat_ordering_type</span></code> <code class="docutils literal notranslate"><span class="pre">ordname</span></code>. If reordering from the API, the
+user should provide the <code class="docutils literal notranslate"><span class="pre">ordname</span></code> as the second input argument of
+<code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/MatOrderings/MatGetOrdering.html#MatGetOrdering">MatGetOrdering</a>()</span></code>.</p>
+<p>The following routines perform complete, in-place, symbolic, and
+numerical factorizations for symmetric and nonsymmetric matrices,
+respectively:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatCholeskyFactor.html#MatCholeskyFactor">MatCholeskyFactor</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/Mat.html#Mat">Mat</a></span> <span class="n">matrix</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/IS/IS.html#IS">IS</a></span> <span class="n">permutation</span><span class="p">,</span><span class="k">const</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatFactorInfo.html#MatFactorInfo">MatFactorInfo</a></span> <span class="o">*</span><span class="n">info</span><span class="p">);</span>
+<span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatLUFactor.html#MatLUFactor">MatLUFactor</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/Mat.html#Mat">Mat</a></span> <span class="n">matrix</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/IS/IS.html#IS">IS</a></span> <span class="n">rowpermutation</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/IS/IS.html#IS">IS</a></span> <span class="n">columnpermutation</span><span class="p">,</span><span class="k">const</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatFactorInfo.html#MatFactorInfo">MatFactorInfo</a></span> <span class="o">*</span><span class="n">info</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>The argument <code class="docutils literal notranslate"><span class="pre">info-&gt;fill</span> <span class="pre">&gt;</span> <span class="pre">1</span></code> is the predicted fill expected in the
+factored matrix, as a ratio of the original fill. For example,
+<code class="docutils literal notranslate"><span class="pre">info-&gt;fill=2.0</span></code> would indicate that one expects the factored matrix
+to have twice as many nonzeros as the original.</p>
+<p>For sparse matrices it is very unlikely that the factorization is
+actually done in-place. More likely, new space is allocated for the
+factored matrix and the old space deallocated, but to the user it
+appears in-place because the factored matrix replaces the unfactored
+matrix.</p>
+<p>The two factorization stages can also be performed separately, by using
+the out-of-place mode, first one obtains that matrix object that will
+hold the factor</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatGetFactor.html#MatGetFactor">MatGetFactor</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/Mat.html#Mat">Mat</a></span> <span class="n">matrix</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatSolverType.html#MatSolverType">MatSolverType</a></span> <span class="n">package</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatFactorType.html#MatFactorType">MatFactorType</a></span> <span class="n">ftype</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/Mat.html#Mat">Mat</a></span> <span class="o">*</span><span class="n">factor</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>and then performs the factorization</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatCholeskyFactorSymbolic.html#MatCholeskyFactorSymbolic">MatCholeskyFactorSymbolic</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/Mat.html#Mat">Mat</a></span> <span class="n">factor</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/Mat.html#Mat">Mat</a></span> <span class="n">matrix</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/IS/IS.html#IS">IS</a></span> <span class="n">perm</span><span class="p">,</span><span class="k">const</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatFactorInfo.html#MatFactorInfo">MatFactorInfo</a></span> <span class="o">*</span><span class="n">info</span><span class="p">);</span>
+<span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatLUFactorSymbolic.html#MatLUFactorSymbolic">MatLUFactorSymbolic</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/Mat.html#Mat">Mat</a></span> <span class="n">factor</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/Mat.html#Mat">Mat</a></span> <span class="n">matrix</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/IS/IS.html#IS">IS</a></span> <span class="n">rowperm</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/IS/IS.html#IS">IS</a></span> <span class="n">colperm</span><span class="p">,</span><span class="k">const</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatFactorInfo.html#MatFactorInfo">MatFactorInfo</a></span> <span class="o">*</span><span class="n">info</span><span class="p">);</span>
+<span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatCholeskyFactorNumeric.html#MatCholeskyFactorNumeric">MatCholeskyFactorNumeric</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/Mat.html#Mat">Mat</a></span> <span class="n">factor</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/Mat.html#Mat">Mat</a></span> <span class="n">matrix</span><span class="p">,</span><span class="k">const</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatFactorInfo.html#MatFactorInfo">MatFactorInfo</a></span><span class="p">);</span>
+<span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatLUFactorNumeric.html#MatLUFactorNumeric">MatLUFactorNumeric</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/Mat.html#Mat">Mat</a></span> <span class="n">factor</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/Mat.html#Mat">Mat</a></span> <span class="n">matrix</span><span class="p">,</span><span class="k">const</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatFactorInfo.html#MatFactorInfo">MatFactorInfo</a></span> <span class="o">*</span><span class="n">info</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>In this case, the contents of the matrix <code class="docutils literal notranslate"><span class="pre">result</span></code> is undefined between
+the symbolic and numeric factorization stages. It is possible to reuse
+the symbolic factorization. For the second and succeeding
+factorizations, one simply calls the numerical factorization with a new
+input <code class="docutils literal notranslate"><span class="pre">matrix</span></code> and the <em>same</em> factored <code class="docutils literal notranslate"><span class="pre">result</span></code> matrix. It is
+<em>essential</em> that the new input matrix have exactly the same nonzero
+structure as the original factored matrix. (The numerical factorization
+merely overwrites the numerical values in the factored matrix and does
+not disturb the symbolic portion, thus enabling reuse of the symbolic
+phase.) In general, calling <code class="docutils literal notranslate"><span class="pre">XXXFactorSymbolic</span></code> with a dense matrix
+will do nothing except allocate the new matrix; the <code class="docutils literal notranslate"><span class="pre">XXXFactorNumeric</span></code>
+routines will do all of the work.</p>
+<p>Why provide the plain <code class="docutils literal notranslate"><span class="pre">XXXfactor</span></code> routines when one could simply call
+the two-stage routines? The answer is that if one desires in-place
+factorization of a sparse matrix, the intermediate stage between the
+symbolic and numeric phases cannot be stored in a <code class="docutils literal notranslate"><span class="pre">result</span></code> matrix, and
+it does not make sense to store the intermediate values inside the
+original matrix that is being transformed. We originally made the
+combined factor routines do either in-place or out-of-place
+factorization, but then decided that this approach was not needed and
+could easily lead to confusion.</p>
+<p>We do not currently support sparse matrix factorization with pivoting
+for numerical stability. This is because trying to both reduce fill and
+do pivoting can become quite complicated. Instead, we provide a poor
+stepchild substitute. After one has obtained a reordering, with
+<code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/MatOrderings/MatGetOrdering.html#MatGetOrdering">MatGetOrdering</a>(<a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/Mat.html#Mat">Mat</a></span> <span class="pre">A,MatOrdering</span> <span class="pre">type,<a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/IS/IS.html#IS">IS</a></span> <span class="pre">*row,<a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/IS/IS.html#IS">IS</a></span> <span class="pre">*col)</span></code> one may call</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatReorderForNonzeroDiagonal.html#MatReorderForNonzeroDiagonal">MatReorderForNonzeroDiagonal</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/Mat.html#Mat">Mat</a></span> <span class="n">A</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a></span> <span class="n">tol</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/IS/IS.html#IS">IS</a></span> <span class="n">row</span><span class="p">,</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/IS/IS.html#IS">IS</a></span> <span class="n">col</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>which will try to reorder the columns to ensure that no values along the
+diagonal are smaller than <code class="docutils literal notranslate"><span class="pre">tol</span></code> in a absolute value. If small values
+are detected and corrected for, a nonsymmetric permutation of the rows
+and columns will result. This is not guaranteed to work, but may help if
+one was simply unlucky in the original ordering. When using the <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSP.html#KSP">KSP</a></span></code>
+solver interface the option <code class="docutils literal notranslate"><span class="pre">-pc_factor_nonzeros_along_diagonal</span> <span class="pre">&lt;tol&gt;</span></code>
+may be used. Here, <code class="docutils literal notranslate"><span class="pre">tol</span></code> is an optional tolerance to decide if a value
+is nonzero; by default it is <code class="docutils literal notranslate"><span class="pre">1.e-10</span></code>.</p>
+<p>Once a matrix has been factored, it is natural to solve linear systems.
+The following four routines enable this process:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatSolve.html#MatSolve">MatSolve</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/Mat.html#Mat">Mat</a></span> <span class="n">A</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span> <span class="n">x</span><span class="p">,</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span> <span class="n">y</span><span class="p">);</span>
+<span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatSolveTranspose.html#MatSolveTranspose">MatSolveTranspose</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/Mat.html#Mat">Mat</a></span> <span class="n">A</span><span class="p">,</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span> <span class="n">x</span><span class="p">,</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span> <span class="n">y</span><span class="p">);</span>
+<span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatSolveAdd.html#MatSolveAdd">MatSolveAdd</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/Mat.html#Mat">Mat</a></span> <span class="n">A</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span> <span class="n">x</span><span class="p">,</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span> <span class="n">y</span><span class="p">,</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span> <span class="n">w</span><span class="p">);</span>
+<span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatSolveTransposeAdd.html#MatSolveTransposeAdd">MatSolveTransposeAdd</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/Mat.html#Mat">Mat</a></span> <span class="n">A</span><span class="p">,</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span> <span class="n">x</span><span class="p">,</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span> <span class="n">y</span><span class="p">,</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span> <span class="n">w</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>matrix <code class="docutils literal notranslate"><span class="pre">A</span></code> of these routines must have been obtained from a
+factorization routine; otherwise, an error will be generated. In
+general, the user should use the <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSP.html#KSP">KSP</a></span></code> solvers introduced in the next
+chapter rather than using these factorization and solve routines
+directly.</p>
+</div>
+<div class="section" id="unimportant-details-of-ksp">
+<h2>Unimportant Details of KSP<a class="headerlink" href="#unimportant-details-of-ksp" title="Permalink to this headline">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Draw/PetscDrawAxisDraw.html#PetscDrawAxisDraw">PetscDrawAxisDraw</a>()</span></code>, are usually not used directly by the
+application programmer Again, virtually all users should use <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSP.html#KSP">KSP</a></span></code>
+through the <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSP.html#KSP">KSP</a></span></code> interface and, thus, will not need to know the
+details that follow.</p>
+<p>It is possible to generate a Krylov subspace context with the command</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSPCreate.html#KSPCreate">KSPCreate</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</a></span> <span class="n">comm</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSP.html#KSP">KSP</a></span> <span class="o">*</span><span class="n">kps</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Before using the Krylov context, one must set the matrix-vector
+multiplication routine and the preconditioner with the commands</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/PC/PCSetOperators.html#PCSetOperators">PCSetOperators</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/PC/PC.html#PC">PC</a></span> <span class="n">pc</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/Mat.html#Mat">Mat</a></span> <span class="n">Amat</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/Mat.html#Mat">Mat</a></span> <span class="n">Pmat</span><span class="p">);</span>
+<span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSPSetPC.html#KSPSetPC">KSPSetPC</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSP.html#KSP">KSP</a></span> <span class="n">ksp</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/PC/PC.html#PC">PC</a></span> <span class="n">pc</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>In addition, the <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSP.html#KSP">KSP</a></span></code> solver must be initialized with</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSPSetUp.html#KSPSetUp">KSPSetUp</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSP.html#KSP">KSP</a></span> <span class="n">ksp</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Solving a linear system is done with the command</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSPSolve.html#KSPSolve">KSPSolve</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSP.html#KSP">KSP</a></span> <span class="n">ksp</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span> <span class="n">b</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span> <span class="n">x</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Finally, the <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSP.html#KSP">KSP</a></span></code> context should be destroyed with</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSPDestroy.html#KSPDestroy">KSPDestroy</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSP.html#KSP">KSP</a></span> <span class="o">*</span><span class="n">ksp</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>It may seem strange to put the matrix in the preconditioner rather than
+directly in the <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSP.html#KSP">KSP</a></span></code>; this decision was the result of much agonizing.
+The reason is that for SSOR with Eisenstat’s trick, and certain other
+preconditioners, the preconditioner has to change the matrix-vector
+multiply. This procedure could not be done cleanly if the matrix were
+stashed in the <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSP.html#KSP">KSP</a></span></code> context that <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/PC/PC.html#PC">PC</a></span></code> cannot access.</p>
+<p>Any preconditioner can supply not only the preconditioner, but also a
+routine that essentially performs a complete Richardson step. The reason
+for this is mainly SOR. To use SOR in the Richardson framework, that is,</p>
+<div class="math">
+\[u^{n+1} = u^{n} + B(f - A u^{n}),
+
+\]</div>
+<p>is much more expensive than just updating the values. With this addition
+it is reasonable to state that <em>all</em> our iterative methods are obtained
+by combining a preconditioner from the <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/PC/PC.html#PC">PC</a></span></code> package with a Krylov
+method from the <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSP.html#KSP">KSP</a></span></code> package. This strategy makes things much simpler
+conceptually, so (we hope) clean code will result. <em>Note</em>: We had this
+idea already implicitly in older versions of <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSP.html#KSP">KSP</a></span></code>, but, for instance,
+just doing Gauss-Seidel with Richardson in old <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSP.html#KSP">KSP</a></span></code> was much more
+expensive than it had to be. With PETSc this should not be a problem.</p>
+</div>
+<div class="section" id="unimportant-details-of-pc">
+<h2>Unimportant Details of PC<a class="headerlink" href="#unimportant-details-of-pc" title="Permalink to this headline">¶</a></h2>
+<p>Most users will obtain their preconditioner contexts from the <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSP.html#KSP">KSP</a></span></code>
+context with the command <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSPGetPC.html#KSPGetPC">KSPGetPC</a>()</span></code>. It is possible to create,
+manipulate, and destroy <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/PC/PC.html#PC">PC</a></span></code> contexts directly, although this
+capability should rarely be needed. To create a <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/PC/PC.html#PC">PC</a></span></code> context, one uses
+the command</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/PC/PCCreate.html#PCCreate">PCCreate</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</a></span> <span class="n">comm</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/PC/PC.html#PC">PC</a></span> <span class="o">*</span><span class="n">pc</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>The routine</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/PC/PCSetType.html#PCSetType">PCSetType</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/PC/PC.html#PC">PC</a></span> <span class="n">pc</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/PC/PCType.html#PCType">PCType</a></span> <span class="n">method</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>sets the preconditioner method to be used. The routine</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/PC/PCSetOperators.html#PCSetOperators">PCSetOperators</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/PC/PC.html#PC">PC</a></span> <span class="n">pc</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/Mat.html#Mat">Mat</a></span> <span class="n">Amat</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/Mat.html#Mat">Mat</a></span> <span class="n">Pmat</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>set the matrices that are to be used with the preconditioner. The
+routine</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/PC/PCGetOperators.html#PCGetOperators">PCGetOperators</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/PC/PC.html#PC">PC</a></span> <span class="n">pc</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/Mat.html#Mat">Mat</a></span> <span class="o">*</span><span class="n">Amat</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/Mat.html#Mat">Mat</a></span> <span class="o">*</span><span class="n">Pmat</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>returns the values set with <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/PC/PCSetOperators.html#PCSetOperators">PCSetOperators</a>()</span></code>.</p>
+<p>The preconditioners in PETSc can be used in several ways. The two most
+basic routines simply apply the preconditioner or its transpose and are
+given, respectively, by</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/PC/PCApply.html#PCApply">PCApply</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/PC/PC.html#PC">PC</a></span> <span class="n">pc</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span> <span class="n">x</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span> <span class="n">y</span><span class="p">);</span>
+<span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/PC/PCApplyTranspose.html#PCApplyTranspose">PCApplyTranspose</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/PC/PC.html#PC">PC</a></span> <span class="n">pc</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span> <span class="n">x</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span> <span class="n">y</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>In particular, for a preconditioner matrix, <code class="docutils literal notranslate"><span class="pre">B</span></code>, that has been set via
+<code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/PC/PCSetOperators.html#PCSetOperators">PCSetOperators</a>(pc,Amat,Pmat)</span></code>, the routine PCApply(pc,x,y) computes
+<span class="math">\(y = B^{-1} x\)</span> by solving the linear system <span class="math">\(By = x\)</span> with
+the specified preconditioner method.</p>
+<p>Additional preconditioner routines are</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/PC/PCApplyBAorAB.html#PCApplyBAorAB">PCApplyBAorAB</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/PC/PC.html#PC">PC</a></span> <span class="n">pc</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/PC/PCSide.html#PCSide">PCSide</a></span> <span class="n">right</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span> <span class="n">x</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span> <span class="n">y</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span> <span class="n">work</span><span class="p">);</span>
+<span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/PC/PCApplyBAorABTranspose.html#PCApplyBAorABTranspose">PCApplyBAorABTranspose</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/PC/PC.html#PC">PC</a></span> <span class="n">pc</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/PC/PCSide.html#PCSide">PCSide</a></span> <span class="n">right</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span> <span class="n">x</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span> <span class="n">y</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span> <span class="n">work</span><span class="p">);</span>
+<span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/PC/PCApplyRichardson.html#PCApplyRichardson">PCApplyRichardson</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/PC/PC.html#PC">PC</a></span> <span class="n">pc</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span> <span class="n">x</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span> <span class="n">y</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span> <span class="n">work</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a></span> <span class="n">rtol</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a></span> <span class="n">atol</span><span class="p">,</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a></span> <span class="n">dtol</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span> <span class="n">maxits</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a></span> <span class="n">zeroguess</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span> <span class="o">*</span><span class="n">outits</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/PC/PCRichardsonConvergedReason.html#PCRichardsonConvergedReason">PCRichardsonConvergedReason</a></span><span class="o">*</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>The first two routines apply the action of the matrix followed by the
+preconditioner or the preconditioner followed by the matrix depending on
+whether the <code class="docutils literal notranslate"><span class="pre">right</span></code> is <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/PC/PCSide.html#PCSide">PC_LEFT</a></span></code> or <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/PC/PCSide.html#PCSide">PC_RIGHT</a></span></code>. The final routine
+applies <code class="docutils literal notranslate"><span class="pre">its</span></code> iterations of Richardson’s method. The last three
+routines are provided to improve efficiency for certain Krylov subspace
+methods.</p>
+<p>A <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/PC/PC.html#PC">PC</a></span></code> context that is no longer needed can be destroyed with the
+command</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/PC/PCDestroy.html#PCDestroy">PCDestroy</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/PC/PC.html#PC">PC</a></span> <span class="o">*</span><span class="n">pc</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="tests.html" title="Running PETSc Tests"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="other.html" title="Other PETSc Features"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">PETSc 3.14.6 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >PETSc Users Manual</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="additional.html" >Additional Information</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 1991-2021, UChicago Argonne, LLC and the PETSc Development Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.4.
+    </div>
+  </body>
+</html>

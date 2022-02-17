@@ -1,0 +1,55 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/LANDAU/LandauIFunction.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>LandauIFunction</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/LANDAU/LandauIFunction.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="LandauIFunction"><H1>LandauIFunction</H1></A>
+<A HREF="../TS/TS.html#TS">TS</A> residual calculation 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscdmplex.h" 
+#include "petsclandau.h"   
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../LANDAU/LandauIFunction.html#LandauIFunction">LandauIFunction</A>(<A HREF="../TS/TS.html#TS">TS</A> ts, <A HREF="../Sys/PetscReal.html#PetscReal">PetscReal</A> time_dummy, <A HREF="../Vec/Vec.html#Vec">Vec</A> X, <A HREF="../Vec/Vec.html#Vec">Vec</A> X_t, <A HREF="../Vec/Vec.html#Vec">Vec</A> F, void *actx)
+</PRE>
+Collective on ts
+<P>
+<H3><FONT COLOR="#CC3333">Input Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B><A HREF="../TS/TS.html#TS">TS</A>  </B></TD><TD>- The time stepping context
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>time_dummy </B></TD><TD>- current time (not used)
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>X </B></TD><TD>- Current state
++   X_t - Time derivative of current state
+</TD></TR></TABLE>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>actx </B></TD><TD>- Landau context
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Output Parameter</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>F  </B></TD><TD>- The residual
+</TD></TR></TABLE>
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">Keywords</FONT></H3>
+ mesh
+<BR>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../LANDAU/LandauCreateVelocitySpace.html#LandauCreateVelocitySpace">LandauCreateVelocitySpace</A>(), <A HREF="../LANDAU/LandauIJacobian.html#LandauIJacobian">LandauIJacobian</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>beginner<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/ts/utils/dmplexlandauplexland.c.html#LandauIFunction">src/ts/utils/dmplexlandauplexland.c</A>
+<P><H3><FONT COLOR="#CC3333">Examples</FONT></H3>
+<A HREF="../../../src/ts/utils/dmplexlandau/tutorials/ex1.c.html">src/ts/utils/dmplexlandau/tutorials/ex1.c.html</A><BR>
+<A HREF="../../../src/ts/utils/dmplexlandau/tutorials/ex2.c.html">src/ts/utils/dmplexlandau/tutorials/ex2.c.html</A><BR>
+<A HREF="../../../src/ts/utils/dmplexlandau/tutorials/ex1f90.F90.html">src/ts/utils/dmplexlandau/tutorials/ex1f90.F90.html</A><BR>
+<BR><A HREF="./index.html">Index of all LANDAU routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

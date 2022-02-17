@@ -1,0 +1,1214 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/sphinx_docs/html/manual/getting_started.html" />
+    <meta charset="utf-8" />
+    <title>Getting Started &#8212; PETSc 3.14.6 documentation</title>
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/katex-math.css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/contrib/auto-render.min.js"></script>
+    <script src="../_static/katex_autorenderer.js"></script>
+    <link rel="shortcut icon" href="../_static/PETSc_RGB-logo.png"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Programming with PETSc" href="programming.html" />
+    <link rel="prev" title="About This Manual" href="about_this_manual.html" /> 
+  </head><body>
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/sphinx_docs/html/manual/getting_started.html "><small>Report Typos and Errors</small></a></div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="programming.html" title="Programming with PETSc"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="about_this_manual.html" title="About This Manual"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">PETSc 3.14.6 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >PETSc Users Manual</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="introduction.html" accesskey="U">Introduction to PETSc</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/PETSc-TAO_RGB.svg" alt="Logo"/>
+            </a></p>
+  <h3><a href="../index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Getting Started</a><ul>
+<li><a class="reference internal" href="#suggested-reading">Suggested Reading</a></li>
+<li><a class="reference internal" href="#running-petsc-programs">Running PETSc Programs</a></li>
+<li><a class="reference internal" href="#writing-petsc-programs">Writing PETSc Programs</a></li>
+<li><a class="reference internal" href="#simple-petsc-examples">Simple PETSc Examples</a><ul>
+<li><a class="reference internal" href="#include-files">Include Files</a></li>
+<li><a class="reference internal" href="#the-options-database">The Options Database</a></li>
+<li><a class="reference internal" href="#vectors">Vectors</a></li>
+<li><a class="reference internal" href="#matrices">Matrices</a></li>
+<li><a class="reference internal" href="#linear-solvers">Linear Solvers</a></li>
+<li><a class="reference internal" href="#nonlinear-solvers">Nonlinear Solvers</a></li>
+<li><a class="reference internal" href="#error-checking">Error Checking</a></li>
+<li><a class="reference internal" href="#parallel-programming">Parallel Programming</a></li>
+<li><a class="reference internal" href="#compiling-and-running-programs">Compiling and Running Programs</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#profiling-programs">Profiling Programs</a></li>
+<li><a class="reference internal" href="#writing-application-codes-with-petsc">Writing Application Codes with PETSc</a></li>
+<li><a class="reference internal" href="#citing-petsc">Citing PETSc</a></li>
+<li><a class="reference internal" href="#directory-structure">Directory Structure</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="about_this_manual.html"
+                        title="previous chapter">About This Manual</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="programming.html"
+                        title="next chapter">Programming with PETSc</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/manual/getting_started.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="getting-started">
+<span id="sec-getting-started"></span><h1>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h1>
+<p>PETSc consists of a collection of classes,
+which are discussed in detail in later parts of the manual (<a class="reference internal" href="programming.html"><span class="doc">Programming with PETSc</span></a> and <a class="reference internal" href="additional.html"><span class="doc">Additional Information</span></a>).
+The important PETSc classes include</p>
+<ul class="simple">
+<li><p>index sets (<code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/IS/IS.html#IS">IS</a></span></code>), including permutations, for indexing into
+vectors, renumbering, etc;</p></li>
+<li><p>vectors (<code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span></code>);</p></li>
+<li><p>matrices (<code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/Mat.html#Mat">Mat</a></span></code>) (generally sparse);</p></li>
+<li><p>over thirty Krylov subspace methods (<code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSP.html#KSP">KSP</a></span></code>);</p></li>
+<li><p>dozens of preconditioners, including multigrid, block solvers, and
+sparse direct solvers (<code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/PC/PC.html#PC">PC</a></span></code>);</p></li>
+<li><p>nonlinear solvers (<code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/SNES/SNES.html#SNES">SNES</a></span></code>);</p></li>
+<li><p>timesteppers for solving time-dependent (nonlinear) PDEs, including
+support for differential algebraic equations, and the computation of
+adjoints (sensitivities/gradients of the solutions) (<code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/TS/TS.html#TS">TS</a></span></code>);</p></li>
+<li><p>managing interactions between mesh data structures and vectors,
+matrices, and solvers (<code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DM/DM.html#DM">DM</a></span></code>);</p></li>
+<li><p>scalable optimization algorithms (<code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Tao/Tao.html#Tao">Tao</a></span></code>).</p></li>
+</ul>
+<p>Each class consist of an abstract interface (simply a set of calling
+sequences; an abstract base class in C++) and an implementation for each algorithm and data structure.
+Thus, PETSc provides clean and effective codes for the
+various phases of solving PDEs, with a uniform approach for each type
+of problem. This design enables easy comparison and use of different
+algorithms (for example, to experiment with different Krylov subspace
+methods, preconditioners, or truncated Newton methods). Hence, PETSc
+provides a rich environment for modeling scientific applications as well
+as for rapid algorithm design and prototyping.</p>
+<p>The classes enable easy customization and extension of both algorithms
+and implementations. This approach promotes code reuse and flexibility,
+and also separates the issues of parallelism from the choice of algorithms.
+The PETSc infrastructure creates a foundation for building large-scale
+applications.</p>
+<p>It is useful to consider the interrelationships among different pieces
+of PETSc. <a class="reference internal" href="#fig-library"><span class="std std-ref">Numerical Libraries in PETSc</span></a> is a diagram of some
+of these pieces. The figure illustrates the library’s hierarchical
+organization, which enables users to employ the solvers that are most
+appropriate for a particular problem.</p>
+<div class="figure align-default" id="fig-library">
+<img alt="PETSc numerical libraries" src="../_images/library_structure.svg" /><p class="caption"><span class="caption-number">Fig. 1 </span><span class="caption-text">Numerical Libraries in PETSc</span><a class="headerlink" href="#fig-library" title="Permalink to this image">¶</a></p>
+</div>
+<div class="section" id="suggested-reading">
+<h2>Suggested Reading<a class="headerlink" href="#suggested-reading" title="Permalink to this headline">¶</a></h2>
+<p>The manual is divided into three parts:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="introduction.html"><span class="doc">Introduction to PETSc</span></a></p></li>
+<li><p><a class="reference internal" href="programming.html"><span class="doc">Programming with PETSc</span></a></p></li>
+<li><p><a class="reference internal" href="additional.html"><span class="doc">Additional Information</span></a></p></li>
+</ul>
+<p><a class="reference internal" href="introduction.html"><span class="doc">Introduction to PETSc</span></a> describes the basic procedure for using the PETSc library and
+presents two simple examples of solving linear systems with PETSc. This
+section conveys the typical style used throughout the library and
+enables the application programmer to begin using the software
+immediately.</p>
+<p><a class="reference internal" href="programming.html"><span class="doc">Programming with PETSc</span></a> explains in detail the use of the various PETSc libraries, such
+as vectors, matrices, index sets, linear and nonlinear solvers, and
+graphics. <a class="reference internal" href="additional.html"><span class="doc">Additional Information</span></a> describes a variety of useful information, including
+profiling, the options database, viewers, error handling, and some
+details of PETSc design.</p>
+<p>PETSc has evolved to become quite a comprehensive package, and therefore
+this manual can be rather intimidating for new users. Bear in mind that PETSc can be used
+efficiently before one understands all of the material presented here.
+Furthermore, the definitive reference for any PETSc function is always
+the online manual page.
+Manual pages for all PETSc functions can be accessed at
+<a class="reference external" href="https://www.mcs.anl.gov/petsc/documentation/">www.mcs.anl.gov/petsc/documentation</a>.
+The manual pages provide hyperlinked indices (organized by both concept
+and routine name) to the tutorial examples and enable easy movement
+among related topics.</p>
+<p><a class="reference external" href="https://code.visualstudio.com/">Visual Studio Code</a> , Eclipse, Emacs, and Vim users may find their development environment’s options for
+searching in the source code (for example, <code class="docutils literal notranslate"><span class="pre">etags</span></code> <code class="docutils literal notranslate"><span class="pre">ctags</span></code> for Emacs and Vim) are
+extremely useful for exploring the PETSc source code. Details of these
+feature are provided in <a class="reference internal" href="other.html#sec-emacs"><span class="std std-ref">Emacs Users</span></a>.</p>
+<p>The complete PETSc distribution, manual pages, and additional information are available via the
+<a class="reference external" href="https://www.mcs.anl.gov/petsc">PETSc home page</a>. The PETSc
+home page also contains details regarding installation, new features and
+changes in recent versions of PETSc, machines that we currently support,
+and a frequently asked questions (FAQ) list.</p>
+<p><strong>Note to Fortran Programmers</strong>: In most of the manual, the examples and calling sequences are given
+for the C/C++ family of programming languages. However, Fortran
+programmers can use all of the functionality of PETSc from Fortran,
+with only minor differences in the user interface.
+<a class="reference internal" href="fortran.html#chapter-fortran"><span class="std std-ref">PETSc for Fortran Users</span></a> provides a discussion of the differences between
+using PETSc from Fortran and C, as well as several complete Fortran
+examples.</p>
+<p><strong>Note to Python Programmers</strong>: To program with PETSc in Python you need to install the
+PETSc4py package developed by Lisandro Dalcin. This can be done by
+configuring PETSc with the option <code class="docutils literal notranslate"><span class="pre">--download-petsc4py</span></code>. See the
+<a class="reference external" href="https://www.mcs.anl.gov/petsc/documentation/installation.html">PETSc installation guide</a>
+for more details.</p>
+</div>
+<div class="section" id="running-petsc-programs">
+<span id="sec-running"></span><h2>Running PETSc Programs<a class="headerlink" href="#running-petsc-programs" title="Permalink to this headline">¶</a></h2>
+<p>Before using PETSc, the user must first set the environmental variable
+<code class="docutils literal notranslate"><span class="pre">PETSC_DIR</span></code>, indicating the full path of the PETSc home directory. For
+example, under the UNIX bash shell a command of the form</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span> <span class="nv">PETSC_DIR</span><span class="o">=</span><span class="nv">$HOME</span>/petsc
+</pre></div>
+</div>
+<p>can be placed in the user’s <code class="docutils literal notranslate"><span class="pre">.bashrc</span></code> or other startup file. In
+addition, the user may need to set the environment variable
+<code class="docutils literal notranslate"><span class="pre">PETSC_ARCH</span></code> to specify a particular configuration of the PETSc
+libraries. Note that <code class="docutils literal notranslate"><span class="pre">PETSC_ARCH</span></code> is just a name selected by the
+installer to refer to the libraries compiled for a particular set of
+compiler options and machine type. Using different values of
+<code class="docutils literal notranslate"><span class="pre">PETSC_ARCH</span></code> allows one to switch between several different sets (say
+debug and optimized) of libraries easily. To determine if you need to
+set <code class="docutils literal notranslate"><span class="pre">PETSC_ARCH</span></code>, look in the directory indicated by <code class="docutils literal notranslate"><span class="pre">PETSC_DIR</span></code>, if
+there are subdirectories beginning with <code class="docutils literal notranslate"><span class="pre">arch</span></code> then those
+subdirectories give the possible values for <code class="docutils literal notranslate"><span class="pre">PETSC_ARCH</span></code>.</p>
+<p>All PETSc programs use the MPI (Message Passing Interface) standard for
+message-passing communication <span id="id1">[<a class="reference internal" href="#id201">For94</a>]</span>. Thus, to
+execute PETSc programs, users must know the procedure for beginning MPI
+jobs on their selected computer system(s). For instance, when using the
+<a class="reference external" href="https://www.mpich.org/">MPICH</a> implementation of MPI and many
+others, the following command initiates a program that uses eight
+processors:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mpiexec -n <span class="m">8</span> ./petsc_program_name petsc_options
+</pre></div>
+</div>
+<p>PETSc also comes with a script that automatically uses the correct
+<code class="docutils literal notranslate"><span class="pre">mpiexec</span></code> for your configuration.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="si">${</span><span class="nv">PETSC_DIR</span><span class="si">}</span>/lib/petsc/bin/petscmpiexec -n <span class="m">8</span> ./petsc_program_name petsc_options
+</pre></div>
+</div>
+<p>All PETSc-compliant programs support the use of the <code class="docutils literal notranslate"><span class="pre">-help</span></code>
+option as well as the <code class="docutils literal notranslate"><span class="pre">-version</span></code> option.</p>
+<p>Certain options are supported by all PETSc programs. We list a few
+particularly useful ones below; a complete list can be obtained by
+running any PETSc program with the option <code class="docutils literal notranslate"><span class="pre">-help</span></code>.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">-log_view</span></code> - summarize the program’s performance (see <a class="reference internal" href="profiling.html#ch-profiling"><span class="std std-ref">Profiling</span></a>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-fp_trap</span></code> - stop on floating-point exceptions; for example divide
+by zero</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-malloc_dump</span></code> - enable memory tracing; dump list of unfreed memory
+at conclusion of the run, see
+<a class="reference internal" href="performance.html#detecting-memory-problems"><span class="std std-ref">Detecting Memory Allocation Problems</span></a>,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-malloc_debug</span></code> - enable memory debugging (by default this is
+activated for the debugging version of PETSc), see
+<a class="reference internal" href="performance.html#detecting-memory-problems"><span class="std std-ref">Detecting Memory Allocation Problems</span></a>,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-start_in_debugger</span></code> <code class="docutils literal notranslate"><span class="pre">[noxterm,gdb,lldb]</span></code>
+<code class="docutils literal notranslate"><span class="pre">[-display</span> <span class="pre">name]</span></code> - start all processes in debugger. See
+<a class="reference internal" href="other.html#sec-debugging"><span class="std std-ref">Debugging</span></a>, for more information on
+debugging PETSc programs.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-on_error_attach_debugger</span></code> <code class="docutils literal notranslate"><span class="pre">[noxterm,gdb,lldb]</span></code>
+<code class="docutils literal notranslate"><span class="pre">[-display</span> <span class="pre">name]</span></code> - start debugger only on encountering an error</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">-info</span></code> - print a great deal of information about what the program
+is doing as it runs</p></li>
+</ul>
+</div>
+<div class="section" id="writing-petsc-programs">
+<span id="sec-writing"></span><h2>Writing PETSc Programs<a class="headerlink" href="#writing-petsc-programs" title="Permalink to this headline">¶</a></h2>
+<p>Most PETSc programs begin with a call to</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInitialize.html#PetscInitialize">PetscInitialize</a></span><span class="p">(</span><span class="kt">int</span> <span class="o">*</span><span class="n">argc</span><span class="p">,</span><span class="kt">char</span> <span class="o">***</span><span class="n">argv</span><span class="p">,</span><span class="kt">char</span> <span class="o">*</span><span class="n">file</span><span class="p">,</span><span class="kt">char</span> <span class="o">*</span><span class="n">help</span><span class="p">);</span><span class="k">if</span> <span class="p">(</span><span class="n">ierr</span><span class="p">)</span> <span class="k">return</span> <span class="n">ierr</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>which initializes PETSc and MPI. The arguments <code class="docutils literal notranslate"><span class="pre">argc</span></code> and <code class="docutils literal notranslate"><span class="pre">argv</span></code> are
+the command line arguments delivered in all C and C++ programs. The
+argument <code class="docutils literal notranslate"><span class="pre">file</span></code> optionally indicates an alternative name for the PETSc
+options file, <code class="docutils literal notranslate"><span class="pre">.petscrc</span></code>, which resides by default in the user’s home
+directory. <a class="reference internal" href="other.html#sec-options"><span class="std std-ref">Runtime Options</span></a> provides details
+regarding this file and the PETSc options database, which can be used
+for runtime customization. The final argument, <code class="docutils literal notranslate"><span class="pre">help</span></code>, is an optional
+character string that will be printed if the program is run with the
+<code class="docutils literal notranslate"><span class="pre">-help</span></code> option. In Fortran the initialization command has the form</p>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="k">call </span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInitialize.html#PetscInitialize">PetscInitialize</a></span><span class="p">(</span><span class="kt">character</span><span class="p">(</span><span class="o">*</span><span class="p">)</span> <span class="k">file</span><span class="p">,</span><span class="kt">integer </span><span class="n">ierr</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInitialize.html#PetscInitialize">PetscInitialize</a>()</span></code> automatically calls <code class="docutils literal notranslate"><span class="pre"><a href="http://www.mpich.org/static/docs/latest/www3/MPI_Init.html#MPI_Init">MPI_Init</a>()</span></code> if MPI has not
+been not previously initialized. In certain circumstances in which MPI
+needs to be initialized directly (or is initialized by some other
+library), the user can first call <code class="docutils literal notranslate"><span class="pre"><a href="http://www.mpich.org/static/docs/latest/www3/MPI_Init.html#MPI_Init">MPI_Init</a>()</span></code> (or have the other
+library do it), and then call <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInitialize.html#PetscInitialize">PetscInitialize</a>()</span></code>. By default,
+<code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInitialize.html#PetscInitialize">PetscInitialize</a>()</span></code> sets the PETSc “world” communicator
+<code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a></span></code> to <code class="docutils literal notranslate"><span class="pre">MPI_COMM_WORLD</span></code>.</p>
+<p>For those not familiar with MPI, a <em>communicator</em> is a way of indicating
+a collection of processes that will be involved together in a
+calculation or communication. Communicators have the variable type
+<code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</a></span></code>. In most cases users can employ the communicator
+<code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a></span></code> to indicate all processes in a given run and
+<code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a></span></code> to indicate a single process.</p>
+<p>MPI provides routines for generating new communicators consisting of
+subsets of processors, though most users rarely need to use these. The
+book <em>Using MPI</em>, by Lusk, Gropp, and Skjellum
+<span id="id2">[<a class="reference internal" href="#id292">GLS94</a>]</span> provides an excellent introduction to the
+concepts in MPI. See also the <a class="reference external" href="https://www.mcs.anl.gov/research/projects/mpi/">MPI homepage</a>.
+Note that PETSc users
+need not program much message passing directly with MPI, but they must
+be familiar with the basic concepts of message passing and distributed
+memory computing.</p>
+<p>All PETSc routines return a <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a></span></code>, which is an integer
+indicating whether an error has occurred during the call. The error code
+is set to be nonzero if an error has been detected; otherwise, it is
+zero. For the C/C++ interface, the error variable is the routine’s
+return value, while for the Fortran version, each PETSc routine has as
+its final argument an integer error variable.</p>
+<p>All PETSc programs should call <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscFinalize.html#PetscFinalize">PetscFinalize</a>()</span></code> as their final (or
+nearly final) statement, as given below in the C/C++ and Fortran
+formats, respectively:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscFinalize.html#PetscFinalize">PetscFinalize</a></span><span class="p">();</span>
+<span class="k">return</span> <span class="n">ierr</span><span class="p">;</span>
+</pre></div>
+</div>
+<div class="highlight-fortran notranslate"><div class="highlight"><pre><span></span><span class="k">call </span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscFinalize.html#PetscFinalize">PetscFinalize</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This routine handles options to be called at the conclusion of the
+program, and calls <code class="docutils literal notranslate"><span class="pre"><a href="http://www.mpich.org/static/docs/latest/www3/MPI_Finalize.html#MPI_Finalize">MPI_Finalize</a>()</span></code> if <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInitialize.html#PetscInitialize">PetscInitialize</a>()</span></code> began
+MPI. If MPI was initiated externally from PETSc (by either the user or
+another software package), the user is responsible for calling
+<code class="docutils literal notranslate"><span class="pre"><a href="http://www.mpich.org/static/docs/latest/www3/MPI_Finalize.html#MPI_Finalize">MPI_Finalize</a>()</span></code>.</p>
+</div>
+<div class="section" id="simple-petsc-examples">
+<span id="sec-simple"></span><h2>Simple PETSc Examples<a class="headerlink" href="#simple-petsc-examples" title="Permalink to this headline">¶</a></h2>
+<p>To help the user start using PETSc immediately, we begin with a simple
+uniprocessor example that
+solves the one-dimensional Laplacian problem with finite differences.
+This sequential code, which can be found in
+<code class="docutils literal notranslate"><span class="pre">$PETSC_DIR/src/ksp/ksp/tutorials/ex1.c</span></code>, illustrates the solution of
+a linear system with <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSP.html#KSP">KSP</a></span></code>, the interface to the preconditioners,
+Krylov subspace methods, and direct linear solvers of PETSc. Following
+the code we highlight a few of the most important parts of this example.</p>
+<div class="admonition-listing-src-ksp-ksp-tutorials-ex1-c admonition" id="ksp-ex1">
+<p class="admonition-title">Listing: <code class="docutils literal notranslate"><span class="pre">src/ksp/ksp/tutorials/ex1.c</span></code></p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span>
+<span class="k">static</span> <span class="kt">char</span> <span class="n">help</span><span class="p">[]</span> <span class="o">=</span> <span class="s">&quot;Solves a tridiagonal linear system with <a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSP.html#KSP">KSP</a>.</span><span class="se">\n\n</span><span class="s">&quot;</span><span class="p">;</span>
+
+<span class="cm">/*T</span>
+<span class="cm">   Concepts: <a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSP.html#KSP">KSP</a>^solving a system of linear equations</span>
+<span class="cm">   Processors: 1</span>
+<span class="cm">T*/</span>
+
+<span class="cm">/*</span>
+<span class="cm">  Include &quot;petscksp.h&quot; so that we can use <a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSP.html#KSP">KSP</a> solvers.  Note that this file</span>
+<span class="cm">  automatically includes:</span>
+<span class="cm">     petscsys.h    - base PETSc routines   petscvec.h - vectors</span>
+<span class="cm">     petscmat.h    - matrices              petscpc.h  - preconditioners</span>
+<span class="cm">     petscis.h     - index sets</span>
+<span class="cm">     petscviewer.h - viewers</span>
+
+<span class="cm">  Note:  The corresponding parallel example is ex23.c</span>
+<span class="cm">*/</span>
+<span class="cp">#include</span> <span class="cpf">&lt;petscksp.h&gt;</span><span class="cp"></span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span><span class="kt">char</span> <span class="o">**</span><span class="n">args</span><span class="p">)</span>
+<span class="p">{</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span>            <span class="n">x</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">u</span><span class="p">;</span>      <span class="cm">/* approx solution, RHS, exact solution */</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/Mat.html#Mat">Mat</a></span>            <span class="n">A</span><span class="p">;</span>            <span class="cm">/* linear system matrix */</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSP.html#KSP">KSP</a></span>            <span class="n">ksp</span><span class="p">;</span>          <span class="cm">/* linear solver context */</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/PC/PC.html#PC">PC</a></span>             <span class="n">pc</span><span class="p">;</span>           <span class="cm">/* preconditioner context */</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a></span>      <span class="n">norm</span><span class="p">;</span>         <span class="cm">/* norm of solution error */</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a></span> <span class="n">ierr</span><span class="p">;</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span>       <span class="n">i</span><span class="p">,</span><span class="n">n</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span><span class="n">col</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span><span class="n">its</span><span class="p">;</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a></span>    <span class="n">size</span><span class="p">;</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a></span>    <span class="n">value</span><span class="p">[</span><span class="mi">3</span><span class="p">];</span>
+
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInitialize.html#PetscInitialize">PetscInitialize</a></span><span class="p">(</span><span class="o">&amp;</span><span class="n">argc</span><span class="p">,</span><span class="o">&amp;</span><span class="n">args</span><span class="p">,(</span><span class="kt">char</span><span class="o">*</span><span class="p">)</span><span class="mi">0</span><span class="p">,</span><span class="n">help</span><span class="p">);</span><span class="k">if</span> <span class="p">(</span><span class="n">ierr</span><span class="p">)</span> <span class="k">return</span> <span class="n">ierr</span><span class="p">;</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_size.html#MPI_Comm_size">MPI_Comm_size</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a></span><span class="p">,</span><span class="o">&amp;</span><span class="n">size</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">size</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">)</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a></span><span class="p">,</span><span class="n">PETSC_ERR_WRONG_MPI_SIZE</span><span class="p">,</span><span class="s">&quot;This is a uniprocessor example only!&quot;</span><span class="p">);</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscOptionsGetInt.html#PetscOptionsGetInt">PetscOptionsGetInt</a></span><span class="p">(</span><span class="nb">NULL</span><span class="p">,</span><span class="nb">NULL</span><span class="p">,</span><span class="s">&quot;-n&quot;</span><span class="p">,</span><span class="o">&amp;</span><span class="n">n</span><span class="p">,</span><span class="nb">NULL</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+
+
+  <span class="cm">/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -</span>
+<span class="cm">         Compute the matrix and right-hand-side vector that define</span>
+<span class="cm">         the linear system, Ax = b.</span>
+<span class="cm">     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */</span>
+
+  <span class="cm">/*</span>
+<span class="cm">     Create vectors.  Note that we form 1 vector from scratch and</span>
+<span class="cm">     then duplicate as needed.</span>
+<span class="cm">  */</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/VecCreate.html#VecCreate">VecCreate</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a></span><span class="p">,</span><span class="o">&amp;</span><span class="n">x</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscObjectSetName.html#PetscObjectSetName">PetscObjectSetName</a></span><span class="p">((</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a></span><span class="p">)</span> <span class="n">x</span><span class="p">,</span> <span class="s">&quot;Solution&quot;</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/VecSetSizes.html#VecSetSizes">VecSetSizes</a></span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a></span><span class="p">,</span><span class="n">n</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/VecSetFromOptions.html#VecSetFromOptions">VecSetFromOptions</a></span><span class="p">(</span><span class="n">x</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/VecDuplicate.html#VecDuplicate">VecDuplicate</a></span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="o">&amp;</span><span class="n">b</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/VecDuplicate.html#VecDuplicate">VecDuplicate</a></span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="o">&amp;</span><span class="n">u</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+
+  <span class="cm">/*</span>
+<span class="cm">     Create matrix.  When using <a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatCreate.html#MatCreate">MatCreate</a>(), the matrix format can</span>
+<span class="cm">     be specified at runtime.</span>
+
+<span class="cm">     Performance tuning note:  For problems of substantial size,</span>
+<span class="cm">     preallocation of matrix memory is crucial for attaining good</span>
+<span class="cm">     performance. See the matrix chapter of the users manual for details.</span>
+<span class="cm">  */</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatCreate.html#MatCreate">MatCreate</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a></span><span class="p">,</span><span class="o">&amp;</span><span class="n">A</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatSetSizes.html#MatSetSizes">MatSetSizes</a></span><span class="p">(</span><span class="n">A</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a></span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a></span><span class="p">,</span><span class="n">n</span><span class="p">,</span><span class="n">n</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatSetFromOptions.html#MatSetFromOptions">MatSetFromOptions</a></span><span class="p">(</span><span class="n">A</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatSetUp.html#MatSetUp">MatSetUp</a></span><span class="p">(</span><span class="n">A</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+
+  <span class="cm">/*</span>
+<span class="cm">     Assemble matrix</span>
+<span class="cm">  */</span>
+  <span class="n">value</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">-1.0</span><span class="p">;</span> <span class="n">value</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mf">2.0</span><span class="p">;</span> <span class="n">value</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="mf">-1.0</span><span class="p">;</span>
+  <span class="k">for</span> <span class="p">(</span><span class="n">i</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="mi">-1</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">col</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span><span class="mi">-1</span><span class="p">;</span> <span class="n">col</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span><span class="p">;</span> <span class="n">col</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">;</span>
+    <span class="n">ierr</span>   <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatSetValues.html#MatSetValues">MatSetValues</a></span><span class="p">(</span><span class="n">A</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="o">&amp;</span><span class="n">i</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="n">col</span><span class="p">,</span><span class="n">value</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a></span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+  <span class="p">}</span>
+  <span class="n">i</span>    <span class="o">=</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">;</span> <span class="n">col</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">2</span><span class="p">;</span> <span class="n">col</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">;</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatSetValues.html#MatSetValues">MatSetValues</a></span><span class="p">(</span><span class="n">A</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="o">&amp;</span><span class="n">i</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="n">col</span><span class="p">,</span><span class="n">value</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a></span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+  <span class="n">i</span>    <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">col</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">col</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="n">value</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">2.0</span><span class="p">;</span> <span class="n">value</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mf">-1.0</span><span class="p">;</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatSetValues.html#MatSetValues">MatSetValues</a></span><span class="p">(</span><span class="n">A</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="o">&amp;</span><span class="n">i</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="n">col</span><span class="p">,</span><span class="n">value</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a></span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatAssemblyBegin.html#MatAssemblyBegin">MatAssemblyBegin</a></span><span class="p">(</span><span class="n">A</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatAssemblyType.html#MatAssemblyType">MAT_FINAL_ASSEMBLY</a></span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatAssemblyEnd.html#MatAssemblyEnd">MatAssemblyEnd</a></span><span class="p">(</span><span class="n">A</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatAssemblyType.html#MatAssemblyType">MAT_FINAL_ASSEMBLY</a></span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+
+  <span class="cm">/*</span>
+<span class="cm">     Set exact solution; then compute right-hand-side vector.</span>
+<span class="cm">  */</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/VecSet.html#VecSet">VecSet</a></span><span class="p">(</span><span class="n">u</span><span class="p">,</span><span class="mf">1.0</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatMult.html#MatMult">MatMult</a></span><span class="p">(</span><span class="n">A</span><span class="p">,</span><span class="n">u</span><span class="p">,</span><span class="n">b</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+
+  <span class="cm">/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -</span>
+<span class="cm">                Create the linear solver and set various options</span>
+<span class="cm">     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSPCreate.html#KSPCreate">KSPCreate</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a></span><span class="p">,</span><span class="o">&amp;</span><span class="n">ksp</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+
+  <span class="cm">/*</span>
+<span class="cm">     Set operators. Here the matrix that defines the linear system</span>
+<span class="cm">     also serves as the matrix that defines the preconditioner.</span>
+<span class="cm">  */</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSPSetOperators.html#KSPSetOperators">KSPSetOperators</a></span><span class="p">(</span><span class="n">ksp</span><span class="p">,</span><span class="n">A</span><span class="p">,</span><span class="n">A</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+
+  <span class="cm">/*</span>
+<span class="cm">     Set linear solver defaults for this problem (optional).</span>
+<span class="cm">     - By extracting the <a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSP.html#KSP">KSP</a> and <a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/PC/PC.html#PC">PC</a> contexts from the <a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSP.html#KSP">KSP</a> context,</span>
+<span class="cm">       we can then directly call any <a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSP.html#KSP">KSP</a> and <a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/PC/PC.html#PC">PC</a> routines to set</span>
+<span class="cm">       various options.</span>
+<span class="cm">     - The following four statements are optional; all of these</span>
+<span class="cm">       parameters could alternatively be specified at runtime via</span>
+<span class="cm">       <a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSPSetFromOptions.html#KSPSetFromOptions">KSPSetFromOptions</a>();</span>
+<span class="cm">  */</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSPGetPC.html#KSPGetPC">KSPGetPC</a></span><span class="p">(</span><span class="n">ksp</span><span class="p">,</span><span class="o">&amp;</span><span class="n">pc</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/PC/PCSetType.html#PCSetType">PCSetType</a></span><span class="p">(</span><span class="n">pc</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/PC/PCJACOBI.html#PCJACOBI">PCJACOBI</a></span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSPSetTolerances.html#KSPSetTolerances">KSPSetTolerances</a></span><span class="p">(</span><span class="n">ksp</span><span class="p">,</span><span class="mf">1.</span><span class="n">e</span><span class="mi">-5</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PETSC_DEFAULT.html#PETSC_DEFAULT">PETSC_DEFAULT</a></span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PETSC_DEFAULT.html#PETSC_DEFAULT">PETSC_DEFAULT</a></span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PETSC_DEFAULT.html#PETSC_DEFAULT">PETSC_DEFAULT</a></span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+
+  <span class="cm">/*</span>
+<span class="cm">    Set runtime options, e.g.,</span>
+<span class="cm">        -ksp_type &lt;type&gt; -pc_type &lt;type&gt; -ksp_monitor -ksp_rtol &lt;rtol&gt;</span>
+<span class="cm">    These options will override those specified above as long as</span>
+<span class="cm">    <a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSPSetFromOptions.html#KSPSetFromOptions">KSPSetFromOptions</a>() is called _after_ any other customization</span>
+<span class="cm">    routines.</span>
+<span class="cm">  */</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSPSetFromOptions.html#KSPSetFromOptions">KSPSetFromOptions</a></span><span class="p">(</span><span class="n">ksp</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+
+  <span class="cm">/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -</span>
+<span class="cm">                      Solve the linear system</span>
+<span class="cm">     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSPSolve.html#KSPSolve">KSPSolve</a></span><span class="p">(</span><span class="n">ksp</span><span class="p">,</span><span class="n">b</span><span class="p">,</span><span class="n">x</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+
+  <span class="cm">/*</span>
+<span class="cm">     View solver info; we could instead use the option -ksp_view to</span>
+<span class="cm">     print this info to the screen at the conclusion of <a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSPSolve.html#KSPSolve">KSPSolve</a>().</span>
+<span class="cm">  */</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSPView.html#KSPView">KSPView</a></span><span class="p">(</span><span class="n">ksp</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Viewer/PETSC_VIEWER_STDOUT_WORLD.html#PETSC_VIEWER_STDOUT_WORLD">PETSC_VIEWER_STDOUT_WORLD</a></span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+
+  <span class="cm">/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -</span>
+<span class="cm">                      Check the solution and clean up</span>
+<span class="cm">     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/VecAXPY.html#VecAXPY">VecAXPY</a></span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="mf">-1.0</span><span class="p">,</span><span class="n">u</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/VecNorm.html#VecNorm">VecNorm</a></span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/NORM_2.html#NORM_2">NORM_2</a></span><span class="p">,</span><span class="o">&amp;</span><span class="n">norm</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSPGetIterationNumber.html#KSPGetIterationNumber">KSPGetIterationNumber</a></span><span class="p">(</span><span class="n">ksp</span><span class="p">,</span><span class="o">&amp;</span><span class="n">its</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a></span><span class="p">,</span><span class="s">&quot;Norm of error %g, Iterations %D</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,(</span><span class="kt">double</span><span class="p">)</span><span class="n">norm</span><span class="p">,</span><span class="n">its</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+
+  <span class="cm">/*</span>
+<span class="cm">     Free work space.  All PETSc objects should be destroyed when they</span>
+<span class="cm">     are no longer needed.</span>
+<span class="cm">  */</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/VecDestroy.html#VecDestroy">VecDestroy</a></span><span class="p">(</span><span class="o">&amp;</span><span class="n">x</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span> <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/VecDestroy.html#VecDestroy">VecDestroy</a></span><span class="p">(</span><span class="o">&amp;</span><span class="n">u</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/VecDestroy.html#VecDestroy">VecDestroy</a></span><span class="p">(</span><span class="o">&amp;</span><span class="n">b</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span> <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatDestroy.html#MatDestroy">MatDestroy</a></span><span class="p">(</span><span class="o">&amp;</span><span class="n">A</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSPDestroy.html#KSPDestroy">KSPDestroy</a></span><span class="p">(</span><span class="o">&amp;</span><span class="n">ksp</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+
+  <span class="cm">/*</span>
+<span class="cm">     Always call <a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscFinalize.html#PetscFinalize">PetscFinalize</a>() before exiting a program.  This routine</span>
+<span class="cm">       - finalizes the PETSc libraries as well as MPI</span>
+<span class="cm">       - provides summary and diagnostic information if certain runtime</span>
+<span class="cm">         options are chosen (e.g., -log_view).</span>
+<span class="cm">  */</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscFinalize.html#PetscFinalize">PetscFinalize</a></span><span class="p">();</span>
+  <span class="k">return</span> <span class="n">ierr</span><span class="p">;</span>
+<span class="p">}</span>
+
+</pre></div>
+</div>
+</div>
+<div class="section" id="include-files">
+<h3>Include Files<a class="headerlink" href="#include-files" title="Permalink to this headline">¶</a></h3>
+<p>The C/C++ include files for PETSc should be used via statements such as</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;petscksp.h&gt;</span><span class="cp"></span>
+</pre></div>
+</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">petscksp.h</span></code> is the include file for the linear solver library.
+Each PETSc program must specify an include file that corresponds to the
+highest level PETSc objects needed within the program; all of the
+required lower level include files are automatically included within the
+higher level files. For example, <code class="docutils literal notranslate"><span class="pre">petscksp.h</span></code> includes <code class="docutils literal notranslate"><span class="pre">petscmat.h</span></code>
+(matrices), <code class="docutils literal notranslate"><span class="pre">petscvec.h</span></code> (vectors), and <code class="docutils literal notranslate"><span class="pre">petscsys.h</span></code> (base PETSc
+file). The PETSc include files are located in the directory
+<code class="docutils literal notranslate"><span class="pre">${PETSC_DIR}/include</span></code>. See <a class="reference internal" href="fortran.html#sec-fortran-includes"><span class="std std-ref">Fortran Include Files</span></a>
+for a discussion of PETSc include files in Fortran programs.</p>
+</div>
+<div class="section" id="the-options-database">
+<h3>The Options Database<a class="headerlink" href="#the-options-database" title="Permalink to this headline">¶</a></h3>
+<p>As shown in <a class="reference internal" href="#sec-simple"><span class="std std-ref">Simple PETSc Examples</span></a>, the user can
+input control data at run time using the options database. In this
+example the command <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscOptionsGetInt.html#PetscOptionsGetInt">PetscOptionsGetInt</a>(NULL,NULL,&quot;-n&quot;,&amp;n,&amp;flg);</span></code>
+checks whether the user has provided a command line option to set the
+value of <code class="docutils literal notranslate"><span class="pre">n</span></code>, the problem dimension. If so, the variable <code class="docutils literal notranslate"><span class="pre">n</span></code> is set
+accordingly; otherwise, <code class="docutils literal notranslate"><span class="pre">n</span></code> remains unchanged. A complete description
+of the options database may be found in <a class="reference internal" href="other.html#sec-options"><span class="std std-ref">Runtime Options</span></a>.</p>
+</div>
+<div class="section" id="vectors">
+<span id="sec-vecintro"></span><h3>Vectors<a class="headerlink" href="#vectors" title="Permalink to this headline">¶</a></h3>
+<p>One creates a new parallel or sequential vector, <code class="docutils literal notranslate"><span class="pre">x</span></code>, of global
+dimension <code class="docutils literal notranslate"><span class="pre">M</span></code> with the commands</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/VecCreate.html#VecCreate">VecCreate</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</a></span> <span class="n">comm</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span> <span class="o">*</span><span class="n">x</span><span class="p">);</span>
+<span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/VecSetSizes.html#VecSetSizes">VecSetSizes</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span> <span class="n">x</span><span class="p">,</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span> <span class="n">m</span><span class="p">,</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span> <span class="n">M</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">comm</span></code> denotes the MPI communicator and <code class="docutils literal notranslate"><span class="pre">m</span></code> is the optional
+local size which may be <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a></span></code>. The type of storage for the
+vector may be set with either calls to <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/VecSetType.html#VecSetType">VecSetType</a>()</span></code> or
+<code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/VecSetFromOptions.html#VecSetFromOptions">VecSetFromOptions</a>()</span></code>. Additional vectors of the same type can be
+formed with</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/VecDuplicate.html#VecDuplicate">VecDuplicate</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span> <span class="n">old</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span> <span class="o">*</span><span class="n">new</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>The commands</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/VecSet.html#VecSet">VecSet</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span> <span class="n">x</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a></span> <span class="n">value</span><span class="p">);</span>
+<span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/VecSetValues.html#VecSetValues">VecSetValues</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span> <span class="n">x</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span> <span class="n">n</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span> <span class="o">*</span><span class="n">indices</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a></span> <span class="o">*</span><span class="n">values</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a></span><span class="p">);</span>
+</pre></div>
+</div>
+<p>respectively set all the components of a vector to a particular scalar
+value and assign a different value to each component. More detailed
+information about PETSc vectors, including their basic operations,
+scattering/gathering, index sets, and distributed arrays, is discussed
+in Chapter <a class="reference internal" href="vec.html#chapter-vectors"><span class="std std-ref">Vectors and Parallel Data</span></a>.</p>
+<p>Note the use of the PETSc variable type <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a></span></code> in this example.
+The <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a></span></code> is simply defined to be <code class="docutils literal notranslate"><span class="pre">double</span></code> in C/C++ (or
+correspondingly <code class="docutils literal notranslate"><span class="pre">double</span> <span class="pre">precision</span></code> in Fortran) for versions of PETSc
+that have <em>not</em> been compiled for use with complex numbers. The
+<code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a></span></code> data type enables identical code to be used when the
+PETSc libraries have been compiled for use with complex numbers.
+<a class="reference internal" href="other.html#sec-complex"><span class="std std-ref">Numbers</span></a> discusses the use of complex
+numbers in PETSc programs.</p>
+</div>
+<div class="section" id="matrices">
+<span id="sec-matintro"></span><h3>Matrices<a class="headerlink" href="#matrices" title="Permalink to this headline">¶</a></h3>
+<p>Usage of PETSc matrices and vectors is similar. The user can create a
+new parallel or sequential matrix, <code class="docutils literal notranslate"><span class="pre">A</span></code>, which has <code class="docutils literal notranslate"><span class="pre">M</span></code> global rows
+and <code class="docutils literal notranslate"><span class="pre">N</span></code> global columns, with the routines</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatCreate.html#MatCreate">MatCreate</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</a></span> <span class="n">comm</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/Mat.html#Mat">Mat</a></span> <span class="o">*</span><span class="n">A</span><span class="p">);</span>
+<span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatSetSizes.html#MatSetSizes">MatSetSizes</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/Mat.html#Mat">Mat</a></span> <span class="n">A</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a></span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a></span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span> <span class="n">M</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span> <span class="n">N</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>where the matrix format can be specified at runtime via the options
+database. The user could alternatively specify each processes’ number of
+local rows and columns using <code class="docutils literal notranslate"><span class="pre">m</span></code> and <code class="docutils literal notranslate"><span class="pre">n</span></code>.</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatSetSizes.html#MatSetSizes">MatSetSizes</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/Mat.html#Mat">Mat</a></span> <span class="n">A</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span> <span class="n">m</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span> <span class="n">n</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PETSC_DETERMINE.html#PETSC_DETERMINE">PETSC_DETERMINE</a></span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PETSC_DETERMINE.html#PETSC_DETERMINE">PETSC_DETERMINE</a></span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Generally one then sets the “type” of the matrix, with, for example,</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatSetType.html#MatSetType">MatSetType</a></span><span class="p">(</span><span class="n">A</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MATAIJ.html#MATAIJ">MATAIJ</a></span><span class="p">);</span>
+</pre></div>
+</div>
+<p>This causes the matrix <code class="docutils literal notranslate"><span class="pre">A</span></code> to used the compressed sparse row storage
+format to store the matrix entries. See <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatType.html#MatType">MatType</a></span></code> for a list of all
+matrix types. Values can then be set with the command</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatSetValues.html#MatSetValues">MatSetValues</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/Mat.html#Mat">Mat</a></span> <span class="n">A</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span> <span class="n">m</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span> <span class="o">*</span><span class="n">im</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span> <span class="n">n</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span> <span class="o">*</span><span class="n">in</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a></span> <span class="o">*</span><span class="n">values</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a></span><span class="p">);</span>
+</pre></div>
+</div>
+<p>After all elements have been inserted into the matrix, it must be
+processed with the pair of commands</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatAssemblyBegin.html#MatAssemblyBegin">MatAssemblyBegin</a></span><span class="p">(</span><span class="n">A</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatAssemblyType.html#MatAssemblyType">MAT_FINAL_ASSEMBLY</a></span><span class="p">);</span>
+<span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatAssemblyEnd.html#MatAssemblyEnd">MatAssemblyEnd</a></span><span class="p">(</span><span class="n">A</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatAssemblyType.html#MatAssemblyType">MAT_FINAL_ASSEMBLY</a></span><span class="p">);</span>
+</pre></div>
+</div>
+<p><a class="reference internal" href="mat.html#chapter-matrices"><span class="std std-ref">Matrices</span></a> discusses various matrix formats as
+well as the details of some basic matrix manipulation routines.</p>
+</div>
+<div class="section" id="linear-solvers">
+<h3>Linear Solvers<a class="headerlink" href="#linear-solvers" title="Permalink to this headline">¶</a></h3>
+<p>After creating the matrix and vectors that define a linear system,
+<code class="docutils literal notranslate"><span class="pre">Ax</span></code> <span class="math">\(=\)</span> <code class="docutils literal notranslate"><span class="pre">b</span></code>, the user can then use <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSP.html#KSP">KSP</a></span></code> to solve the
+system with the following sequence of commands:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSPCreate.html#KSPCreate">KSPCreate</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</a></span> <span class="n">comm</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSP.html#KSP">KSP</a></span> <span class="o">*</span><span class="n">ksp</span><span class="p">);</span>
+<span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSPSetOperators.html#KSPSetOperators">KSPSetOperators</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSP.html#KSP">KSP</a></span> <span class="n">ksp</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/Mat.html#Mat">Mat</a></span> <span class="n">Amat</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/Mat.html#Mat">Mat</a></span> <span class="n">Pmat</span><span class="p">);</span>
+<span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSPSetFromOptions.html#KSPSetFromOptions">KSPSetFromOptions</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSP.html#KSP">KSP</a></span> <span class="n">ksp</span><span class="p">);</span>
+<span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSPSolve.html#KSPSolve">KSPSolve</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSP.html#KSP">KSP</a></span> <span class="n">ksp</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span> <span class="n">b</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span> <span class="n">x</span><span class="p">);</span>
+<span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSPDestroy.html#KSPDestroy">KSPDestroy</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSP.html#KSP">KSP</a></span> <span class="n">ksp</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>The user first creates the <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSP.html#KSP">KSP</a></span></code> context and sets the operators
+associated with the system (matrix that defines the linear system,
+<code class="docutils literal notranslate"><span class="pre">Amat</span></code> and matrix from which the preconditioner is constructed,
+<code class="docutils literal notranslate"><span class="pre">Pmat</span></code>). The user then sets various options for customized solution,
+solves the linear system, and finally destroys the <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSP.html#KSP">KSP</a></span></code> context. We
+emphasize the command <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSPSetFromOptions.html#KSPSetFromOptions">KSPSetFromOptions</a>()</span></code>, which enables the user to
+customize the linear solution method at runtime by using the options
+database, which is discussed in <a class="reference internal" href="other.html#sec-options"><span class="std std-ref">Runtime Options</span></a>. Through this database, the
+user not only can select an iterative method and preconditioner, but
+also can prescribe the convergence tolerance, set various monitoring
+routines, etc. (see, e.g., <a class="reference internal" href="#sec-profiling-programs"><span class="std std-ref">Profiling Programs</span></a>).</p>
+<p><a class="reference internal" href="ksp.html#chapter-ksp"><span class="std std-ref">KSP: Linear System Solvers</span></a> describes in detail the <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSP.html#KSP">KSP</a></span></code> package,
+including the <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/PC/PC.html#PC">PC</a></span></code> and <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSP.html#KSP">KSP</a></span></code> packages for preconditioners and Krylov
+subspace methods.</p>
+</div>
+<div class="section" id="nonlinear-solvers">
+<h3>Nonlinear Solvers<a class="headerlink" href="#nonlinear-solvers" title="Permalink to this headline">¶</a></h3>
+<p>Most PDE problems of interest are inherently nonlinear. PETSc provides
+an interface to tackle the nonlinear problems directly called <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/SNES/SNES.html#SNES">SNES</a></span></code>.
+<a class="reference internal" href="snes.html#chapter-snes"><span class="std std-ref">SNES: Nonlinear Solvers</span></a> describes the nonlinear
+solvers in detail. We recommend most PETSc users work directly with
+<code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/SNES/SNES.html#SNES">SNES</a></span></code>, rather than using PETSc for the linear problem within a
+nonlinear solver.</p>
+</div>
+<div class="section" id="error-checking">
+<h3>Error Checking<a class="headerlink" href="#error-checking" title="Permalink to this headline">¶</a></h3>
+<p>All PETSc routines return an integer indicating whether an error has
+occurred during the call. The PETSc macro <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a>(ierr)</span></code> checks the
+value of <code class="docutils literal notranslate"><span class="pre">ierr</span></code> and calls the PETSc error handler upon error
+detection. <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a>(ierr)</span></code> should be used in all subroutines to enable
+a complete error traceback. Below, we indicate a traceback
+generated by error detection within a sample PETSc program. The error
+occurred on line 3618 of the file
+<code class="docutils literal notranslate"><span class="pre">${PETSC_DIR}/src/mat/impls/aij/seq/aij.c</span></code> and was caused by trying to
+allocate too large an array in memory. The routine was called in the
+program <code class="docutils literal notranslate"><span class="pre">ex3.c</span></code> on line 66. See
+<a class="reference internal" href="fortran.html#sec-fortran-errors"><span class="std std-ref">Error Checking</span></a> for details regarding error checking
+when using the PETSc Fortran interface.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ cd $PETSC_DIR/src/ksp/ksp/tutorials
+$ make ex3
+$ mpiexec -n 1 ./ex3 -m 100000
+[0]PETSC ERROR: --------------------- Error Message --------------------------------
+[0]PETSC ERROR: Out of memory. This could be due to allocating
+[0]PETSC ERROR: too large an object or bleeding by not properly
+[0]PETSC ERROR: destroying unneeded objects.
+[0]PETSC ERROR: Memory allocated 11282182704 Memory used by process 7075897344
+[0]PETSC ERROR: Try running with -malloc_dump or -malloc_view for info.
+[0]PETSC ERROR: Memory requested 18446744072169447424
+[0]PETSC ERROR: See https://www.mcs.anl.gov/petsc/documentation/faq.html for trouble shooting.
+[0]PETSC ERROR: Petsc Development GIT revision: v3.7.1-224-g9c9a9c5  GIT Date: 2016-05-18 22:43:00 -0500
+[0]PETSC ERROR: ./ex3 on a arch-darwin-double-debug named Patricks-MacBook-Pro-2.local by patrick Mon Jun 27 18:04:03 2016
+[0]PETSC ERROR: Configure options PETSC_DIR=/Users/patrick/petsc PETSC_ARCH=arch-darwin-double-debug --download-mpich --download-f2cblaslapack --with-cc=clang --with-cxx=clang++ --with-fc=gfortran --with-debugging=1 --with-precision=double --with-scalar-type=real --with-viennacl=0 --download-c2html -download-sowing
+[0]PETSC ERROR: #1 MatSeqAIJSetPreallocation_SeqAIJ() line 3618 in /Users/patrick/petsc/src/mat/impls/aij/seq/aij.c
+[0]PETSC ERROR: #2 PetscTrMallocDefault() line 188 in /Users/patrick/petsc/src/sys/memory/mtr.c
+[0]PETSC ERROR: #3 MatSeqAIJSetPreallocation_SeqAIJ() line 3618 in /Users/patrick/petsc/src/mat/impls/aij/seq/aij.c
+[0]PETSC ERROR: #4 <a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatSeqAIJSetPreallocation.html#MatSeqAIJSetPreallocation">MatSeqAIJSetPreallocation</a>() line 3562 in /Users/patrick/petsc/src/mat/impls/aij/seq/aij.c
+[0]PETSC ERROR: #5 main() line 66 in /Users/patrick/petsc/src/ksp/ksp/tutorials/ex3.c
+[0]PETSC ERROR: PETSc Option Table entries:
+[0]PETSC ERROR: -m 100000
+[0]PETSC ERROR: ----------------End of Error Message ------- send entire error message to petsc-maint@mcs.anl.gov----------
+</pre></div>
+</div>
+<p>When running the debug version of the PETSc libraries, it does a great
+deal of checking for memory corruption (writing outside of array bounds
+etc). The macro <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKMEMQ.html#CHKMEMQ">CHKMEMQ</a></span></code> can be called anywhere in the code to check
+the current status of the memory for corruption. By putting several (or
+many) of these macros into your code you can usually easily track down
+in what small segment of your code the corruption has occured. One can
+also use Valgrind to track down memory errors; see the <a class="reference external" href="https://www.mcs.anl.gov/petsc/documentation/faq.html">FAQ</a>.</p>
+</div>
+<div class="section" id="parallel-programming">
+<span id="sec-parallel"></span><h3>Parallel Programming<a class="headerlink" href="#parallel-programming" title="Permalink to this headline">¶</a></h3>
+<p>Since PETSc uses the message-passing model for parallel programming and
+employs MPI for all interprocessor communication, the user is free to
+employ MPI routines as needed throughout an application code. However,
+by default the user is shielded from many of the details of message
+passing within PETSc, since these are hidden within parallel objects,
+such as vectors, matrices, and solvers. In addition, PETSc provides
+tools such as generalized vector scatters/gathers to assist in the
+management of parallel data.</p>
+<p>Recall that the user must specify a communicator upon creation of any
+PETSc object (such as a vector, matrix, or solver) to indicate the
+processors over which the object is to be distributed. For example, as
+mentioned above, some commands for matrix, vector, and linear solver
+creation are:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatCreate.html#MatCreate">MatCreate</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</a></span> <span class="n">comm</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/Mat.html#Mat">Mat</a></span> <span class="o">*</span><span class="n">A</span><span class="p">);</span>
+<span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/VecCreate.html#VecCreate">VecCreate</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</a></span> <span class="n">comm</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span> <span class="o">*</span><span class="n">x</span><span class="p">);</span>
+<span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSPCreate.html#KSPCreate">KSPCreate</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</a></span> <span class="n">comm</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSP.html#KSP">KSP</a></span> <span class="o">*</span><span class="n">ksp</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>The creation routines are collective over all processors in the
+communicator; thus, all processors in the communicator <em>must</em> call the
+creation routine. In addition, if a sequence of collective routines is
+being used, they <em>must</em> be called in the same order on each processor.</p>
+<p>The next example, given below,
+illustrates the solution of a linear system in parallel. This code,
+corresponding to
+<cite>KSP Tutorial ex2 &lt;https://www.mcs.anl.gov/petsc/petsc-current/src/ksp/ksp/tutorials/ex2.c.html&gt;</cite>,
+handles the two-dimensional Laplacian discretized with finite
+differences, where the linear system is again solved with KSP. The code
+performs the same tasks as the sequential version within
+<a class="reference internal" href="#sec-simple"><span class="std std-ref">Simple PETSc Examples</span></a>. Note that the user interface
+for initiating the program, creating vectors and matrices, and solving
+the linear system is <em>exactly</em> the same for the uniprocessor and
+multiprocessor examples. The primary difference between the examples in
+<a class="reference internal" href="#sec-simple"><span class="std std-ref">Simple PETSc Examples</span></a> and
+here is that each processor forms only its
+local part of the matrix and vectors in the parallel case.</p>
+<div class="admonition-listing-src-ksp-ksp-tutorials-ex2-c admonition" id="ksp-ex2">
+<p class="admonition-title">Listing: <code class="docutils literal notranslate"><span class="pre">src/ksp/ksp/tutorials/ex2.c</span></code></p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span>
+<span class="k">static</span> <span class="kt">char</span> <span class="n">help</span><span class="p">[]</span> <span class="o">=</span> <span class="s">&quot;Solves a linear system in parallel with <a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSP.html#KSP">KSP</a>.</span><span class="se">\n</span><span class="s">\</span>
+<span class="s">Input parameters include:</span><span class="se">\n</span><span class="s">\</span>
+<span class="s">  -view_exact_sol   : write exact solution vector to stdout</span><span class="se">\n</span><span class="s">\</span>
+<span class="s">  -m &lt;mesh_x&gt;       : number of mesh points in x-direction</span><span class="se">\n</span><span class="s">\</span>
+<span class="s">  -n &lt;mesh_y&gt;       : number of mesh points in y-direction</span><span class="se">\n\n</span><span class="s">&quot;</span><span class="p">;</span>
+
+<span class="cm">/*T</span>
+<span class="cm">   Concepts: <a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSP.html#KSP">KSP</a>^basic parallel example;</span>
+<span class="cm">   Concepts: <a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSP.html#KSP">KSP</a>^Laplacian, 2d</span>
+<span class="cm">   Concepts: Laplacian, 2d</span>
+<span class="cm">   Processors: n</span>
+<span class="cm">T*/</span>
+
+<span class="cm">/*</span>
+<span class="cm">  Include &quot;petscksp.h&quot; so that we can use <a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSP.html#KSP">KSP</a> solvers.</span>
+<span class="cm">*/</span>
+<span class="cp">#include</span> <span class="cpf">&lt;petscksp.h&gt;</span><span class="cp"></span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span><span class="kt">char</span> <span class="o">**</span><span class="n">args</span><span class="p">)</span>
+<span class="p">{</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span>            <span class="n">x</span><span class="p">,</span><span class="n">b</span><span class="p">,</span><span class="n">u</span><span class="p">;</span>    <span class="cm">/* approx solution, RHS, exact solution */</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/Mat.html#Mat">Mat</a></span>            <span class="n">A</span><span class="p">;</span>        <span class="cm">/* linear system matrix */</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSP.html#KSP">KSP</a></span>            <span class="n">ksp</span><span class="p">;</span>      <span class="cm">/* linear solver context */</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a></span>      <span class="n">norm</span><span class="p">;</span>     <span class="cm">/* norm of solution error */</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span>       <span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">,</span><span class="n">Ii</span><span class="p">,</span><span class="n">J</span><span class="p">,</span><span class="n">Istart</span><span class="p">,</span><span class="n">Iend</span><span class="p">,</span><span class="n">m</span> <span class="o">=</span> <span class="mi">8</span><span class="p">,</span><span class="n">n</span> <span class="o">=</span> <span class="mi">7</span><span class="p">,</span><span class="n">its</span><span class="p">;</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a></span> <span class="n">ierr</span><span class="p">;</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a></span>      <span class="n">flg</span><span class="p">;</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a></span>    <span class="n">v</span><span class="p">;</span>
+
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInitialize.html#PetscInitialize">PetscInitialize</a></span><span class="p">(</span><span class="o">&amp;</span><span class="n">argc</span><span class="p">,</span><span class="o">&amp;</span><span class="n">args</span><span class="p">,(</span><span class="kt">char</span><span class="o">*</span><span class="p">)</span><span class="mi">0</span><span class="p">,</span><span class="n">help</span><span class="p">);</span><span class="k">if</span> <span class="p">(</span><span class="n">ierr</span><span class="p">)</span> <span class="k">return</span> <span class="n">ierr</span><span class="p">;</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscOptionsGetInt.html#PetscOptionsGetInt">PetscOptionsGetInt</a></span><span class="p">(</span><span class="nb">NULL</span><span class="p">,</span><span class="nb">NULL</span><span class="p">,</span><span class="s">&quot;-m&quot;</span><span class="p">,</span><span class="o">&amp;</span><span class="n">m</span><span class="p">,</span><span class="nb">NULL</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscOptionsGetInt.html#PetscOptionsGetInt">PetscOptionsGetInt</a></span><span class="p">(</span><span class="nb">NULL</span><span class="p">,</span><span class="nb">NULL</span><span class="p">,</span><span class="s">&quot;-n&quot;</span><span class="p">,</span><span class="o">&amp;</span><span class="n">n</span><span class="p">,</span><span class="nb">NULL</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+  <span class="cm">/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -</span>
+<span class="cm">         Compute the matrix and right-hand-side vector that define</span>
+<span class="cm">         the linear system, Ax = b.</span>
+<span class="cm">     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */</span>
+  <span class="cm">/*</span>
+<span class="cm">     Create parallel matrix, specifying only its global dimensions.</span>
+<span class="cm">     When using <a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatCreate.html#MatCreate">MatCreate</a>(), the matrix format can be specified at</span>
+<span class="cm">     runtime. Also, the parallel partitioning of the matrix is</span>
+<span class="cm">     determined by PETSc at runtime.</span>
+
+<span class="cm">     Performance tuning note:  For problems of substantial size,</span>
+<span class="cm">     preallocation of matrix memory is crucial for attaining good</span>
+<span class="cm">     performance. See the matrix chapter of the users manual for details.</span>
+<span class="cm">  */</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatCreate.html#MatCreate">MatCreate</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a></span><span class="p">,</span><span class="o">&amp;</span><span class="n">A</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatSetSizes.html#MatSetSizes">MatSetSizes</a></span><span class="p">(</span><span class="n">A</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a></span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a></span><span class="p">,</span><span class="n">m</span><span class="o">*</span><span class="n">n</span><span class="p">,</span><span class="n">m</span><span class="o">*</span><span class="n">n</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatSetFromOptions.html#MatSetFromOptions">MatSetFromOptions</a></span><span class="p">(</span><span class="n">A</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatMPIAIJSetPreallocation.html#MatMPIAIJSetPreallocation">MatMPIAIJSetPreallocation</a></span><span class="p">(</span><span class="n">A</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="nb">NULL</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="nb">NULL</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatSeqAIJSetPreallocation.html#MatSeqAIJSetPreallocation">MatSeqAIJSetPreallocation</a></span><span class="p">(</span><span class="n">A</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="nb">NULL</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatSeqSBAIJSetPreallocation.html#MatSeqSBAIJSetPreallocation">MatSeqSBAIJSetPreallocation</a></span><span class="p">(</span><span class="n">A</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="nb">NULL</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatMPISBAIJSetPreallocation.html#MatMPISBAIJSetPreallocation">MatMPISBAIJSetPreallocation</a></span><span class="p">(</span><span class="n">A</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="nb">NULL</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="nb">NULL</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatMPISELLSetPreallocation.html#MatMPISELLSetPreallocation">MatMPISELLSetPreallocation</a></span><span class="p">(</span><span class="n">A</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="nb">NULL</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="nb">NULL</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatSeqSELLSetPreallocation.html#MatSeqSELLSetPreallocation">MatSeqSELLSetPreallocation</a></span><span class="p">(</span><span class="n">A</span><span class="p">,</span><span class="mi">5</span><span class="p">,</span><span class="nb">NULL</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+
+  <span class="cm">/*</span>
+<span class="cm">     Currently, all PETSc parallel matrix formats are partitioned by</span>
+<span class="cm">     contiguous chunks of rows across the processors.  Determine which</span>
+<span class="cm">     rows of the matrix are locally owned.</span>
+<span class="cm">  */</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatGetOwnershipRange.html#MatGetOwnershipRange">MatGetOwnershipRange</a></span><span class="p">(</span><span class="n">A</span><span class="p">,</span><span class="o">&amp;</span><span class="n">Istart</span><span class="p">,</span><span class="o">&amp;</span><span class="n">Iend</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+
+  <span class="cm">/*</span>
+<span class="cm">     Set matrix elements for the 2-D, five-point stencil in parallel.</span>
+<span class="cm">      - Each processor needs to insert only elements that it owns</span>
+<span class="cm">        locally (but any non-local elements will be sent to the</span>
+<span class="cm">        appropriate processor during matrix assembly).</span>
+<span class="cm">      - Always specify global rows and columns of matrix entries.</span>
+
+<span class="cm">     Note: this uses the less common natural ordering that orders first</span>
+<span class="cm">     all the unknowns for x = h then for x = 2h etc; Hence you see J = Ii +- n</span>
+<span class="cm">     instead of J = I +- m as you might expect. The more standard ordering</span>
+<span class="cm">     would first do all variables for y = h, then y = 2h etc.</span>
+
+<span class="cm">   */</span>
+  <span class="k">for</span> <span class="p">(</span><span class="n">Ii</span><span class="o">=</span><span class="n">Istart</span><span class="p">;</span> <span class="n">Ii</span><span class="o">&lt;</span><span class="n">Iend</span><span class="p">;</span> <span class="n">Ii</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">v</span> <span class="o">=</span> <span class="mf">-1.0</span><span class="p">;</span> <span class="n">i</span> <span class="o">=</span> <span class="n">Ii</span><span class="o">/</span><span class="n">n</span><span class="p">;</span> <span class="n">j</span> <span class="o">=</span> <span class="n">Ii</span> <span class="o">-</span> <span class="n">i</span><span class="o">*</span><span class="n">n</span><span class="p">;</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">i</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">)</span>   <span class="p">{</span><span class="n">J</span> <span class="o">=</span> <span class="n">Ii</span> <span class="o">-</span> <span class="n">n</span><span class="p">;</span> <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatSetValues.html#MatSetValues">MatSetValues</a></span><span class="p">(</span><span class="n">A</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="o">&amp;</span><span class="n">Ii</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="o">&amp;</span><span class="n">J</span><span class="p">,</span><span class="o">&amp;</span><span class="n">v</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/ADD_VALUES.html#ADD_VALUES">ADD_VALUES</a></span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);}</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">i</span><span class="o">&lt;</span><span class="n">m</span><span class="mi">-1</span><span class="p">)</span> <span class="p">{</span><span class="n">J</span> <span class="o">=</span> <span class="n">Ii</span> <span class="o">+</span> <span class="n">n</span><span class="p">;</span> <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatSetValues.html#MatSetValues">MatSetValues</a></span><span class="p">(</span><span class="n">A</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="o">&amp;</span><span class="n">Ii</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="o">&amp;</span><span class="n">J</span><span class="p">,</span><span class="o">&amp;</span><span class="n">v</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/ADD_VALUES.html#ADD_VALUES">ADD_VALUES</a></span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);}</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">j</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">)</span>   <span class="p">{</span><span class="n">J</span> <span class="o">=</span> <span class="n">Ii</span> <span class="o">-</span> <span class="mi">1</span><span class="p">;</span> <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatSetValues.html#MatSetValues">MatSetValues</a></span><span class="p">(</span><span class="n">A</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="o">&amp;</span><span class="n">Ii</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="o">&amp;</span><span class="n">J</span><span class="p">,</span><span class="o">&amp;</span><span class="n">v</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/ADD_VALUES.html#ADD_VALUES">ADD_VALUES</a></span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);}</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">j</span><span class="o">&lt;</span><span class="n">n</span><span class="mi">-1</span><span class="p">)</span> <span class="p">{</span><span class="n">J</span> <span class="o">=</span> <span class="n">Ii</span> <span class="o">+</span> <span class="mi">1</span><span class="p">;</span> <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatSetValues.html#MatSetValues">MatSetValues</a></span><span class="p">(</span><span class="n">A</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="o">&amp;</span><span class="n">Ii</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="o">&amp;</span><span class="n">J</span><span class="p">,</span><span class="o">&amp;</span><span class="n">v</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/ADD_VALUES.html#ADD_VALUES">ADD_VALUES</a></span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);}</span>
+    <span class="n">v</span> <span class="o">=</span> <span class="mf">4.0</span><span class="p">;</span> <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatSetValues.html#MatSetValues">MatSetValues</a></span><span class="p">(</span><span class="n">A</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="o">&amp;</span><span class="n">Ii</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="o">&amp;</span><span class="n">Ii</span><span class="p">,</span><span class="o">&amp;</span><span class="n">v</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/ADD_VALUES.html#ADD_VALUES">ADD_VALUES</a></span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+  <span class="p">}</span>
+
+  <span class="cm">/*</span>
+<span class="cm">     Assemble matrix, using the 2-step process:</span>
+<span class="cm">       <a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatAssemblyBegin.html#MatAssemblyBegin">MatAssemblyBegin</a>(), <a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatAssemblyEnd.html#MatAssemblyEnd">MatAssemblyEnd</a>()</span>
+<span class="cm">     Computations can be done while messages are in transition</span>
+<span class="cm">     by placing code between these two statements.</span>
+<span class="cm">  */</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatAssemblyBegin.html#MatAssemblyBegin">MatAssemblyBegin</a></span><span class="p">(</span><span class="n">A</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatAssemblyType.html#MatAssemblyType">MAT_FINAL_ASSEMBLY</a></span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatAssemblyEnd.html#MatAssemblyEnd">MatAssemblyEnd</a></span><span class="p">(</span><span class="n">A</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatAssemblyType.html#MatAssemblyType">MAT_FINAL_ASSEMBLY</a></span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+
+  <span class="cm">/* A is symmetric. Set symmetric flag to enable ICC/Cholesky preconditioner */</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatSetOption.html#MatSetOption">MatSetOption</a></span><span class="p">(</span><span class="n">A</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatOption.html#MatOption">MAT_SYMMETRIC</a></span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a></span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+
+  <span class="cm">/*</span>
+<span class="cm">     Create parallel vectors.</span>
+<span class="cm">      - We form 1 vector from scratch and then duplicate as needed.</span>
+<span class="cm">      - When using <a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/VecCreate.html#VecCreate">VecCreate</a>(), <a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/VecSetSizes.html#VecSetSizes">VecSetSizes</a> and <a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/VecSetFromOptions.html#VecSetFromOptions">VecSetFromOptions</a>()</span>
+<span class="cm">        in this example, we specify only the</span>
+<span class="cm">        vector&#39;s global dimension; the parallel partitioning is determined</span>
+<span class="cm">        at runtime.</span>
+<span class="cm">      - When solving a linear system, the vectors and matrices MUST</span>
+<span class="cm">        be partitioned accordingly.  PETSc automatically generates</span>
+<span class="cm">        appropriately partitioned matrices and vectors when <a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatCreate.html#MatCreate">MatCreate</a>()</span>
+<span class="cm">        and <a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/VecCreate.html#VecCreate">VecCreate</a>() are used with the same communicator.</span>
+<span class="cm">      - The user can alternatively specify the local vector and matrix</span>
+<span class="cm">        dimensions when more sophisticated partitioning is needed</span>
+<span class="cm">        (replacing the <a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a> argument in the <a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/VecSetSizes.html#VecSetSizes">VecSetSizes</a>() statement</span>
+<span class="cm">        below).</span>
+<span class="cm">  */</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/VecCreate.html#VecCreate">VecCreate</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a></span><span class="p">,</span><span class="o">&amp;</span><span class="n">u</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/VecSetSizes.html#VecSetSizes">VecSetSizes</a></span><span class="p">(</span><span class="n">u</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a></span><span class="p">,</span><span class="n">m</span><span class="o">*</span><span class="n">n</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/VecSetFromOptions.html#VecSetFromOptions">VecSetFromOptions</a></span><span class="p">(</span><span class="n">u</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/VecDuplicate.html#VecDuplicate">VecDuplicate</a></span><span class="p">(</span><span class="n">u</span><span class="p">,</span><span class="o">&amp;</span><span class="n">b</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/VecDuplicate.html#VecDuplicate">VecDuplicate</a></span><span class="p">(</span><span class="n">b</span><span class="p">,</span><span class="o">&amp;</span><span class="n">x</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+
+  <span class="cm">/*</span>
+<span class="cm">     Set exact solution; then compute right-hand-side vector.</span>
+<span class="cm">     By default we use an exact solution of a vector with all</span>
+<span class="cm">     elements of 1.0;</span>
+<span class="cm">  */</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/VecSet.html#VecSet">VecSet</a></span><span class="p">(</span><span class="n">u</span><span class="p">,</span><span class="mf">1.0</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatMult.html#MatMult">MatMult</a></span><span class="p">(</span><span class="n">A</span><span class="p">,</span><span class="n">u</span><span class="p">,</span><span class="n">b</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+
+  <span class="cm">/*</span>
+<span class="cm">     View the exact solution vector if desired</span>
+<span class="cm">  */</span>
+  <span class="n">flg</span>  <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a></span><span class="p">;</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscOptionsGetBool.html#PetscOptionsGetBool">PetscOptionsGetBool</a></span><span class="p">(</span><span class="nb">NULL</span><span class="p">,</span><span class="nb">NULL</span><span class="p">,</span><span class="s">&quot;-view_exact_sol&quot;</span><span class="p">,</span><span class="o">&amp;</span><span class="n">flg</span><span class="p">,</span><span class="nb">NULL</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">flg</span><span class="p">)</span> <span class="p">{</span><span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/VecView.html#VecView">VecView</a></span><span class="p">(</span><span class="n">u</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Viewer/PETSC_VIEWER_STDOUT_WORLD.html#PETSC_VIEWER_STDOUT_WORLD">PETSC_VIEWER_STDOUT_WORLD</a></span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);}</span>
+
+  <span class="cm">/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -</span>
+<span class="cm">                Create the linear solver and set various options</span>
+<span class="cm">     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSPCreate.html#KSPCreate">KSPCreate</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a></span><span class="p">,</span><span class="o">&amp;</span><span class="n">ksp</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+
+  <span class="cm">/*</span>
+<span class="cm">     Set operators. Here the matrix that defines the linear system</span>
+<span class="cm">     also serves as the preconditioning matrix.</span>
+<span class="cm">  */</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSPSetOperators.html#KSPSetOperators">KSPSetOperators</a></span><span class="p">(</span><span class="n">ksp</span><span class="p">,</span><span class="n">A</span><span class="p">,</span><span class="n">A</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+
+  <span class="cm">/*</span>
+<span class="cm">     Set linear solver defaults for this problem (optional).</span>
+<span class="cm">     - By extracting the <a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSP.html#KSP">KSP</a> and <a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/PC/PC.html#PC">PC</a> contexts from the <a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSP.html#KSP">KSP</a> context,</span>
+<span class="cm">       we can then directly call any <a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSP.html#KSP">KSP</a> and <a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/PC/PC.html#PC">PC</a> routines to set</span>
+<span class="cm">       various options.</span>
+<span class="cm">     - The following two statements are optional; all of these</span>
+<span class="cm">       parameters could alternatively be specified at runtime via</span>
+<span class="cm">       <a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSPSetFromOptions.html#KSPSetFromOptions">KSPSetFromOptions</a>().  All of these defaults can be</span>
+<span class="cm">       overridden at runtime, as indicated below.</span>
+<span class="cm">  */</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSPSetTolerances.html#KSPSetTolerances">KSPSetTolerances</a></span><span class="p">(</span><span class="n">ksp</span><span class="p">,</span><span class="mf">1.</span><span class="n">e</span><span class="mi">-2</span><span class="o">/</span><span class="p">((</span><span class="n">m</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">n</span><span class="o">+</span><span class="mi">1</span><span class="p">)),</span><span class="mf">1.</span><span class="n">e</span><span class="mi">-50</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PETSC_DEFAULT.html#PETSC_DEFAULT">PETSC_DEFAULT</a></span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PETSC_DEFAULT.html#PETSC_DEFAULT">PETSC_DEFAULT</a></span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+
+  <span class="cm">/*</span>
+<span class="cm">    Set runtime options, e.g.,</span>
+<span class="cm">        -ksp_type &lt;type&gt; -pc_type &lt;type&gt; -ksp_monitor -ksp_rtol &lt;rtol&gt;</span>
+<span class="cm">    These options will override those specified above as long as</span>
+<span class="cm">    <a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSPSetFromOptions.html#KSPSetFromOptions">KSPSetFromOptions</a>() is called _after_ any other customization</span>
+<span class="cm">    routines.</span>
+<span class="cm">  */</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSPSetFromOptions.html#KSPSetFromOptions">KSPSetFromOptions</a></span><span class="p">(</span><span class="n">ksp</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+
+  <span class="cm">/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -</span>
+<span class="cm">                      Solve the linear system</span>
+<span class="cm">     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */</span>
+
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSPSolve.html#KSPSolve">KSPSolve</a></span><span class="p">(</span><span class="n">ksp</span><span class="p">,</span><span class="n">b</span><span class="p">,</span><span class="n">x</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+
+  <span class="cm">/* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -</span>
+<span class="cm">                      Check the solution and clean up</span>
+<span class="cm">     - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/VecAXPY.html#VecAXPY">VecAXPY</a></span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="mf">-1.0</span><span class="p">,</span><span class="n">u</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/VecNorm.html#VecNorm">VecNorm</a></span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/NORM_2.html#NORM_2">NORM_2</a></span><span class="p">,</span><span class="o">&amp;</span><span class="n">norm</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSPGetIterationNumber.html#KSPGetIterationNumber">KSPGetIterationNumber</a></span><span class="p">(</span><span class="n">ksp</span><span class="p">,</span><span class="o">&amp;</span><span class="n">its</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+
+  <span class="cm">/*</span>
+<span class="cm">     Print convergence information.  <a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a>() produces a single</span>
+<span class="cm">     print statement from all processes that share a communicator.</span>
+<span class="cm">     An alternative is <a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscFPrintf.html#PetscFPrintf">PetscFPrintf</a>(), which prints to a file.</span>
+<span class="cm">  */</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a></span><span class="p">,</span><span class="s">&quot;Norm of error %g iterations %D</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,(</span><span class="kt">double</span><span class="p">)</span><span class="n">norm</span><span class="p">,</span><span class="n">its</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+
+  <span class="cm">/*</span>
+<span class="cm">     Free work space.  All PETSc objects should be destroyed when they</span>
+<span class="cm">     are no longer needed.</span>
+<span class="cm">  */</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSPDestroy.html#KSPDestroy">KSPDestroy</a></span><span class="p">(</span><span class="o">&amp;</span><span class="n">ksp</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/VecDestroy.html#VecDestroy">VecDestroy</a></span><span class="p">(</span><span class="o">&amp;</span><span class="n">u</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/VecDestroy.html#VecDestroy">VecDestroy</a></span><span class="p">(</span><span class="o">&amp;</span><span class="n">x</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/VecDestroy.html#VecDestroy">VecDestroy</a></span><span class="p">(</span><span class="o">&amp;</span><span class="n">b</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatDestroy.html#MatDestroy">MatDestroy</a></span><span class="p">(</span><span class="o">&amp;</span><span class="n">A</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+
+  <span class="cm">/*</span>
+<span class="cm">     Always call <a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscFinalize.html#PetscFinalize">PetscFinalize</a>() before exiting a program.  This routine</span>
+<span class="cm">       - finalizes the PETSc libraries as well as MPI</span>
+<span class="cm">       - provides summary and diagnostic information if certain runtime</span>
+<span class="cm">         options are chosen (e.g., -log_view).</span>
+<span class="cm">  */</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscFinalize.html#PetscFinalize">PetscFinalize</a></span><span class="p">();</span>
+  <span class="k">return</span> <span class="n">ierr</span><span class="p">;</span>
+<span class="p">}</span>
+
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="compiling-and-running-programs">
+<h3>Compiling and Running Programs<a class="headerlink" href="#compiling-and-running-programs" title="Permalink to this headline">¶</a></h3>
+<p>The output below illustrates compiling and running a
+PETSc program using MPICH on an OS X laptop. Note that different
+machines will have compilation commands as determined by the
+configuration process. See <a class="reference internal" href="#sec-writing-application-codes"><span class="std std-ref">Writing Application Codes with PETSc</span></a> for
+a discussion about how to compile your PETSc programs. Users who are
+experiencing difficulties linking PETSc programs should refer to the FAQ
+on the PETSc website <a class="reference external" href="https://www.mcs.anl.gov/petsc">https://www.mcs.anl.gov/petsc</a> or given in the file
+<code class="docutils literal notranslate"><span class="pre">$PETSC_DIR/docs/faq.html</span></code>.</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>$ cd $PETSC_DIR/src/ksp/ksp/tutorials
+$ make ex2
+/Users/patrick/petsc/arch-darwin-double-debug/bin/mpicc -o ex2.o -c -Wall -Wwrite-strings -Wno-strict-aliasing -Wno-unknown-pragmas -Qunused-arguments -fvisibility=hidden -g3   -I/Users/patrick/petsc/include -I/Users/patrick/petsc/arch-darwin-double-debug/include -I/opt/X11/include -I/opt/local/include    `pwd`/ex2.c
+/Users/patrick/petsc/arch-darwin-double-debug/bin/mpicc -Wl,-multiply_defined,suppress -Wl,-multiply_defined -Wl,suppress -Wl,-commons,use_dylibs -Wl,-search_paths_first -Wl,-multiply_defined,suppress -Wl,-multiply_defined -Wl,suppress -Wl,-commons,use_dylibs -Wl,-search_paths_first    -Wall -Wwrite-strings -Wno-strict-aliasing -Wno-unknown-pragmas -Qunused-arguments -fvisibility=hidden -g3  -o ex2 ex2.o  -Wl,-rpath,/Users/patrick/petsc/arch-darwin-double-debug/lib -L/Users/patrick/petsc/arch-darwin-double-debug/lib  -lpetsc -Wl,-rpath,/Users/patrick/petsc/arch-darwin-double-debug/lib -lf2clapack -lf2cblas -Wl,-rpath,/opt/X11/lib -L/opt/X11/lib -lX11 -lssl -lcrypto -Wl,-rpath,/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/7.0.2/lib/darwin -L/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/7.0.2/lib/darwin -lmpifort -lgfortran -Wl,-rpath,/opt/local/lib/gcc5/gcc/x86_64-apple-darwin14/5.3.0 -L/opt/local/lib/gcc5/gcc/x86_64-apple-darwin14/5.3.0 -Wl,-rpath,/opt/local/lib/gcc5 -L/opt/local/lib/gcc5 -lgfortran -lgcc_ext.10.5 -lquadmath -lm -lclang_rt.osx -lmpicxx -lc++ -Wl,-rpath,/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../lib/clang/7.0.2/lib/darwin -L/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../lib/clang/7.0.2/lib/darwin -lclang_rt.osx -Wl,-rpath,/Users/patrick/petsc/arch-darwin-double-debug/lib -L/Users/patrick/petsc/arch-darwin-double-debug/lib -ldl -lmpi -lpmpi -lSystem -Wl,-rpath,/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../lib/clang/7.0.2/lib/darwin -L/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/../lib/clang/7.0.2/lib/darwin -lclang_rt.osx -ldl
+/bin/rm -f ex2.o
+$ $PETSC_DIR/lib/petsc/bin/petscmpiexec -n 1 ./ex2
+Norm of error 0.000156044 iterations 6
+$ $PETSC_DIR/lib/petsc/bin/petscmpiexec -n 2 ./ex2
+Norm of error 0.000411674 iterations 7
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="profiling-programs">
+<span id="sec-profiling-programs"></span><h2>Profiling Programs<a class="headerlink" href="#profiling-programs" title="Permalink to this headline">¶</a></h2>
+<p>The option
+<code class="docutils literal notranslate"><span class="pre">-log_view</span></code> activates printing of a performance summary, including
+times, floating point operation (flop) rates, and message-passing
+activity. <a class="reference internal" href="profiling.html#ch-profiling"><span class="std std-ref">Profiling</span></a> provides details about
+profiling, including interpretation of the output data below.
+This particular example involves
+the solution of a linear system on one processor using GMRES and ILU.
+The low floating point operation (flop) rates in this example are due to
+the fact that the code solved a tiny system. We include this example
+merely to demonstrate the ease of extracting performance information.</p>
+<div class="highlight-none notranslate" id="listing-exprof"><div class="highlight"><pre><span></span>$ $PETSC_DIR/lib/petsc/bin/petscmpiexec -n 1 ./ex1 -n 1000 -pc_type ilu -ksp_type gmres -ksp_rtol 1.e-7 -log_view
+...
+------------------------------------------------------------------------------------------------------------------------
+Event                Count      Time (sec)     Flops                             --- Global ---  --- Stage ----  Total
+                   Max Ratio  Max     Ratio   Max  Ratio  Mess   AvgLen  Reduct  %T %F %M %L %R  %T %F %M %L %R Mflop/s
+------------------------------------------------------------------------------------------------------------------------
+
+--- Event Stage 0: Main Stage
+
+<a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/VecMDot.html#VecMDot">VecMDot</a>                1 1.0 3.2830e-06 1.0 2.00e+03 1.0 0.0e+00 0.0e+00 0.0e+00  0  5  0  0  0   0  5  0  0  0   609
+<a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/VecNorm.html#VecNorm">VecNorm</a>                3 1.0 4.4550e-06 1.0 6.00e+03 1.0 0.0e+00 0.0e+00 0.0e+00  0 14  0  0  0   0 14  0  0  0  1346
+<a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/VecScale.html#VecScale">VecScale</a>               2 1.0 4.0110e-06 1.0 2.00e+03 1.0 0.0e+00 0.0e+00 0.0e+00  0  5  0  0  0   0  5  0  0  0   499
+<a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/VecCopy.html#VecCopy">VecCopy</a>                1 1.0 3.2280e-06 1.0 0.00e+00 0.0 0.0e+00 0.0e+00 0.0e+00  0  0  0  0  0   0  0  0  0  0     0
+<a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/VecSet.html#VecSet">VecSet</a>                11 1.0 2.5537e-05 1.0 0.00e+00 0.0 0.0e+00 0.0e+00 0.0e+00  2  0  0  0  0   2  0  0  0  0     0
+<a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/VecAXPY.html#VecAXPY">VecAXPY</a>                2 1.0 2.0930e-06 1.0 4.00e+03 1.0 0.0e+00 0.0e+00 0.0e+00  0 10  0  0  0   0 10  0  0  0  1911
+<a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/VecMAXPY.html#VecMAXPY">VecMAXPY</a>               2 1.0 1.1280e-06 1.0 4.00e+03 1.0 0.0e+00 0.0e+00 0.0e+00  0 10  0  0  0   0 10  0  0  0  3546
+<a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/VecNormalize.html#VecNormalize">VecNormalize</a>           2 1.0 9.3970e-06 1.0 6.00e+03 1.0 0.0e+00 0.0e+00 0.0e+00  1 14  0  0  0   1 14  0  0  0   638
+<a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatMult.html#MatMult">MatMult</a>                2 1.0 1.1177e-05 1.0 9.99e+03 1.0 0.0e+00 0.0e+00 0.0e+00  1 24  0  0  0   1 24  0  0  0   894
+<a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatSolve.html#MatSolve">MatSolve</a>               2 1.0 1.9933e-05 1.0 9.99e+03 1.0 0.0e+00 0.0e+00 0.0e+00  1 24  0  0  0   1 24  0  0  0   501
+MatLUFactorNum         1 1.0 3.5081e-05 1.0 4.00e+03 1.0 0.0e+00 0.0e+00 0.0e+00  2 10  0  0  0   2 10  0  0  0   114
+MatILUFactorSym        1 1.0 4.4259e-05 1.0 0.00e+00 0.0 0.0e+00 0.0e+00 0.0e+00  3  0  0  0  0   3  0  0  0  0     0
+<a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatAssemblyBegin.html#MatAssemblyBegin">MatAssemblyBegin</a>       1 1.0 8.2015e-08 1.0 0.00e+00 0.0 0.0e+00 0.0e+00 0.0e+00  0  0  0  0  0   0  0  0  0  0     0
+<a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatAssemblyEnd.html#MatAssemblyEnd">MatAssemblyEnd</a>         1 1.0 3.3536e-05 1.0 0.00e+00 0.0 0.0e+00 0.0e+00 0.0e+00  2  0  0  0  0   2  0  0  0  0     0
+<a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatGetRowIJ.html#MatGetRowIJ">MatGetRowIJ</a>            1 1.0 1.5960e-06 1.0 0.00e+00 0.0 0.0e+00 0.0e+00 0.0e+00  0  0  0  0  0   0  0  0  0  0     0
+<a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/MatOrderings/MatGetOrdering.html#MatGetOrdering">MatGetOrdering</a>         1 1.0 3.9791e-05 1.0 0.00e+00 0.0 0.0e+00 0.0e+00 0.0e+00  3  0  0  0  0   3  0  0  0  0     0
+<a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatView.html#MatView">MatView</a>                2 1.0 6.7909e-05 1.0 0.00e+00 0.0 0.0e+00 0.0e+00 0.0e+00  5  0  0  0  0   5  0  0  0  0     0
+KSPGMRESOrthog         1 1.0 7.5970e-06 1.0 4.00e+03 1.0 0.0e+00 0.0e+00 0.0e+00  1 10  0  0  0   1 10  0  0  0   526
+<a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSPSetUp.html#KSPSetUp">KSPSetUp</a>               1 1.0 3.4424e-05 1.0 0.00e+00 0.0 0.0e+00 0.0e+00 0.0e+00  2  0  0  0  0   2  0  0  0  0     0
+<a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSPSolve.html#KSPSolve">KSPSolve</a>               1 1.0 2.7264e-04 1.0 3.30e+04 1.0 0.0e+00 0.0e+00 0.0e+00 19 79  0  0  0  19 79  0  0  0   121
+<a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/PC/PCSetUp.html#PCSetUp">PCSetUp</a>                1 1.0 1.5234e-04 1.0 4.00e+03 1.0 0.0e+00 0.0e+00 0.0e+00 11 10  0  0  0  11 10  0  0  0    26
+<a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/PC/PCApply.html#PCApply">PCApply</a>                2 1.0 2.1022e-05 1.0 9.99e+03 1.0 0.0e+00 0.0e+00 0.0e+00  1 24  0  0  0   1 24  0  0  0   475
+------------------------------------------------------------------------------------------------------------------------
+
+Memory usage is given in bytes:
+
+Object Type          Creations   Destructions     Memory  Descendants&#39; Mem.
+Reports information only for process 0.
+
+--- Event Stage 0: Main Stage
+
+              Vector     8              8        76224     0.
+              Matrix     2              2       134212     0.
+       Krylov Solver     1              1        18400     0.
+      Preconditioner     1              1         1032     0.
+           Index Set     3              3        10328     0.
+              Viewer     1              0            0     0.
+========================================================================================================================
+...
+</pre></div>
+</div>
+</div>
+<div class="section" id="writing-application-codes-with-petsc">
+<span id="sec-writing-application-codes"></span><h2>Writing Application Codes with PETSc<a class="headerlink" href="#writing-application-codes-with-petsc" title="Permalink to this headline">¶</a></h2>
+<p>The examples throughout the library demonstrate the software usage and
+can serve as templates for developing custom applications. We suggest
+that new PETSc users examine programs in the directories
+<code class="docutils literal notranslate"><span class="pre">${PETSC_DIR}/src/&lt;library&gt;/tutorials</span></code> where <code class="docutils literal notranslate"><span class="pre">&lt;library&gt;</span></code> denotes any
+of the PETSc libraries (listed in the following section), such as
+<code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/SNES/SNES.html#SNES">SNES</a></span></code> or <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSP.html#KSP">KSP</a></span></code> or <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/TS/TS.html#TS">TS</a></span></code>. The manual pages located at
+<code class="docutils literal notranslate"><span class="pre">${PETSC_DIR}/docs/index.htm</span></code> or
+<a class="reference external" href="https://www.mcs.anl.gov/petsc/documentation/">https://www.mcs.anl.gov/petsc/documentation/</a> provide links (organized by
+both routine names and concepts) to the tutorial examples.</p>
+<p>To write a new application program using PETSc, we suggest the following
+procedure:</p>
+<ol class="arabic simple">
+<li><p>Install and test PETSc according to the instructions at the PETSc web
+site.</p></li>
+<li><p>Make a working directory for your source code: for example,
+<code class="docutils literal notranslate"><span class="pre">mkdir</span> <span class="pre">$HOME/application</span></code></p></li>
+<li><p>Change to that working directory; for
+example,<code class="docutils literal notranslate"><span class="pre">cd</span> <span class="pre">$HOME/application</span></code></p></li>
+<li><p>Copy one of the examples in the directory that corresponds to the
+class of problem of interest into your working directory, for
+example, <code class="docutils literal notranslate"><span class="pre">cp</span> <span class="pre">$PETSC_DIR/src/snes/tutorials/ex19.c</span> <span class="pre">ex19.c</span></code></p></li>
+<li><p>Copy $PETSC_DIR/share/petsc/Makefile.user to your working directory,
+for example, <code class="docutils literal notranslate"><span class="pre">cp</span> <span class="pre">$PETSC_DIR/share/petsc/Makefile.user</span> <span class="pre">Makefile</span></code></p></li>
+<li><p>Compile and run the example program, for example,
+<code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">ex19;</span> <span class="pre">./ex19</span></code></p></li>
+<li><p>Use the example program as a starting point for developing a custom
+code.</p></li>
+</ol>
+<p>We highly recommend against the following since it requires changing
+your makefile for each new configuration/computing system but if you do
+not wish to include any PETSc utilities in your makefile, you can use
+the following commands in the PETSc root directory to get the
+information needed by your makefile:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make getlinklibs getincludedirs getcflags getcxxflags getfortranflags getccompiler getfortrancompiler getcxxcompiler
+</pre></div>
+</div>
+<p>All the libraries listed need to be linked into your executable and the
+include directories and flags need to be passed to the compiler. Usually
+this is done with <code class="docutils literal notranslate"><span class="pre">CFLAGS=&lt;list</span> <span class="pre">of</span> <span class="pre">-I</span> <span class="pre">and</span> <span class="pre">other</span> <span class="pre">flags&gt;</span></code> and
+<code class="docutils literal notranslate"><span class="pre">FFLAGS=&lt;list</span> <span class="pre">of</span> <span class="pre">-I</span> <span class="pre">and</span> <span class="pre">other</span> <span class="pre">flags&gt;</span></code> in your makefile.</p>
+</div>
+<div class="section" id="citing-petsc">
+<h2>Citing PETSc<a class="headerlink" href="#citing-petsc" title="Permalink to this headline">¶</a></h2>
+<p>If you use the TS component of PETSc please cite the following:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>@article{abhyankar2018petsc,
+  title={PETSc/<a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/TS/TS.html#TS">TS</a>: A Modern Scalable ODE/DAE Solver Library},
+  author={Abhyankar, Shrirang and Brown, Jed and Constantinescu, Emil M and Ghosh, Debojyoti and Smith, Barry F and Zhang, Hong},
+  journal={arXiv preprint arXiv:1806.01437},
+  year={2018}
+}
+</pre></div>
+</div>
+<p>When citing PETSc in a publication please cite the following:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>@Misc{petsc-web-page,
+   Author = &quot;Satish Balay and Shrirang Abhyankar and Mark~F. Adams and Jed Brown
+   and Peter Brune and Kris Buschelman and Lisandro Dalcin and Alp Dener and Victor Eijkhout
+   and William~D. Gropp and Dinesh Kaushik and Matthew~G. Knepley and Dave~A. May
+   and Lois Curfman McInnes and Richard Tran Mills and Todd Munson and Karl Rupp
+   and Patrick Sanan and Barry~F. Smith and Stefano Zampini and Hong Zhang and Hong Zhang&quot;,
+   Title  = &quot;{PETS}c {W}eb page&quot;,
+   Note   = &quot;https://www.mcs.anl.gov/petsc&quot;,
+   Year   = &quot;2020&quot;}
+
+@TechReport{petsc-user-ref,
+   Author = &quot;Satish Balay and Shrirang Abhyankar and Mark~F. Adams and Jed Brown
+   and Peter Brune and Kris Buschelman and Lisandro Dalcin and Alp Dener and Victor Eijkhout
+   and William~D. Gropp and Dinesh Kaushik and Matthew~G. Knepley and Dave~A. May
+   and Lois Curfman McInnes and Richard Tran Mills and Todd Munson and Karl Rupp
+   and Patrick Sanan and Barry~F. Smith and Stefano Zampini and Hong Zhang and Hong Zhang&quot;,
+   Title       = &quot;{PETS}c Users Manual&quot;,
+   Number      = &quot;ANL-95/11 - Revision 3.13&quot;,
+   Institution = &quot;Argonne National Laboratory&quot;,
+   Year        = &quot;2020&quot;}
+
+@InProceedings{petsc-efficient,
+   Author    = &quot;Satish Balay and William D. Gropp and Lois C. McInnes and Barry F. Smith&quot;,
+   Title     = &quot;Efficient Management of Parallelism in Object Oriented
+                Numerical Software Libraries&quot;,
+   Booktitle = &quot;Modern Software Tools in Scientific Computing&quot;,
+   Editor    = &quot;E. Arge and A. M. Bruaset and H. P. Langtangen&quot;,
+   Pages     = &quot;163--202&quot;,
+   Publisher = &quot;Birkhauser Press&quot;,
+   Year      = &quot;1997&quot;}
+</pre></div>
+</div>
+</div>
+<div class="section" id="directory-structure">
+<span id="sec-directory"></span><h2>Directory Structure<a class="headerlink" href="#directory-structure" title="Permalink to this headline">¶</a></h2>
+<p>We conclude this introduction with an overview of the organization of
+the PETSc software. The root directory of PETSc contains the following
+directories:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">docs</span></code> (only in the tarball distribution of PETSc; not the git
+repository) - All documentation for PETSc. The files <code class="docutils literal notranslate"><span class="pre">manual.pdf</span></code>
+contains the hyperlinked users manual, suitable for printing or
+on-screen viewering. Includes the subdirectory - <code class="docutils literal notranslate"><span class="pre">manualpages</span></code>
+(on-line manual pages).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">conf</span></code> - Base PETSc configuration files that define the standard
+make variables and rules used by PETSc</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">include</span></code> - All include files for PETSc that are visible to the
+user.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">include/petsc/finclude</span></code> - PETSc include files for Fortran
+programmers using the .F suffix (recommended).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">include/petsc/private</span></code> - Private PETSc include files that should
+<em>not</em> need to be used by application programmers.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">share</span></code> - Some small test matrices in data files</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">src</span></code> - The source code for all PETSc libraries, which currently
+includes</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">vec</span></code> - vectors,</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">is</span></code> - index sets,</p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">mat</span></code> - matrices,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ksp</span></code> - complete linear equations solvers,</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">ksp</span></code> - Krylov subspace accelerators,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pc</span></code> - preconditioners,</p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">snes</span></code> - nonlinear solvers</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ts</span></code> - ODE solvers and timestepping,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dm</span></code> - data management between meshes and solvers, vectors, and
+matrices,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sys</span></code> - general system-related routines,</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">logging</span></code> - PETSc logging and profiling routines,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">classes</span></code> - low-level classes</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">draw</span></code> - simple graphics,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">viewer</span></code> - mechanism for printing and visualizing PETSc
+objects,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bag</span></code> - mechanism for saving and loading from disk user
+data stored in C structs.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">random</span></code> - random number generators.</p></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p>Each PETSc source code library directory has the following
+subdirectories:</p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">tutorials</span></code> - Programs designed to teach users about PETSc.</dt><dd><p>These codes can serve as templates for the design of custom
+applications.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">tests</span></code> - Programs designed for thorough testing of PETSc. As</dt><dd><p>such, these codes are not intended for examination by users.</p>
+</dd>
+</dl>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">interface</span></code> - The calling sequences for the abstract interface to
+the component. Code here does not know about particular
+implementations.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">impls</span></code> - Source code for one or more implementations.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">utils</span></code> - Utility routines. Source here may know about the
+implementations, but ideally will not know about implementations for
+other components.</p></li>
+</ul>
+<hr><p id="id3"><dl class="citation">
+<dt class="label" id="id201"><span class="brackets"><a class="fn-backref" href="#id1">For94</a></span></dt>
+<dd><p>MPI Forum. MPI: a message-passing interface standard. <em>International J. Supercomputing Applications</em>, 1994.</p>
+</dd>
+<dt class="label" id="id292"><span class="brackets"><a class="fn-backref" href="#id2">GLS94</a></span></dt>
+<dd><p>William Gropp, Ewing Lusk, and Anthony Skjellum. <em>Using MPI: Portable Parallel Programming with the Message Passing Interface</em>. MIT Press, 1994.</p>
+</dd>
+</dl>
+</p>
+<span class="target" id="id1253"></span></div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="programming.html" title="Programming with PETSc"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="about_this_manual.html" title="About This Manual"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">PETSc 3.14.6 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >PETSc Users Manual</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="introduction.html" >Introduction to PETSc</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 1991-2021, UChicago Argonne, LLC and the PETSc Development Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.4.
+    </div>
+  </body>
+</html>

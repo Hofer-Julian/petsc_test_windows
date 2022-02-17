@@ -1,0 +1,71 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DM/PetscPartitionerPartition.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>PetscPartitionerPartition</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/DM/PetscPartitionerPartition.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="PetscPartitionerPartition"><H1>PetscPartitionerPartition</H1></A>
+Partition a graph 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscpartitioner.h" 
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../DM/PetscPartitionerPartition.html#PetscPartitionerPartition">PetscPartitionerPartition</A>(<A HREF="../DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</A> part, <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> nparts, <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> numVertices, <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> start[], <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> adjacency[], <A HREF="../PetscSection/PetscSection.html#PetscSection">PetscSection</A> vertexSection, <A HREF="../PetscSection/PetscSection.html#PetscSection">PetscSection</A> targetSection, <A HREF="../PetscSection/PetscSection.html#PetscSection">PetscSection</A> partSection, <A HREF="../IS/IS.html#IS">IS</A> *partition)
+</PRE>
+Collective on <A HREF="../DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</A>
+<P>
+<H3><FONT COLOR="#CC3333">Input Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>part    </B></TD><TD>- The <A HREF="../DM/PetscPartitioner.html#PetscPartitioner">PetscPartitioner</A>
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>nparts  </B></TD><TD>- Number of partitions
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>numVertices </B></TD><TD>- Number of vertices in the local part of the graph
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>start </B></TD><TD>- row pointers for the local part of the graph (CSR style)
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>adjacency </B></TD><TD>- adjacency list (CSR style)
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>vertexSection </B></TD><TD>- <A HREF="../PetscSection/PetscSection.html#PetscSection">PetscSection</A> describing the absolute weight of each local vertex (can be NULL)
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>targetSection </B></TD><TD>- <A HREF="../PetscSection/PetscSection.html#PetscSection">PetscSection</A> describing the absolute weight of each partition (can be NULL)
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Output Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>partSection     </B></TD><TD>- The <A HREF="../PetscSection/PetscSection.html#PetscSection">PetscSection</A> giving the division of points by partition
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>partition       </B></TD><TD>- The list of points by partition
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Options Database</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>-petscpartitioner_view </B></TD><TD>- View the partitioner information
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>-petscpartitioner_view_graph </B></TD><TD>- View the graph we are partitioning
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Notes</FONT></H3>
+The chart of the vertexSection (if present) must contain [0,numVertices), with the number of dofs in the section specifying the absolute weight for each vertex.
+The chart of the targetSection (if present) must contain [0,nparts), with the number of dofs in the section specifying the absolute weight for each partition. This information must be the same across processes, PETSc does not check it.
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+<A HREF="../DM/PetscPartitionerCreate.html#PetscPartitionerCreate">PetscPartitionerCreate</A>(), <A HREF="../PetscSection/PetscSectionCreate.html#PetscSectionCreate">PetscSectionCreate</A>(), <A HREF="../PetscSection/PetscSectionSetChart.html#PetscSectionSetChart">PetscSectionSetChart</A>(), <A HREF="../PetscSection/PetscSectionSetDof.html#PetscSectionSetDof">PetscSectionSetDof</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>developer<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/dm/partitioner/interface/partitioner.c.html#PetscPartitionerPartition">src/dm/partitioner/interface/partitioner.c</A>
+<P><H3><FONT COLOR="CC3333">Implementations</FONT></H3><A HREF="../../../src/dm/partitioner/impls/chaco/partchaco.c.html#PetscPartitionerPartition_Chaco">PetscPartitionerPartition_Chaco in src/dm/partitioner/impls/chaco/partchaco.c</A><BR>
+<A HREF="../../../src/dm/partitioner/impls/gather/partgather.c.html#PetscPartitionerPartition_Gather">PetscPartitionerPartition_Gather in src/dm/partitioner/impls/gather/partgather.c</A><BR>
+<A HREF="../../../src/dm/partitioner/impls/matpart/partmatpart.c.html#PetscPartitionerPartition_MatPartitioning">PetscPartitionerPartition_MatPartitioning in src/dm/partitioner/impls/matpart/partmatpart.c</A><BR>
+<A HREF="../../../src/dm/partitioner/impls/parmetis/partparmetis.c.html#PetscPartitionerPartition_ParMetis">PetscPartitionerPartition_ParMetis in src/dm/partitioner/impls/parmetis/partparmetis.c</A><BR>
+<A HREF="../../../src/dm/partitioner/impls/ptscotch/partptscotch.c.html#PetscPartitionerPartition_PTScotch">PetscPartitionerPartition_PTScotch in src/dm/partitioner/impls/ptscotch/partptscotch.c</A><BR>
+<A HREF="../../../src/dm/partitioner/impls/shell/partshell.c.html#PetscPartitionerPartition_Shell">PetscPartitionerPartition_Shell in src/dm/partitioner/impls/shell/partshell.c</A><BR>
+<A HREF="../../../src/dm/partitioner/impls/simple/partsimple.c.html#PetscPartitionerPartition_Simple">PetscPartitionerPartition_Simple in src/dm/partitioner/impls/simple/partsimple.c</A><BR>
+<BR><A HREF="./index.html">Index of all DM routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

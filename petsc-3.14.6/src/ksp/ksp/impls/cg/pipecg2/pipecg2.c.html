@@ -1,0 +1,734 @@
+<center><a href="pipecg2.c">Actual source code: pipecg2.c</a></center><br>
+
+<html>
+<head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/src/ksp/ksp/impls/cg/pipecg2/pipecg2.c.html" />
+<title></title>
+<meta name="generator" content="c2html 0.9.4">
+<meta name="date" content="2021-03-30T16:51:19+00:00">
+</head>
+
+<body bgcolor="#FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 src/ksp/ksp/impls/cg/pipecg2/pipecg2.c.html "><small>Report Typos and Errors</small></a></div>
+<pre width="80">
+<a name="line1">  1: </a>#include <A href="../../../../../../include/petsc/private/kspimpl.h.html">&lt;petsc/private/kspimpl.h&gt;</A>
+
+<a name="line3">  3: </a><font color="#B22222">/* The auxiliary functions below are merged vector operations that load vectors from memory once and use</font>
+<a name="line4">  4: </a><font color="#B22222">   the data multiple times by performing vector operations element-wise. These functions</font>
+<a name="line5">  5: </a><font color="#B22222">   only apply to sequential vectors.</font>
+<a name="line6">  6: </a><font color="#B22222">*/</font>
+<a name="line7">  7: </a><font color="#B22222">/*   VecMergedDot_Private function merges the dot products for gamma, delta and dp */</font>
+<a name="line8">  8: </a><strong><font color="#4169E1"><a name="VecMergedDot_Private"></a>static <a href="../../../../..2/../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> VecMergedDot_Private(<a href="../../../../..2/../docs/manualpages/Vec/Vec.html#Vec">Vec</a> U,<a href="../../../../..2/../docs/manualpages/Vec/Vec.html#Vec">Vec</a> W,<a href="../../../../..2/../docs/manualpages/Vec/Vec.html#Vec">Vec</a> R,<a href="../../../../..2/../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> normtype,<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> *ru, <a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> *wu, <a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> *uu)</font></strong>
+<a name="line9">  9: </a>{
+<a name="line10"> 10: </a>  const <a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> *PETSC_RESTRICT PU, *PETSC_RESTRICT PW, *PETSC_RESTRICT PR;
+<a name="line11"> 11: </a>  <a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>       sumru = 0.0, sumwu = 0.0, sumuu = 0.0;
+<a name="line12"> 12: </a>  <a href="../../../../..2/../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>          j, n;
+<a name="line13"> 13: </a>  <a href="../../../../..2/../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>    ierr;
+
+<a name="line16"> 16: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecGetArrayRead.html#VecGetArrayRead">VecGetArrayRead</a>(U,(const <a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;PU);
+<a name="line17"> 17: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecGetArrayRead.html#VecGetArrayRead">VecGetArrayRead</a>(W,(const <a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;PW);
+<a name="line18"> 18: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecGetArrayRead.html#VecGetArrayRead">VecGetArrayRead</a>(R,(const <a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;PR);
+<a name="line19"> 19: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecGetLocalSize.html#VecGetLocalSize">VecGetLocalSize</a>(U,&amp;n);
+
+<a name="line21"> 21: </a>  <font color="#4169E1">if</font> (normtype==<a href="../../../../..2/../docs/manualpages/KSP/KSP_NORM_PRECONDITIONED.html#KSP_NORM_PRECONDITIONED">KSP_NORM_PRECONDITIONED</a>) {
+<a name="line22"> 22: </a>    PetscPragmaSIMD
+<a name="line23"> 23: </a>    <font color="#4169E1">for</font> (j=0; j&lt;n; j++) {
+<a name="line24"> 24: </a>      sumwu += PW[j] * PetscConj(PU[j]);
+<a name="line25"> 25: </a>      sumru += PR[j] * PetscConj(PU[j]);
+<a name="line26"> 26: </a>      sumuu += PU[j] * PetscConj(PU[j]);
+<a name="line27"> 27: </a>    }
+<a name="line28"> 28: </a>  } <font color="#4169E1">else</font> <font color="#4169E1">if</font> (normtype==<a href="../../../../..2/../docs/manualpages/KSP/KSP_NORM_UNPRECONDITIONED.html#KSP_NORM_UNPRECONDITIONED">KSP_NORM_UNPRECONDITIONED</a>) {
+<a name="line29"> 29: </a>    PetscPragmaSIMD
+<a name="line30"> 30: </a>    <font color="#4169E1">for</font> (j=0; j&lt;n; j++) {
+<a name="line31"> 31: </a>      sumwu += PW[j] * PetscConj(PU[j]);
+<a name="line32"> 32: </a>      sumru += PR[j] * PetscConj(PU[j]);
+<a name="line33"> 33: </a>      sumuu += PR[j] * PetscConj(PR[j]);
+<a name="line34"> 34: </a>    }
+<a name="line35"> 35: </a>  } <font color="#4169E1">else</font> <font color="#4169E1">if</font> (normtype==<a href="../../../../..2/../docs/manualpages/KSP/KSP_NORM_NATURAL.html#KSP_NORM_NATURAL">KSP_NORM_NATURAL</a>) {
+<a name="line36"> 36: </a>    PetscPragmaSIMD
+<a name="line37"> 37: </a>    <font color="#4169E1">for</font> (j=0; j&lt;n; j++) {
+<a name="line38"> 38: </a>      sumwu += PW[j] * PetscConj(PU[j]);
+<a name="line39"> 39: </a>      sumru += PR[j] * PetscConj(PU[j]);
+<a name="line40"> 40: </a>    }
+<a name="line41"> 41: </a>    sumuu = sumru;
+<a name="line42"> 42: </a>  }
+
+<a name="line44"> 44: </a>  *ru = sumru;
+<a name="line45"> 45: </a>  *wu = sumwu;
+<a name="line46"> 46: </a>  *uu = sumuu;
+
+<a name="line48"> 48: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecRestoreArrayRead.html#VecRestoreArrayRead">VecRestoreArrayRead</a>(U,(const <a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;PU);
+<a name="line49"> 49: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecRestoreArrayRead.html#VecRestoreArrayRead">VecRestoreArrayRead</a>(W,(const <a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;PW);
+<a name="line50"> 50: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecRestoreArrayRead.html#VecRestoreArrayRead">VecRestoreArrayRead</a>(R,(const <a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;PR);
+<a name="line51"> 51: </a>  <font color="#4169E1">return</font>(0);
+<a name="line52"> 52: </a>}
+
+<a name="line54"> 54: </a><font color="#B22222">/*   VecMergedDot2_Private function merges the dot products for lambda_1 and lambda_4 */</font>
+<a name="line55"> 55: </a><strong><font color="#4169E1"><a name="VecMergedDot2_Private"></a>static <a href="../../../../..2/../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> VecMergedDot2_Private(<a href="../../../../..2/../docs/manualpages/Vec/Vec.html#Vec">Vec</a> N,<a href="../../../../..2/../docs/manualpages/Vec/Vec.html#Vec">Vec</a> M,<a href="../../../../..2/../docs/manualpages/Vec/Vec.html#Vec">Vec</a> W,<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> *wm,<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> *nm)</font></strong>
+<a name="line56"> 56: </a>{
+<a name="line57"> 57: </a>  const <a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> *PETSC_RESTRICT PN, *PETSC_RESTRICT PM, *PETSC_RESTRICT PW;
+<a name="line58"> 58: </a>  <a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>       sumwm = 0.0, sumnm = 0.0;
+<a name="line59"> 59: </a>  <a href="../../../../..2/../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>          j, n;
+<a name="line60"> 60: </a>  <a href="../../../../..2/../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>    ierr;
+
+<a name="line63"> 63: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecGetArrayRead.html#VecGetArrayRead">VecGetArrayRead</a>(W,(const <a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;PW);
+<a name="line64"> 64: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecGetArrayRead.html#VecGetArrayRead">VecGetArrayRead</a>(N,(const <a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;PN);
+<a name="line65"> 65: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecGetArrayRead.html#VecGetArrayRead">VecGetArrayRead</a>(M,(const <a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;PM);
+<a name="line66"> 66: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecGetLocalSize.html#VecGetLocalSize">VecGetLocalSize</a>(N,&amp;n);
+
+<a name="line68"> 68: </a>  PetscPragmaSIMD
+<a name="line69"> 69: </a>  <font color="#4169E1">for</font> (j=0; j&lt;n; j++){
+<a name="line70"> 70: </a>    sumwm += PW[j] * PetscConj(PM[j]);
+<a name="line71"> 71: </a>    sumnm += PN[j] * PetscConj(PM[j]);
+<a name="line72"> 72: </a>  }
+
+<a name="line74"> 74: </a>  *wm = sumwm;
+<a name="line75"> 75: </a>  *nm = sumnm;
+
+<a name="line77"> 77: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecRestoreArrayRead.html#VecRestoreArrayRead">VecRestoreArrayRead</a>(W,(const <a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;PW);
+<a name="line78"> 78: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecRestoreArrayRead.html#VecRestoreArrayRead">VecRestoreArrayRead</a>(N,(const <a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;PN);
+<a name="line79"> 79: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecRestoreArrayRead.html#VecRestoreArrayRead">VecRestoreArrayRead</a>(M,(const <a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;PM);
+<a name="line80"> 80: </a>  <font color="#4169E1">return</font>(0);
+<a name="line81"> 81: </a>}
+
+<a name="line83"> 83: </a><font color="#B22222">/*   VecMergedOpsShort_Private function merges the dot products, AXPY and SAXPY operations for all vectors for iteration 0  */</font>
+<a name="line84"> 84: </a><strong><font color="#4169E1"><a name="VecMergedOpsShort_Private"></a>static <a href="../../../../..2/../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> VecMergedOpsShort_Private(<a href="../../../../..2/../docs/manualpages/Vec/Vec.html#Vec">Vec</a> vx,<a href="../../../../..2/../docs/manualpages/Vec/Vec.html#Vec">Vec</a> vr,<a href="../../../../..2/../docs/manualpages/Vec/Vec.html#Vec">Vec</a> vz,<a href="../../../../..2/../docs/manualpages/Vec/Vec.html#Vec">Vec</a> vw,<a href="../../../../..2/../docs/manualpages/Vec/Vec.html#Vec">Vec</a> vp,<a href="../../../../..2/../docs/manualpages/Vec/Vec.html#Vec">Vec</a> vq,<a href="../../../../..2/../docs/manualpages/Vec/Vec.html#Vec">Vec</a> vc,<a href="../../../../..2/../docs/manualpages/Vec/Vec.html#Vec">Vec</a> vd,<a href="../../../../..2/../docs/manualpages/Vec/Vec.html#Vec">Vec</a> vg0,<a href="../../../../..2/../docs/manualpages/Vec/Vec.html#Vec">Vec</a> vh0,<a href="../../../../..2/../docs/manualpages/Vec/Vec.html#Vec">Vec</a> vg1,<a href="../../../../..2/../docs/manualpages/Vec/Vec.html#Vec">Vec</a> vh1,<a href="../../../../..2/../docs/manualpages/Vec/Vec.html#Vec">Vec</a> vs,<a href="../../../../..2/../docs/manualpages/Vec/Vec.html#Vec">Vec</a> va1,<a href="../../../../..2/../docs/manualpages/Vec/Vec.html#Vec">Vec</a> vb1,<a href="../../../../..2/../docs/manualpages/Vec/Vec.html#Vec">Vec</a> ve,<a href="../../../../..2/../docs/manualpages/Vec/Vec.html#Vec">Vec</a> vf,<a href="../../../../..2/../docs/manualpages/Vec/Vec.html#Vec">Vec</a> vm,<a href="../../../../..2/../docs/manualpages/Vec/Vec.html#Vec">Vec</a> vn,<a href="../../../../..2/../docs/manualpages/Vec/Vec.html#Vec">Vec</a> vu,<a href="../../../../..2/../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> normtype,<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> beta0,<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> alpha0,<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> beta1,<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> alpha1,<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> *lambda)</font></strong>
+<a name="line85"> 85: </a>{
+<a name="line86"> 86: </a>  <a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>       *PETSC_RESTRICT px, *PETSC_RESTRICT pr, *PETSC_RESTRICT pz, *PETSC_RESTRICT pw;
+<a name="line87"> 87: </a>  <a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>       *PETSC_RESTRICT pp, *PETSC_RESTRICT pq;
+<a name="line88"> 88: </a>  <a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>       *PETSC_RESTRICT pc, *PETSC_RESTRICT pd, *PETSC_RESTRICT pg0, *PETSC_RESTRICT ph0, *PETSC_RESTRICT pg1,*PETSC_RESTRICT ph1,*PETSC_RESTRICT ps,*PETSC_RESTRICT pa1,*PETSC_RESTRICT pb1, *PETSC_RESTRICT pe,*PETSC_RESTRICT pf,*PETSC_RESTRICT pm,*PETSC_RESTRICT pn, *PETSC_RESTRICT pu;
+<a name="line89"> 89: </a>  <a href="../../../../..2/../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>          j, n;
+<a name="line90"> 90: </a>  <a href="../../../../..2/../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>    ierr;
+
+<a name="line93"> 93: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecGetArray.html#VecGetArray">VecGetArray</a>(vx,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;px);
+<a name="line94"> 94: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecGetArray.html#VecGetArray">VecGetArray</a>(vr,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;pr);
+<a name="line95"> 95: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecGetArray.html#VecGetArray">VecGetArray</a>(vz,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;pz);
+<a name="line96"> 96: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecGetArray.html#VecGetArray">VecGetArray</a>(vw,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;pw);
+<a name="line97"> 97: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecGetArray.html#VecGetArray">VecGetArray</a>(vp,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;pp);
+<a name="line98"> 98: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecGetArray.html#VecGetArray">VecGetArray</a>(vq,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;pq);
+<a name="line99"> 99: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecGetArray.html#VecGetArray">VecGetArray</a>(vc,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;pc);
+<a name="line100">100: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecGetArray.html#VecGetArray">VecGetArray</a>(vd,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;pd);
+<a name="line101">101: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecGetArray.html#VecGetArray">VecGetArray</a>(vg0,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;pg0);
+<a name="line102">102: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecGetArray.html#VecGetArray">VecGetArray</a>(vh0,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;ph0);
+<a name="line103">103: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecGetArray.html#VecGetArray">VecGetArray</a>(vg1,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;pg1);
+<a name="line104">104: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecGetArray.html#VecGetArray">VecGetArray</a>(vh1,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;ph1);
+<a name="line105">105: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecGetArray.html#VecGetArray">VecGetArray</a>(vs,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;ps);
+<a name="line106">106: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecGetArray.html#VecGetArray">VecGetArray</a>(va1,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;pa1);
+<a name="line107">107: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecGetArray.html#VecGetArray">VecGetArray</a>(vb1,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;pb1);
+<a name="line108">108: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecGetArray.html#VecGetArray">VecGetArray</a>(ve,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;pe);
+<a name="line109">109: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecGetArray.html#VecGetArray">VecGetArray</a>(vf,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;pf);
+<a name="line110">110: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecGetArray.html#VecGetArray">VecGetArray</a>(vm,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;pm);
+<a name="line111">111: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecGetArray.html#VecGetArray">VecGetArray</a>(vn,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;pn);
+<a name="line112">112: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecGetArray.html#VecGetArray">VecGetArray</a>(vu,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;pu);
+
+<a name="line114">114: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecGetLocalSize.html#VecGetLocalSize">VecGetLocalSize</a>(vx,&amp;n);
+<a name="line115">115: </a>  <font color="#4169E1">for</font> (j=0; j&lt;15; j++) lambda[j] = 0.0;
+
+<a name="line117">117: </a>  <font color="#4169E1">if</font> (normtype==<a href="../../../../..2/../docs/manualpages/KSP/KSP_NORM_PRECONDITIONED.html#KSP_NORM_PRECONDITIONED">KSP_NORM_PRECONDITIONED</a>) {
+<a name="line118">118: </a>    PetscPragmaSIMD
+<a name="line119">119: </a>    <font color="#4169E1">for</font> (j=0; j&lt;n; j++) {
+<a name="line120">120: </a>      pz[j] = pn[j];
+<a name="line121">121: </a>      pq[j] = pm[j];
+<a name="line122">122: </a>      ps[j] = pw[j];
+<a name="line123">123: </a>      pp[j] = pu[j];
+<a name="line124">124: </a>      pc[j] = pg0[j];
+<a name="line125">125: </a>      pd[j] = ph0[j];
+<a name="line126">126: </a>      pa1[j] = pe[j];
+<a name="line127">127: </a>      pb1[j] = pf[j];
+
+<a name="line129">129: </a>      px[j] = px[j] + alpha0 * pp[j];
+<a name="line130">130: </a>      pr[j] = pr[j] - alpha0 * ps[j];
+<a name="line131">131: </a>      pu[j] = pu[j] - alpha0 * pq[j];
+<a name="line132">132: </a>      pw[j] = pw[j] - alpha0 * pz[j];
+<a name="line133">133: </a>      pm[j] = pm[j] - alpha0 * pc[j];
+<a name="line134">134: </a>      pn[j] = pn[j] - alpha0 * pd[j];
+<a name="line135">135: </a>      pg0[j] = pg0[j] - alpha0 * pa1[j];
+<a name="line136">136: </a>      ph0[j] = ph0[j] - alpha0 * pb1[j];
+
+<a name="line138">138: </a>      pg1[j] = pg0[j];
+<a name="line139">139: </a>      ph1[j] = ph0[j];
+
+<a name="line141">141: </a>      pz[j] = pn[j] + beta1 * pz[j];
+<a name="line142">142: </a>      pq[j] = pm[j] + beta1 * pq[j];
+<a name="line143">143: </a>      ps[j] = pw[j] + beta1 * ps[j];
+<a name="line144">144: </a>      pp[j] = pu[j] + beta1 * pp[j];
+<a name="line145">145: </a>      pc[j] = pg0[j] + beta1 * pc[j];
+<a name="line146">146: </a>      pd[j] = ph0[j] + beta1 * pd[j];
+
+<a name="line148">148: </a>      px[j] = px[j] + alpha1 * pp[j];
+<a name="line149">149: </a>      pr[j] = pr[j] - alpha1 * ps[j];
+<a name="line150">150: </a>      pu[j] = pu[j] - alpha1 * pq[j];
+<a name="line151">151: </a>      pw[j] = pw[j] - alpha1 * pz[j];
+<a name="line152">152: </a>      pm[j] = pm[j] - alpha1 * pc[j];
+<a name="line153">153: </a>      pn[j] = pn[j] - alpha1 * pd[j];
+
+<a name="line155">155: </a>      lambda[0] += ps[j] * PetscConj(pu[j]);   lambda[1] += pw[j] * PetscConj(pm[j]);
+<a name="line156">156: </a>      lambda[2] += pw[j] * PetscConj(pq[j]);   lambda[4] += ps[j] * PetscConj(pq[j]);
+<a name="line157">157: </a>      lambda[6] += pn[j] * PetscConj(pm[j]);   lambda[7] += pn[j] * PetscConj(pq[j]);
+<a name="line158">158: </a>      lambda[9] += pz[j] * PetscConj(pq[j]);   lambda[10] += pr[j] * PetscConj(pu[j]);
+<a name="line159">159: </a>      lambda[11] += pw[j] * PetscConj(pu[j]);  lambda[12] += pu[j] * PetscConj(pu[j]);
+<a name="line160">160: </a>    }
+<a name="line161">161: </a>    lambda[3] = PetscConj(lambda[2]);
+<a name="line162">162: </a>    lambda[5] = PetscConj(lambda[1]);
+<a name="line163">163: </a>    lambda[8] = PetscConj(lambda[7]);
+<a name="line164">164: </a>    lambda[13] = PetscConj(lambda[11]);
+<a name="line165">165: </a>    lambda[14] = PetscConj(lambda[0]);
+
+<a name="line167">167: </a>  } <font color="#4169E1">else</font> <font color="#4169E1">if</font> (normtype==<a href="../../../../..2/../docs/manualpages/KSP/KSP_NORM_UNPRECONDITIONED.html#KSP_NORM_UNPRECONDITIONED">KSP_NORM_UNPRECONDITIONED</a>) {
+<a name="line168">168: </a>    PetscPragmaSIMD
+<a name="line169">169: </a>    <font color="#4169E1">for</font> (j=0; j&lt;n; j++) {
+<a name="line170">170: </a>      pz[j] = pn[j];
+<a name="line171">171: </a>      pq[j] = pm[j];
+<a name="line172">172: </a>      ps[j] = pw[j];
+<a name="line173">173: </a>      pp[j] = pu[j];
+<a name="line174">174: </a>      pc[j] = pg0[j];
+<a name="line175">175: </a>      pd[j] = ph0[j];
+<a name="line176">176: </a>      pa1[j] = pe[j];
+<a name="line177">177: </a>      pb1[j] = pf[j];
+
+<a name="line179">179: </a>      px[j] = px[j] + alpha0 * pp[j];
+<a name="line180">180: </a>      pr[j] = pr[j] - alpha0 * ps[j];
+<a name="line181">181: </a>      pu[j] = pu[j] - alpha0 * pq[j];
+<a name="line182">182: </a>      pw[j] = pw[j] - alpha0 * pz[j];
+<a name="line183">183: </a>      pm[j] = pm[j] - alpha0 * pc[j];
+<a name="line184">184: </a>      pn[j] = pn[j] - alpha0 * pd[j];
+<a name="line185">185: </a>      pg0[j] = pg0[j] - alpha0 * pa1[j];
+<a name="line186">186: </a>      ph0[j] = ph0[j] - alpha0 * pb1[j];
+
+<a name="line188">188: </a>      pg1[j] = pg0[j];
+<a name="line189">189: </a>      ph1[j] = ph0[j];
+
+<a name="line191">191: </a>      pz[j] = pn[j] + beta1 * pz[j];
+<a name="line192">192: </a>      pq[j] = pm[j] + beta1 * pq[j];
+<a name="line193">193: </a>      ps[j] = pw[j] + beta1 * ps[j];
+<a name="line194">194: </a>      pp[j] = pu[j] + beta1 * pp[j];
+<a name="line195">195: </a>      pc[j] = pg0[j] + beta1 * pc[j];
+<a name="line196">196: </a>      pd[j] = ph0[j] + beta1 * pd[j];
+
+<a name="line198">198: </a>      px[j] = px[j] + alpha1 * pp[j];
+<a name="line199">199: </a>      pr[j] = pr[j] - alpha1 * ps[j];
+<a name="line200">200: </a>      pu[j] = pu[j] - alpha1 * pq[j];
+<a name="line201">201: </a>      pw[j] = pw[j] - alpha1 * pz[j];
+<a name="line202">202: </a>      pm[j] = pm[j] - alpha1 * pc[j];
+<a name="line203">203: </a>      pn[j] = pn[j] - alpha1 * pd[j];
+
+<a name="line205">205: </a>      lambda[0] += ps[j] * PetscConj(pu[j]);   lambda[1] += pw[j] * PetscConj(pm[j]);
+<a name="line206">206: </a>      lambda[2] += pw[j] * PetscConj(pq[j]);   lambda[4] += ps[j] * PetscConj(pq[j]);
+<a name="line207">207: </a>      lambda[6] += pn[j] * PetscConj(pm[j]);   lambda[7] += pn[j] * PetscConj(pq[j]);
+<a name="line208">208: </a>      lambda[9] += pz[j] * PetscConj(pq[j]);   lambda[10] += pr[j] * PetscConj(pu[j]);
+<a name="line209">209: </a>      lambda[11] += pw[j] * PetscConj(pu[j]);  lambda[12] += pr[j] * PetscConj(pr[j]);
+<a name="line210">210: </a>    }
+<a name="line211">211: </a>    lambda[3] = PetscConj(lambda[2]);
+<a name="line212">212: </a>    lambda[5] = PetscConj(lambda[1]);
+<a name="line213">213: </a>    lambda[8] = PetscConj(lambda[7]);
+<a name="line214">214: </a>    lambda[13] = PetscConj(lambda[11]);
+<a name="line215">215: </a>    lambda[14] = PetscConj(lambda[0]);
+
+<a name="line217">217: </a>  } <font color="#4169E1">else</font> <font color="#4169E1">if</font> (normtype==<a href="../../../../..2/../docs/manualpages/KSP/KSP_NORM_NATURAL.html#KSP_NORM_NATURAL">KSP_NORM_NATURAL</a>) {
+<a name="line218">218: </a>    PetscPragmaSIMD
+<a name="line219">219: </a>    <font color="#4169E1">for</font> (j=0; j&lt;n; j++) {
+<a name="line220">220: </a>      pz[j] = pn[j];
+<a name="line221">221: </a>      pq[j] = pm[j];
+<a name="line222">222: </a>      ps[j] = pw[j];
+<a name="line223">223: </a>      pp[j] = pu[j];
+<a name="line224">224: </a>      pc[j] = pg0[j];
+<a name="line225">225: </a>      pd[j] = ph0[j];
+<a name="line226">226: </a>      pa1[j] = pe[j];
+<a name="line227">227: </a>      pb1[j] = pf[j];
+
+<a name="line229">229: </a>      px[j] = px[j] + alpha0 * pp[j];
+<a name="line230">230: </a>      pr[j] = pr[j] - alpha0 * ps[j];
+<a name="line231">231: </a>      pu[j] = pu[j] - alpha0 * pq[j];
+<a name="line232">232: </a>      pw[j] = pw[j] - alpha0 * pz[j];
+<a name="line233">233: </a>      pm[j] = pm[j] - alpha0 * pc[j];
+<a name="line234">234: </a>      pn[j] = pn[j] - alpha0 * pd[j];
+<a name="line235">235: </a>      pg0[j] = pg0[j] - alpha0 * pa1[j];
+<a name="line236">236: </a>      ph0[j] = ph0[j] - alpha0 * pb1[j];
+
+<a name="line238">238: </a>      pg1[j] = pg0[j];
+<a name="line239">239: </a>      ph1[j] = ph0[j];
+
+<a name="line241">241: </a>      pz[j] = pn[j] + beta1 * pz[j];
+<a name="line242">242: </a>      pq[j] = pm[j] + beta1 * pq[j];
+<a name="line243">243: </a>      ps[j] = pw[j] + beta1 * ps[j];
+<a name="line244">244: </a>      pp[j] = pu[j] + beta1 * pp[j];
+<a name="line245">245: </a>      pc[j] = pg0[j] + beta1 * pc[j];
+<a name="line246">246: </a>      pd[j] = ph0[j] + beta1 * pd[j];
+
+<a name="line248">248: </a>      px[j] = px[j] + alpha1 * pp[j];
+<a name="line249">249: </a>      pr[j] = pr[j] - alpha1 * ps[j];
+<a name="line250">250: </a>      pu[j] = pu[j] - alpha1 * pq[j];
+<a name="line251">251: </a>      pw[j] = pw[j] - alpha1 * pz[j];
+<a name="line252">252: </a>      pm[j] = pm[j] - alpha1 * pc[j];
+<a name="line253">253: </a>      pn[j] = pn[j] - alpha1 * pd[j];
+
+<a name="line255">255: </a>      lambda[0] += ps[j] * PetscConj(pu[j]);   lambda[1] += pw[j] * PetscConj(pm[j]);
+<a name="line256">256: </a>      lambda[2] += pw[j] * PetscConj(pq[j]);   lambda[4] += ps[j] * PetscConj(pq[j]);
+<a name="line257">257: </a>      lambda[6] += pn[j] * PetscConj(pm[j]);   lambda[7] += pn[j] * PetscConj(pq[j]);
+<a name="line258">258: </a>      lambda[9] += pz[j] * PetscConj(pq[j]);   lambda[10] += pr[j] * PetscConj(pu[j]);
+<a name="line259">259: </a>      lambda[11] += pw[j] * PetscConj(pu[j]);
+<a name="line260">260: </a>    }
+<a name="line261">261: </a>    lambda[3] = PetscConj(lambda[2]);
+<a name="line262">262: </a>    lambda[5] = PetscConj(lambda[1]);
+<a name="line263">263: </a>    lambda[8] = PetscConj(lambda[7]);
+<a name="line264">264: </a>    lambda[13] = PetscConj(lambda[11]);
+<a name="line265">265: </a>    lambda[14] = PetscConj(lambda[0]);
+<a name="line266">266: </a>    lambda[12] = lambda[10];
+
+<a name="line268">268: </a>  }
+
+<a name="line270">270: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecRestoreArray.html#VecRestoreArray">VecRestoreArray</a>(vx,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;px);
+<a name="line271">271: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecRestoreArray.html#VecRestoreArray">VecRestoreArray</a>(vr,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;pr);
+<a name="line272">272: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecRestoreArray.html#VecRestoreArray">VecRestoreArray</a>(vz,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;pz);
+<a name="line273">273: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecRestoreArray.html#VecRestoreArray">VecRestoreArray</a>(vw,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;pw);
+<a name="line274">274: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecRestoreArray.html#VecRestoreArray">VecRestoreArray</a>(vp,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;pp);
+<a name="line275">275: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecRestoreArray.html#VecRestoreArray">VecRestoreArray</a>(vq,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;pq);
+<a name="line276">276: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecRestoreArray.html#VecRestoreArray">VecRestoreArray</a>(vc,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;pc);
+<a name="line277">277: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecRestoreArray.html#VecRestoreArray">VecRestoreArray</a>(vd,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;pd);
+<a name="line278">278: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecRestoreArray.html#VecRestoreArray">VecRestoreArray</a>(vg0,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;pg0);
+<a name="line279">279: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecRestoreArray.html#VecRestoreArray">VecRestoreArray</a>(vh0,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;ph0);
+<a name="line280">280: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecRestoreArray.html#VecRestoreArray">VecRestoreArray</a>(vg1,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;pg1);
+<a name="line281">281: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecRestoreArray.html#VecRestoreArray">VecRestoreArray</a>(vh1,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;ph1);
+<a name="line282">282: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecRestoreArray.html#VecRestoreArray">VecRestoreArray</a>(vs,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;ps);
+<a name="line283">283: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecRestoreArray.html#VecRestoreArray">VecRestoreArray</a>(va1,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;pa1);
+<a name="line284">284: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecRestoreArray.html#VecRestoreArray">VecRestoreArray</a>(vb1,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;pb1);
+<a name="line285">285: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecRestoreArray.html#VecRestoreArray">VecRestoreArray</a>(ve,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;pe);
+<a name="line286">286: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecRestoreArray.html#VecRestoreArray">VecRestoreArray</a>(vf,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;pf);
+<a name="line287">287: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecRestoreArray.html#VecRestoreArray">VecRestoreArray</a>(vm,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;pm);
+<a name="line288">288: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecRestoreArray.html#VecRestoreArray">VecRestoreArray</a>(vn,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;pn);
+<a name="line289">289: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecRestoreArray.html#VecRestoreArray">VecRestoreArray</a>(vu,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;pu);
+<a name="line290">290: </a>  <font color="#4169E1">return</font>(0);
+<a name="line291">291: </a>}
+
+<a name="line293">293: </a><font color="#B22222">/*   VecMergedOps_Private function merges the dot products, AXPY and SAXPY operations for all vectors for iteration &gt; 0  */</font>
+<a name="line294">294: </a><strong><font color="#4169E1"><a name="VecMergedOps_Private"></a>static <a href="../../../../..2/../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> VecMergedOps_Private(<a href="../../../../..2/../docs/manualpages/Vec/Vec.html#Vec">Vec</a> vx,<a href="../../../../..2/../docs/manualpages/Vec/Vec.html#Vec">Vec</a> vr,<a href="../../../../..2/../docs/manualpages/Vec/Vec.html#Vec">Vec</a> vz,<a href="../../../../..2/../docs/manualpages/Vec/Vec.html#Vec">Vec</a> vw,<a href="../../../../..2/../docs/manualpages/Vec/Vec.html#Vec">Vec</a> vp,<a href="../../../../..2/../docs/manualpages/Vec/Vec.html#Vec">Vec</a> vq,<a href="../../../../..2/../docs/manualpages/Vec/Vec.html#Vec">Vec</a> vc,<a href="../../../../..2/../docs/manualpages/Vec/Vec.html#Vec">Vec</a> vd,<a href="../../../../..2/../docs/manualpages/Vec/Vec.html#Vec">Vec</a> vg0,<a href="../../../../..2/../docs/manualpages/Vec/Vec.html#Vec">Vec</a> vh0,<a href="../../../../..2/../docs/manualpages/Vec/Vec.html#Vec">Vec</a> vg1,<a href="../../../../..2/../docs/manualpages/Vec/Vec.html#Vec">Vec</a> vh1,<a href="../../../../..2/../docs/manualpages/Vec/Vec.html#Vec">Vec</a> vs,<a href="../../../../..2/../docs/manualpages/Vec/Vec.html#Vec">Vec</a> va1,<a href="../../../../..2/../docs/manualpages/Vec/Vec.html#Vec">Vec</a> vb1,<a href="../../../../..2/../docs/manualpages/Vec/Vec.html#Vec">Vec</a> ve,<a href="../../../../..2/../docs/manualpages/Vec/Vec.html#Vec">Vec</a> vf,<a href="../../../../..2/../docs/manualpages/Vec/Vec.html#Vec">Vec</a> vm,<a href="../../../../..2/../docs/manualpages/Vec/Vec.html#Vec">Vec</a> vn,<a href="../../../../..2/../docs/manualpages/Vec/Vec.html#Vec">Vec</a> vu,<a href="../../../../..2/../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> normtype,<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> beta0,<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> alpha0,<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> beta1,<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> alpha1,<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> *lambda, <a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> alphaold)</font></strong>
+<a name="line295">295: </a>{
+<a name="line296">296: </a>  <a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>       *PETSC_RESTRICT px, *PETSC_RESTRICT pr, *PETSC_RESTRICT pz, *PETSC_RESTRICT pw;
+<a name="line297">297: </a>  <a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>       *PETSC_RESTRICT pp, *PETSC_RESTRICT pq;
+<a name="line298">298: </a>  <a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>       *PETSC_RESTRICT pc,  *PETSC_RESTRICT pd, *PETSC_RESTRICT pg0,  *PETSC_RESTRICT ph0,  *PETSC_RESTRICT pg1, *PETSC_RESTRICT ph1,*PETSC_RESTRICT ps, *PETSC_RESTRICT pa1,*PETSC_RESTRICT pb1,*PETSC_RESTRICT pe,*PETSC_RESTRICT pf, *PETSC_RESTRICT pm,*PETSC_RESTRICT pn, *PETSC_RESTRICT pu;
+<a name="line299">299: </a>  <a href="../../../../..2/../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>          j, n;
+<a name="line300">300: </a>  <a href="../../../../..2/../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>    ierr;
+
+<a name="line303">303: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecGetArray.html#VecGetArray">VecGetArray</a>(vx,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;px);
+<a name="line304">304: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecGetArray.html#VecGetArray">VecGetArray</a>(vr,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;pr);
+<a name="line305">305: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecGetArray.html#VecGetArray">VecGetArray</a>(vz,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;pz);
+<a name="line306">306: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecGetArray.html#VecGetArray">VecGetArray</a>(vw,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;pw);
+<a name="line307">307: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecGetArray.html#VecGetArray">VecGetArray</a>(vp,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;pp);
+<a name="line308">308: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecGetArray.html#VecGetArray">VecGetArray</a>(vq,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;pq);
+<a name="line309">309: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecGetArray.html#VecGetArray">VecGetArray</a>(vc,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;pc);
+<a name="line310">310: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecGetArray.html#VecGetArray">VecGetArray</a>(vd,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;pd);
+<a name="line311">311: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecGetArray.html#VecGetArray">VecGetArray</a>(vg0,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;pg0);
+<a name="line312">312: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecGetArray.html#VecGetArray">VecGetArray</a>(vh0,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;ph0);
+<a name="line313">313: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecGetArray.html#VecGetArray">VecGetArray</a>(vg1,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;pg1);
+<a name="line314">314: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecGetArray.html#VecGetArray">VecGetArray</a>(vh1,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;ph1);
+<a name="line315">315: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecGetArray.html#VecGetArray">VecGetArray</a>(vs,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;ps);
+<a name="line316">316: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecGetArray.html#VecGetArray">VecGetArray</a>(va1,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;pa1);
+<a name="line317">317: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecGetArray.html#VecGetArray">VecGetArray</a>(vb1,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;pb1);
+<a name="line318">318: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecGetArray.html#VecGetArray">VecGetArray</a>(ve,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;pe);
+<a name="line319">319: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecGetArray.html#VecGetArray">VecGetArray</a>(vf,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;pf);
+<a name="line320">320: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecGetArray.html#VecGetArray">VecGetArray</a>(vm,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;pm);
+<a name="line321">321: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecGetArray.html#VecGetArray">VecGetArray</a>(vn,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;pn);
+<a name="line322">322: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecGetArray.html#VecGetArray">VecGetArray</a>(vu,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;pu);
+
+<a name="line324">324: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecGetLocalSize.html#VecGetLocalSize">VecGetLocalSize</a>(vx,&amp;n);
+<a name="line325">325: </a>  <font color="#4169E1">for</font> (j=0; j&lt;15; j++) lambda[j] = 0.0;
+
+<a name="line327">327: </a>  <font color="#4169E1">if</font> (normtype==<a href="../../../../..2/../docs/manualpages/KSP/KSP_NORM_PRECONDITIONED.html#KSP_NORM_PRECONDITIONED">KSP_NORM_PRECONDITIONED</a>) {
+<a name="line328">328: </a>    PetscPragmaSIMD
+<a name="line329">329: </a>    <font color="#4169E1">for</font> (j=0; j&lt;n; j++) {
+<a name="line330">330: </a>      pa1[j] = (pg1[j] - pg0[j])/alphaold;
+<a name="line331">331: </a>      pb1[j] = (ph1[j] - ph0[j])/alphaold;
+
+<a name="line333">333: </a>      pz[j] = pn[j] + beta0 * pz[j];
+<a name="line334">334: </a>      pq[j] = pm[j] + beta0 * pq[j];
+<a name="line335">335: </a>      ps[j] = pw[j] + beta0 * ps[j];
+<a name="line336">336: </a>      pp[j] = pu[j] + beta0 * pp[j];
+<a name="line337">337: </a>      pc[j] = pg0[j] + beta0 * pc[j];
+<a name="line338">338: </a>      pd[j] = ph0[j] + beta0 * pd[j];
+<a name="line339">339: </a>      pa1[j] = pe[j] + beta0 * pa1[j];
+<a name="line340">340: </a>      pb1[j] = pf[j] + beta0 * pb1[j];
+
+<a name="line342">342: </a>      px[j] = px[j] + alpha0 * pp[j];
+<a name="line343">343: </a>      pr[j] = pr[j] - alpha0 * ps[j];
+<a name="line344">344: </a>      pu[j] = pu[j] - alpha0 * pq[j];
+<a name="line345">345: </a>      pw[j] = pw[j] - alpha0 * pz[j];
+<a name="line346">346: </a>      pm[j] = pm[j] - alpha0 * pc[j];
+<a name="line347">347: </a>      pn[j] = pn[j] - alpha0 * pd[j];
+<a name="line348">348: </a>      pg0[j] = pg0[j] - alpha0 * pa1[j];
+<a name="line349">349: </a>      ph0[j] = ph0[j] - alpha0 * pb1[j];
+
+<a name="line351">351: </a>      pg1[j] = pg0[j];
+<a name="line352">352: </a>      ph1[j] = ph0[j];
+
+<a name="line354">354: </a>      pz[j] = pn[j] + beta1 * pz[j];
+<a name="line355">355: </a>      pq[j] = pm[j] + beta1 * pq[j];
+<a name="line356">356: </a>      ps[j] = pw[j] + beta1 * ps[j];
+<a name="line357">357: </a>      pp[j] = pu[j] + beta1 * pp[j];
+<a name="line358">358: </a>      pc[j] = pg0[j] + beta1 * pc[j];
+<a name="line359">359: </a>      pd[j] = ph0[j] + beta1 * pd[j];
+
+<a name="line361">361: </a>      px[j] = px[j] + alpha1 * pp[j];
+<a name="line362">362: </a>      pr[j] = pr[j] - alpha1 * ps[j];
+<a name="line363">363: </a>      pu[j] = pu[j] - alpha1 * pq[j];
+<a name="line364">364: </a>      pw[j] = pw[j] - alpha1 * pz[j];
+<a name="line365">365: </a>      pm[j] = pm[j] - alpha1 * pc[j];
+<a name="line366">366: </a>      pn[j] = pn[j] - alpha1 * pd[j];
+
+<a name="line368">368: </a>      lambda[0] += ps[j] * PetscConj(pu[j]);   lambda[1] += pw[j] * PetscConj(pm[j]);
+<a name="line369">369: </a>      lambda[2] += pw[j] * PetscConj(pq[j]);   lambda[4] += ps[j] * PetscConj(pq[j]);
+<a name="line370">370: </a>      lambda[6] += pn[j] * PetscConj(pm[j]);   lambda[7] += pn[j] * PetscConj(pq[j]);
+<a name="line371">371: </a>      lambda[9] += pz[j] * PetscConj(pq[j]);   lambda[10] += pr[j] * PetscConj(pu[j]);
+<a name="line372">372: </a>      lambda[11] += pw[j] * PetscConj(pu[j]);  lambda[12] += pu[j] * PetscConj(pu[j]);
+<a name="line373">373: </a>    }
+<a name="line374">374: </a>    lambda[3] = PetscConj(lambda[2]);
+<a name="line375">375: </a>    lambda[5] = PetscConj(lambda[1]);
+<a name="line376">376: </a>    lambda[8] = PetscConj(lambda[7]);
+<a name="line377">377: </a>    lambda[13] = PetscConj(lambda[11]);
+<a name="line378">378: </a>    lambda[14] = PetscConj(lambda[0]);
+<a name="line379">379: </a>  } <font color="#4169E1">else</font> <font color="#4169E1">if</font> (normtype==<a href="../../../../..2/../docs/manualpages/KSP/KSP_NORM_UNPRECONDITIONED.html#KSP_NORM_UNPRECONDITIONED">KSP_NORM_UNPRECONDITIONED</a>) {
+<a name="line380">380: </a>    PetscPragmaSIMD
+<a name="line381">381: </a>    <font color="#4169E1">for</font> (j=0; j&lt;n; j++) {
+<a name="line382">382: </a>      pa1[j] = (pg1[j] - pg0[j])/alphaold;
+<a name="line383">383: </a>      pb1[j] = (ph1[j] - ph0[j])/alphaold;
+
+<a name="line385">385: </a>      pz[j] = pn[j] + beta0 * pz[j];
+<a name="line386">386: </a>      pq[j] = pm[j] + beta0 * pq[j];
+<a name="line387">387: </a>      ps[j] = pw[j] + beta0 * ps[j];
+<a name="line388">388: </a>      pp[j] = pu[j] + beta0 * pp[j];
+<a name="line389">389: </a>      pc[j] = pg0[j] + beta0 * pc[j];
+<a name="line390">390: </a>      pd[j] = ph0[j] + beta0 * pd[j];
+<a name="line391">391: </a>      pa1[j] = pe[j] + beta0 * pa1[j];
+<a name="line392">392: </a>      pb1[j] = pf[j] + beta0 * pb1[j];
+
+<a name="line394">394: </a>      px[j] = px[j] + alpha0 * pp[j];
+<a name="line395">395: </a>      pr[j] = pr[j] - alpha0 * ps[j];
+<a name="line396">396: </a>      pu[j] = pu[j] - alpha0 * pq[j];
+<a name="line397">397: </a>      pw[j] = pw[j] - alpha0 * pz[j];
+<a name="line398">398: </a>      pm[j] = pm[j] - alpha0 * pc[j];
+<a name="line399">399: </a>      pn[j] = pn[j] - alpha0 * pd[j];
+<a name="line400">400: </a>      pg0[j] = pg0[j] - alpha0 * pa1[j];
+<a name="line401">401: </a>      ph0[j] = ph0[j] - alpha0 * pb1[j];
+
+<a name="line403">403: </a>      pg1[j] = pg0[j];
+<a name="line404">404: </a>      ph1[j] = ph0[j];
+
+<a name="line406">406: </a>      pz[j] = pn[j] + beta1 * pz[j];
+<a name="line407">407: </a>      pq[j] = pm[j] + beta1 * pq[j];
+<a name="line408">408: </a>      ps[j] = pw[j] + beta1 * ps[j];
+<a name="line409">409: </a>      pp[j] = pu[j] + beta1 * pp[j];
+<a name="line410">410: </a>      pc[j] = pg0[j] + beta1 * pc[j];
+<a name="line411">411: </a>      pd[j] = ph0[j] + beta1 * pd[j];
+
+<a name="line413">413: </a>      px[j] = px[j] + alpha1 * pp[j];
+<a name="line414">414: </a>      pr[j] = pr[j] - alpha1 * ps[j];
+<a name="line415">415: </a>      pu[j] = pu[j] - alpha1 * pq[j];
+<a name="line416">416: </a>      pw[j] = pw[j] - alpha1 * pz[j];
+<a name="line417">417: </a>      pm[j] = pm[j] - alpha1 * pc[j];
+<a name="line418">418: </a>      pn[j] = pn[j] - alpha1 * pd[j];
+
+<a name="line420">420: </a>      lambda[0] += ps[j] * PetscConj(pu[j]);   lambda[1] += pw[j] * PetscConj(pm[j]);
+<a name="line421">421: </a>      lambda[2] += pw[j] * PetscConj(pq[j]);   lambda[4] += ps[j] * PetscConj(pq[j]);
+<a name="line422">422: </a>      lambda[6] += pn[j] * PetscConj(pm[j]);   lambda[7] += pn[j] * PetscConj(pq[j]);
+<a name="line423">423: </a>      lambda[9] += pz[j] * PetscConj(pq[j]);   lambda[10] += pr[j] * PetscConj(pu[j]);
+<a name="line424">424: </a>      lambda[11] += pw[j] * PetscConj(pu[j]);  lambda[12] += pr[j] * PetscConj(pr[j]);
+<a name="line425">425: </a>    }
+<a name="line426">426: </a>    lambda[3] = PetscConj(lambda[2]);
+<a name="line427">427: </a>    lambda[5] = PetscConj(lambda[1]);
+<a name="line428">428: </a>    lambda[8] = PetscConj(lambda[7]);
+<a name="line429">429: </a>    lambda[13] = PetscConj(lambda[11]);
+<a name="line430">430: </a>    lambda[14] = PetscConj(lambda[0]);
+<a name="line431">431: </a>  } <font color="#4169E1">else</font> <font color="#4169E1">if</font> (normtype==<a href="../../../../..2/../docs/manualpages/KSP/KSP_NORM_NATURAL.html#KSP_NORM_NATURAL">KSP_NORM_NATURAL</a>) {
+<a name="line432">432: </a>    PetscPragmaSIMD
+<a name="line433">433: </a>    <font color="#4169E1">for</font> (j=0; j&lt;n; j++) {
+<a name="line434">434: </a>      pa1[j] = (pg1[j] - pg0[j])/alphaold;
+<a name="line435">435: </a>      pb1[j] = (ph1[j] - ph0[j])/alphaold;
+
+<a name="line437">437: </a>      pz[j] = pn[j] + beta0 * pz[j];
+<a name="line438">438: </a>      pq[j] = pm[j] + beta0 * pq[j];
+<a name="line439">439: </a>      ps[j] = pw[j] + beta0 * ps[j];
+<a name="line440">440: </a>      pp[j] = pu[j] + beta0 * pp[j];
+<a name="line441">441: </a>      pc[j] = pg0[j] + beta0 * pc[j];
+<a name="line442">442: </a>      pd[j] = ph0[j] + beta0 * pd[j];
+<a name="line443">443: </a>      pa1[j] = pe[j] + beta0 * pa1[j];
+<a name="line444">444: </a>      pb1[j] = pf[j] + beta0 * pb1[j];
+
+<a name="line446">446: </a>      px[j] = px[j] + alpha0 * pp[j];
+<a name="line447">447: </a>      pr[j] = pr[j] - alpha0 * ps[j];
+<a name="line448">448: </a>      pu[j] = pu[j] - alpha0 * pq[j];
+<a name="line449">449: </a>      pw[j] = pw[j] - alpha0 * pz[j];
+<a name="line450">450: </a>      pm[j] = pm[j] - alpha0 * pc[j];
+<a name="line451">451: </a>      pn[j] = pn[j] - alpha0 * pd[j];
+<a name="line452">452: </a>      pg0[j] = pg0[j] - alpha0 * pa1[j];
+<a name="line453">453: </a>      ph0[j] = ph0[j] - alpha0 * pb1[j];
+
+<a name="line455">455: </a>      pg1[j] = pg0[j];
+<a name="line456">456: </a>      ph1[j] = ph0[j];
+
+<a name="line458">458: </a>      pz[j] = pn[j] + beta1 * pz[j];
+<a name="line459">459: </a>      pq[j] = pm[j] + beta1 * pq[j];
+<a name="line460">460: </a>      ps[j] = pw[j] + beta1 * ps[j];
+<a name="line461">461: </a>      pp[j] = pu[j] + beta1 * pp[j];
+<a name="line462">462: </a>      pc[j] = pg0[j] + beta1 * pc[j];
+<a name="line463">463: </a>      pd[j] = ph0[j] + beta1 * pd[j];
+
+<a name="line465">465: </a>      px[j] = px[j] + alpha1 * pp[j];
+<a name="line466">466: </a>      pr[j] = pr[j] - alpha1 * ps[j];
+<a name="line467">467: </a>      pu[j] = pu[j] - alpha1 * pq[j];
+<a name="line468">468: </a>      pw[j] = pw[j] - alpha1 * pz[j];
+<a name="line469">469: </a>      pm[j] = pm[j] - alpha1 * pc[j];
+<a name="line470">470: </a>      pn[j] = pn[j] - alpha1 * pd[j];
+
+<a name="line472">472: </a>      lambda[0] += ps[j] * PetscConj(pu[j]);   lambda[1] += pw[j] * PetscConj(pm[j]);
+<a name="line473">473: </a>      lambda[2] += pw[j] * PetscConj(pq[j]);   lambda[4] += ps[j] * PetscConj(pq[j]);
+<a name="line474">474: </a>      lambda[6] += pn[j] * PetscConj(pm[j]);   lambda[7] += pn[j] * PetscConj(pq[j]);
+<a name="line475">475: </a>      lambda[9] += pz[j] * PetscConj(pq[j]);   lambda[10] += pr[j] * PetscConj(pu[j]);
+<a name="line476">476: </a>      lambda[11] += pw[j] * PetscConj(pu[j]);
+<a name="line477">477: </a>    }
+<a name="line478">478: </a>    lambda[3] = PetscConj(lambda[2]);
+<a name="line479">479: </a>    lambda[5] = PetscConj(lambda[1]);
+<a name="line480">480: </a>    lambda[8] = PetscConj(lambda[7]);
+<a name="line481">481: </a>    lambda[13] = PetscConj(lambda[11]);
+<a name="line482">482: </a>    lambda[14] = PetscConj(lambda[0]);
+<a name="line483">483: </a>    lambda[12] = lambda[10];
+<a name="line484">484: </a>  }
+
+<a name="line486">486: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecRestoreArray.html#VecRestoreArray">VecRestoreArray</a>(vx,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;px);
+<a name="line487">487: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecRestoreArray.html#VecRestoreArray">VecRestoreArray</a>(vr,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;pr);
+<a name="line488">488: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecRestoreArray.html#VecRestoreArray">VecRestoreArray</a>(vz,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;pz);
+<a name="line489">489: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecRestoreArray.html#VecRestoreArray">VecRestoreArray</a>(vw,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;pw);
+<a name="line490">490: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecRestoreArray.html#VecRestoreArray">VecRestoreArray</a>(vp,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;pp);
+<a name="line491">491: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecRestoreArray.html#VecRestoreArray">VecRestoreArray</a>(vq,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;pq);
+<a name="line492">492: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecRestoreArray.html#VecRestoreArray">VecRestoreArray</a>(vc,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;pc);
+<a name="line493">493: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecRestoreArray.html#VecRestoreArray">VecRestoreArray</a>(vd,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;pd);
+<a name="line494">494: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecRestoreArray.html#VecRestoreArray">VecRestoreArray</a>(vg0,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;pg0);
+<a name="line495">495: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecRestoreArray.html#VecRestoreArray">VecRestoreArray</a>(vh0,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;ph0);
+<a name="line496">496: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecRestoreArray.html#VecRestoreArray">VecRestoreArray</a>(vg1,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;pg1);
+<a name="line497">497: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecRestoreArray.html#VecRestoreArray">VecRestoreArray</a>(vh1,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;ph1);
+<a name="line498">498: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecRestoreArray.html#VecRestoreArray">VecRestoreArray</a>(vs,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;ps);
+<a name="line499">499: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecRestoreArray.html#VecRestoreArray">VecRestoreArray</a>(va1,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;pa1);
+<a name="line500">500: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecRestoreArray.html#VecRestoreArray">VecRestoreArray</a>(vb1,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;pb1);
+<a name="line501">501: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecRestoreArray.html#VecRestoreArray">VecRestoreArray</a>(ve,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;pe);
+<a name="line502">502: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecRestoreArray.html#VecRestoreArray">VecRestoreArray</a>(vf,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;pf);
+<a name="line503">503: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecRestoreArray.html#VecRestoreArray">VecRestoreArray</a>(vm,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;pm);
+<a name="line504">504: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecRestoreArray.html#VecRestoreArray">VecRestoreArray</a>(vn,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;pn);
+<a name="line505">505: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecRestoreArray.html#VecRestoreArray">VecRestoreArray</a>(vu,(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>**)&amp;pu);
+<a name="line506">506: </a>  <font color="#4169E1">return</font>(0);
+<a name="line507">507: </a>}
+
+<a name="line509">509: </a><font color="#B22222">/*</font>
+<a name="line510">510: </a><font color="#B22222">     KSPSetUp_PIPECG2 - Sets up the workspace needed by the PIPECG method.</font>
+
+<a name="line512">512: </a><font color="#B22222">      This is called once, usually automatically by <a href="../../../../..2/../docs/manualpages/KSP/KSPSolve.html#KSPSolve">KSPSolve</a>() or <a href="../../../../..2/../docs/manualpages/KSP/KSPSetUp.html#KSPSetUp">KSPSetUp</a>()</font>
+<a name="line513">513: </a><font color="#B22222">     but can be called directly by <a href="../../../../..2/../docs/manualpages/KSP/KSPSetUp.html#KSPSetUp">KSPSetUp</a>()</font>
+<a name="line514">514: </a><font color="#B22222">*/</font>
+<a name="line515">515: </a><strong><font color="#4169E1"><a name="KSPSetUp_PIPECG2"></a>static  <a href="../../../../..2/../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> KSPSetUp_PIPECG2(<a href="../../../../..2/../docs/manualpages/KSP/KSP.html#KSP">KSP</a> ksp)</font></strong>
+<a name="line516">516: </a>{
+
+<a name="line520">520: </a>  <font color="#B22222">/* get work vectors needed by PIPECG2 */</font>
+<a name="line521">521: </a>  <a href="../../../../..2/../docs/manualpages/KSP/KSPSetWorkVecs.html#KSPSetWorkVecs">KSPSetWorkVecs</a>(ksp,20);
+<a name="line522">522: </a>  <font color="#4169E1">return</font>(0);
+<a name="line523">523: </a>}
+
+<a name="line525">525: </a><font color="#B22222">/*</font>
+<a name="line526">526: </a><font color="#B22222"> KSPSolve_PIPECG2 - This routine actually applies the PIPECG2 method</font>
+<a name="line527">527: </a><font color="#B22222">*/</font>
+<a name="line528">528: </a><strong><font color="#4169E1"><a name="KSPSolve_PIPECG2"></a>static <a href="../../../../..2/../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  KSPSolve_PIPECG2(<a href="../../../../..2/../docs/manualpages/KSP/KSP.html#KSP">KSP</a> ksp)</font></strong>
+<a name="line529">529: </a>{
+<a name="line531">531: </a>  <a href="../../../../..2/../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       i,n;
+<a name="line532">532: </a>  <a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>    alpha[2],beta[2],gamma[2],delta[2],lambda[15];
+<a name="line533">533: </a>  <a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>    dps = 0.0,alphaold=0.0;
+<a name="line534">534: </a>  <a href="../../../../..2/../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>      dp = 0.0;
+<a name="line535">535: </a>  <a href="../../../../..2/../docs/manualpages/Vec/Vec.html#Vec">Vec</a>            X,B,Z,P,W,Q,U,M,N,R,S,C,D,E,F,G[2],H[2],A1,B1;
+<a name="line536">536: </a>  <a href="../../../../..2/../docs/manualpages/Mat/Mat.html#Mat">Mat</a>            Amat,Pmat;
+<a name="line537">537: </a>  <a href="../../../../..2/../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>      diagonalscale;
+<a name="line538">538: </a>  <a href="../../../../..2/../docs/manualpages/Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</a>       pcomm;
+<a name="line539">539: </a>  MPI_Request    req;
+<a name="line540">540: </a>  MPI_Status     stat;
+
+<a name="line543">543: </a>  pcomm = <a href="../../../../..2/../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../..2/../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)ksp);
+<a name="line544">544: </a>  <a href="../../../../..2/../docs/manualpages/PC/PCGetDiagonalScale.html#PCGetDiagonalScale">PCGetDiagonalScale</a>(ksp-&gt;pc,&amp;diagonalscale);
+<a name="line545">545: </a>  <font color="#4169E1">if</font> (diagonalscale) <a href="../../../../..2/../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../..2/../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../..2/../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)ksp),PETSC_ERR_SUP,<font color="#666666">"Krylov method %s does not support diagonal scaling"</font>,((<a href="../../../../..2/../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)ksp)-&gt;type_name);
+
+<a name="line547">547: </a>  X = ksp-&gt;vec_sol;
+<a name="line548">548: </a>  B = ksp-&gt;vec_rhs;
+<a name="line549">549: </a>  M = ksp-&gt;work[0];
+<a name="line550">550: </a>  Z = ksp-&gt;work[1];
+<a name="line551">551: </a>  P = ksp-&gt;work[2];
+<a name="line552">552: </a>  N = ksp-&gt;work[3];
+<a name="line553">553: </a>  W = ksp-&gt;work[4];
+<a name="line554">554: </a>  Q = ksp-&gt;work[5];
+<a name="line555">555: </a>  U = ksp-&gt;work[6];
+<a name="line556">556: </a>  R = ksp-&gt;work[7];
+<a name="line557">557: </a>  S = ksp-&gt;work[8];
+<a name="line558">558: </a>  C = ksp-&gt;work[9];
+<a name="line559">559: </a>  D = ksp-&gt;work[10];
+<a name="line560">560: </a>  E = ksp-&gt;work[11];
+<a name="line561">561: </a>  F = ksp-&gt;work[12];
+<a name="line562">562: </a>  G[0]  = ksp-&gt;work[13];
+<a name="line563">563: </a>  H[0] = ksp-&gt;work[14];
+<a name="line564">564: </a>  G[1]  = ksp-&gt;work[15];
+<a name="line565">565: </a>  H[1] = ksp-&gt;work[16];
+<a name="line566">566: </a>  A1 = ksp-&gt;work[17];
+<a name="line567">567: </a>  B1 = ksp-&gt;work[18];
+
+<a name="line569">569: </a>  <a href="../../../../..2/../docs/manualpages/Sys/PetscMemzero.html#PetscMemzero">PetscMemzero</a>(alpha,2*<font color="#4169E1">sizeof</font>(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>));
+<a name="line570">570: </a>  <a href="../../../../..2/../docs/manualpages/Sys/PetscMemzero.html#PetscMemzero">PetscMemzero</a>(beta,2*<font color="#4169E1">sizeof</font>(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>));
+<a name="line571">571: </a>  <a href="../../../../..2/../docs/manualpages/Sys/PetscMemzero.html#PetscMemzero">PetscMemzero</a>(gamma,2*<font color="#4169E1">sizeof</font>(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>));
+<a name="line572">572: </a>  <a href="../../../../..2/../docs/manualpages/Sys/PetscMemzero.html#PetscMemzero">PetscMemzero</a>(delta,2*<font color="#4169E1">sizeof</font>(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>));
+<a name="line573">573: </a>  <a href="../../../../..2/../docs/manualpages/Sys/PetscMemzero.html#PetscMemzero">PetscMemzero</a>(lambda,15*<font color="#4169E1">sizeof</font>(<a href="../../../../..2/../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>));
+
+<a name="line575">575: </a>  <a href="../../../../..2/../docs/manualpages/Vec/VecGetLocalSize.html#VecGetLocalSize">VecGetLocalSize</a>(B,&amp;n);
+<a name="line576">576: </a>  <a href="../../../../..2/../docs/manualpages/PC/PCGetOperators.html#PCGetOperators">PCGetOperators</a>(ksp-&gt;pc,&amp;Amat,&amp;Pmat);
+
+<a name="line578">578: </a>  ksp-&gt;its = 0;
+<a name="line579">579: </a>  <font color="#4169E1">if</font> (!ksp-&gt;guess_zero) {
+<a name="line580">580: </a>    KSP_MatMult(ksp,Amat,X,R);             <font color="#B22222">/*  r &lt;- b - Ax  */</font>
+<a name="line581">581: </a>    <a href="../../../../..2/../docs/manualpages/Vec/VecAYPX.html#VecAYPX">VecAYPX</a>(R,-1.0,B);
+<a name="line582">582: </a>  } <font color="#4169E1">else</font> {
+<a name="line583">583: </a>    <a href="../../../../..2/../docs/manualpages/Vec/VecCopy.html#VecCopy">VecCopy</a>(B,R);                          <font color="#B22222">/*  r &lt;- b (x is 0) */</font>
+<a name="line584">584: </a>  }
+
+<a name="line586">586: </a>  KSP_PCApply(ksp,R,U);                    <font color="#B22222">/*  u &lt;- Br  */</font>
+<a name="line587">587: </a>  KSP_MatMult(ksp,Amat,U,W);               <font color="#B22222">/*  w &lt;- Au  */</font>
+
+<a name="line589">589: </a>  VecMergedDot_Private(U,W,R,ksp-&gt;normtype,&amp;gamma[0],&amp;delta[0],&amp;dps);     <font color="#B22222">/*  gamma  &lt;- r'*u , delta &lt;- w'*u , dp &lt;- u'*u or r'*r or r'*u depending on ksp_norm_type  */</font>
+<a name="line590">590: </a>  lambda[10]= gamma[0];
+<a name="line591">591: </a>  lambda[11]= delta[0];
+<a name="line592">592: </a>  lambda[12] = dps;
+
+<a name="line594">594: </a>  <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Iallreduce.html#MPI_Iallreduce">MPI_Iallreduce</a>(MPI_IN_PLACE,&amp;lambda[10],3,<a href="../../../../..2/../docs/manualpages/Sys/MPIU_SCALAR.html#MPIU_SCALAR">MPIU_SCALAR</a>,MPIU_SUM,pcomm,&amp;req);
+
+<a name="line596">596: </a>  KSP_PCApply(ksp,W,M);                    <font color="#B22222">/*  m &lt;- Bw  */</font>
+<a name="line597">597: </a>  KSP_MatMult(ksp,Amat,M,N);               <font color="#B22222">/*  n &lt;- Am  */</font>
+
+<a name="line599">599: </a>  KSP_PCApply(ksp,N,G[0]);                 <font color="#B22222">/*  g &lt;- Bn  */</font>
+<a name="line600">600: </a>  KSP_MatMult(ksp,Amat,G[0],H[0]);         <font color="#B22222">/*  h &lt;- Ag  */</font>
+
+<a name="line602">602: </a>  KSP_PCApply(ksp,H[0],E);                 <font color="#B22222">/*  e &lt;- Bh  */</font>
+<a name="line603">603: </a>  KSP_MatMult(ksp,Amat,E,F);               <font color="#B22222">/*  f &lt;- Ae  */</font>
+
+<a name="line605">605: </a>  <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Wait.html#MPI_Wait">MPI_Wait</a>(&amp;req,&amp;stat);
+
+<a name="line607">607: </a>  gamma[0] = lambda[10];
+<a name="line608">608: </a>  delta[0] = lambda[11];
+<a name="line609">609: </a>  dp = PetscSqrtReal(PetscAbsScalar(lambda[12]));
+
+<a name="line611">611: </a>  VecMergedDot2_Private(N,M,W,&amp;lambda[1],&amp;lambda[6]);     <font color="#B22222">/*  lambda_1 &lt;- w'*m , lambda_4 &lt;- n'*m  */</font>
+<a name="line612">612: </a>  <a href="../../../../..2/../docs/manualpages/Sys/MPIU_Allreduce.html#MPIU_Allreduce">MPIU_Allreduce</a>(MPI_IN_PLACE,&amp;lambda[1],1,<a href="../../../../..2/../docs/manualpages/Sys/MPIU_SCALAR.html#MPIU_SCALAR">MPIU_SCALAR</a>,MPIU_SUM,pcomm);
+<a name="line613">613: </a>  <a href="../../../../..2/../docs/manualpages/Sys/MPIU_Allreduce.html#MPIU_Allreduce">MPIU_Allreduce</a>(MPI_IN_PLACE,&amp;lambda[6],1,<a href="../../../../..2/../docs/manualpages/Sys/MPIU_SCALAR.html#MPIU_SCALAR">MPIU_SCALAR</a>,MPIU_SUM,pcomm);
+
+<a name="line615">615: </a>  lambda[5] = PetscConj(lambda[1]);
+<a name="line616">616: </a>  lambda[13] = PetscConj(lambda[11]);
+
+<a name="line618">618: </a>  KSPLogResidualHistory(ksp,dp);
+<a name="line619">619: </a>  <a href="../../../../..2/../docs/manualpages/KSP/KSPMonitor.html#KSPMonitor">KSPMonitor</a>(ksp,0,dp);
+<a name="line620">620: </a>  ksp-&gt;rnorm = dp;
+
+<a name="line622">622: </a>  (*ksp-&gt;converged)(ksp,0,dp,&amp;ksp-&gt;reason,ksp-&gt;cnvP); <font color="#B22222">/* test for convergence */</font>
+<a name="line623">623: </a>  <font color="#4169E1">if</font> (ksp-&gt;reason) <font color="#4169E1">return</font>(0);
+
+<a name="line625">625: </a>  <font color="#4169E1">for</font> (i=2; i&lt;ksp-&gt;max_it; i+=2) {
+<a name="line626">626: </a>    <font color="#4169E1">if</font> (i == 2) {
+<a name="line627">627: </a>      beta[0] = 0;
+<a name="line628">628: </a>      alpha[0] = gamma[0]/delta[0];
+
+<a name="line630">630: </a>      gamma[1] = gamma[0] - alpha[0] * lambda[13] - alpha[0] * delta[0] + alpha[0] * alpha[0] * lambda[1];
+<a name="line631">631: </a>      delta[1] = delta[0] - alpha[0] * lambda[1] - alpha[0] * lambda[5] + alpha[0]*alpha[0]*lambda[6];
+
+<a name="line633">633: </a>      beta[1]  = gamma[1] / gamma[0];
+<a name="line634">634: </a>      alpha[1] = gamma[1] / (delta[1] - beta[1] / alpha[0] * gamma[1]);
+
+<a name="line636">636: </a>      VecMergedOpsShort_Private(X,R,Z,W,P,Q,C,D,G[0],H[0],G[1],H[1],S,A1,B1,E,F,M,N,U,ksp-&gt;normtype,beta[0],alpha[0],beta[1],alpha[1],lambda);
+<a name="line637">637: </a>    } <font color="#4169E1">else</font> {
+<a name="line638">638: </a>      beta[0]  = gamma[1] / gamma[0];
+<a name="line639">639: </a>      alpha[0] = gamma[1] / (delta[1] - beta[0] / alpha[1] * gamma[1]);
+
+<a name="line641">641: </a>      gamma[0] = gamma[1];
+<a name="line642">642: </a>      delta[0] = delta[1];
+
+<a name="line644">644: </a>      gamma[1] = gamma[0] - alpha[0]*(lambda[13] + beta[0]*lambda[14]) - alpha[0] *(delta[0] + beta[0] * lambda[0]) + alpha[0] * alpha[0] * (lambda[1] + beta[0] * lambda[2] + beta[0] * lambda[3] + beta[0] * beta[0] * lambda[4]);
+
+<a name="line646">646: </a>      delta[1] = delta[0] - alpha[0] * (lambda[1] + beta[0]* lambda[2]) - alpha[0] *(lambda[5] + beta[0] * lambda[3]) + alpha[0]*alpha[0] * (lambda[6] + beta[0] * lambda[7] + beta[0] *lambda[8] + beta[0] * beta[0] * lambda[9]);
+
+<a name="line648">648: </a>      beta[1]  = gamma[1] / gamma[0];
+<a name="line649">649: </a>      alpha[1] = gamma[1] / (delta[1] - beta[1] / alpha[0] * gamma[1]);
+
+<a name="line651">651: </a>       VecMergedOps_Private(X,R,Z,W,P,Q,C,D,G[0],H[0],G[1],H[1],S,A1,B1,E,F,M,N,U,ksp-&gt;normtype,beta[0],alpha[0],beta[1],alpha[1],lambda,alphaold);
+<a name="line652">652: </a>    }
+
+<a name="line654">654: </a>    gamma[0] = gamma[1];
+<a name="line655">655: </a>    delta[0] = delta[1];
+
+<a name="line657">657: </a>    <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Iallreduce.html#MPI_Iallreduce">MPI_Iallreduce</a>(MPI_IN_PLACE,lambda,15,<a href="../../../../..2/../docs/manualpages/Sys/MPIU_SCALAR.html#MPIU_SCALAR">MPIU_SCALAR</a>,MPIU_SUM,pcomm,&amp;req);  <font color="#B22222">/* Calculating the lambdas, gamma, delta and dp */</font>
+
+<a name="line659">659: </a>    KSP_PCApply(ksp,N,G[0]);                       <font color="#B22222">/*  g &lt;- Bn  */</font>
+<a name="line660">660: </a>    KSP_MatMult(ksp,Amat,G[0],H[0]);               <font color="#B22222">/*  h &lt;- Ag  */</font>
+
+<a name="line662">662: </a>    KSP_PCApply(ksp,H[0],E);               <font color="#B22222">/*  e &lt;- Bh  */</font>
+<a name="line663">663: </a>    KSP_MatMult(ksp,Amat,E,F);             <font color="#B22222">/*  f &lt;- Ae */</font>
+
+<a name="line665">665: </a>    <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Wait.html#MPI_Wait">MPI_Wait</a>(&amp;req,&amp;stat);
+
+<a name="line667">667: </a>    gamma[1] = lambda[10];
+<a name="line668">668: </a>    delta[1] = lambda[11];
+<a name="line669">669: </a>    dp = PetscSqrtReal(PetscAbsScalar(lambda[12]));
+
+<a name="line671">671: </a>    alphaold = alpha[1];
+<a name="line672">672: </a>    ksp-&gt;its = i;
+
+<a name="line674">674: </a>    <font color="#4169E1">if</font> (i &gt; 0) {
+<a name="line675">675: </a>      <font color="#4169E1">if</font> (ksp-&gt;normtype == <a href="../../../../..2/../docs/manualpages/KSP/KSP_NORM_NONE.html#KSP_NORM_NONE">KSP_NORM_NONE</a>) dp = 0.0;
+<a name="line676">676: </a>      ksp-&gt;rnorm = dp;
+<a name="line677">677: </a>      KSPLogResidualHistory(ksp,dp);
+<a name="line678">678: </a>      <a href="../../../../..2/../docs/manualpages/KSP/KSPMonitor.html#KSPMonitor">KSPMonitor</a>(ksp,i,dp);
+<a name="line679">679: </a>      (*ksp-&gt;converged)(ksp,i,dp,&amp;ksp-&gt;reason,ksp-&gt;cnvP);
+<a name="line680">680: </a>      <font color="#4169E1">if</font> (ksp-&gt;reason) <font color="#4169E1">break</font>;
+<a name="line681">681: </a>    }
+<a name="line682">682: </a>  }
+
+<a name="line684">684: </a>  <font color="#4169E1">if</font> (i &gt;= ksp-&gt;max_it) ksp-&gt;reason = <a href="../../../../..2/../docs/manualpages/KSP/KSP_DIVERGED_ITS.html#KSP_DIVERGED_ITS">KSP_DIVERGED_ITS</a>;
+<a name="line685">685: </a>  <font color="#4169E1">return</font>(0);
+<a name="line686">686: </a>}
+
+<a name="line688">688: </a><font color="#B22222">/*MC</font>
+<a name="line689">689: </a><font color="#B22222">   <a href="../../../../..2/../docs/manualpages/KSP/KSPPIPECG2.html#KSPPIPECG2">KSPPIPECG2</a> - Pipelined conjugate gradient method with a single non-blocking allreduce per two iterations.</font>
+
+<a name="line691">691: </a><font color="#B22222">   This method has only a single non-blocking reduction per two iterations, compared to 2 blocking for standard CG.  The</font>
+<a name="line692">692: </a><font color="#B22222">   non-blocking reduction is overlapped by two matrix-vector products and two preconditioner applications.</font>
+
+<a name="line694">694: </a><font color="#B22222">   Level: intermediate</font>
+
+<a name="line696">696: </a><font color="#B22222">   Notes:</font>
+<a name="line697">697: </a><font color="#B22222">   MPI configuration may be necessary for reductions to make asynchronous progress, which is important for performance of pipelined methods.</font>
+<a name="line698">698: </a><font color="#B22222">   See the FAQ on the PETSc website for details.</font>
+
+<a name="line700">700: </a><font color="#B22222">   Contributed by:</font>
+<a name="line701">701: </a><font color="#B22222">   Manasi Tiwari, Computational and Data Sciences, Indian Institute of Science, Bangalore</font>
+
+<a name="line703">703: </a><font color="#B22222">   Reference:</font>
+<a name="line704">704: </a><font color="#B22222">   Manasi Tiwari and Sathish Vadhiyar, "Pipelined Conjugate Gradient Methods for Distributed Memory Systems",</font>
+<a name="line705">705: </a><font color="#B22222">   Submitted to International Conference on High Performance Computing, Data and Analytics 2020.</font>
+
+<a name="line707">707: </a><font color="#B22222">.seealso: <a href="../../../../..2/../docs/manualpages/KSP/KSPCreate.html#KSPCreate">KSPCreate</a>(), <a href="../../../../..2/../docs/manualpages/KSP/KSPSetType.html#KSPSetType">KSPSetType</a>(), <a href="../../../../..2/../docs/manualpages/KSP/KSPCG.html#KSPCG">KSPCG</a>, <a href="../../../../..2/../docs/manualpages/KSP/KSPPIPECG.html#KSPPIPECG">KSPPIPECG</a></font>
+<a name="line708">708: </a><font color="#B22222">M*/</font>
+<a name="line709">709: </a><strong><font color="#4169E1"><a name="KSPCreate_PIPECG2"></a>PETSC_EXTERN <a href="../../../../..2/../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> KSPCreate_PIPECG2(<a href="../../../../..2/../docs/manualpages/KSP/KSP.html#KSP">KSP</a> ksp)</font></strong>
+<a name="line710">710: </a>{
+
+<a name="line714">714: </a>  <a href="../../../../..2/../docs/manualpages/KSP/KSPSetSupportedNorm.html#KSPSetSupportedNorm">KSPSetSupportedNorm</a>(ksp,<a href="../../../../..2/../docs/manualpages/KSP/KSP_NORM_UNPRECONDITIONED.html#KSP_NORM_UNPRECONDITIONED">KSP_NORM_UNPRECONDITIONED</a>,<a href="../../../../..2/../docs/manualpages/PC/PCSide.html#PCSide">PC_LEFT</a>,2);
+<a name="line715">715: </a>  <a href="../../../../..2/../docs/manualpages/KSP/KSPSetSupportedNorm.html#KSPSetSupportedNorm">KSPSetSupportedNorm</a>(ksp,<a href="../../../../..2/../docs/manualpages/KSP/KSP_NORM_PRECONDITIONED.html#KSP_NORM_PRECONDITIONED">KSP_NORM_PRECONDITIONED</a>,<a href="../../../../..2/../docs/manualpages/PC/PCSide.html#PCSide">PC_LEFT</a>,2);
+<a name="line716">716: </a>  <a href="../../../../..2/../docs/manualpages/KSP/KSPSetSupportedNorm.html#KSPSetSupportedNorm">KSPSetSupportedNorm</a>(ksp,<a href="../../../../..2/../docs/manualpages/KSP/KSP_NORM_NATURAL.html#KSP_NORM_NATURAL">KSP_NORM_NATURAL</a>,<a href="../../../../..2/../docs/manualpages/PC/PCSide.html#PCSide">PC_LEFT</a>,2);
+<a name="line717">717: </a>  <a href="../../../../..2/../docs/manualpages/KSP/KSPSetSupportedNorm.html#KSPSetSupportedNorm">KSPSetSupportedNorm</a>(ksp,<a href="../../../../..2/../docs/manualpages/KSP/KSP_NORM_NONE.html#KSP_NORM_NONE">KSP_NORM_NONE</a>,<a href="../../../../..2/../docs/manualpages/PC/PCSide.html#PCSide">PC_LEFT</a>,1);
+
+<a name="line719">719: </a>  ksp-&gt;ops-&gt;setup          = KSPSetUp_PIPECG2;
+<a name="line720">720: </a>  ksp-&gt;ops-&gt;solve          = KSPSolve_PIPECG2;
+<a name="line721">721: </a>  ksp-&gt;ops-&gt;destroy        = KSPDestroyDefault;
+<a name="line722">722: </a>  ksp-&gt;ops-&gt;view           = NULL;
+<a name="line723">723: </a>  ksp-&gt;ops-&gt;setfromoptions = NULL;
+<a name="line724">724: </a>  ksp-&gt;ops-&gt;buildsolution  = KSPBuildSolutionDefault;
+<a name="line725">725: </a>  ksp-&gt;ops-&gt;buildresidual  = KSPBuildResidualDefault;
+<a name="line726">726: </a>  <font color="#4169E1">return</font>(0);
+<a name="line727">727: </a>}
+</pre>
+</body>
+
+</html>

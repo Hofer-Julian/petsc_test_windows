@@ -1,0 +1,43 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatDenseCUDAReplaceArray.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>MatDenseCUDAReplaceArray</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/Mat/MatDenseCUDAReplaceArray.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="MatDenseCUDAReplaceArray"><H1>MatDenseCUDAReplaceArray</H1></A>
+Allows one to replace the GPU array in a dense matrix with an array provided by the user. This is useful to avoid copying an array into a matrix 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscmat.h"  
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A>  <A HREF="../Mat/MatDenseCUDAReplaceArray.html#MatDenseCUDAReplaceArray">MatDenseCUDAReplaceArray</A>(<A HREF="../Mat/Mat.html#Mat">Mat</A> mat,const <A HREF="../Sys/PetscScalar.html#PetscScalar">PetscScalar</A> *array)
+</PRE>
+Not Collective
+<P>
+<H3><FONT COLOR="#CC3333">Input Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>mat </B></TD><TD>- the matrix
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>array </B></TD><TD>- the array in column major order
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Notes</FONT></H3>
+This permanently replaces the GPU array and frees the memory associated with the old GPU array.
+The memory passed in CANNOT be freed by the user. It will be freed
+when the matrix is destroyed. The array should respect the matrix leading dimension.
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../Mat/MatDenseCUDAGetArray.html#MatDenseCUDAGetArray">MatDenseCUDAGetArray</A>(), <A HREF="../Mat/MatDenseCUDAPlaceArray.html#MatDenseCUDAPlaceArray">MatDenseCUDAPlaceArray</A>(), <A HREF="../Mat/MatDenseCUDAResetArray.html#MatDenseCUDAResetArray">MatDenseCUDAResetArray</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>developer<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/mat/impls/dense/mpi/mpidense.c.html#MatDenseCUDAReplaceArray">src/mat/impls/dense/mpi/mpidense.c</A>
+<P><H3><FONT COLOR="CC3333">Implementations</FONT></H3><A HREF="../../../src/mat/impls/dense/mpi/mpidense.c.html#MatDenseCUDAReplaceArray_MPIDenseCUDA">MatDenseCUDAReplaceArray_MPIDenseCUDA in src/mat/impls/dense/mpi/mpidense.c</A><BR>
+<A HREF="../../../src/mat/impls/dense/seq/cuda/densecuda.cu.html#MatDenseCUDAReplaceArray_SeqDenseCUDA">MatDenseCUDAReplaceArray_SeqDenseCUDA in src/mat/impls/dense/seq/cuda/densecuda.cu</A><BR>
+<BR><A HREF="./index.html">Index of all Mat routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

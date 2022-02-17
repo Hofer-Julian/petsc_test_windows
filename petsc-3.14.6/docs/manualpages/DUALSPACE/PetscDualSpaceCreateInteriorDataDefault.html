@@ -1,0 +1,41 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DUALSPACE/PetscDualSpaceCreateInteriorDataDefault.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>PetscDualSpaceCreateInteriorDataDefault</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/DUALSPACE/PetscDualSpaceCreateInteriorDataDefault.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="PetscDualSpaceCreateInteriorDataDefault"><H1>PetscDualSpaceCreateInteriorDataDefault</H1></A>
+Create quadrature points by examining interior functionals and create the matrix mapping quadrature point values to interior dual space values 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscfe.h" 
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../DUALSPACE/PetscDualSpaceCreateInteriorDataDefault.html#PetscDualSpaceCreateInteriorDataDefault">PetscDualSpaceCreateInteriorDataDefault</A>(<A HREF="../FE/PetscDualSpace.html#PetscDualSpace">PetscDualSpace</A> sp, <A HREF="../FE/PetscQuadrature.html#PetscQuadrature">PetscQuadrature</A> *intNodes, <A HREF="../Mat/Mat.html#Mat">Mat</A> *intMat)
+</PRE>
+<H3><FONT COLOR="#CC3333">Input Parameter</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>sp </B></TD><TD>- The dualspace
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Output Parameter</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>intNodes </B></TD><TD>- A <A HREF="../FE/PetscQuadrature.html#PetscQuadrature">PetscQuadrature</A> object containing all evaluation points needed to evaluate interior degrees of freedom
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>intMat    </B></TD><TD>- A matrix that computes dual space values from point values: size [spdim0 x (npoints * nc)], where spdim0 is
+the size of the constrained layout (PetscSectionGetConstrainStorageSize()) of the dual space section,
+npoints is the number of points in allNodes and nc is <A HREF="../DUALSPACE/PetscDualSpaceGetNumComponents.html#PetscDualSpaceGetNumComponents">PetscDualSpaceGetNumComponents</A>().
+</TD></TR></TABLE>
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../DUALSPACE/PetscDualSpaceCreate.html#PetscDualSpaceCreate">PetscDualSpaceCreate</A>(), <A HREF="../DUALSPACE/PetscDualSpaceGetInteriorData.html#PetscDualSpaceGetInteriorData">PetscDualSpaceGetInteriorData</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>advanced<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/dm/dt/dualspace/interface/dualspace.c.html#PetscDualSpaceCreateInteriorDataDefault">src/dm/dt/dualspace/interface/dualspace.c</A>
+<BR><A HREF="./index.html">Index of all DUALSPACE routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

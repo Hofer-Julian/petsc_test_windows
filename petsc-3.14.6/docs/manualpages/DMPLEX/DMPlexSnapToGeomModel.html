@@ -1,0 +1,45 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DMPLEX/DMPlexSnapToGeomModel.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>DMPlexSnapToGeomModel</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/DMPLEX/DMPlexSnapToGeomModel.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="DMPlexSnapToGeomModel"><H1>DMPlexSnapToGeomModel</H1></A>
+Given a coordinate point 'mcoords' on the mesh point 'p', return the closest coordinate point 'gcoords' on the geometry model associated with that point. 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscdmplex.h"   
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../DMPLEX/DMPlexSnapToGeomModel.html#DMPlexSnapToGeomModel">DMPlexSnapToGeomModel</A>(<A HREF="../DM/DM.html#DM">DM</A> dm, <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> p, const <A HREF="../Sys/PetscScalar.html#PetscScalar">PetscScalar</A> mcoords[], <A HREF="../Sys/PetscScalar.html#PetscScalar">PetscScalar</A> gcoords[])
+</PRE>
+Not collective
+<P>
+<H3><FONT COLOR="#CC3333">Input Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>dm      </B></TD><TD>- The DMPlex object
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>p       </B></TD><TD>- The mesh point
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>mcoords </B></TD><TD>- A coordinate point lying on the mesh point
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Output Parameter</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>gcoords </B></TD><TD>- The closest coordinate point on the geometry model associated with 'p' to the given point
+</TD></TR></TABLE>
+<P>
+Note: Returns the original coordinates if no geometry model is found. Right now the only supported geometry model is EGADS.
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../DM/DMRefine.html#DMRefine">DMRefine</A>(), <A HREF="../DMPLEX/DMPlexCreate.html#DMPlexCreate">DMPlexCreate</A>(), <A HREF="../DMPLEX/DMPlexSetRefinementUniform.html#DMPlexSetRefinementUniform">DMPlexSetRefinementUniform</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>intermediate<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/dm/impls/plex/plexegads.c.html#DMPlexSnapToGeomModel">src/dm/impls/plex/plexegads.c</A>
+<BR><A HREF="./index.html">Index of all DMPLEX routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

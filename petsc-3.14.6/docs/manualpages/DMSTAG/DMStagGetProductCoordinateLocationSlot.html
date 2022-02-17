@@ -1,0 +1,50 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DMSTAG/DMStagGetProductCoordinateLocationSlot.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>DMStagGetProductCoordinateLocationSlot</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/DMSTAG/DMStagGetProductCoordinateLocationSlot.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="DMStagGetProductCoordinateLocationSlot"><H1>DMStagGetProductCoordinateLocationSlot</H1></A>
+get slot for use with local product coordinate arrays 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+PETSC_EXTERN <A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../DMSTAG/DMStagGetProductCoordinateLocationSlot.html#DMStagGetProductCoordinateLocationSlot">DMStagGetProductCoordinateLocationSlot</A>(<A HREF="../DM/DM.html#DM">DM</A> dm,<A HREF="../DMSTAG/DMStagStencilLocation.html#DMStagStencilLocation">DMStagStencilLocation</A> loc,<A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> *slot)
+</PRE>
+Not Collective
+<P>
+High-level helper function to get slot indices for 1D coordinate DMs,
+for use with <A HREF="../DMSTAG/DMStagGetProductCoordinateArrays.html#DMStagGetProductCoordinateArrays">DMStagGetProductCoordinateArrays</A>() and related functions.
+<P>
+<H3><FONT COLOR="#CC3333">Input Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>dm </B></TD><TD>- the DMStag object
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>loc </B></TD><TD>- the grid location
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Output Parameter</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>slot </B></TD><TD>- the index to use in local arrays
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Notes</FONT></H3>
+Checks that the coordinates are actually set up so that using the
+slots from the first 1d coordinate sub-<A HREF="../DM/DM.html#DM">DM</A> is valid for all the 1D coordinate sub-DMs.
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../DMSTAG/DMSTAG.html#DMSTAG">DMSTAG</A>, <A HREF="../DMPRODUCT/DMPRODUCT.html#DMPRODUCT">DMPRODUCT</A>, <A HREF="../DMSTAG/DMStagGetProductCoordinateArrays.html#DMStagGetProductCoordinateArrays">DMStagGetProductCoordinateArrays</A>(), <A HREF="../DMSTAG/DMStagGetProductCoordinateArraysRead.html#DMStagGetProductCoordinateArraysRead">DMStagGetProductCoordinateArraysRead</A>(), <A HREF="../DMSTAG/DMStagSetUniformCoordinates.html#DMStagSetUniformCoordinates">DMStagSetUniformCoordinates</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>intermediate<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/dm/impls/stag/stagutils.c.html#DMStagGetProductCoordinateLocationSlot">src/dm/impls/stag/stagutils.c</A>
+<P><H3><FONT COLOR="#CC3333">Examples</FONT></H3>
+<A HREF="../../../src/dm/impls/stag/tutorials/ex2.c.html">src/dm/impls/stag/tutorials/ex2.c.html</A><BR>
+<A HREF="../../../src/dm/impls/stag/tutorials/ex6.c.html">src/dm/impls/stag/tutorials/ex6.c.html</A><BR>
+<BR><A HREF="./index.html">Index of all DMSTAG routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

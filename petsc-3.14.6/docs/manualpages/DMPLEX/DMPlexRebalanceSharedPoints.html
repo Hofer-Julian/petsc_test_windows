@@ -1,0 +1,41 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DMPLEX/DMPlexRebalanceSharedPoints.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>DMPlexRebalanceSharedPoints</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/DMPLEX/DMPlexRebalanceSharedPoints.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="DMPlexRebalanceSharedPoints"><H1>DMPlexRebalanceSharedPoints</H1></A>
+Redistribute points in the plex that are shared in order to achieve better balancing. This routine updates the PointSF of the <A HREF="../DM/DM.html#DM">DM</A> inplace. 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscdmplex.h"   
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../DMPLEX/DMPlexRebalanceSharedPoints.html#DMPlexRebalanceSharedPoints">DMPlexRebalanceSharedPoints</A>(<A HREF="../DM/DM.html#DM">DM</A> dm, <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> entityDepth, <A HREF="../Sys/PetscBool.html#PetscBool">PetscBool</A> useInitialGuess, <A HREF="../Sys/PetscBool.html#PetscBool">PetscBool</A> parallel, <A HREF="../Sys/PetscBool.html#PetscBool">PetscBool</A> *success)
+</PRE>
+<H3><FONT COLOR="#CC3333">Input parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>dm               </B></TD><TD>- The DMPlex object.
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>entityDepth      </B></TD><TD>- depth of the entity to balance (0 -&gt; balance vertices).
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>useInitialGuess  </B></TD><TD>- whether to use the current distribution as initial guess (only used by ParMETIS).
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>parallel         </B></TD><TD>- whether to use ParMETIS and do the partition in parallel or whether to gather the graph onto a single process and use METIS.
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Output parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>success          </B></TD><TD>- whether the graph partitioning was successful or not. If not, try useInitialGuess=True and parallel=True.
+</TD></TR></TABLE>
+<P>
+
+<P>
+<P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>intermediate<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/dm/impls/plex/plexpartition.c.html#DMPlexRebalanceSharedPoints">src/dm/impls/plex/plexpartition.c</A>
+<BR><A HREF="./index.html">Index of all DMPLEX routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

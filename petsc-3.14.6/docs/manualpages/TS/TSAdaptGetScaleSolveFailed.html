@@ -1,0 +1,39 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/TS/TSAdaptGetScaleSolveFailed.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>TSAdaptGetScaleSolveFailed</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/TS/TSAdaptGetScaleSolveFailed.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="TSAdaptGetScaleSolveFailed"><H1>TSAdaptGetScaleSolveFailed</H1></A>
+Gets the admissible decrease/increase factor in step size 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscts.h" 
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../TS/TSAdaptGetScaleSolveFailed.html#TSAdaptGetScaleSolveFailed">TSAdaptGetScaleSolveFailed</A>(<A HREF="../TS/TSAdapt.html#TSAdapt">TSAdapt</A> adapt,<A HREF="../Sys/PetscReal.html#PetscReal">PetscReal</A> *scale)
+</PRE>
+Not Collective
+<P>
+<H3><FONT COLOR="#CC3333">Input Arguments</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>adapt </B></TD><TD>- adaptive controller context
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Ouput Arguments</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>scale </B></TD><TD>- scale factor
+</TD></TR></TABLE>
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../TS/TSAdaptChoose.html#TSAdaptChoose">TSAdaptChoose</A>(), <A HREF="../TS/TSAdaptSetScaleSolveFailed.html#TSAdaptSetScaleSolveFailed">TSAdaptSetScaleSolveFailed</A>(), <A HREF="../TS/TSAdaptSetClip.html#TSAdaptSetClip">TSAdaptSetClip</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>intermediate<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/ts/adapt/interface/tsadapt.c.html#TSAdaptGetScaleSolveFailed">src/ts/adapt/interface/tsadapt.c</A>
+<BR><A HREF="./index.html">Index of all TS routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

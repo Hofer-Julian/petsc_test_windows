@@ -1,0 +1,118 @@
+<center><a href="ex1f90.F90">Actual source code: ex1f90.F90</a></center><br>
+
+<html>
+<head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/src/ts/utils/dmplexlandau/tutorials/ex1f90.F90.html" />
+<title></title>
+<meta name="generator" content="c2html 0.9.4">
+<meta name="date" content="2021-03-30T16:52:01+00:00">
+</head>
+
+<body bgcolor="#FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 src/ts/utils/dmplexlandau/tutorials/ex1f90.F90.html "><small>Report Typos and Errors</small></a></div>
+<pre width="80">
+<a name="line1">  1: </a>! test phase space (Maxwellian) mesh construction (serial)
+<a name="line2">  2: </a>!
+<a name="line3">  3: </a>!run:
+<a name="line4">  4: </a>!       -${MPIEXEC} ....
+<a name="line5">  5: </a>!       -@${PETSC_DIR}/lib/petsc/bin/petsc_gen_xdmf.py *.h5
+<a name="line6">  6: </a>!
+<a name="line7">  7: </a>!
+<a name="line8">  8: </a>! Contributed by Mark Adams
+<a name="line9">  9: </a>program DMPlexTestLandauInterface
+<a name="line10"> 10: </a>  use petscts
+<a name="line11"> 11: </a>  use petscdmplex
+<a name="line12"> 12: </a>#include <A href="../../../../../include/petsc/finclude/petscts.h.html">&lt;petsc/finclude/petscts.h&gt;</A>
+<a name="line13"> 13: </a>#include <A href="../../../../../include/petsc/finclude/petscdmplex.h.html">&lt;petsc/finclude/petscdmplex.h&gt;</A>
+<a name="line14"> 14: </a>  implicit none
+<a name="line15"> 15: </a>  external <a href="../../../../../docs/manualpages/LANDAU/LandauIFunction.html#LandauIFunction">LandauIFunction</a>
+<a name="line16"> 16: </a>  external <a href="../../../../../docs/manualpages/LANDAU/LandauIJacobian.html#LandauIJacobian">LandauIJacobian</a>
+<a name="line17"> 17: </a>  <a href="../../../../../docs/manualpages/DM/DM.html#DM">DM</a>             dm
+<a name="line18"> 18: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       dim
+<a name="line19"> 19: </a>  <a href="../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       ii
+<a name="line20"> 20: </a>  <a href="../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> ierr
+<a name="line21"> 21: </a>  <a href="../../../../../docs/manualpages/TS/TS.html#TS">TS</a>             ts
+<a name="line22"> 22: </a>  <a href="../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a>            X,X_0
+<a name="line23"> 23: </a>  <a href="../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a>            J
+<a name="line24"> 24: </a>  <a href="../../../../../docs/manualpages/SNES/SNES.html#SNES">SNES</a>           snes
+<a name="line25"> 25: </a>  <a href="../../../../../docs/manualpages/KSP/KSP.html#KSP">KSP</a>            ksp
+<a name="line26"> 26: </a>  <a href="../../../../../docs/manualpages/PC/PC.html#PC">PC</a>             pc
+<a name="line27"> 27: </a>  <a href="../../../../../docs/manualpages/SNES/SNESLineSearch.html#SNESLineSearch">SNESLineSearch</a> linesearch
+<a name="line28"> 28: </a>  <a href="../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>      mone
+<a name="line29"> 29: </a>  <a href="../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>    scalar
+<a name="line30"> 30: </a>  call <a href="../../../../../docs/manualpages/Sys/PetscInitialize.html#PetscInitialize">PetscInitialize</a>(PETSC_NULL_CHARACTER, ierr)
+<a name="line31"> 31: </a>  <font color="#4169E1">if</font> (ierr .ne. 0) then
+<a name="line32"> 32: </a>     print*,'Unable to initialize PETSc'
+<a name="line33"> 33: </a>     stop
+<a name="line34"> 34: </a>  endif
+<a name="line35"> 35: </a>  ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+<a name="line36"> 36: </a>  !  Create mesh (<a href="../../../../../docs/manualpages/DM/DM.html#DM">DM</a>), read in parameters, create and add f_0 (X)
+<a name="line37"> 37: </a>  ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+<a name="line38"> 38: </a>  dim = 2
+<a name="line39"> 39: </a>  call <a href="../../../../../docs/manualpages/LANDAU/LandauCreateVelocitySpace.html#LandauCreateVelocitySpace">LandauCreateVelocitySpace</a>(<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, dim, '', X, J, dm, ierr);CHKERRA(ierr)
+<a name="line40"> 40: </a>  call <a href="../../../../../docs/manualpages/LANDAU/LandauCreateMassMatrix.html#LandauCreateMassMatrix">LandauCreateMassMatrix</a>(dm, PETSC_NULL_MAT, ierr);CHKERRA(ierr)
+<a name="line41"> 41: </a>  call <a href="../../../../../docs/manualpages/DM/DMSetUp.html#DMSetUp">DMSetUp</a>(dm,ierr);CHKERRA(ierr)
+<a name="line42"> 42: </a>  call <a href="../../../../../docs/manualpages/Vec/VecDuplicate.html#VecDuplicate">VecDuplicate</a>(X,X_0,ierr);CHKERRA(ierr)
+<a name="line43"> 43: </a>  call <a href="../../../../../docs/manualpages/Vec/VecCopy.html#VecCopy">VecCopy</a>(X,X_0,ierr)
+<a name="line44"> 44: </a>  ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+<a name="line45"> 45: </a>  !  View
+<a name="line46"> 46: </a>  ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+<a name="line47"> 47: </a>  ii = 0
+<a name="line48"> 48: </a>  call <a href="../../../../../docs/manualpages/LANDAU/LandauPrintNorms.html#LandauPrintNorms">LandauPrintNorms</a>(X,ii,ierr);CHKERRA(ierr)
+<a name="line49"> 49: </a>  mone = 0;
+<a name="line50"> 50: </a>  call <a href="../../../../../docs/manualpages/DM/DMSetOutputSequenceNumber.html#DMSetOutputSequenceNumber">DMSetOutputSequenceNumber</a>(dm, ii, mone, ierr);CHKERRA(ierr);
+<a name="line51"> 51: </a>  ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+<a name="line52"> 52: </a>  !    Create timestepping solver context
+<a name="line53"> 53: </a>  ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+<a name="line54"> 54: </a>  call <a href="../../../../../docs/manualpages/TS/TSCreate.html#TSCreate">TSCreate</a>(<a href="../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,ts,ierr);CHKERRA(ierr)
+<a name="line55"> 55: </a>  call <a href="../../../../../docs/manualpages/TS/TSSetOptionsPrefix.html#TSSetOptionsPrefix">TSSetOptionsPrefix</a>(ts, 'ex1f90_', ierr);CHKERRA(ierr) ! should get this from the dm or give it to the dm
+<a name="line56"> 56: </a>  call <a href="../../../../../docs/manualpages/TS/TSSetDM.html#TSSetDM">TSSetDM</a>(ts,dm,ierr);CHKERRA(ierr)
+<a name="line57"> 57: </a>  call <a href="../../../../../docs/manualpages/TS/TSGetSNES.html#TSGetSNES">TSGetSNES</a>(ts,snes,ierr);CHKERRA(ierr)
+<a name="line58"> 58: </a>  call <a href="../../../../../docs/manualpages/SNES/SNESSetOptionsPrefix.html#SNESSetOptionsPrefix">SNESSetOptionsPrefix</a>(snes, 'ex1f90_', ierr);CHKERRA(ierr) ! should get this from the dm or give it to the dm
+<a name="line59"> 59: </a>  call <a href="../../../../../docs/manualpages/SNES/SNESGetLineSearch.html#SNESGetLineSearch">SNESGetLineSearch</a>(snes,linesearch,ierr);CHKERRA(ierr)
+<a name="line60"> 60: </a>  call <a href="../../../../../docs/manualpages/SNES/SNESLineSearchSetType.html#SNESLineSearchSetType">SNESLineSearchSetType</a>(linesearch,<a href="../../../../../docs/manualpages/SNES/SNESLINESEARCHBASIC.html#SNESLINESEARCHBASIC">SNESLINESEARCHBASIC</a>,ierr);CHKERRA(ierr)
+<a name="line61"> 61: </a>  call <a href="../../../../../docs/manualpages/TS/TSSetIFunction.html#TSSetIFunction">TSSetIFunction</a>(ts,PETSC_NULL_VEC,<a href="../../../../../docs/manualpages/LANDAU/LandauIFunction.html#LandauIFunction">LandauIFunction</a>,PETSC_NULL_VEC,ierr);CHKERRA(ierr)
+<a name="line62"> 62: </a>  call <a href="../../../../../docs/manualpages/TS/TSSetIJacobian.html#TSSetIJacobian">TSSetIJacobian</a>(ts,J,J,<a href="../../../../../docs/manualpages/LANDAU/LandauIJacobian.html#LandauIJacobian">LandauIJacobian</a>,PETSC_NULL_VEC,ierr);CHKERRA(ierr)
+<a name="line63"> 63: </a>  call <a href="../../../../../docs/manualpages/TS/TSSetExactFinalTime.html#TSSetExactFinalTime">TSSetExactFinalTime</a>(ts,<a href="../../../../../docs/manualpages/TS/TSExactFinalTimeOption.html#TSExactFinalTimeOption">TS_EXACTFINALTIME_STEPOVER</a>,ierr);CHKERRA(ierr)
+
+<a name="line65"> 65: </a>  call <a href="../../../../../docs/manualpages/SNES/SNESGetKSP.html#SNESGetKSP">SNESGetKSP</a>(snes,ksp,ierr);CHKERRA(ierr)
+<a name="line66"> 66: </a>  call <a href="../../../../../docs/manualpages/KSP/KSPSetOptionsPrefix.html#KSPSetOptionsPrefix">KSPSetOptionsPrefix</a>(ksp, 'ex1f90_', ierr);CHKERRA(ierr) ! should get this from the dm or give it to the dm
+<a name="line67"> 67: </a>  call <a href="../../../../../docs/manualpages/KSP/KSPGetPC.html#KSPGetPC">KSPGetPC</a>(ksp,pc,ierr);CHKERRA(ierr)
+<a name="line68"> 68: </a>  call <a href="../../../../../docs/manualpages/PC/PCSetOptionsPrefix.html#PCSetOptionsPrefix">PCSetOptionsPrefix</a>(pc, 'ex1f90_', ierr);CHKERRA(ierr) ! should get this from the dm or give it to the dm
+
+<a name="line70"> 70: </a>  call <a href="../../../../../docs/manualpages/TS/TSSetFromOptions.html#TSSetFromOptions">TSSetFromOptions</a>(ts,ierr);CHKERRA(ierr)
+<a name="line71"> 71: </a>  call <a href="../../../../../docs/manualpages/TS/TSSetSolution.html#TSSetSolution">TSSetSolution</a>(ts,X,ierr);CHKERRA(ierr)
+<a name="line72"> 72: </a>  ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+<a name="line73"> 73: </a>  !  Solve nonlinear system
+<a name="line74"> 74: </a>  ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+<a name="line75"> 75: </a>  call <a href="../../../../../docs/manualpages/TS/TSSolve.html#TSSolve">TSSolve</a>(ts,X,ierr);CHKERRA(ierr)
+<a name="line76"> 76: </a>  ii = 1
+<a name="line77"> 77: </a>  call <a href="../../../../../docs/manualpages/LANDAU/LandauPrintNorms.html#LandauPrintNorms">LandauPrintNorms</a>(X,ii,ierr);CHKERRA(ierr)
+<a name="line78"> 78: </a>  call <a href="../../../../../docs/manualpages/TS/TSGetTime.html#TSGetTime">TSGetTime</a>(ts, mone, ierr);CHKERRA(ierr);
+<a name="line79"> 79: </a>  call <a href="../../../../../docs/manualpages/DM/DMSetOutputSequenceNumber.html#DMSetOutputSequenceNumber">DMSetOutputSequenceNumber</a>(dm, ii, mone, ierr);CHKERRA(ierr);
+<a name="line80"> 80: </a>  ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+<a name="line81"> 81: </a>  !  remove f_0
+<a name="line82"> 82: </a>  ! - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+<a name="line83"> 83: </a>  scalar = -1.
+<a name="line84"> 84: </a>  call <a href="../../../../../docs/manualpages/Vec/VecAXPY.html#VecAXPY">VecAXPY</a>(X,scalar,X_0,ierr);CHKERRA(ierr)
+<a name="line85"> 85: </a>  call <a href="../../../../../docs/manualpages/LANDAU/LandauDestroyVelocitySpace.html#LandauDestroyVelocitySpace">LandauDestroyVelocitySpace</a>(dm, ierr);CHKERRA(ierr)
+<a name="line86"> 86: </a>  call <a href="../../../../../docs/manualpages/TS/TSDestroy.html#TSDestroy">TSDestroy</a>(ts, ierr);CHKERRA(ierr)
+<a name="line87"> 87: </a>  call <a href="../../../../../docs/manualpages/Vec/VecDestroy.html#VecDestroy">VecDestroy</a>(X, ierr);CHKERRA(ierr)
+<a name="line88"> 88: </a>  call <a href="../../../../../docs/manualpages/Vec/VecDestroy.html#VecDestroy">VecDestroy</a>(X_0, ierr);CHKERRA(ierr)
+<a name="line89"> 89: </a>  call <a href="../../../../../docs/manualpages/Sys/PetscFinalize.html#PetscFinalize">PetscFinalize</a>(ierr)
+<a name="line90"> 90: </a>end program DMPlexTestLandauInterface
+
+<a name="line92"> 92: </a>!<font color="#B22222">/*TEST</font>
+<a name="line93"> 93: </a><font color="#B22222">!  build:</font>
+<a name="line94"> 94: </a><font color="#B22222">!    requires: define(PETSC_USING_F90FREEFORM)</font>
+<a name="line95"> 95: </a><font color="#B22222">!</font>
+<a name="line96"> 96: </a><font color="#B22222">!  test:</font>
+<a name="line97"> 97: </a><font color="#B22222">!    suffix: 0</font>
+<a name="line98"> 98: </a><font color="#B22222">!    requires: p4est !complex</font>
+<a name="line99"> 99: </a><font color="#B22222">!    args: -petscspace_degree 4 -petscspace_poly_tensor 1 -dm_landau_type p4est -info :dm,tsadapt -dm_landau_ion_masses 2,4 -dm_landau_ion_charges 1,8 -dm_landau_thermal_temps 5,5,.5 -dm_landau_n 1.00018,1,1e-5 -dm_landau_n_0 1e20 -ex1f90_ts_monitor -ex1f90_snes_rtol 1.e-6 -ex1f90_snes_monitor -ex1f90_snes_converged_reason -ex1f90_ts_type arkimex -ex1f90_ts_arkimex_type 1bee -ex1f90_ts_max_snes_failures -1 -ex1f90_ts_rtol 1e-4 -ex1f90_ts_dt 1.e-6 -ex1f90_ts_max_time 1 -ex1f90_ts_adapt_clip .5,1.25 -ex1f90_ts_adapt_scale_solve_failed 0.75 -ex1f90_ts_adapt_time_step_increase_delay 5 -ex1f90_ts_max_steps 1 -ex1f90_pc_type lu -ex1f90_ksp_type preonly -dm_landau_amr_levels_max 7 -dm_landau_domain_radius 5 -dm_landau_amr_re_levels 0 -dm_landau_re_radius 1 -dm_landau_amr_z_refine1 1 -dm_landau_amr_z_refine2 0 -dm_landau_amr_post_refine 0 -dm_landau_z_radius1 .1 -dm_landau_z_radius2 .1 -dm_refine 1 -dm_landau_device_type cpu</font>
+<a name="line100">100: </a><font color="#B22222">!</font>
+<a name="line101">101: </a><font color="#B22222">!TEST*/</font>
+</pre>
+</body>
+
+</html>

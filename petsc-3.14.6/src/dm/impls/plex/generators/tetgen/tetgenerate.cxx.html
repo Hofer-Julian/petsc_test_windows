@@ -1,0 +1,355 @@
+<center><a href="tetgenerate.cxx">Actual source code: tetgenerate.cxx</a></center><br>
+
+<html>
+<head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/src/dm/impls/plex/generators/tetgen/tetgenerate.cxx.html" />
+<title></title>
+<meta name="generator" content="c2html 0.9.4">
+<meta name="date" content="2021-03-30T16:50:46+00:00">
+</head>
+
+<body bgcolor="#FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 src/dm/impls/plex/generators/tetgen/tetgenerate.cxx.html "><small>Report Typos and Errors</small></a></div>
+<pre width="80">
+<a name="line1">  1: </a>#include <A href="../../../../../../include/petsc/private/dmpleximpl.h.html">&lt;petsc/private/dmpleximpl.h&gt;</A>
+
+<a name="line3">  3: </a><font color="#A020F0">#if defined(PETSC_HAVE_TETGEN_TETLIBRARY_NEEDED)</font>
+<a name="line4">  4: </a><strong><font color="#228B22">#define TETLIBRARY</font></strong>
+<a name="line5">  5: </a><font color="#A020F0">#endif</font>
+<a name="line6">  6: </a><font color="#A020F0">#include &lt;tetgen.h&gt;</font>
+
+<a name="line8">  8: </a><font color="#B22222">/* This is to fix the tetrahedron orientation from TetGen */</font>
+<a name="line9">  9: </a><strong><font color="#4169E1"><a name="DMPlexInvertCells_Tetgen"></a>static <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> DMPlexInvertCells_Tetgen(<a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> numCells, <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> numCorners, <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> cells[])</font></strong>
+<a name="line10"> 10: </a>{
+<a name="line11"> 11: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> bound = numCells*numCorners, coff;
+
+<a name="line14"> 14: </a><strong><font color="#228B22">#define SWAP(a,b) do { <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> tmp = (a); (a) = (b); (b) = tmp; } while (0)</font></strong>
+<a name="line15"> 15: </a>  <font color="#4169E1">for</font> (coff = 0; coff &lt; bound; coff += numCorners) SWAP(cells[coff],cells[coff+1]);
+<a name="line16"> 16: </a><strong><font color="#228B22">#undef SWAP</font></strong>
+<a name="line17"> 17: </a>  <font color="#4169E1">return</font>(0);
+<a name="line18"> 18: </a>}
+
+<a name="line20"> 20: </a><strong><font color="#4169E1"><a name="DMPlexGenerate_Tetgen"></a>PETSC_EXTERN <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> DMPlexGenerate_Tetgen(<a href="../../../../../../docs/manualpages/DM/DM.html#DM">DM</a> boundary, <a href="../../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> interpolate, <a href="../../../../../../docs/manualpages/DM/DM.html#DM">DM</a> *dm)</font></strong>
+<a name="line21"> 21: </a>{
+<a name="line22"> 22: </a>  <a href="../../../../../../docs/manualpages/Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</a>       comm;
+<a name="line23"> 23: </a>  DM_Plex       *mesh      = (DM_Plex *) boundary-&gt;data;
+<a name="line24"> 24: </a>  const <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> dim       = 3;
+<a name="line25"> 25: </a>  const char    *labelName = <font color="#666666">"marker"</font>;
+<a name="line26"> 26: </a>  ::tetgenio     in;
+<a name="line27"> 27: </a>  ::tetgenio     out;
+<a name="line28"> 28: </a>  <a href="../../../../../../docs/manualpages/DM/DMLabel.html#DMLabel">DMLabel</a>        label;
+<a name="line29"> 29: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       vStart, vEnd, v, fStart, fEnd, f;
+<a name="line30"> 30: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a>    rank;
+
+<a name="line34"> 34: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscObjectGetComm.html#PetscObjectGetComm">PetscObjectGetComm</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)boundary,&amp;comm);
+<a name="line35"> 35: </a>  <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_rank.html#MPI_Comm_rank">MPI_Comm_rank</a>(comm, &amp;rank);
+<a name="line36"> 36: </a>  <a href="../../../../../../docs/manualpages/DMPLEX/DMPlexGetDepthStratum.html#DMPlexGetDepthStratum">DMPlexGetDepthStratum</a>(boundary, 0, &amp;vStart, &amp;vEnd);
+<a name="line37"> 37: </a>  <a href="../../../../../../docs/manualpages/DM/DMGetLabel.html#DMGetLabel">DMGetLabel</a>(boundary, labelName, &amp;label);
+
+<a name="line39"> 39: </a>  in.numberofpoints = vEnd - vStart;
+<a name="line40"> 40: </a>  <font color="#4169E1">if</font> (in.numberofpoints &gt; 0) {
+<a name="line41"> 41: </a>    <a href="../../../../../../docs/manualpages/PetscSection/PetscSection.html#PetscSection">PetscSection</a> coordSection;
+<a name="line42"> 42: </a>    <a href="../../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a>          coordinates;
+<a name="line43"> 43: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> *array;
+
+<a name="line45"> 45: </a>    in.pointlist       = new double[in.numberofpoints*dim];
+<a name="line46"> 46: </a>    in.pointmarkerlist = new int[in.numberofpoints];
+
+<a name="line48"> 48: </a>    <a href="../../../../../../docs/manualpages/DM/DMGetCoordinatesLocal.html#DMGetCoordinatesLocal">DMGetCoordinatesLocal</a>(boundary, &amp;coordinates);
+<a name="line49"> 49: </a>    <a href="../../../../../../docs/manualpages/DM/DMGetCoordinateSection.html#DMGetCoordinateSection">DMGetCoordinateSection</a>(boundary, &amp;coordSection);
+<a name="line50"> 50: </a>    <a href="../../../../../../docs/manualpages/Vec/VecGetArray.html#VecGetArray">VecGetArray</a>(coordinates, &amp;array);
+<a name="line51"> 51: </a>    <font color="#4169E1">for</font> (v = vStart; v &lt; vEnd; ++v) {
+<a name="line52"> 52: </a>      const <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> idx = v - vStart;
+<a name="line53"> 53: </a>      <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       off, d;
+
+<a name="line55"> 55: </a>      <a href="../../../../../../docs/manualpages/PetscSection/PetscSectionGetOffset.html#PetscSectionGetOffset">PetscSectionGetOffset</a>(coordSection, v, &amp;off);
+<a name="line56"> 56: </a>      <font color="#4169E1">for</font> (d = 0; d &lt; dim; ++d) in.pointlist[idx*dim + d] = <a href="../../../../../../docs/manualpages/Sys/PetscRealPart.html#PetscRealPart">PetscRealPart</a>(array[off+d]);
+<a name="line57"> 57: </a>      <font color="#4169E1">if</font> (label) {
+<a name="line58"> 58: </a>        <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> val;
+
+<a name="line60"> 60: </a>        <a href="../../../../../../docs/manualpages/DMLABEL/DMLabelGetValue.html#DMLabelGetValue">DMLabelGetValue</a>(label, v, &amp;val);
+<a name="line61"> 61: </a>        in.pointmarkerlist[idx] = (int) val;
+<a name="line62"> 62: </a>      }
+<a name="line63"> 63: </a>    }
+<a name="line64"> 64: </a>    <a href="../../../../../../docs/manualpages/Vec/VecRestoreArray.html#VecRestoreArray">VecRestoreArray</a>(coordinates, &amp;array);
+<a name="line65"> 65: </a>  }
+<a name="line66"> 66: </a>  <a href="../../../../../../docs/manualpages/DMPLEX/DMPlexGetHeightStratum.html#DMPlexGetHeightStratum">DMPlexGetHeightStratum</a>(boundary, 0, &amp;fStart, &amp;fEnd);
+
+<a name="line68"> 68: </a>  in.numberoffacets = fEnd - fStart;
+<a name="line69"> 69: </a>  <font color="#4169E1">if</font> (in.numberoffacets &gt; 0) {
+<a name="line70"> 70: </a>    in.facetlist       = new tetgenio::facet[in.numberoffacets];
+<a name="line71"> 71: </a>    in.facetmarkerlist = new int[in.numberoffacets];
+<a name="line72"> 72: </a>    <font color="#4169E1">for</font> (f = fStart; f &lt; fEnd; ++f) {
+<a name="line73"> 73: </a>      const <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> idx     = f - fStart;
+<a name="line74"> 74: </a>      <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>      *points = NULL, numPoints, p, numVertices = 0, v;
+
+<a name="line76"> 76: </a>      in.facetlist[idx].numberofpolygons = 1;
+<a name="line77"> 77: </a>      in.facetlist[idx].polygonlist      = new tetgenio::polygon[in.facetlist[idx].numberofpolygons];
+<a name="line78"> 78: </a>      in.facetlist[idx].numberofholes    = 0;
+<a name="line79"> 79: </a>      in.facetlist[idx].holelist         = NULL;
+
+<a name="line81"> 81: </a>      <a href="../../../../../../docs/manualpages/DMPLEX/DMPlexGetTransitiveClosure.html#DMPlexGetTransitiveClosure">DMPlexGetTransitiveClosure</a>(boundary, f, <a href="../../../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>, &amp;numPoints, &amp;points);
+<a name="line82"> 82: </a>      <font color="#4169E1">for</font> (p = 0; p &lt; numPoints*2; p += 2) {
+<a name="line83"> 83: </a>        const <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> point = points[p];
+<a name="line84"> 84: </a>        <font color="#4169E1">if</font> ((point &gt;= vStart) &amp;&amp; (point &lt; vEnd)) points[numVertices++] = point;
+<a name="line85"> 85: </a>      }
+
+<a name="line87"> 87: </a><strong><font color="#FF0000">      tetgenio:</font></strong>:polygon *poly = in.facetlist[idx].polygonlist;
+<a name="line88"> 88: </a>      poly-&gt;numberofvertices = numVertices;
+<a name="line89"> 89: </a>      poly-&gt;vertexlist       = new int[poly-&gt;numberofvertices];
+<a name="line90"> 90: </a>      <font color="#4169E1">for</font> (v = 0; v &lt; numVertices; ++v) {
+<a name="line91"> 91: </a>        const <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> vIdx = points[v] - vStart;
+<a name="line92"> 92: </a>        poly-&gt;vertexlist[v] = vIdx;
+<a name="line93"> 93: </a>      }
+<a name="line94"> 94: </a>      <font color="#4169E1">if</font> (label) {
+<a name="line95"> 95: </a>        <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> val;
+
+<a name="line97"> 97: </a>        <a href="../../../../../../docs/manualpages/DMLABEL/DMLabelGetValue.html#DMLabelGetValue">DMLabelGetValue</a>(label, f, &amp;val);
+<a name="line98"> 98: </a>        in.facetmarkerlist[idx] = (int) val;
+<a name="line99"> 99: </a>      }
+<a name="line100">100: </a>      <a href="../../../../../../docs/manualpages/DMPLEX/DMPlexRestoreTransitiveClosure.html#DMPlexRestoreTransitiveClosure">DMPlexRestoreTransitiveClosure</a>(boundary, f, <a href="../../../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>, &amp;numPoints, &amp;points);
+<a name="line101">101: </a>    }
+<a name="line102">102: </a>  }
+<a name="line103">103: </a>  <font color="#4169E1">if</font> (!rank) {
+<a name="line104">104: </a>    char args[32];
+
+<a name="line106">106: </a>    <font color="#B22222">/* Take away 'Q' for verbose output */</font>
+<a name="line107">107: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscStrcpy.html#PetscStrcpy">PetscStrcpy</a>(args, <font color="#666666">"pqezQ"</font>);
+<a name="line108">108: </a>    <font color="#4169E1">if</font> (mesh-&gt;tetgenOpts) {::tetrahedralize(mesh-&gt;tetgenOpts, &amp;in, &amp;out);}
+<a name="line109">109: </a>    <font color="#4169E1">else</font>                  {::tetrahedralize(args, &amp;in, &amp;out);}
+<a name="line110">110: </a>  }
+<a name="line111">111: </a>  {
+<a name="line112">112: </a>    <a href="../../../../../../docs/manualpages/DM/DMLabel.html#DMLabel">DMLabel</a>          glabel      = NULL;
+<a name="line113">113: </a>    const <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>   numCorners  = 4;
+<a name="line114">114: </a>    const <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>   numCells    = out.numberoftetrahedra;
+<a name="line115">115: </a>    const <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>   numVertices = out.numberofpoints;
+<a name="line116">116: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>        *meshCoords = NULL;
+<a name="line117">117: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>         *cells      = NULL;
+
+<a name="line119">119: </a>    <font color="#4169E1">if</font> (<font color="#4169E1">sizeof</font> (<a href="../../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>) == <font color="#4169E1">sizeof</font> (out.pointlist[0])) {
+<a name="line120">120: </a>      meshCoords = (<a href="../../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> *) out.pointlist;
+<a name="line121">121: </a>    } <font color="#4169E1">else</font> {
+<a name="line122">122: </a>      <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> i;
+
+<a name="line124">124: </a>      meshCoords = new <a href="../../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>[dim * numVertices];
+<a name="line125">125: </a>      <font color="#4169E1">for</font> (i = 0; i &lt; dim * numVertices; i++) {
+<a name="line126">126: </a>        meshCoords[i] = (<a href="../../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>) out.pointlist[i];
+<a name="line127">127: </a>      }
+<a name="line128">128: </a>    }
+<a name="line129">129: </a>    <font color="#4169E1">if</font> (<font color="#4169E1">sizeof</font> (<a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>) == <font color="#4169E1">sizeof</font> (out.tetrahedronlist[0])) {
+<a name="line130">130: </a>      cells = (<a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *) out.tetrahedronlist;
+<a name="line131">131: </a>    } <font color="#4169E1">else</font> {
+<a name="line132">132: </a>      <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> i;
+
+<a name="line134">134: </a>      cells = new <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>[numCells * numCorners];
+<a name="line135">135: </a>      <font color="#4169E1">for</font> (i = 0; i &lt; numCells * numCorners; i++) {
+<a name="line136">136: </a>        cells[i] = (<a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>) out.tetrahedronlist[i];
+<a name="line137">137: </a>      }
+<a name="line138">138: </a>    }
+
+<a name="line140">140: </a>    DMPlexInvertCells_Tetgen(numCells, numCorners, cells);
+<a name="line141">141: </a>    <a href="../../../../../../docs/manualpages/DMPLEX/DMPlexCreateFromCellListPetsc.html#DMPlexCreateFromCellListPetsc">DMPlexCreateFromCellListPetsc</a>(comm, dim, numCells, numVertices, numCorners, interpolate, cells, dim, meshCoords, dm);
+<a name="line142">142: </a>    <font color="#4169E1">if</font> (label) {<a href="../../../../../../docs/manualpages/DM/DMCreateLabel.html#DMCreateLabel">DMCreateLabel</a>(*dm, labelName); <a href="../../../../../../docs/manualpages/DM/DMGetLabel.html#DMGetLabel">DMGetLabel</a>(*dm, labelName, &amp;glabel);}
+<a name="line143">143: </a>    <font color="#B22222">/* Set labels */</font>
+<a name="line144">144: </a>    <font color="#4169E1">for</font> (v = 0; v &lt; numVertices; ++v) {
+<a name="line145">145: </a>      <font color="#4169E1">if</font> (out.pointmarkerlist[v]) {
+<a name="line146">146: </a>        <font color="#4169E1">if</font> (glabel) {<a href="../../../../../../docs/manualpages/DMLABEL/DMLabelSetValue.html#DMLabelSetValue">DMLabelSetValue</a>(glabel, v+numCells, out.pointmarkerlist[v]);}
+<a name="line147">147: </a>      }
+<a name="line148">148: </a>    }
+<a name="line149">149: </a>    <font color="#4169E1">if</font> (interpolate) {
+<a name="line150">150: </a><font color="#A020F0">#if 0</font>
+<a name="line151">151: </a>      <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> e;
+
+<a name="line153">153: </a>      <font color="#B22222">/* This check is never actually executed for ctetgen (which never returns edgemarkers) and seems to be broken for</font>
+<a name="line154">154: </a><font color="#B22222">       * tetgen */</font>
+<a name="line155">155: </a>      <font color="#4169E1">for</font> (e = 0; e &lt; out.numberofedges; e++) {
+<a name="line156">156: </a>        <font color="#4169E1">if</font> (out.edgemarkerlist[e]) {
+<a name="line157">157: </a>          const <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>  vertices[2] = {out.edgelist[e*2+0]+numCells, out.edgelist[e*2+1]+numCells};
+<a name="line158">158: </a>          const <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *edges;
+<a name="line159">159: </a>          <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>        numEdges;
+
+<a name="line161">161: </a>          <a href="../../../../../../docs/manualpages/DMPLEX/DMPlexGetJoin.html#DMPlexGetJoin">DMPlexGetJoin</a>(*dm, 2, vertices, &amp;numEdges, &amp;edges);
+<a name="line162">162: </a>          <font color="#4169E1">if</font> (numEdges != 1) <a href="../../../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, PETSC_ERR_PLIB, <font color="#666666">"Two vertices must cover only one edge, not %D"</font>, numEdges);
+<a name="line163">163: </a>          <font color="#4169E1">if</font> (glabel) {<a href="../../../../../../docs/manualpages/DMLABEL/DMLabelSetValue.html#DMLabelSetValue">DMLabelSetValue</a>(glabel, edges[0], out.edgemarkerlist[e]);}
+<a name="line164">164: </a>          <a href="../../../../../../docs/manualpages/DMPLEX/DMPlexRestoreJoin.html#DMPlexRestoreJoin">DMPlexRestoreJoin</a>(*dm, 2, vertices, &amp;numEdges, &amp;edges);
+<a name="line165">165: </a>        }
+<a name="line166">166: </a>      }
+<a name="line167">167: </a><font color="#A020F0">#endif</font>
+<a name="line168">168: </a>      <font color="#4169E1">for</font> (f = 0; f &lt; out.numberoftrifaces; f++) {
+<a name="line169">169: </a>        <font color="#4169E1">if</font> (out.trifacemarkerlist[f]) {
+<a name="line170">170: </a>          const <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>  vertices[3] = {out.trifacelist[f*3+0]+numCells, out.trifacelist[f*3+1]+numCells, out.trifacelist[f*3+2]+numCells};
+<a name="line171">171: </a>          const <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *faces;
+<a name="line172">172: </a>          <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>        numFaces;
+
+<a name="line174">174: </a>          <a href="../../../../../../docs/manualpages/DMPLEX/DMPlexGetFullJoin.html#DMPlexGetFullJoin">DMPlexGetFullJoin</a>(*dm, 3, vertices, &amp;numFaces, &amp;faces);
+<a name="line175">175: </a>          <font color="#4169E1">if</font> (numFaces != 1) <a href="../../../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, PETSC_ERR_PLIB, <font color="#666666">"Three vertices must cover only one face, not %D"</font>, numFaces);
+<a name="line176">176: </a>          <font color="#4169E1">if</font> (glabel) {<a href="../../../../../../docs/manualpages/DMLABEL/DMLabelSetValue.html#DMLabelSetValue">DMLabelSetValue</a>(glabel, faces[0], out.trifacemarkerlist[f]);}
+<a name="line177">177: </a>          <a href="../../../../../../docs/manualpages/DMPLEX/DMPlexRestoreJoin.html#DMPlexRestoreJoin">DMPlexRestoreJoin</a>(*dm, 3, vertices, &amp;numFaces, &amp;faces);
+<a name="line178">178: </a>        }
+<a name="line179">179: </a>      }
+<a name="line180">180: </a>    }
+<a name="line181">181: </a>    <a href="../../../../../../docs/manualpages/DMPLEX/DMPlexSetRefinementUniform.html#DMPlexSetRefinementUniform">DMPlexSetRefinementUniform</a>(*dm, <a href="../../../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>);
+<a name="line182">182: </a>  }
+<a name="line183">183: </a>  <font color="#4169E1">return</font>(0);
+<a name="line184">184: </a>}
+
+<a name="line186">186: </a><strong><font color="#4169E1"><a name="DMPlexRefine_Tetgen"></a>PETSC_EXTERN <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> DMPlexRefine_Tetgen(<a href="../../../../../../docs/manualpages/DM/DM.html#DM">DM</a> dm, double *maxVolumes, <a href="../../../../../../docs/manualpages/DM/DM.html#DM">DM</a> *dmRefined)</font></strong>
+<a name="line187">187: </a>{
+<a name="line188">188: </a>  <a href="../../../../../../docs/manualpages/Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</a>       comm;
+<a name="line189">189: </a>  const <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> dim       = 3;
+<a name="line190">190: </a>  const char    *labelName = <font color="#666666">"marker"</font>;
+<a name="line191">191: </a>  ::tetgenio     in;
+<a name="line192">192: </a>  ::tetgenio     out;
+<a name="line193">193: </a>  <a href="../../../../../../docs/manualpages/DM/DMLabel.html#DMLabel">DMLabel</a>        label;
+<a name="line194">194: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       vStart, vEnd, v, cStart, cEnd, c, depth, depthGlobal;
+<a name="line195">195: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscMPIInt.html#PetscMPIInt">PetscMPIInt</a>    rank;
+
+<a name="line199">199: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscObjectGetComm.html#PetscObjectGetComm">PetscObjectGetComm</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)dm,&amp;comm);
+<a name="line200">200: </a>  <a href="http://www.mpich.org/static/docs/latest/www3/MPI_Comm_rank.html#MPI_Comm_rank">MPI_Comm_rank</a>(comm, &amp;rank);
+<a name="line201">201: </a>  <a href="../../../../../../docs/manualpages/DMPLEX/DMPlexGetDepth.html#DMPlexGetDepth">DMPlexGetDepth</a>(dm, &amp;depth);
+<a name="line202">202: </a>  <a href="../../../../../../docs/manualpages/Sys/MPIU_Allreduce.html#MPIU_Allreduce">MPIU_Allreduce</a>(&amp;depth, &amp;depthGlobal, 1, <a href="../../../../../../docs/manualpages/Sys/MPIU_INT.html#MPIU_INT">MPIU_INT</a>, MPI_MAX, comm);
+<a name="line203">203: </a>  <a href="../../../../../../docs/manualpages/DMPLEX/DMPlexGetDepthStratum.html#DMPlexGetDepthStratum">DMPlexGetDepthStratum</a>(dm, 0, &amp;vStart, &amp;vEnd);
+<a name="line204">204: </a>  <a href="../../../../../../docs/manualpages/DM/DMGetLabel.html#DMGetLabel">DMGetLabel</a>(dm, labelName, &amp;label);
+
+<a name="line206">206: </a>  in.numberofpoints = vEnd - vStart;
+<a name="line207">207: </a>  <font color="#4169E1">if</font> (in.numberofpoints &gt; 0) {
+<a name="line208">208: </a>    <a href="../../../../../../docs/manualpages/PetscSection/PetscSection.html#PetscSection">PetscSection</a> coordSection;
+<a name="line209">209: </a>    <a href="../../../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a>          coordinates;
+<a name="line210">210: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> *array;
+
+<a name="line212">212: </a>    in.pointlist       = new double[in.numberofpoints*dim];
+<a name="line213">213: </a>    in.pointmarkerlist = new int[in.numberofpoints];
+
+<a name="line215">215: </a>    <a href="../../../../../../docs/manualpages/DM/DMGetCoordinatesLocal.html#DMGetCoordinatesLocal">DMGetCoordinatesLocal</a>(dm, &amp;coordinates);
+<a name="line216">216: </a>    <a href="../../../../../../docs/manualpages/DM/DMGetCoordinateSection.html#DMGetCoordinateSection">DMGetCoordinateSection</a>(dm, &amp;coordSection);
+<a name="line217">217: </a>    <a href="../../../../../../docs/manualpages/Vec/VecGetArray.html#VecGetArray">VecGetArray</a>(coordinates, &amp;array);
+<a name="line218">218: </a>    <font color="#4169E1">for</font> (v = vStart; v &lt; vEnd; ++v) {
+<a name="line219">219: </a>      const <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> idx = v - vStart;
+<a name="line220">220: </a>      <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       off, d;
+
+<a name="line222">222: </a>      <a href="../../../../../../docs/manualpages/PetscSection/PetscSectionGetOffset.html#PetscSectionGetOffset">PetscSectionGetOffset</a>(coordSection, v, &amp;off);
+<a name="line223">223: </a>      <font color="#4169E1">for</font> (d = 0; d &lt; dim; ++d) in.pointlist[idx*dim + d] = <a href="../../../../../../docs/manualpages/Sys/PetscRealPart.html#PetscRealPart">PetscRealPart</a>(array[off+d]);
+<a name="line224">224: </a>      <font color="#4169E1">if</font> (label) {
+<a name="line225">225: </a>        <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> val;
+
+<a name="line227">227: </a>        <a href="../../../../../../docs/manualpages/DMLABEL/DMLabelGetValue.html#DMLabelGetValue">DMLabelGetValue</a>(label, v, &amp;val);
+<a name="line228">228: </a>        in.pointmarkerlist[idx] = (int) val;
+<a name="line229">229: </a>      }
+<a name="line230">230: </a>    }
+<a name="line231">231: </a>    <a href="../../../../../../docs/manualpages/Vec/VecRestoreArray.html#VecRestoreArray">VecRestoreArray</a>(coordinates, &amp;array);
+<a name="line232">232: </a>  }
+<a name="line233">233: </a>  <a href="../../../../../../docs/manualpages/DMPLEX/DMPlexGetHeightStratum.html#DMPlexGetHeightStratum">DMPlexGetHeightStratum</a>(dm, 0, &amp;cStart, &amp;cEnd);
+
+<a name="line235">235: </a>  in.numberofcorners       = 4;
+<a name="line236">236: </a>  in.numberoftetrahedra    = cEnd - cStart;
+<a name="line237">237: </a>  in.tetrahedronvolumelist = (double*) maxVolumes;
+<a name="line238">238: </a>  <font color="#4169E1">if</font> (in.numberoftetrahedra &gt; 0) {
+<a name="line239">239: </a>    in.tetrahedronlist = new int[in.numberoftetrahedra*in.numberofcorners];
+<a name="line240">240: </a>    <font color="#4169E1">for</font> (c = cStart; c &lt; cEnd; ++c) {
+<a name="line241">241: </a>      const <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> idx      = c - cStart;
+<a name="line242">242: </a>      <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>      *closure = NULL;
+<a name="line243">243: </a>      <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       closureSize;
+
+<a name="line245">245: </a>      <a href="../../../../../../docs/manualpages/DMPLEX/DMPlexGetTransitiveClosure.html#DMPlexGetTransitiveClosure">DMPlexGetTransitiveClosure</a>(dm, c, <a href="../../../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>, &amp;closureSize, &amp;closure);
+<a name="line246">246: </a>      <font color="#4169E1">if</font> ((closureSize != 5) &amp;&amp; (closureSize != 15)) <a href="../../../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(comm, PETSC_ERR_ARG_WRONG, <font color="#666666">"Mesh has cell which is not a tetrahedron, %D vertices in closure"</font>, closureSize);
+<a name="line247">247: </a>      <font color="#4169E1">for</font> (v = 0; v &lt; 4; ++v) {
+<a name="line248">248: </a>        in.tetrahedronlist[idx*in.numberofcorners + v] = closure[(v+closureSize-4)*2] - vStart;
+<a name="line249">249: </a>      }
+<a name="line250">250: </a>      <a href="../../../../../../docs/manualpages/DMPLEX/DMPlexRestoreTransitiveClosure.html#DMPlexRestoreTransitiveClosure">DMPlexRestoreTransitiveClosure</a>(dm, c, <a href="../../../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>, &amp;closureSize, &amp;closure);
+<a name="line251">251: </a>    }
+<a name="line252">252: </a>  }
+<a name="line253">253: </a>  <font color="#B22222">/* TODO: Put in boundary faces with markers */</font>
+<a name="line254">254: </a>  <font color="#4169E1">if</font> (!rank) {
+<a name="line255">255: </a>    char args[32];
+
+<a name="line257">257: </a><font color="#A020F0">#if 1</font>
+<a name="line258">258: </a>    <font color="#B22222">/* Take away 'Q' for verbose output */</font>
+<a name="line259">259: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscStrcpy.html#PetscStrcpy">PetscStrcpy</a>(args, <font color="#666666">"qezQra"</font>);
+<a name="line260">260: </a><font color="#A020F0">#else</font>
+<a name="line261">261: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscStrcpy.html#PetscStrcpy">PetscStrcpy</a>(args, <font color="#666666">"qezraVVVV"</font>);
+<a name="line262">262: </a><font color="#A020F0">#endif</font>
+<a name="line263">263: </a>    ::tetrahedralize(args, &amp;in, &amp;out);
+<a name="line264">264: </a>  }
+<a name="line265">265: </a>  in.tetrahedronvolumelist = NULL;
+
+<a name="line267">267: </a>  {
+<a name="line268">268: </a>    <a href="../../../../../../docs/manualpages/DM/DMLabel.html#DMLabel">DMLabel</a>          rlabel      = NULL;
+<a name="line269">269: </a>    const <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>   numCorners  = 4;
+<a name="line270">270: </a>    const <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>   numCells    = out.numberoftetrahedra;
+<a name="line271">271: </a>    const <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>   numVertices = out.numberofpoints;
+<a name="line272">272: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>        *meshCoords = NULL;
+<a name="line273">273: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>         *cells      = NULL;
+<a name="line274">274: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>        interpolate = depthGlobal &gt; 1 ? <a href="../../../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a> : <a href="../../../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+
+<a name="line276">276: </a>    <font color="#4169E1">if</font> (<font color="#4169E1">sizeof</font> (<a href="../../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>) == <font color="#4169E1">sizeof</font> (out.pointlist[0])) {
+<a name="line277">277: </a>      meshCoords = (<a href="../../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a> *) out.pointlist;
+<a name="line278">278: </a>    } <font color="#4169E1">else</font> {
+<a name="line279">279: </a>      <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> i;
+
+<a name="line281">281: </a>      meshCoords = new <a href="../../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>[dim * numVertices];
+<a name="line282">282: </a>      <font color="#4169E1">for</font> (i = 0; i &lt; dim * numVertices; i++) {
+<a name="line283">283: </a>        meshCoords[i] = (<a href="../../../../../../docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a>) out.pointlist[i];
+<a name="line284">284: </a>      }
+<a name="line285">285: </a>    }
+<a name="line286">286: </a>    <font color="#4169E1">if</font> (<font color="#4169E1">sizeof</font> (<a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>) == <font color="#4169E1">sizeof</font> (out.tetrahedronlist[0])) {
+<a name="line287">287: </a>      cells = (<a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *) out.tetrahedronlist;
+<a name="line288">288: </a>    } <font color="#4169E1">else</font> {
+<a name="line289">289: </a>      <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> i;
+
+<a name="line291">291: </a>      cells = new <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>[numCells * numCorners];
+<a name="line292">292: </a>      <font color="#4169E1">for</font> (i = 0; i &lt; numCells * numCorners; i++) {
+<a name="line293">293: </a>        cells[i] = (<a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>) out.tetrahedronlist[i];
+<a name="line294">294: </a>      }
+<a name="line295">295: </a>    }
+
+<a name="line297">297: </a>    DMPlexInvertCells_Tetgen(numCells, numCorners, cells);
+<a name="line298">298: </a>    <a href="../../../../../../docs/manualpages/DMPLEX/DMPlexCreateFromCellListPetsc.html#DMPlexCreateFromCellListPetsc">DMPlexCreateFromCellListPetsc</a>(comm, dim, numCells, numVertices, numCorners, interpolate, cells, dim, meshCoords, dmRefined);
+<a name="line299">299: </a>    <font color="#4169E1">if</font> (label) {
+<a name="line300">300: </a>      <a href="../../../../../../docs/manualpages/DM/DMCreateLabel.html#DMCreateLabel">DMCreateLabel</a>(*dmRefined, labelName);
+<a name="line301">301: </a>      <a href="../../../../../../docs/manualpages/DM/DMGetLabel.html#DMGetLabel">DMGetLabel</a>(*dmRefined, labelName, &amp;rlabel);
+<a name="line302">302: </a>    }
+<a name="line303">303: </a>    <font color="#B22222">/* Set labels */</font>
+<a name="line304">304: </a>    <font color="#4169E1">for</font> (v = 0; v &lt; numVertices; ++v) {
+<a name="line305">305: </a>      <font color="#4169E1">if</font> (out.pointmarkerlist[v]) {
+<a name="line306">306: </a>        <font color="#4169E1">if</font> (rlabel) {<a href="../../../../../../docs/manualpages/DMLABEL/DMLabelSetValue.html#DMLabelSetValue">DMLabelSetValue</a>(rlabel, v+numCells, out.pointmarkerlist[v]);}
+<a name="line307">307: </a>      }
+<a name="line308">308: </a>    }
+<a name="line309">309: </a>    <font color="#4169E1">if</font> (interpolate) {
+<a name="line310">310: </a>      <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> f;
+<a name="line311">311: </a><font color="#A020F0">#if 0</font>
+<a name="line312">312: </a>      <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> e;
+
+<a name="line314">314: </a>      <font color="#4169E1">for</font> (e = 0; e &lt; out.numberofedges; e++) {
+<a name="line315">315: </a>        <font color="#4169E1">if</font> (out.edgemarkerlist[e]) {
+<a name="line316">316: </a>          const <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>  vertices[2] = {out.edgelist[e*2+0]+numCells, out.edgelist[e*2+1]+numCells};
+<a name="line317">317: </a>          const <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *edges;
+<a name="line318">318: </a>          <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>        numEdges;
+
+<a name="line320">320: </a>          <a href="../../../../../../docs/manualpages/DMPLEX/DMPlexGetJoin.html#DMPlexGetJoin">DMPlexGetJoin</a>(*dmRefined, 2, vertices, &amp;numEdges, &amp;edges);
+<a name="line321">321: </a>          <font color="#4169E1">if</font> (numEdges != 1) <a href="../../../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, PETSC_ERR_PLIB, <font color="#666666">"Two vertices must cover only one edge, not %D"</font>, numEdges);
+<a name="line322">322: </a>          <font color="#4169E1">if</font> (rlabel) {<a href="../../../../../../docs/manualpages/DMLABEL/DMLabelSetValue.html#DMLabelSetValue">DMLabelSetValue</a>(rlabel, edges[0], out.edgemarkerlist[e]);}
+<a name="line323">323: </a>          <a href="../../../../../../docs/manualpages/DMPLEX/DMPlexRestoreJoin.html#DMPlexRestoreJoin">DMPlexRestoreJoin</a>(*dmRefined, 2, vertices, &amp;numEdges, &amp;edges);
+<a name="line324">324: </a>        }
+<a name="line325">325: </a>      }
+<a name="line326">326: </a><font color="#A020F0">#endif</font>
+<a name="line327">327: </a>      <font color="#4169E1">for</font> (f = 0; f &lt; out.numberoftrifaces; f++) {
+<a name="line328">328: </a>        <font color="#4169E1">if</font> (out.trifacemarkerlist[f]) {
+<a name="line329">329: </a>          const <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>  vertices[3] = {out.trifacelist[f*3+0]+numCells, out.trifacelist[f*3+1]+numCells, out.trifacelist[f*3+2]+numCells};
+<a name="line330">330: </a>          const <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *faces;
+<a name="line331">331: </a>          <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>        numFaces;
+
+<a name="line333">333: </a>          <a href="../../../../../../docs/manualpages/DMPLEX/DMPlexGetFullJoin.html#DMPlexGetFullJoin">DMPlexGetFullJoin</a>(*dmRefined, 3, vertices, &amp;numFaces, &amp;faces);
+<a name="line334">334: </a>          <font color="#4169E1">if</font> (numFaces != 1) <a href="../../../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>, PETSC_ERR_PLIB, <font color="#666666">"Three vertices must cover only one face, not %D"</font>, numFaces);
+<a name="line335">335: </a>          <font color="#4169E1">if</font> (rlabel) {<a href="../../../../../../docs/manualpages/DMLABEL/DMLabelSetValue.html#DMLabelSetValue">DMLabelSetValue</a>(rlabel, faces[0], out.trifacemarkerlist[f]);}
+<a name="line336">336: </a>          <a href="../../../../../../docs/manualpages/DMPLEX/DMPlexRestoreJoin.html#DMPlexRestoreJoin">DMPlexRestoreJoin</a>(*dmRefined, 3, vertices, &amp;numFaces, &amp;faces);
+<a name="line337">337: </a>        }
+<a name="line338">338: </a>      }
+<a name="line339">339: </a>    }
+<a name="line340">340: </a>    <a href="../../../../../../docs/manualpages/DMPLEX/DMPlexSetRefinementUniform.html#DMPlexSetRefinementUniform">DMPlexSetRefinementUniform</a>(*dmRefined, <a href="../../../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>);
+<a name="line341">341: </a>  }
+<a name="line342">342: </a>  <font color="#4169E1">return</font>(0);
+<a name="line343">343: </a>}
+</pre>
+</body>
+
+</html>

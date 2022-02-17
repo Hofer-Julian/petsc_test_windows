@@ -1,0 +1,110 @@
+<center><a href="ex21f.F90">Actual source code: ex21f.F90</a></center><br>
+
+<html>
+<head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/src/snes/tests/ex21f.F90.html" />
+<title></title>
+<meta name="generator" content="c2html 0.9.4">
+<meta name="date" content="2021-03-30T16:51:41+00:00">
+</head>
+
+<body bgcolor="#FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 src/snes/tests/ex21f.F90.html "><small>Report Typos and Errors</small></a></div>
+<pre width="80">
+<a name="line1">  1: </a>!
+<a name="line2">  2: </a>!
+<a name="line3">  3: </a>!     Solves the problem A x - x^3 + 1 = 0 via Picard iteration
+<a name="line4">  4: </a>!
+<a name="line5">  5: </a>      module ex21fmodule
+<a name="line6">  6: </a>        use petscsnes
+<a name="line7">  7: </a>#include <A href="../../../include/petsc/finclude/petscsnes.h.html">&lt;petsc/finclude/petscsnes.h&gt;</A>
+<a name="line8">  8: </a>        type userctx
+<a name="line9">  9: </a>          <a href="../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> A
+<a name="line10"> 10: </a>        end type userctx
+<a name="line11"> 11: </a>      end module ex21fmodule
+
+<a name="line13"> 13: </a>      program main
+<a name="line14"> 14: </a>#include <A href="../../../include/petsc/finclude/petscsnes.h.html">&lt;petsc/finclude/petscsnes.h&gt;</A>
+<a name="line15"> 15: </a>      use ex21fmodule
+<a name="line16"> 16: </a>      implicit none
+<a name="line17"> 17: </a>      <a href="../../../docs/manualpages/SNES/SNES.html#SNES">SNES</a> snes
+<a name="line18"> 18: </a>      <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> ierr
+<a name="line19"> 19: </a>      <a href="../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> res,x
+<a name="line20"> 20: </a>      type(userctx) user
+<a name="line21"> 21: </a>      <a href="../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> val
+<a name="line22"> 22: </a>      <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> one,zero,two
+<a name="line23"> 23: </a>      external FormFunction,FormJacobian
+
+<a name="line25"> 25: </a>      call <a href="../../../docs/manualpages/Sys/PetscInitialize.html#PetscInitialize">PetscInitialize</a>(PETSC_NULL_CHARACTER,ierr)
+<a name="line26"> 26: </a>      <font color="#4169E1">if</font> (ierr .ne. 0) then
+<a name="line27"> 27: </a>        print*,'Unable to initialize PETSc'
+<a name="line28"> 28: </a>        stop
+<a name="line29"> 29: </a>      endif
+
+<a name="line31"> 31: </a>      one = 1
+<a name="line32"> 32: </a>      zero = 0
+<a name="line33"> 33: </a>      two = 2
+<a name="line34"> 34: </a>      call <a href="../../../docs/manualpages/Mat/MatCreateSeqAIJ.html#MatCreateSeqAIJ">MatCreateSeqAIJ</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,two,two,two,PETSC_NULL_INTEGER,user%A,ierr)
+<a name="line35"> 35: </a>      val = 2.0; call <a href="../../../docs/manualpages/Mat/MatSetValues.html#MatSetValues">MatSetValues</a>(user%A,one,zero,one,zero,val,<a href="../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>,ierr)
+<a name="line36"> 36: </a>      val = -1.0; call <a href="../../../docs/manualpages/Mat/MatSetValues.html#MatSetValues">MatSetValues</a>(user%A,one,zero,one,one,val,<a href="../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>,ierr)
+<a name="line37"> 37: </a>      val = -1.0; call <a href="../../../docs/manualpages/Mat/MatSetValues.html#MatSetValues">MatSetValues</a>(user%A,one,one,one,zero,val,<a href="../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>,ierr)
+<a name="line38"> 38: </a>      val = 1.0; call <a href="../../../docs/manualpages/Mat/MatSetValues.html#MatSetValues">MatSetValues</a>(user%A,one,one,one,one,val,<a href="../../../docs/manualpages/Sys/INSERT_VALUES.html#INSERT_VALUES">INSERT_VALUES</a>,ierr)
+<a name="line39"> 39: </a>      call <a href="../../../docs/manualpages/Mat/MatAssemblyBegin.html#MatAssemblyBegin">MatAssemblyBegin</a>(user%A,<a href="../../../docs/manualpages/Mat/MatAssemblyType.html#MatAssemblyType">MAT_FINAL_ASSEMBLY</a>,ierr)
+<a name="line40"> 40: </a>      call <a href="../../../docs/manualpages/Mat/MatAssemblyEnd.html#MatAssemblyEnd">MatAssemblyEnd</a>(user%A,<a href="../../../docs/manualpages/Mat/MatAssemblyType.html#MatAssemblyType">MAT_FINAL_ASSEMBLY</a>,ierr)
+
+<a name="line42"> 42: </a>      call <a href="../../../docs/manualpages/Mat/MatCreateVecs.html#MatCreateVecs">MatCreateVecs</a>(user%A,x,res,ierr)
+
+<a name="line44"> 44: </a>      call <a href="../../../docs/manualpages/SNES/SNESCreate.html#SNESCreate">SNESCreate</a>(<a href="../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,snes, ierr)
+<a name="line45"> 45: </a>      call <a href="../../../docs/manualpages/SNES/SNESSetPicard.html#SNESSetPicard">SNESSetPicard</a>(snes, res, FormFunction, user%A, user%A, FormJacobian, user, ierr)
+<a name="line46"> 46: </a>      call <a href="../../../docs/manualpages/SNES/SNESSetFromOptions.html#SNESSetFromOptions">SNESSetFromOptions</a>(snes,ierr)
+<a name="line47"> 47: </a>      call <a href="../../../docs/manualpages/SNES/SNESSolve.html#SNESSolve">SNESSolve</a>(snes, PETSC_NULL_VEC, x, ierr)
+<a name="line48"> 48: </a>      call <a href="../../../docs/manualpages/Vec/VecDestroy.html#VecDestroy">VecDestroy</a>(x,ierr)
+<a name="line49"> 49: </a>      call <a href="../../../docs/manualpages/Vec/VecDestroy.html#VecDestroy">VecDestroy</a>(res,ierr)
+<a name="line50"> 50: </a>      call <a href="../../../docs/manualpages/Mat/MatDestroy.html#MatDestroy">MatDestroy</a>(user%A,ierr)
+<a name="line51"> 51: </a>      call <a href="../../../docs/manualpages/SNES/SNESDestroy.html#SNESDestroy">SNESDestroy</a>(snes,ierr)
+<a name="line52"> 52: </a>      call <a href="../../../docs/manualpages/Sys/PetscFinalize.html#PetscFinalize">PetscFinalize</a>(ierr)
+<a name="line53"> 53: </a>      end
+
+
+<a name="line56"> 56: </a>      subroutine FormFunction(snes, x, f, user, ierr)
+<a name="line57"> 57: </a>      use ex21fmodule
+<a name="line58"> 58: </a>      <a href="../../../docs/manualpages/SNES/SNES.html#SNES">SNES</a> snes
+<a name="line59"> 59: </a>      <a href="../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a>  x, f
+<a name="line60"> 60: </a>      type(userctx) user
+<a name="line61"> 61: </a>      <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> ierr
+<a name="line62"> 62: </a>      <a href="../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> i,n
+<a name="line63"> 63: </a>      <a href="../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>, pointer :: xx(:),ff(:)
+
+<a name="line65"> 65: </a>      call <a href="../../../docs/manualpages/Mat/MatMult.html#MatMult">MatMult</a>(user%A, x, f, ierr)
+<a name="line66"> 66: </a>      call <a href="../../../docs/manualpages/Vec/VecGetArrayF90.html#VecGetArrayF90">VecGetArrayF90</a>(f,ff,ierr)
+<a name="line67"> 67: </a>      call <a href="../../../docs/manualpages/Vec/VecGetArrayReadF90.html#VecGetArrayReadF90">VecGetArrayReadF90</a>(x,xx,ierr)
+<a name="line68"> 68: </a>      call <a href="../../../docs/manualpages/Vec/VecGetLocalSize.html#VecGetLocalSize">VecGetLocalSize</a>(x,n,ierr)
+<a name="line69"> 69: </a>      <font color="#4169E1">do</font> 10, i=1,n
+<a name="line70"> 70: </a>         ff(i) = ff(i) - xx(i)*xx(i)*xx(i)*xx(i) + 1.0
+<a name="line71"> 71: </a> 10   <font color="#4169E1">continue</font>
+<a name="line72"> 72: </a>      call <a href="../../../docs/manualpages/Vec/VecRestoreArrayF90.html#VecRestoreArrayF90">VecRestoreArrayF90</a>(f,ff,ierr)
+<a name="line73"> 73: </a>      call <a href="../../../docs/manualpages/Vec/VecRestoreArrayReadF90.html#VecRestoreArrayReadF90">VecRestoreArrayReadF90</a>(x,xx,ierr)
+<a name="line74"> 74: </a>      end subroutine
+
+<a name="line76"> 76: </a>!      The matrix is constant so no need to recompute it
+<a name="line77"> 77: </a>      subroutine FormJacobian(snes, x, jac, jacb, user, ierr)
+<a name="line78"> 78: </a>      use ex21fmodule
+<a name="line79"> 79: </a>      <a href="../../../docs/manualpages/SNES/SNES.html#SNES">SNES</a> snes
+<a name="line80"> 80: </a>      <a href="../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a>  x
+<a name="line81"> 81: </a>      type(userctx) user
+<a name="line82"> 82: </a>      <a href="../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a>  jac, jacb
+<a name="line83"> 83: </a>      <a href="../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> ierr
+<a name="line84"> 84: </a>      end subroutine
+
+<a name="line86"> 86: </a>!<font color="#B22222">/*TEST</font>
+<a name="line87"> 87: </a><font color="#B22222">!</font>
+<a name="line88"> 88: </a><font color="#B22222">!   test:</font>
+<a name="line89"> 89: </a><font color="#B22222">!     nsize: 1</font>
+<a name="line90"> 90: </a><font color="#B22222">!     requires: !single</font>
+<a name="line91"> 91: </a><font color="#B22222">!     args: -snes_monitor -snes_converged_reason -snes_view -pc_type lu</font>
+<a name="line92"> 92: </a><font color="#B22222">!</font>
+<a name="line93"> 93: </a><font color="#B22222">!TEST*/</font>
+</pre>
+</body>
+
+</html>

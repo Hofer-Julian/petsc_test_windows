@@ -1,0 +1,118 @@
+<center><a href="aijcholmod.c">Actual source code: aijcholmod.c</a></center><br>
+
+<html>
+<head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/src/mat/impls/aij/seq/cholmod/aijcholmod.c.html" />
+<title></title>
+<meta name="generator" content="c2html 0.9.4">
+<meta name="date" content="2021-03-30T16:50:05+00:00">
+</head>
+
+<body bgcolor="#FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 src/mat/impls/aij/seq/cholmod/aijcholmod.c.html "><small>Report Typos and Errors</small></a></div>
+<pre width="80">
+
+<a name="line2">  2: </a>#include <A href="../aij.h.html">&lt;../src/mat/impls/aij/seq/aij.h&gt;</A>
+<a name="line3">  3: </a>#include <A href="../../../sbaij/seq/cholmod/cholmodimpl.h.html">&lt;../src/mat/impls/sbaij/seq/cholmod/cholmodimpl.h&gt;</A>
+
+<a name="line5">  5: </a><strong><font color="#4169E1"><a name="MatWrapCholmod_seqaij"></a>static <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatWrapCholmod_seqaij(<a href="../../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> A,<a href="../../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> values,cholmod_sparse *C,<a href="../../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> *aijalloc,<a href="../../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a> *valloc)</font></strong>
+<a name="line6">  6: </a>{
+<a name="line7">  7: </a>  Mat_SeqAIJ        *aij = (Mat_SeqAIJ*)A-&gt;data;
+<a name="line8">  8: </a>  const <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a> *aa;
+<a name="line9">  9: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a>       *ca;
+<a name="line10"> 10: </a>  const <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>    *ai = aij-&gt;i,*aj = aij-&gt;j,*adiag;
+<a name="line11"> 11: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>          m = A-&gt;rmap-&gt;n,i,j,k,nz,*ci,*cj;
+<a name="line12"> 12: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>         vain = <a href="../../../../../../docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>;
+<a name="line13"> 13: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>    ierr;
+
+<a name="line16"> 16: </a>  MatMarkDiagonal_SeqAIJ(A);
+<a name="line17"> 17: </a>  adiag = aij-&gt;diag;
+<a name="line18"> 18: </a>  <font color="#4169E1">for</font> (i=0,nz=0; i&lt;m; i++) nz += ai[i+1] - adiag[i];
+<a name="line19"> 19: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscMalloc2.html#PetscMalloc2">PetscMalloc2</a>(m+1,&amp;ci,nz,&amp;cj);
+<a name="line20"> 20: </a>  <font color="#4169E1">if</font> (values) {
+<a name="line21"> 21: </a>    vain = <a href="../../../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>;
+<a name="line22"> 22: </a>    <a href="../../../../../../docs/manualpages/Sys/PetscMalloc1.html#PetscMalloc1">PetscMalloc1</a>(nz,&amp;ca);
+<a name="line23"> 23: </a>    <a href="../../../../../../docs/manualpages/Mat/MatSeqAIJGetArrayRead.html#MatSeqAIJGetArrayRead">MatSeqAIJGetArrayRead</a>(A,&amp;aa);
+<a name="line24"> 24: </a>  }
+<a name="line25"> 25: </a>  <font color="#4169E1">for</font> (i=0,k=0; i&lt;m; i++) {
+<a name="line26"> 26: </a>    ci[i] = k;
+<a name="line27"> 27: </a>    <font color="#4169E1">for</font> (j=adiag[i]; j&lt;ai[i+1]; j++,k++) {
+<a name="line28"> 28: </a>      cj[k] = aj[j];
+<a name="line29"> 29: </a>      <font color="#4169E1">if</font> (values) ca[k] = PetscConj(aa[j]);
+<a name="line30"> 30: </a>    }
+<a name="line31"> 31: </a>  }
+<a name="line32"> 32: </a>  ci[i]     = k;
+<a name="line33"> 33: </a>  *aijalloc = <a href="../../../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>;
+<a name="line34"> 34: </a>  *valloc   = vain;
+<a name="line35"> 35: </a>  <font color="#4169E1">if</font> (values) {
+<a name="line36"> 36: </a>    <a href="../../../../../../docs/manualpages/Mat/MatSeqAIJRestoreArrayRead.html#MatSeqAIJRestoreArrayRead">MatSeqAIJRestoreArrayRead</a>(A,&amp;aa);
+<a name="line37"> 37: </a>  }
+
+<a name="line39"> 39: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscMemzero.html#PetscMemzero">PetscMemzero</a>(C,<font color="#4169E1">sizeof</font>(*C));
+
+<a name="line41"> 41: </a>  C-&gt;nrow   = (size_t)A-&gt;cmap-&gt;n;
+<a name="line42"> 42: </a>  C-&gt;ncol   = (size_t)A-&gt;rmap-&gt;n;
+<a name="line43"> 43: </a>  C-&gt;nzmax  = (size_t)nz;
+<a name="line44"> 44: </a>  C-&gt;p      = ci;
+<a name="line45"> 45: </a>  C-&gt;i      = cj;
+<a name="line46"> 46: </a>  C-&gt;x      = values ? ca : 0;
+<a name="line47"> 47: </a>  C-&gt;stype  = -1;
+<a name="line48"> 48: </a>  C-&gt;itype  = CHOLMOD_INT_TYPE;
+<a name="line49"> 49: </a>  C-&gt;xtype  = values ? CHOLMOD_SCALAR_TYPE : CHOLMOD_PATTERN;
+<a name="line50"> 50: </a>  C-&gt;dtype  = CHOLMOD_DOUBLE;
+<a name="line51"> 51: </a>  C-&gt;sorted = 1;
+<a name="line52"> 52: </a>  C-&gt;packed = 1;
+<a name="line53"> 53: </a>  <font color="#4169E1">return</font>(0);
+<a name="line54"> 54: </a>}
+
+<a name="line56"> 56: </a><strong><font color="#4169E1"><a name="MatFactorGetSolverType_seqaij_cholmod"></a>static <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatFactorGetSolverType_seqaij_cholmod(<a href="../../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> A,<a href="../../../../../../docs/manualpages/Mat/MatSolverType.html#MatSolverType">MatSolverType</a> *type)</font></strong>
+<a name="line57"> 57: </a>{
+<a name="line59"> 59: </a>  *type = <a href="../../../../../../docs/manualpages/Mat/MATSOLVERCHOLMOD.html#MATSOLVERCHOLMOD">MATSOLVERCHOLMOD</a>;
+<a name="line60"> 60: </a>  <font color="#4169E1">return</font>(0);
+<a name="line61"> 61: </a>}
+
+<a name="line63"> 63: </a><font color="#B22222">/* Almost a copy of MatGetFactor_seqsbaij_cholmod, yuck */</font>
+<a name="line64"> 64: </a><strong><font color="#4169E1"><a name="MatGetFactor_seqaij_cholmod"></a>PETSC_INTERN <a href="../../../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> MatGetFactor_seqaij_cholmod(<a href="../../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> A,<a href="../../../../../../docs/manualpages/Mat/MatFactorType.html#MatFactorType">MatFactorType</a> ftype,<a href="../../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a> *F)</font></strong>
+<a name="line65"> 65: </a>{
+<a name="line66"> 66: </a>  <a href="../../../../../../docs/manualpages/Mat/Mat.html#Mat">Mat</a>            B;
+<a name="line67"> 67: </a>  Mat_CHOLMOD    *chol;
+<a name="line69"> 69: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       m=A-&gt;rmap-&gt;n,n=A-&gt;cmap-&gt;n;
+<a name="line70"> 70: </a>  const char     *prefix;
+
+<a name="line73"> 73: </a><font color="#A020F0">#if defined(PETSC_USE_COMPLEX)</font>
+<a name="line74"> 74: </a>  <font color="#4169E1">if</font> (!A-&gt;hermitian) <a href="../../../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)A),PETSC_ERR_SUP,<font color="#666666">"Only for hermitian matrices"</font>);
+<a name="line75"> 75: </a><font color="#A020F0">#endif</font>
+<a name="line76"> 76: </a>  <font color="#B22222">/* Create the factorization matrix F */</font>
+<a name="line77"> 77: </a>  <a href="../../../../../../docs/manualpages/Mat/MatCreate.html#MatCreate">MatCreate</a>(<a href="../../../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)A),&amp;B);
+<a name="line78"> 78: </a>  <a href="../../../../../../docs/manualpages/Mat/MatSetSizes.html#MatSetSizes">MatSetSizes</a>(B,<a href="../../../../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a>,<a href="../../../../../../docs/manualpages/Sys/PETSC_DECIDE.html#PETSC_DECIDE">PETSC_DECIDE</a>,m,n);
+<a name="line79"> 79: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscStrallocpy.html#PetscStrallocpy">PetscStrallocpy</a>(<font color="#666666">"cholmod"</font>,&amp;((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)B)-&gt;type_name);
+<a name="line80"> 80: </a>  <a href="../../../../../../docs/manualpages/Mat/MatGetOptionsPrefix.html#MatGetOptionsPrefix">MatGetOptionsPrefix</a>(A,&amp;prefix);
+<a name="line81"> 81: </a>  <a href="../../../../../../docs/manualpages/Mat/MatSetOptionsPrefix.html#MatSetOptionsPrefix">MatSetOptionsPrefix</a>(B,prefix);
+<a name="line82"> 82: </a>  <a href="../../../../../../docs/manualpages/Mat/MatSetUp.html#MatSetUp">MatSetUp</a>(B);
+<a name="line83"> 83: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscNewLog.html#PetscNewLog">PetscNewLog</a>(B,&amp;chol);
+
+<a name="line85"> 85: </a>  chol-&gt;Wrap = MatWrapCholmod_seqaij;
+<a name="line86"> 86: </a>  B-&gt;data    = chol;
+
+<a name="line88"> 88: </a>  B-&gt;ops-&gt;getinfo                = MatGetInfo_CHOLMOD;
+<a name="line89"> 89: </a>  B-&gt;ops-&gt;view                   = MatView_CHOLMOD;
+<a name="line90"> 90: </a>  B-&gt;ops-&gt;choleskyfactorsymbolic = MatCholeskyFactorSymbolic_CHOLMOD;
+<a name="line91"> 91: </a>  B-&gt;ops-&gt;destroy                = MatDestroy_CHOLMOD;
+
+<a name="line93"> 93: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscObjectComposeFunction.html#PetscObjectComposeFunction">PetscObjectComposeFunction</a>((<a href="../../../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)B,<font color="#666666">"MatFactorGetSolverType_C"</font>,MatFactorGetSolverType_seqaij_cholmod);
+
+<a name="line95"> 95: </a>  B-&gt;factortype   = <a href="../../../../../../docs/manualpages/Mat/MatFactorType.html#MatFactorType">MAT_FACTOR_CHOLESKY</a>;
+<a name="line96"> 96: </a>  B-&gt;assembled    = <a href="../../../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>;
+<a name="line97"> 97: </a>  B-&gt;preallocated = <a href="../../../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>;
+
+<a name="line99"> 99: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>(B-&gt;solvertype);
+<a name="line100">100: </a>  <a href="../../../../../../docs/manualpages/Sys/PetscStrallocpy.html#PetscStrallocpy">PetscStrallocpy</a>(<a href="../../../../../../docs/manualpages/Mat/MATSOLVERCHOLMOD.html#MATSOLVERCHOLMOD">MATSOLVERCHOLMOD</a>,&amp;B-&gt;solvertype);
+<a name="line101">101: </a>  B-&gt;useordering = <a href="../../../../../../docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>;
+<a name="line102">102: </a>  CholmodStart(B);
+<a name="line103">103: </a>  *F   = B;
+<a name="line104">104: </a>  <font color="#4169E1">return</font>(0);
+<a name="line105">105: </a>}
+</pre>
+</body>
+
+</html>

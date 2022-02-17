@@ -1,0 +1,37 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/SNES/SNESMultiblockSetBlockSize.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>SNESMultiblockSetBlockSize</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/SNES/SNESMultiblockSetBlockSize.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="SNESMultiblockSetBlockSize"><H1>SNESMultiblockSetBlockSize</H1></A>
+Sets the block size for structured mesh block division. If not set the matrix block size is used. 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscsnes.h" 
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../SNES/SNESMultiblockSetBlockSize.html#SNESMultiblockSetBlockSize">SNESMultiblockSetBlockSize</A>(<A HREF="../SNES/SNES.html#SNES">SNES</A> snes, <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> bs)
+</PRE>
+Logically Collective on <A HREF="../SNES/SNES.html#SNES">SNES</A>
+<P>
+<H3><FONT COLOR="#CC3333">Input Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>snes </B></TD><TD>- the solver context
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>bs   </B></TD><TD>- the block size
+</TD></TR></TABLE>
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../SNES/SNESMultiblockGetSubSNES.html#SNESMultiblockGetSubSNES">SNESMultiblockGetSubSNES</A>(), <A HREF="../SNES/SNESMULTIBLOCK.html#SNESMULTIBLOCK">SNESMULTIBLOCK</A>, <A HREF="../SNES/SNESMultiblockSetFields.html#SNESMultiblockSetFields">SNESMultiblockSetFields</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>intermediate<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/snes/impls/multiblock/multiblock.c.html#SNESMultiblockSetBlockSize">src/snes/impls/multiblock/multiblock.c</A>
+<P><H3><FONT COLOR="CC3333">Implementations</FONT></H3><A HREF="../../../src/snes/impls/multiblock/multiblock.c.html#SNESMultiblockSetBlockSize_Default">SNESMultiblockSetBlockSize_Default in src/snes/impls/multiblock/multiblock.c</A><BR>
+<BR><A HREF="./index.html">Index of all SNES routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

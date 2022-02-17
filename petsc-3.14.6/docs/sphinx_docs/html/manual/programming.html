@@ -1,0 +1,185 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/sphinx_docs/html/manual/programming.html" />
+    <meta charset="utf-8" />
+    <title>Programming with PETSc &#8212; PETSc 3.14.6 documentation</title>
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/katex-math.css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/contrib/auto-render.min.js"></script>
+    <script src="../_static/katex_autorenderer.js"></script>
+    <link rel="shortcut icon" href="../_static/PETSc_RGB-logo.png"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Vectors and Parallel Data" href="vec.html" />
+    <link rel="prev" title="Getting Started" href="getting_started.html" /> 
+  </head><body>
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/sphinx_docs/html/manual/programming.html "><small>Report Typos and Errors</small></a></div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="vec.html" title="Vectors and Parallel Data"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="getting_started.html" title="Getting Started"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">PETSc 3.14.6 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">PETSc Users Manual</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/PETSc-TAO_RGB.svg" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="getting_started.html"
+                        title="previous chapter">Getting Started</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="vec.html"
+                        title="next chapter">Vectors and Parallel Data</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/manual/programming.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="programming-with-petsc">
+<h1>Programming with PETSc<a class="headerlink" href="#programming-with-petsc" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="vec.html">Vectors and Parallel Data</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="vec.html#creating-and-assembling-vectors">Creating and Assembling Vectors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vec.html#basic-vector-operations">Basic Vector Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vec.html#indexing-and-ordering">Indexing and Ordering</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vec.html#structured-grids-using-distributed-arrays">Structured Grids Using Distributed Arrays</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vec.html#vectors-related-to-unstructured-grids">Vectors Related to Unstructured Grids</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="mat.html">Matrices</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="mat.html#creating-and-assembling-matrices">Creating and Assembling Matrices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mat.html#basic-matrix-operations">Basic Matrix Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mat.html#matrix-free-matrices">Matrix-Free Matrices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mat.html#other-matrix-operations">Other Matrix Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mat.html#partitioning">Partitioning</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ksp.html">KSP: Linear System Solvers</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ksp.html#using-ksp">Using KSP</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ksp.html#solving-successive-linear-systems">Solving Successive Linear Systems</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ksp.html#krylov-methods">Krylov Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ksp.html#preconditioners">Preconditioners</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ksp.html#solving-block-matrices">Solving Block Matrices</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ksp.html#solving-singular-systems">Solving Singular Systems</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ksp.html#using-external-linear-solvers">Using External Linear Solvers</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="snes.html">SNES: Nonlinear Solvers</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="snes.html#basic-snes-usage">Basic SNES Usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="snes.html#the-nonlinear-solvers">The Nonlinear Solvers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="snes.html#general-options">General Options</a></li>
+<li class="toctree-l2"><a class="reference internal" href="snes.html#inexact-newton-like-methods">Inexact Newton-like Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="snes.html#matrix-free-methods">Matrix-Free Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="snes.html#finite-difference-jacobian-approximations">Finite Difference Jacobian Approximations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="snes.html#variational-inequalities">Variational Inequalities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="snes.html#nonlinear-preconditioning">Nonlinear Preconditioning</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ts.html">TS: Scalable ODE and DAE Solvers</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ts.html#basic-ts-options">Basic TS Options</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ts.html#dae-formulations">DAE Formulations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ts.html#using-implicit-explicit-imex-methods">Using Implicit-Explicit (IMEX) Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ts.html#glee-methods">GLEE methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ts.html#using-fully-implicit-methods">Using fully implicit methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ts.html#using-the-explicit-runge-kutta-timestepper-with-variable-timesteps">Using the Explicit Runge-Kutta timestepper with variable timesteps</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ts.html#special-cases">Special Cases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ts.html#monitoring-and-visualizing-solutions">Monitoring and visualizing solutions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ts.html#error-control-via-variable-time-stepping">Error control via variable time-stepping</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ts.html#handling-of-discontinuities">Handling of discontinuities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ts.html#using-tchem-from-petsc">Using TChem from PETSc</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ts.html#using-sundials-from-petsc">Using Sundials from PETSc</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="sensitivity_analysis.html">Performing sensitivity analysis</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="sensitivity_analysis.html#using-the-discrete-adjoint-methods">Using the discrete adjoint methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sensitivity_analysis.html#checkpointing">Checkpointing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="sensitivity_analysis.html#solving-steady-state-problems-with-pseudo-timestepping">Solving Steady-State Problems with Pseudo-Timestepping</a></li>
+<li class="toctree-l1"><a class="reference internal" href="high_level_mg.html">High Level Support for Multigrid with KSPSetDM() and SNESSetDM()</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="high_level_mg.html#adaptive-interpolation">Adaptive Interpolation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="dmplex.html">DMPlex: Unstructured Grids in PETSc</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="dmplex.html#representing-unstructured-grids">Representing Unstructured Grids</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dmplex.html#data-on-unstructured-grids">Data on Unstructured Grids</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dmplex.html#evaluating-residuals">Evaluating Residuals</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dmplex.html#networks">Networks</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="vec.html" title="Vectors and Parallel Data"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="getting_started.html" title="Getting Started"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">PETSc 3.14.6 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >PETSc Users Manual</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 1991-2021, UChicago Argonne, LLC and the PETSc Development Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.4.
+    </div>
+  </body>
+</html>

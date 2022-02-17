@@ -1,0 +1,54 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscOptionsInsertFileYAML.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>PetscOptionsInsertFileYAML</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/Sys/PetscOptionsInsertFileYAML.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="PetscOptionsInsertFileYAML"><H1>PetscOptionsInsertFileYAML</H1></A>
+Insert a YAML-formatted file in the option database 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscsys.h"   
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../Sys/PetscOptionsInsertFileYAML.html#PetscOptionsInsertFileYAML">PetscOptionsInsertFileYAML</A>(<A HREF="../Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</A> comm,const char file[],<A HREF="../Sys/PetscBool.html#PetscBool">PetscBool</A> require)
+</PRE>
+Collective
+<P>
+<H3><FONT COLOR="#CC3333">Input Parameter</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>comm </B></TD><TD>- the processes that will share the options (usually <A HREF="../Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</A>)
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>file </B></TD><TD>- name of file
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>require </B></TD><TD>- if <A HREF="../Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</A> will generate an error if the file does not exist
+</TD></TR></TABLE>
+<P>
+Only a small subset of the YAML standard is implemented. Sequences are NOT supported;
+aliases and the merge key "&lt;&lt;" are.
+The algorithm recursively parses the yaml file, pushing and popping prefixes
+and inserting key + values pairs using <A HREF="../Sys/PetscOptionsInsertString.html#PetscOptionsInsertString">PetscOptionsInsertString</A>().
+<P>
+PETSc will generate an error condition that stops the program if a YAML error
+is detected, hence the user should check that the YAML file is valid before
+supplying it, for instance at <a href="http://www.yamllint.com/">http://www.yamllint.com/ </a> .
+<P>
+Inspired by https://stackoverflow.com/a/621451
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../Sys/PetscOptionsSetValue.html#PetscOptionsSetValue">PetscOptionsSetValue</A>(), <A HREF="../Sys/PetscOptionsView.html#PetscOptionsView">PetscOptionsView</A>(), <A HREF="../Sys/PetscOptionsHasName.html#PetscOptionsHasName">PetscOptionsHasName</A>(), <A HREF="../Sys/PetscOptionsGetInt.html#PetscOptionsGetInt">PetscOptionsGetInt</A>(),
+<BR><A HREF="../Sys/PetscOptionsGetReal.html#PetscOptionsGetReal">PetscOptionsGetReal</A>(), <A HREF="../Sys/PetscOptionsGetString.html#PetscOptionsGetString">PetscOptionsGetString</A>(), <A HREF="../Sys/PetscOptionsGetIntArray.html#PetscOptionsGetIntArray">PetscOptionsGetIntArray</A>(), <A HREF="../Sys/PetscOptionsBool.html#PetscOptionsBool">PetscOptionsBool</A>(),
+<A HREF="../Sys/PetscOptionsName.html#PetscOptionsName">PetscOptionsName</A>(), <A HREF="../Sys/PetscOptionsBegin.html#PetscOptionsBegin">PetscOptionsBegin</A>(), <A HREF="../Sys/PetscOptionsEnd.html#PetscOptionsEnd">PetscOptionsEnd</A>(), <A HREF="../Sys/PetscOptionsHead.html#PetscOptionsHead">PetscOptionsHead</A>(),
+<A HREF="../Sys/PetscOptionsStringArray.html#PetscOptionsStringArray">PetscOptionsStringArray</A>(),<A HREF="../Sys/PetscOptionsRealArray.html#PetscOptionsRealArray">PetscOptionsRealArray</A>(), <A HREF="../Sys/PetscOptionsScalar.html#PetscOptionsScalar">PetscOptionsScalar</A>(),
+<A HREF="../Sys/PetscOptionsBoolGroupBegin.html#PetscOptionsBoolGroupBegin">PetscOptionsBoolGroupBegin</A>(), <A HREF="../Sys/PetscOptionsBoolGroup.html#PetscOptionsBoolGroup">PetscOptionsBoolGroup</A>(), <A HREF="../Sys/PetscOptionsBoolGroupEnd.html#PetscOptionsBoolGroupEnd">PetscOptionsBoolGroupEnd</A>(),
+<A HREF="../Sys/PetscOptionsFList.html#PetscOptionsFList">PetscOptionsFList</A>(), <A HREF="../Sys/PetscOptionsEList.html#PetscOptionsEList">PetscOptionsEList</A>(), <A HREF="../Sys/PetscOptionsInsertFile.html#PetscOptionsInsertFile">PetscOptionsInsertFile</A>(), <A HREF="../Sys/PetscOptionsInsertStringYAML.html#PetscOptionsInsertStringYAML">PetscOptionsInsertStringYAML</A>()
+<P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>intermediate<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/sys/yaml/yamlimpls.c.html#PetscOptionsInsertFileYAML">src/sys/yaml/yamlimpls.c</A>
+<BR><A HREF="./index.html">Index of all Sys routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

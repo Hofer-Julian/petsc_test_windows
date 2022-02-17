@@ -1,0 +1,56 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/TS/TSDiscGradSetFormulation.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>TSDiscGradSetFormulation</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/TS/TSDiscGradSetFormulation.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="TSDiscGradSetFormulation"><H1>TSDiscGradSetFormulation</H1></A>
+Set the construction method for S, F, and grad F from the formulation u_t = S(u) grad F(u) 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscts.h"   
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../TS/TSDiscGradSetFormulation.html#TSDiscGradSetFormulation">TSDiscGradSetFormulation</A>(<A HREF="../TS/TS.html#TS">TS</A> ts, <A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> (*Sfunc)(<A HREF="../TS/TS.html#TS">TS</A>, <A HREF="../Sys/PetscReal.html#PetscReal">PetscReal</A>, <A HREF="../Vec/Vec.html#Vec">Vec</A>, <A HREF="../Mat/Mat.html#Mat">Mat</A>, void *), <A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> (*Ffunc)(<A HREF="../TS/TS.html#TS">TS</A>, <A HREF="../Sys/PetscReal.html#PetscReal">PetscReal</A>, <A HREF="../Vec/Vec.html#Vec">Vec</A> , <A HREF="../Sys/PetscScalar.html#PetscScalar">PetscScalar</A> *, void *), <A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> (*Gfunc)(<A HREF="../TS/TS.html#TS">TS</A>, <A HREF="../Sys/PetscReal.html#PetscReal">PetscReal</A>, <A HREF="../Vec/Vec.html#Vec">Vec</A>, <A HREF="../Vec/Vec.html#Vec">Vec</A>, void *), void *ctx)
+</PRE>
+Not Collective
+<P>
+<H3><FONT COLOR="#CC3333">Input Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>ts    </B></TD><TD>- timestepping context
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>Sfunc </B></TD><TD>- constructor for the S matrix from the formulation
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>Ffunc </B></TD><TD>- functional F from the formulation
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>Gfunc </B></TD><TD>- constructor for the gradient of F from the formulation
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Calling sequence of Sfunc</FONT></H3>
+<pre>
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> func(<A HREF="../TS/TS.html#TS">TS</A> ts, <A HREF="../Sys/PetscReal.html#PetscReal">PetscReal</A> time, <A HREF="../Vec/Vec.html#Vec">Vec</A> u, <A HREF="../Mat/Mat.html#Mat">Mat</A> S, void *)
+</pre>
+<P>
+<H3><FONT COLOR="#CC3333">Calling sequence of Ffunc</FONT></H3>
+<pre>
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> func(<A HREF="../TS/TS.html#TS">TS</A> ts, <A HREF="../Sys/PetscReal.html#PetscReal">PetscReal</A> time, <A HREF="../Vec/Vec.html#Vec">Vec</A> u, <A HREF="../Sys/PetscScalar.html#PetscScalar">PetscScalar</A> *F, void *)
+</pre>
+<P>
+<H3><FONT COLOR="#CC3333">Calling sequence of Gfunc</FONT></H3>
+<pre>
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> func(<A HREF="../TS/TS.html#TS">TS</A> ts, <A HREF="../Sys/PetscReal.html#PetscReal">PetscReal</A> time, <A HREF="../Vec/Vec.html#Vec">Vec</A> u, <A HREF="../Vec/Vec.html#Vec">Vec</A> G, void *)
+</pre>
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../TS/TSDiscGradGetFormulation.html#TSDiscGradGetFormulation">TSDiscGradGetFormulation</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>Intermediate<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/ts/impls/implicit/discgrad/tsdiscgrad.c.html#TSDiscGradSetFormulation">src/ts/impls/implicit/discgrad/tsdiscgrad.c</A>
+<P><H3><FONT COLOR="CC3333">Implementations</FONT></H3><A HREF="../../../src/ts/impls/implicit/discgrad/tsdiscgrad.c.html#TSDiscGradSetFormulation_DiscGrad(TS ts, PetscErrorCode (*Sfunc)(TS, PetscReal, Vec, Mat, void *), PetscErrorCode (*Ffunc)(TS, PetscReal, Vec, PetscScalar *, void *), PetscErrorCode (*Gfunc)">TSDiscGradSetFormulation_DiscGrad(TS ts, PetscErrorCode (*Sfunc)(TS, PetscReal, Vec, Mat, void *), PetscErrorCode (*Ffunc)(TS, PetscReal, Vec, PetscScalar *, void *), PetscErrorCode (*Gfunc) in src/ts/impls/implicit/discgrad/tsdiscgrad.c</A><BR>
+<BR><A HREF="./index.html">Index of all TS routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

@@ -1,0 +1,48 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/MatLMVMSymBroydenSetScaleType.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>MatLMVMSymBroydenSetScaleType</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/KSP/MatLMVMSymBroydenSetScaleType.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="MatLMVMSymBroydenSetScaleType"><H1>MatLMVMSymBroydenSetScaleType</H1></A>
+Sets the scale type for symmetric Broyden-type updates. 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscksp.h" 
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../KSP/MatLMVMSymBroydenSetScaleType.html#MatLMVMSymBroydenSetScaleType">MatLMVMSymBroydenSetScaleType</A>(<A HREF="../Mat/Mat.html#Mat">Mat</A> B, MatLMVMSymBroydenScaleType stype)
+</PRE>
+<H3><FONT COLOR="#CC3333">Input Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>snes </B></TD><TD>- the iterative context
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>rtype </B></TD><TD>- restart type
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Options Database</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>-mat_lmvm_scale_type &lt;none,scalar,diagonal&gt; </B></TD><TD>- set the scaling type
+</TD></TR></TABLE>
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">MatLMVMSymBrdnScaleTypes</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>MAT_LMVM_SYMBROYDEN_SCALE_NONE </B></TD><TD>- initial Hessian is the identity matrix
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>MAT_LMVM_SYMBROYDEN_SCALE_SCALAR </B></TD><TD>- use the Shanno scalar as the initial Hessian
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>MAT_LMVM_SYMBROYDEN_SCALE_DIAGONAL </B></TD><TD>- use a diagonalized BFGS update as the initial Hessian
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ MATLMVMSYMBROYDEN, <A HREF="../KSP/MatCreateLMVMSymBroyden.html#MatCreateLMVMSymBroyden">MatCreateLMVMSymBroyden</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>intermediate<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/ksp/ksp/utils/lmvm/symbrdn/symbrdn.c.html#MatLMVMSymBroydenSetScaleType">src/ksp/ksp/utils/lmvm/symbrdn/symbrdn.c</A>
+<BR><A HREF="./index.html">Index of all KSP routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

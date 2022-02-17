@@ -1,0 +1,623 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/sphinx_docs/html/developers/style.html" />
+    <meta charset="utf-8" />
+    <title>PETSc Style and Usage Guide &#8212; PETSc 3.14.6 documentation</title>
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/katex-math.css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/contrib/auto-render.min.js"></script>
+    <script src="../_static/katex_autorenderer.js"></script>
+    <link rel="shortcut icon" href="../_static/PETSc_RGB-logo.png"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="PETSc Integration Workflows" href="integration.html" />
+    <link rel="prev" title="Contributing to PETSc" href="contributing.html" /> 
+  </head><body>
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/sphinx_docs/html/developers/style.html "><small>Report Typos and Errors</small></a></div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="integration.html" title="PETSc Integration Workflows"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="contributing.html" title="Contributing to PETSc"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">PETSc 3.14.6 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">PETSc Developer’s Documentation</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/PETSc-TAO_RGB.svg" alt="Logo"/>
+            </a></p>
+  <h3><a href="../index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">PETSc Style and Usage Guide</a><ul>
+<li><a class="reference internal" href="#names">Names</a></li>
+<li><a class="reference internal" href="#coding-conventions-and-style">Coding Conventions and Style</a><ul>
+<li><a class="reference internal" href="#c-formatting">C Formatting</a></li>
+<li><a class="reference internal" href="#c-usage">C Usage</a></li>
+<li><a class="reference internal" href="#usage-of-petsc-functions-and-macros">Usage of PETSc Functions and Macros</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#formatted-comments">Formatted Comments</a><ul>
+<li><a class="reference internal" href="#manual-page-format">Manual Page Format</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#references">References</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="contributing.html"
+                        title="previous chapter">Contributing to PETSc</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="integration.html"
+                        title="next chapter">PETSc Integration Workflows</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/developers/style.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="petsc-style-and-usage-guide">
+<h1>PETSc Style and Usage Guide<a class="headerlink" href="#petsc-style-and-usage-guide" title="Permalink to this headline">¶</a></h1>
+<p>The PETSc team uses certain conventions to make the source code
+consistent and hence easier to maintain. We will interchangeably use the
+terminology <em>subclass</em>, <em>implementation</em>, or <em>type</em> <a class="footnote-reference brackets" href="#id6" id="id1">1</a> to refer to a
+concrete realization of an abstract base class. For example,
+<code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSPGMRES.html#KSPGMRES">KSPGMRES</a></span></code> is a type for the base class <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSP.html#KSP">KSP</a></span></code>.</p>
+<div class="section" id="names">
+<h2>Names<a class="headerlink" href="#names" title="Permalink to this headline">¶</a></h2>
+<p>Consistency of names for variables, functions, and so on is extremely
+important. We use several conventions</p>
+<ol class="arabic">
+<li><p>All function names and enum types consist of acronyms or words, each
+of which is capitalized, for example, <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSPSolve.html#KSPSolve">KSPSolve</a>()</span></code> and
+<code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/MatOrderings/MatGetOrdering.html#MatGetOrdering">MatGetOrdering</a>()</span></code>.</p></li>
+<li><p>All enum elements and macro variables are named with all capital
+letters. When they consist of several complete words, there is an
+underscore between each word. For example, <code class="docutils literal notranslate"><span class="pre">MATFINALASSEMBLY</span></code>.</p></li>
+<li><p>Functions that are private to PETSc (not callable by the application
+code) either</p>
+<ul class="simple">
+<li><p>have an appended <code class="docutils literal notranslate"><span class="pre">_Private</span></code> (for example, <code class="docutils literal notranslate"><span class="pre">StashValues_Private</span></code>)
+or</p></li>
+<li><p>have an appended <code class="docutils literal notranslate"><span class="pre">_Subtype</span></code> (for example, <code class="docutils literal notranslate"><span class="pre">MatMultSeq_AIJ</span></code>).</p></li>
+</ul>
+<p>In addition, functions that are not intended for use outside of a
+particular file are declared <code class="docutils literal notranslate"><span class="pre">static</span></code>. Also see item
+on symbol visibility in <a class="reference internal" href="#usage-of-petsc-functions-and-macros"><span class="std std-ref">Usage of PETSc Functions and Macros</span></a>.</p>
+</li>
+<li><p>Function names in structures (for example, <code class="docutils literal notranslate"><span class="pre">_matops</span></code>) are the same
+as the base application function name without the object prefix and
+are in small letters. For example, <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatMultTranspose.html#MatMultTranspose">MatMultTranspose</a>()</span></code> has a
+structure name of <code class="docutils literal notranslate"><span class="pre">multtranspose</span></code>.</p></li>
+<li><p>Names of implementations of class functions should begin with the
+function name, an underscore, and the name of the implementation, for
+example, <code class="docutils literal notranslate"><span class="pre">KSPSolve_GMRES()</span></code>.</p></li>
+<li><p>Each application-usable function begins with the name of the class
+object, followed by any subclass name, for example,
+<code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/IS/ISInvertPermutation.html#ISInvertPermutation">ISInvertPermutation</a>()</span></code>, <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatMult.html#MatMult">MatMult</a>()</span></code>, or
+<code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSPGMRESSetRestart.html#KSPGMRESSetRestart">KSPGMRESSetRestart</a>()</span></code>.</p></li>
+<li><p>Functions that PETSc provides as defaults for user-providable
+functions end with <code class="docutils literal notranslate"><span class="pre">Default</span></code> (for example, <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSPMonitorDefault.html#KSPMonitorDefault">KSPMonitorDefault</a>()</span></code>
+or <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscSignalHandlerDefault.html#PetscSignalHandlerDefault">PetscSignalHandlerDefault</a>()</span></code>).</p></li>
+<li><p>Options database keys are lower case, have an underscore between
+words, and match the function name associated with the option without
+the word “set” or “get”, for example, <code class="docutils literal notranslate"><span class="pre">-ksp_gmres_restart</span></code>.</p></li>
+<li><p>Specific <code class="docutils literal notranslate"><span class="pre">XXXType</span></code> values (for example, <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MATSEQAIJ.html#MATSEQAIJ">MATSEQAIJ</a></span></code>) do not have
+an underscore in them unless they refer to another package that uses
+an underscore, for example, <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MATSOLVERSUPERLU_DIST.html#MATSOLVERSUPERLU_DIST">MATSOLVERSUPERLU_DIST</a></span></code>.</p></li>
+</ol>
+</div>
+<div class="section" id="coding-conventions-and-style">
+<h2>Coding Conventions and Style<a class="headerlink" href="#coding-conventions-and-style" title="Permalink to this headline">¶</a></h2>
+<p>Within the PETSc source code, we adhere to the following guidelines so
+that the code is uniform and easily maintained.</p>
+<div class="section" id="c-formatting">
+<h3>C Formatting<a class="headerlink" href="#c-formatting" title="Permalink to this headline">¶</a></h3>
+<ol class="arabic">
+<li><p><em>No</em> tabs are allowed in <em>any</em> of the source code.</p></li>
+<li><p>All PETSc function bodies are indented two characters.</p></li>
+<li><p>Each additional level of loops, <code class="docutils literal notranslate"><span class="pre">if</span></code> statements, and so on is
+indented two more characters.</p></li>
+<li><p>Wrapping lines should be avoided whenever possible.</p></li>
+<li><p>Source code lines do not have a hard length limit; generally, we like
+them less than 150 characters wide.</p></li>
+<li><p>The local variable declarations should be aligned. For example, use
+the style</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a></span> <span class="n">a</span><span class="p">;</span>
+<span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span>    <span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>instead of</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a></span> <span class="n">a</span><span class="p">;</span>
+<span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span> <span class="n">i</span><span class="p">,</span><span class="n">j</span><span class="p">;</span> <span class="cm">/* Incorrect */</span>
+</pre></div>
+</div>
+</li>
+<li><p>Assignment and comparison operations, for example, <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">=</span> <span class="pre">22.0</span></code> or
+<code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">&lt;</span> <span class="pre">22.0</span></code>, should have single spaces around the operator. This
+convention is true even when assignments are given directly in a line
+that declares the variable, such as <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a></span> <span class="pre">r</span> <span class="pre">=</span> <span class="pre">22.3</span></code>. The
+exception is when these symbols are used in a <code class="docutils literal notranslate"><span class="pre">for</span></code> loop; then,
+there should be no spaces, for example, <code class="docutils literal notranslate"><span class="pre">for</span> <span class="pre">(i=0;</span> <span class="pre">i&lt;m;</span> <span class="pre">i++)</span></code>.
+Comparisons in <code class="docutils literal notranslate"><span class="pre">while()</span></code> constructs should have the spaces.</p></li>
+<li><p>When declaring variables there should be no space between multiple
+variables, for example, <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a></span> <span class="pre">a,b,c</span></code>, not
+<code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a></span> <span class="pre">a,</span> <span class="pre">b,</span> <span class="pre">c</span></code>.</p></li>
+<li><p>The prototypes for functions should not include the names of the
+variables; for example, write</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">PETSC_EXTERN</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a></span> <span class="n">MyFunction</span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span><span class="p">);</span>
+</pre></div>
+</div>
+<p>not</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">PETSC_EXTERN</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a></span> <span class="n">MyFunction</span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span> <span class="n">myvalue</span><span class="p">);</span> <span class="cm">/* Incorrect */</span>
+</pre></div>
+</div>
+</li>
+<li><p>All local variables of a particular type (for example, <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span></code>)
+should be listed on the same line if possible; otherwise, they should
+be listed on adjacent lines.</p></li>
+<li><p>Equal signs should be aligned in regions where possible.</p></li>
+<li><p>There <em>must</em> be a single blank line between the local variable
+declarations and the body of the function.</p></li>
+<li><p>Indentation for <code class="docutils literal notranslate"><span class="pre">if</span></code> statements <em>must</em> be done as follows.</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="p">(</span> <span class="p">)</span> <span class="p">{</span>
+  <span class="p">....</span>
+<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+  <span class="p">....</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</li>
+<li><p><em>Never</em> have</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="p">(</span> <span class="p">)</span>
+  <span class="n">a</span> <span class="n">single</span> <span class="n">indented</span> <span class="n">line</span> <span class="cm">/* Incorrect */</span>
+</pre></div>
+</div>
+<p>or</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="p">(</span> <span class="p">)</span>
+  <span class="n">a</span> <span class="n">single</span> <span class="n">indented</span> <span class="n">line</span> <span class="cm">/* Incorrect */</span>
+</pre></div>
+</div>
+<p>Instead, use either</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="p">(</span> <span class="p">)</span> <span class="n">a</span> <span class="n">single</span> <span class="n">statement</span>
+</pre></div>
+</div>
+<p>or</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="p">(</span> <span class="p">)</span> <span class="p">{</span>
+  <span class="n">a</span> <span class="n">single</span> <span class="n">indented</span> <span class="n">line</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Note that error checking is a separate statement, so the following is
+<em>incorrect</em></p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="p">(</span> <span class="p">)</span> <span class="n">ierr</span> <span class="o">=</span> <span class="n">XXX</span><span class="p">();</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span> <span class="cm">/* Incorrect */</span>
+</pre></div>
+</div>
+<p>and instead you should use</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="p">(</span> <span class="p">)</span> <span class="p">{</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n">XXX</span><span class="p">();</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</li>
+<li><p>Always have a space between <code class="docutils literal notranslate"><span class="pre">if</span></code> or <code class="docutils literal notranslate"><span class="pre">for</span></code> and the following
+<code class="docutils literal notranslate"><span class="pre">()</span></code>.</p></li>
+<li><p>The open brace should be on the same line
+as the <code class="docutils literal notranslate"><span class="pre">if</span> <span class="pre">(</span> <span class="pre">)</span></code> test, <code class="docutils literal notranslate"><span class="pre">for</span> <span class="pre">(</span> <span class="pre">)</span></code>, and so forth, not on its own
+line, for example,</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</pre></div>
+</div>
+<p>instead of</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="p">}</span>
+<span class="k">else</span> <span class="p">{</span> <span class="cm">/* Incorrect */</span>
+</pre></div>
+</div>
+<p>See the next item for an exception. The closing
+brace should <em>always</em> be on its own line.</p>
+</li>
+<li><p>In function declarations, the opening brace
+should be on the <em>next</em> line, not on the same line as the function
+name and arguments. This is an exception to the previous item.</p></li>
+<li><p>Do not leave sections of commented-out code in the source files.</p></li>
+<li><p>Use classic block comments (<code class="docutils literal notranslate"><span class="pre">/*</span> <span class="pre">Comment</span> <span class="pre">*/</span></code>) for multi-line comments and
+for <em>all</em> comments in headers.  Single-line comments in source files (<em>not</em>
+headers) may use the C99/C++ style (<code class="docutils literal notranslate"><span class="pre">//</span> <span class="pre">Comment</span></code>).  The rationale is that
+it must be possible for users to build applications using strict <code class="docutils literal notranslate"><span class="pre">-std=c89</span></code>
+even though PETSc (since v3.14) uses select C99 features internally.</p></li>
+<li><p>All variables must be declared at the beginning of the code block (C89
+style), never mixed in with code.  When variables are only used in a limited
+scope, it is encouraged to declare them in that scope.  For example:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="p">(</span><span class="n">cond</span><span class="p">)</span> <span class="p">{</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a></span> <span class="o">*</span><span class="n">tmp</span><span class="p">;</span>
+
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscMalloc1.html#PetscMalloc1">PetscMalloc1</a></span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="o">&amp;</span><span class="n">tmp</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+  <span class="c1">// use tmp</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a></span><span class="p">(</span><span class="n">tmp</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>It is also permissible to use <code class="docutils literal notranslate"><span class="pre">for</span></code> loop declarations:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">n</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+  <span class="c1">// loop body</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</li>
+<li><p>Do not include a space after a <code class="docutils literal notranslate"><span class="pre">(</span></code> or before a <code class="docutils literal notranslate"><span class="pre">)</span></code>. Do not write</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscMalloc1.html#PetscMalloc1">PetscMalloc1</a></span><span class="p">(</span> <span class="mi">10</span><span class="p">,</span><span class="o">&amp;</span><span class="n">a</span> <span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span> <span class="cm">/* Incorrect */</span>
+</pre></div>
+</div>
+<p>but instead write</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscMalloc1.html#PetscMalloc1">PetscMalloc1</a></span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="o">&amp;</span><span class="n">a</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+</pre></div>
+</div>
+</li>
+<li><p>Do not use a space after the <code class="docutils literal notranslate"><span class="pre">)</span></code> in a cast or between the type and
+the <code class="docutils literal notranslate"><span class="pre">*</span></code> in a cast.</p></li>
+<li><p>Do not include a space before or after a comma in lists. That is, do
+not write</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">ierr</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="mf">22.0</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span> <span class="cm">/* Incorrect */</span>
+</pre></div>
+</div>
+<p>but instead write</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">ierr</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="mf">22.0</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+</pre></div>
+</div>
+</li>
+</ol>
+</div>
+<div class="section" id="c-usage">
+<h3>C Usage<a class="headerlink" href="#c-usage" title="Permalink to this headline">¶</a></h3>
+<ol class="arabic simple">
+<li><p>Array and pointer arguments where the array values are not changed
+should be labeled as <code class="docutils literal notranslate"><span class="pre">const</span></code> arguments.</p></li>
+<li><p>Scalar values passed to functions should <em>never</em> be labeled as
+<code class="docutils literal notranslate"><span class="pre">const</span></code>.</p></li>
+<li><p>Subroutines that would normally have a <code class="docutils literal notranslate"><span class="pre">void**</span></code> argument to return
+a pointer to some data should actually be prototyped as <code class="docutils literal notranslate"><span class="pre">void*</span></code>.
+This prevents the caller from having to put a <code class="docutils literal notranslate"><span class="pre">(void**)</span></code> cast in
+each function call. See, for example, <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DMDA/DMDAVecGetArray.html#DMDAVecGetArray">DMDAVecGetArray</a>()</span></code>.</p></li>
+<li><p>Do not use the <code class="docutils literal notranslate"><span class="pre">register</span></code> directive.</p></li>
+<li><p>Do not use <code class="docutils literal notranslate"><span class="pre">if</span> <span class="pre">(rank</span> <span class="pre">==</span> <span class="pre">0)</span></code> or <code class="docutils literal notranslate"><span class="pre">if</span> <span class="pre">(v</span> <span class="pre">==</span> <span class="pre">NULL)</span></code> or
+<code class="docutils literal notranslate"><span class="pre">if</span> <span class="pre">(flg</span> <span class="pre">==</span> <span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</a>)</span></code> or <code class="docutils literal notranslate"><span class="pre">if</span> <span class="pre">(flg</span> <span class="pre">==</span> <span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PETSC_FALSE.html#PETSC_FALSE">PETSC_FALSE</a>)</span></code>. Instead, use
+<code class="docutils literal notranslate"><span class="pre">if</span> <span class="pre">(!rank)</span></code> or <code class="docutils literal notranslate"><span class="pre">if</span> <span class="pre">(!v)</span></code> or <code class="docutils literal notranslate"><span class="pre">if</span> <span class="pre">(flg)</span></code> or <code class="docutils literal notranslate"><span class="pre">if</span> <span class="pre">(!flg)</span></code>.</p></li>
+<li><p>Do not use <code class="docutils literal notranslate"><span class="pre">#ifdef</span></code> or <code class="docutils literal notranslate"><span class="pre">#ifndef</span></code>. Rather, use <code class="docutils literal notranslate"><span class="pre">#if</span> <span class="pre">defined(...</span></code>
+or <code class="docutils literal notranslate"><span class="pre">#if</span> <span class="pre">!defined(...</span></code>.  Better, use <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscDefined.html#PetscDefined">PetscDefined</a>()</span></code> (see below).</p></li>
+<li><p>Never use system random number generators such as <code class="docutils literal notranslate"><span class="pre">rand()</span></code> in PETSc
+code or examples because these can produce different results on
+different systems thus making portability testing difficult. Instead
+use <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscRandom.html#PetscRandom">PetscRandom</a></span></code> which produces the exact same results regardless
+of system it is used on.</p></li>
+<li><p>Variadic macros may be used in PETSc source files, but must work with MSVC
+and must not be required in public headers (which must be usable with strict
+<code class="docutils literal notranslate"><span class="pre">-std=c89</span></code>).  Most compilers have conforming implementations of the
+C99/C++11 rules for <code class="docutils literal notranslate"><span class="pre">__VA_ARGS__</span></code>, but MSVC’s implementation is not
+conforming and may need workarounds.  See <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscDefined.html#PetscDefined">PetscDefined</a>()</span></code> for an example
+of how to work around MSVC’s limitations to write a macro that is usable in
+both.</p></li>
+<li><p>Do not use language features that are not in the intersection of C99, C++11,
+and MSVC.  Examples of such features include designated initializers and
+variable-length arrays.  Note that variable-length arrays (including
+VLA-pointers) are not supported in C++ and were made optional in C11 and that
+designated initializers are not in C++.</p></li>
+</ol>
+</div>
+<div class="section" id="usage-of-petsc-functions-and-macros">
+<span id="id2"></span><h3>Usage of PETSc Functions and Macros<a class="headerlink" href="#usage-of-petsc-functions-and-macros" title="Permalink to this headline">¶</a></h3>
+<ol class="arabic">
+<li><p>Public PETSc include files, <code class="docutils literal notranslate"><span class="pre">petsc*.h</span></code>, should not reference
+private PETSc <code class="docutils literal notranslate"><span class="pre">petsc/private/*impl.h</span></code> include files.</p></li>
+<li><p>Public and private PETSc include files cannot reference include files
+located in the PETSc source tree.</p></li>
+<li><p>When possible, use <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscDefined.html#PetscDefined">PetscDefined</a>()</span></code> instead of preprocessor conditionals.
+For example use:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscDefined.html#PetscDefined">PetscDefined</a></span><span class="p">(</span><span class="n">USE_DEBUG</span><span class="p">))</span> <span class="p">{</span> <span class="p">...</span> <span class="p">}</span>
+</pre></div>
+</div>
+<p>instead of:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#if defined(PETSC_USE_DEBUG)</span>
+  <span class="p">...</span>
+<span class="cp">#endif</span>
+</pre></div>
+</div>
+<p>The former usage allows syntax and type checking in all configurations of
+PETSc, where as the latter needs to be compiled with and without debugging
+just to confirm that it compiles.</p>
+</li>
+<li><p>The first line of the executable statements in functions must be
+<code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscFunctionBegin.html#PetscFunctionBegin">PetscFunctionBegin</a>;</span></code></p></li>
+<li><p>Use <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscFunctionReturn.html#PetscFunctionReturn">PetscFunctionReturn</a>(returnvalue)</span></code>, not
+<code class="docutils literal notranslate"><span class="pre">return(returnvalue);</span></code></p></li>
+<li><p><em>Never</em> put a function call in a <code class="docutils literal notranslate"><span class="pre">return</span></code> statement; do not write</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscFunctionReturn.html#PetscFunctionReturn">PetscFunctionReturn</a></span><span class="p">(</span> <span class="n">somefunction</span><span class="p">(...)</span> <span class="p">);</span> <span class="cm">/* Incorrect */</span>
+</pre></div>
+</div>
+</li>
+<li><p>Do <em>not</em> put a blank line immediately after <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscFunctionBegin.html#PetscFunctionBegin">PetscFunctionBegin</a>;</span></code>
+or a blank line immediately before <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscFunctionReturn.html#PetscFunctionReturn">PetscFunctionReturn</a>(0);</span></code>.</p></li>
+<li><p>Do not use <code class="docutils literal notranslate"><span class="pre">sqrt()</span></code>, <code class="docutils literal notranslate"><span class="pre">pow()</span></code>, <code class="docutils literal notranslate"><span class="pre">sin()</span></code>, and so on directly in
+PETSc C/C++ source code or examples (usage is fine in Fortran source
+code). Rather, use <code class="docutils literal notranslate"><span class="pre">PetscSqrtScalar()</span></code>, <code class="docutils literal notranslate"><span class="pre">PetscSqrtReal()</span></code>, and so
+on, depending on the context. See <code class="docutils literal notranslate"><span class="pre">petscmath.h</span></code> for expressions to
+use.</p></li>
+<li><p>Do not include <code class="docutils literal notranslate"><span class="pre">assert.h</span></code> in PETSc source code. Do not use
+<code class="docutils literal notranslate"><span class="pre">assert()</span></code>, it doesn’t play well in the parallel MPI world.</p></li>
+<li><p>The macros <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>()</span></code> and <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a>()</span></code> should be on the same line
+as the routine to be checked unless doing so violates the 150
+character-width-rule. Try to make error messages short but
+informative.</p></li>
+<li><p>Do not include a space before <code class="docutils literal notranslate"><span class="pre">CHKXXX()</span></code>. That is, do not write</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscMalloc1.html#PetscMalloc1">PetscMalloc1</a></span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="o">&amp;</span><span class="n">a</span><span class="p">);</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span> <span class="cm">/* Incorrect */</span>
+</pre></div>
+</div>
+<p>but instead write</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscMalloc1.html#PetscMalloc1">PetscMalloc1</a></span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="o">&amp;</span><span class="n">a</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+</pre></div>
+</div>
+</li>
+<li><p>Except in code that may be called before PETSc is fully initialized,
+always use <code class="docutils literal notranslate"><span class="pre">PetscMallocN()</span></code> (for example, <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscMalloc1.html#PetscMalloc1">PetscMalloc1</a>()</span></code>),
+<code class="docutils literal notranslate"><span class="pre">PetscCallocN()</span></code>, <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscNew.html#PetscNew">PetscNew</a>()</span></code>, and <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscFree.html#PetscFree">PetscFree</a>()</span></code>, not
+<code class="docutils literal notranslate"><span class="pre">malloc()</span></code> and <code class="docutils literal notranslate"><span class="pre">free()</span></code>.</p></li>
+<li><p>MPI routines and macros that are not part of the 1.0 or 1.1 standard
+should not be used in PETSc without appropriate <code class="docutils literal notranslate"><span class="pre">./configure</span></code>
+checks and <code class="docutils literal notranslate"><span class="pre">#if</span> <span class="pre">defined()</span></code> checks. Code should also be provided
+that works if the MPI feature is not available, for example,</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#if defined(PETSC_HAVE_MPI_IN_PLACE)</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="http://www.mpich.org/static/docs/latest/www3/MPI_Allgatherv.html#MPI_Allgatherv">MPI_Allgatherv</a></span><span class="p">(</span><span class="n">MPI_IN_PLACE</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="n">MPI_DATATYPE_NULL</span><span class="p">,</span><span class="n">lens</span><span class="p">,</span>
+                        <span class="n">recvcounts</span><span class="p">,</span><span class="n">displs</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/MPIU_INT.html#MPIU_INT">MPIU_INT</a></span><span class="p">,</span><span class="n">comm</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+<span class="cp">#else</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="http://www.mpich.org/static/docs/latest/www3/MPI_Allgatherv.html#MPI_Allgatherv">MPI_Allgatherv</a></span><span class="p">(</span><span class="n">lens</span><span class="p">,</span><span class="n">sendcount</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/MPIU_INT.html#MPIU_INT">MPIU_INT</a></span><span class="p">,</span><span class="n">lens</span><span class="p">,</span><span class="n">recvcounts</span><span class="p">,</span>
+                        <span class="n">displs</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/MPIU_INT.html#MPIU_INT">MPIU_INT</a></span><span class="p">,</span><span class="n">comm</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+<span class="cp">#endif</span>
+</pre></div>
+</div>
+</li>
+<li><p>Do not introduce PETSc routines that provide essentially the same
+functionality as an available MPI routine. For example, do not write
+a routine <code class="docutils literal notranslate"><span class="pre">PetscGlobalSum()</span></code> that takes a scalar value and performs
+an <code class="docutils literal notranslate"><span class="pre"><a href="http://www.mpich.org/static/docs/latest/www3/MPI_Allreduce.html#MPI_Allreduce">MPI_Allreduce</a>()</span></code> on it. Instead, use the MPI routine
+<code class="docutils literal notranslate"><span class="pre"><a href="http://www.mpich.org/static/docs/latest/www3/MPI_Allreduce.html#MPI_Allreduce">MPI_Allreduce</a>()</span></code> directly in the code.</p></li>
+<li><p>Never use a local variable counter such as <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span> <span class="pre">flops</span> <span class="pre">=</span> <span class="pre">0;</span></code> to
+accumulate flops and then call <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Profiling/PetscLogFlops.html#PetscLogFlops">PetscLogFlops</a>();</span></code> <em>always</em> just
+call <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Profiling/PetscLogFlops.html#PetscLogFlops">PetscLogFlops</a>()</span></code> directly when needed.</p></li>
+<li><p>Library functions should be declared
+<code class="docutils literal notranslate"><span class="pre">PETSC_INTERN</span></code> if they are intended to be visible only within a
+single PETSc shared library. They should be declared <code class="docutils literal notranslate"><span class="pre">PETSC_EXTERN</span></code>
+if intended to be visible across shared libraries. Note that PETSc
+can be configured to build a separate shared library for each
+top-level class (<code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/Mat.html#Mat">Mat</a></span></code>, <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span></code>, <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSP.html#KSP">KSP</a></span></code>, and so on) and that
+plugin implementations of these classes can be included as separate
+shared libraries; thus, private functions may need to be marked
+<code class="docutils literal notranslate"><span class="pre">PETSC_EXTERN</span></code>. For example,</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">MatStashCreatePrivate</span></code> is marked <code class="docutils literal notranslate"><span class="pre">PETSC_INTERN</span></code> as it is used
+across compilation units, but only within the <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/Mat.html#Mat">Mat</a></span></code> package;</p></li>
+<li><p>all functions, such as <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSPCreate.html#KSPCreate">KSPCreate</a>()</span></code>, included in the public
+headers (<code class="docutils literal notranslate"><span class="pre">include/petsc*.h</span></code>) should be marked <code class="docutils literal notranslate"><span class="pre">PETSC_EXTERN</span></code>;</p></li>
+</ul>
+</li>
+<li><p>Before removing or renaming an API function, type, or enumerator,
+<code class="docutils literal notranslate"><span class="pre">PETSC_DEPRECATED_XXX()</span></code> should be used in the relevant header file
+to indicate the new, correct usage and the version number where the
+deprecation will first appear. For example,</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">typedef</span> <span class="n">NewType</span> <span class="n">OldType</span> <span class="n">PETSC_DEPRECATED_TYPEDEF</span><span class="p">(</span><span class="s">&quot;Use NewType (since version 3.9)&quot;</span><span class="p">);</span>
+<span class="n">PETSC_DEPRECATED_FUNCTION</span><span class="p">(</span><span class="s">&quot;Use NewFunction() (since version 3.9)&quot;</span><span class="p">)</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a></span> <span class="n">OldFunction</span><span class="p">();</span>
+<span class="cp">#define OLD_ENUMERATOR_DEPRECATED  OLD_ENUMERATOR PETSC_DEPRECATED_ENUM(&quot;Use NEW_ENUMERATOR (since version 3.9)&quot;)</span>
+<span class="k">typedef</span> <span class="k">enum</span> <span class="p">{</span>
+  <span class="n">OLD_ENUMERATOR_DEPRECATED</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>
+  <span class="n">NEW_ENUMERATOR</span> <span class="o">=</span> <span class="mi">3</span>
+<span class="p">}</span> <span class="n">MyEnum</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>The old function or type, with the deprecation warning, should remain
+for at least one major release. The function or type’s manual page
+should be updated (see <a class="reference internal" href="#manual-page-format"><span class="std std-ref">Manual Page Format</span></a>).</p>
+</li>
+<li><p>Before removing or renaming an options database key,
+<code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscOptionsDeprecated.html#PetscOptionsDeprecated">PetscOptionsDeprecated</a>()</span></code> should be used for at least one major
+release.</p></li>
+<li><p>The format strings in PETSc ASCII output routines, such as
+<code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a></span></code>, take a for all PETSc variables of type <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span></code>,
+not a .</p></li>
+<li><p>All arguments of type <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a></span></code> to PETSc ASCII output routines,
+such as <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a></span></code>, must be cast to <code class="docutils literal notranslate"><span class="pre">double</span></code>, for example,</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscPrintf.html#PetscPrintf">PetscPrintf</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PETSC_COMM_WORLD.html#PETSC_COMM_WORLD">PETSC_COMM_WORLD</a></span><span class="p">,</span><span class="s">&quot;Norm %g</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,(</span><span class="kt">double</span><span class="p">)</span><span class="n">norm</span><span class="p">);</span>
+</pre></div>
+</div>
+</li>
+</ol>
+</div>
+</div>
+<div class="section" id="formatted-comments">
+<h2>Formatted Comments<a class="headerlink" href="#formatted-comments" title="Permalink to this headline">¶</a></h2>
+<p>PETSc uses formatted comments and the Sowing packages
+<span id="id3">[<a class="reference internal" href="#id945">Gro95b</a>]</span> <span id="id4">[<a class="reference internal" href="#id946">Gro95a</a>]</span>
+to generate documentation (manual pages) and the Fortran interfaces. Documentation
+for Sowing and the formatting may be found at
+<a class="reference external" href="http://wgropp.cs.illinois.edu/projects/software/sowing/">http://wgropp.cs.illinois.edu/projects/software/sowing/</a>; in particular,
+see the documentation for <code class="docutils literal notranslate"><span class="pre">doctext</span></code>.</p>
+<ul>
+<li><div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">/*&#64;</span></code></div>
+<div class="line">a formatted comment of a function that will be used for both</div>
+<div class="line">documentation and a Fortran interface.</div>
+</div>
+</li>
+<li><div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">/*&#64;C</span></code></div>
+<div class="line">a formatted comment of a function that will be used only for</div>
+<div class="line">documentation, not to generate a Fortran interface. In general, such</div>
+<div class="line">labeled C functions should have a custom Fortran interface provided.</div>
+<div class="line">Functions that take <code class="docutils literal notranslate"><span class="pre">char*</span></code> or function pointer arguments must have</div>
+<div class="line">the <code class="docutils literal notranslate"><span class="pre">C</span></code> symbol and a custom Fortran interface provided.</div>
+</div>
+</li>
+<li><div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">/*E</span></code></div>
+<div class="line">a formatted comment of an enum used for documentation only. Note</div>
+<div class="line">that each of these needs to be listed in</div>
+<div class="line"><code class="docutils literal notranslate"><span class="pre">lib/petsc/conf/bfort-petsc.txt</span></code> as a native and defined in the</div>
+<div class="line">corresponding <code class="docutils literal notranslate"><span class="pre">include/petsc/finclude/petscxxx.h</span></code> Fortran include</div>
+<div class="line">file and the values set as parameters in the file</div>
+<div class="line"><code class="docutils literal notranslate"><span class="pre">src/SECTION/f90-mod/petscSUBSECTION.h</span></code>, for example,</div>
+<div class="line"><code class="docutils literal notranslate"><span class="pre">src/vec/f90-mod/petscis.h</span></code>.</div>
+</div>
+</li>
+<li><div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">/*S</span></code></div>
+<div class="line">a formatted comment for a data type such as <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSP.html#KSP">KSP</a></span></code>. Note that each</div>
+<div class="line">of these needs to be listed in <code class="docutils literal notranslate"><span class="pre">lib/petsc/conf/bfort-petsc.txt</span></code> as</div>
+<div class="line">a <code class="docutils literal notranslate"><span class="pre">nativeptr</span></code>.</div>
+</div>
+</li>
+<li><div class="line-block">
+<div class="line"><code class="docutils literal notranslate"><span class="pre">/*MC</span></code></div>
+<div class="line">a formatted comment of a CPP macro or enum value for documentation.</div>
+</div>
+</li>
+</ul>
+<p>The Fortran interface files supplied by the user go into the two
+directories <code class="docutils literal notranslate"><span class="pre">ftn-custom</span></code> and <code class="docutils literal notranslate"><span class="pre">f90-custom</span></code>, while those generated by
+Sowing go into <code class="docutils literal notranslate"><span class="pre">ftn-auto</span></code>.</p>
+<div class="section" id="manual-page-format">
+<span id="id5"></span><h3>Manual Page Format<a class="headerlink" href="#manual-page-format" title="Permalink to this headline">¶</a></h3>
+<p>Each function, typedef, class, macro, enum, and so on in the public API
+should include the following data, correctly formatted (see codes
+section) to generate complete manual pages and Fortran interfaces with
+Sowing. All entries below should be separated by blank lines. Except
+where noted, add a newline after the section headings.</p>
+<ol class="arabic simple">
+<li><p>The item’s name, followed by a dash and brief (one-sentence)
+description.</p></li>
+<li><p>If documenting a function implemented with a preprocessor macro
+(e.g., <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscOptionsBegin.html#PetscOptionsBegin">PetscOptionsBegin</a>()</span></code>), an explicit <code class="docutils literal notranslate"><span class="pre">Synopsis:</span></code> section
+noting the required header and the function signature.</p></li>
+<li><p>If documenting a function, a description of the function’s
+“collectivity” (whether all ranks in an MPI communicator need to
+participate). Unless otherwise noted, it’s assumed that this
+collectivity is with respect to the MPI communicator associated with
+the first argument.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Not</span> <span class="pre">Collective</span></code> if the function need not be called on all MPI
+ranks</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Collective</span> <span class="pre">[on</span> <span class="pre">XXX]</span></code> if the function is a collective operation
+(with respect to the MPI communicator associated with argument
+<code class="docutils literal notranslate"><span class="pre">XXX</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Logically</span> <span class="pre">Collective</span> <span class="pre">[on</span> <span class="pre">XXX][;</span> <span class="pre">YYY</span> <span class="pre">must</span> <span class="pre">contain</span> <span class="pre">common</span> <span class="pre">value]</span></code>
+if the function is collective but does not require any actual
+synchronization (e.g. setting class parameters uniformly). Any
+argument YYY which must have the same value on all ranks of the
+MPI communicator should be noted here.</p></li>
+</ul>
+</li>
+<li><p>If documenting a function with input parameters, a list of input
+parameter descriptions in an <code class="docutils literal notranslate"><span class="pre">Input</span> <span class="pre">Parameters:</span></code> section.</p></li>
+<li><p>If documenting a function with output parameters, a list of output
+parameter descriptions in an <code class="docutils literal notranslate"><span class="pre">Output</span> <span class="pre">Parameters:</span></code> section.</p></li>
+<li><p>If documenting a function that interacts with the options database, a
+list of options database keys in an <code class="docutils literal notranslate"><span class="pre">Options</span> <span class="pre">Database</span> <span class="pre">Keys:</span></code>
+section.</p></li>
+<li><p>(Optional) a <code class="docutils literal notranslate"><span class="pre">Notes:</span></code> section containing in-depth discussion,
+technical caveats, special cases, and so on. If it is ambiguous
+whether returned pointers/objects need to be freed/destroyed by the
+user or not, this information should be mentioned here.</p></li>
+<li><p>(If applicable) a <code class="docutils literal notranslate"><span class="pre">Fortran</span> <span class="pre">Notes:</span></code> section detailing any relevant
+differences in calling or using the item from Fortran.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Level:</span></code> (no newline) followed by <code class="docutils literal notranslate"><span class="pre">beginner</span></code>,
+<code class="docutils literal notranslate"><span class="pre">intermediate</span></code>, <code class="docutils literal notranslate"><span class="pre">advanced</span></code>, <code class="docutils literal notranslate"><span class="pre">developer</span></code>, or <code class="docutils literal notranslate"><span class="pre">deprecated</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">.seealso:</span></code> (no newline), followed by a list of related manual
+pages. These manual pages should usually also point back to this
+manual page in their <code class="docutils literal notranslate"><span class="pre">seealso:</span></code> sections.</p></li>
+</ol>
+<dl class="footnote brackets">
+<dt class="label" id="id6"><span class="brackets"><a class="fn-backref" href="#id1">1</a></span></dt>
+<dd><p>Type also refers to the string name of the subclass.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="section" id="references">
+<h2>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
+<p id="id7"><dl class="citation">
+<dt class="label" id="id946"><span class="brackets"><a class="fn-backref" href="#id4">Gro95a</a></span></dt>
+<dd><p>W Gropp. Users manual for doctext: producing documentation from source code. Technical Report ANL/MCS-TM-206, Argonne National Laboratory, 1995.</p>
+</dd>
+<dt class="label" id="id945"><span class="brackets"><a class="fn-backref" href="#id3">Gro95b</a></span></dt>
+<dd><p>W Gropp. Users manual for bfort: producing Fortran interfaces to C source code. Technical Report ANL/MCS-TM-208, Argonne National Laboratory, 1995.</p>
+</dd>
+</dl>
+</p>
+<span class="target" id="id1257"></span></div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="integration.html" title="PETSc Integration Workflows"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="contributing.html" title="Contributing to PETSc"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">PETSc 3.14.6 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >PETSc Developer’s Documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 1991-2021, UChicago Argonne, LLC and the PETSc Development Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.4.
+    </div>
+  </body>
+</html>

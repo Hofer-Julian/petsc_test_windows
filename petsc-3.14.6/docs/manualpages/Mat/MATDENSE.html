@@ -1,0 +1,33 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MATDENSE.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>MATDENSE</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/Mat/MATDENSE.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="MATDENSE"><H1>MATDENSE</H1></A>
+<A HREF="../Mat/MATDENSE.html#MATDENSE">MATDENSE</A> = "dense" - A matrix type to be used for dense matrices. This matrix type is identical to <A HREF="../Mat/MATSEQDENSE.html#MATSEQDENSE">MATSEQDENSE</A> when constructed with a single process communicator,
+and <A HREF="../Mat/MATMPIDENSE.html#MATMPIDENSE">MATMPIDENSE</A> otherwise.
+<P>
+<H3><FONT COLOR="#CC3333">Options Database Keys</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>-mat_type dense </B></TD><TD>- sets the matrix type to "dense" during a call to <A HREF="../Mat/MatSetFromOptions.html#MatSetFromOptions">MatSetFromOptions</A>()
+</TD></TR></TABLE>
+<P>
+
+<P>
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../Mat/MATSEQDENSE.html#MATSEQDENSE">MATSEQDENSE</A>,<A HREF="../Mat/MATMPIDENSE.html#MATMPIDENSE">MATMPIDENSE</A>,<A HREF="../Mat/MATDENSECUDA.html#MATDENSECUDA">MATDENSECUDA</A>
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>beginner<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/mat/impls/dense/mpi/mpidense.c.html#MATDENSE">src/mat/impls/dense/mpi/mpidense.c</A>
+<P><H3><FONT COLOR="#CC3333">Examples</FONT></H3>
+<A HREF="../../../src/ksp/ksp/tutorials/ex21.c.html">src/ksp/ksp/tutorials/ex21.c.html</A><BR>
+<A HREF="../../../src/ts/tutorials/ex40.c.html">src/ts/tutorials/ex40.c.html</A><BR>
+<BR><A HREF="./index.html">Index of all Mat routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

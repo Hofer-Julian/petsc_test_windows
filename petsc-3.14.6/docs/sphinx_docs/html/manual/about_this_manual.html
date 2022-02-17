@@ -1,0 +1,167 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/sphinx_docs/html/manual/about_this_manual.html" />
+    <meta charset="utf-8" />
+    <title>About This Manual &#8212; PETSc 3.14.6 documentation</title>
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/katex-math.css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/contrib/auto-render.min.js"></script>
+    <script src="../_static/katex_autorenderer.js"></script>
+    <link rel="shortcut icon" href="../_static/PETSc_RGB-logo.png"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Getting Started" href="getting_started.html" />
+    <link rel="prev" title="Introduction to PETSc" href="introduction.html" /> 
+  </head><body>
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/sphinx_docs/html/manual/about_this_manual.html "><small>Report Typos and Errors</small></a></div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="getting_started.html" title="Getting Started"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="introduction.html" title="Introduction to PETSc"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">PETSc 3.14.6 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >PETSc Users Manual</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="introduction.html" accesskey="U">Introduction to PETSc</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/PETSc-TAO_RGB.svg" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="introduction.html"
+                        title="previous chapter">Introduction to PETSc</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="getting_started.html"
+                        title="next chapter">Getting Started</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/manual/about_this_manual.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="about-this-manual">
+<h1>About This Manual<a class="headerlink" href="#about-this-manual" title="Permalink to this headline">¶</a></h1>
+<p>This manual describes the use of the Portable, Extensible Toolkit for Scientific Computation
+(PETSc) for the numerical solution of
+partial differential equations and related problems on high-performance
+computers. PETSc is a suite of data structures and routines that provide the
+building blocks for the implementation of large-scale application codes
+on parallel (and serial) computers. PETSc uses the MPI standard for all
+distributed memory communication.</p>
+<p>PETSc includes a large suite of parallel linear solvers, nonlinear
+solvers, and time integrators that may be used in application codes
+written in Fortran, C, C++, and Python (via petsc4py; see <a class="reference internal" href="getting_started.html#sec-getting-started"><span class="std std-ref">Getting Started</span></a> ). PETSc
+provides many of the mechanisms needed within parallel application
+codes, such as parallel matrix and vector assembly routines. The library
+is organized hierarchically, enabling users to employ the level of
+abstraction that is most appropriate for a particular problem. By using
+techniques of object-oriented programming, PETSc provides enormous
+flexibility for users.</p>
+<p>PETSc is a sophisticated set of software tools; as such, for some users
+it initially has a much steeper learning curve than packages such as MATLAB or a simple subroutine
+library. In particular, for individuals without some computer science
+background, experience programming in C, C++, python, or Fortran and
+experience using a debugger such as <code class="docutils literal notranslate"><span class="pre">gdb</span></code> or <code class="docutils literal notranslate"><span class="pre">lldb</span></code>, it may require a
+significant amount of time to take full advantage of the features that
+enable efficient software use. However, the power of the PETSc design
+and the algorithms it incorporates may make the efficient implementation
+of many application codes simpler than “rolling them” yourself.</p>
+<ul class="simple">
+<li><p>For many tasks a package such as MATLAB is often the best tool; PETSc
+is not intended for the classes of problems for which effective
+MATLAB code can be written.</p></li>
+<li><p>There are several packages (listed on <a class="reference external" href="https://www.mcs.anl.gov/petsc">https://www.mcs.anl.gov/petsc</a>),
+built on PETSc, that may satisfy your needs without requiring
+directly using PETSc. We recommend reviewing these packages
+functionality before starting to code directly with PETSc.</p></li>
+<li><p>PETSc should <em>not</em> be used to attempt to provide a “parallel linear
+solver” in an otherwise sequential code. Certainly all parts of a
+previously sequential code need not be parallelized but the matrix
+generation portion must be parallelized to expect any kind of
+reasonable performance. Do not expect to generate your matrix
+sequentially and then “use PETSc” to solve the linear system in
+parallel.</p></li>
+</ul>
+<p>Since PETSc is under continued development, small changes in usage and
+calling sequences of routines will occur. PETSc has been supported for twenty-five years; see
+<a class="reference external" href="https://www.mcs.anl.gov/petsc/miscellaneous/mailing-lists.html">https://www.mcs.anl.gov/petsc/miscellaneous/mailing-lists.html</a> for
+information on contacting support.</p>
+<p>We welcome any reports of corrections for this document at
+<code class="docutils literal notranslate"><span class="pre">petsc-maint&#64;mcs.anl.gov</span></code>.</p>
+<p>Manual pages and example usage :
+<a class="reference external" href="https://www.mcs.anl.gov/petsc/documentation/">https://www.mcs.anl.gov/petsc/documentation/</a></p>
+<p>Installing PETSc :
+<a class="reference external" href="https://www.mcs.anl.gov/petsc/documentation/installation.html">https://www.mcs.anl.gov/petsc/documentation/installation.html</a></p>
+<p>Tutorials :
+<a class="reference external" href="https://www.mcs.anl.gov/petsc/documentation/tutorials/index.html">https://www.mcs.anl.gov/petsc/documentation/tutorials/index.html</a></p>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="getting_started.html" title="Getting Started"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="introduction.html" title="Introduction to PETSc"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">PETSc 3.14.6 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >PETSc Users Manual</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="introduction.html" >Introduction to PETSc</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 1991-2021, UChicago Argonne, LLC and the PETSc Development Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.4.
+    </div>
+  </body>
+</html>

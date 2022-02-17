@@ -1,0 +1,64 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/TS/DMTSSetIJacobian.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>DMTSSetIJacobian</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/TS/DMTSSetIJacobian.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="DMTSSetIJacobian"><H1>DMTSSetIJacobian</H1></A>
+set <A HREF="../TS/TS.html#TS">TS</A> Jacobian evaluation function 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscts.h" 
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../TS/DMTSSetIJacobian.html#DMTSSetIJacobian">DMTSSetIJacobian</A>(<A HREF="../DM/DM.html#DM">DM</A> dm,TSIJacobian func,void *ctx)
+</PRE>
+Not Collective
+<P>
+<H3><FONT COLOR="#CC3333">Input Argument</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>dm </B></TD><TD>- <A HREF="../DM/DM.html#DM">DM</A> to be used with <A HREF="../TS/TS.html#TS">TS</A>
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>func </B></TD><TD>- Jacobian evaluation routine
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>ctx </B></TD><TD>- context for residual evaluation
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Calling sequence of f</FONT></H3>
+<pre>
+   <A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> f(<A HREF="../TS/TS.html#TS">TS</A> ts,<A HREF="../Sys/PetscReal.html#PetscReal">PetscReal</A> t,<A HREF="../Vec/Vec.html#Vec">Vec</A> U,<A HREF="../Vec/Vec.html#Vec">Vec</A> U_t,<A HREF="../Sys/PetscReal.html#PetscReal">PetscReal</A> a,<A HREF="../Mat/Mat.html#Mat">Mat</A> Amat,<A HREF="../Mat/Mat.html#Mat">Mat</A> Pmat,void *ctx);
+</pre>
+<P>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>t    </B></TD><TD>- time at step/stage being solved
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>U    </B></TD><TD>- state vector
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>U_t  </B></TD><TD>- time derivative of state vector
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>a    </B></TD><TD>- shift
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>Amat </B></TD><TD>- (approximate) Jacobian of F(t,U,W+a*U), equivalent to dF/dU + a*dF/dU_t
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>Pmat </B></TD><TD>- matrix used for constructing preconditioner, usually the same as Amat
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>ctx  </B></TD><TD>- [optional] user-defined context for matrix evaluation routine
+</TD></TR></TABLE>
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">Note</FONT></H3>
+TSSetJacobian() is normally used, but it calls this function internally because the user context is actually
+associated with the <A HREF="../DM/DM.html#DM">DM</A>.  This makes the interface consistent regardless of whether the user interacts with a <A HREF="../DM/DM.html#DM">DM</A> or
+not. If <A HREF="../DM/DM.html#DM">DM</A> took a more central role at some later date, this could become the primary method of setting the Jacobian.
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ DMTSSetContext(), <A HREF="../TS/TSSetRHSFunction.html#TSSetRHSFunction">TSSetRHSFunction</A>(), DMTSGetJacobian(), <A HREF="../TS/TSSetIJacobian.html#TSSetIJacobian">TSSetIJacobian</A>(), <A HREF="../TS/TSSetIFunction.html#TSSetIFunction">TSSetIFunction</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>advanced<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/ts/utils/dmts.c.html#DMTSSetIJacobian">src/ts/utils/dmts.c</A>
+<BR><A HREF="./index.html">Index of all TS routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

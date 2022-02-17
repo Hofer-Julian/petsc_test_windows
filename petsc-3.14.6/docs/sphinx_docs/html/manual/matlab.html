@@ -1,0 +1,271 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/sphinx_docs/html/manual/matlab.html" />
+    <meta charset="utf-8" />
+    <title>Using MATLAB with PETSc &#8212; PETSc 3.14.6 documentation</title>
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/katex-math.css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/contrib/auto-render.min.js"></script>
+    <script src="../_static/katex_autorenderer.js"></script>
+    <link rel="shortcut icon" href="../_static/PETSc_RGB-logo.png"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Profiling" href="profiling.html" />
+    <link rel="prev" title="PETSc for Fortran Users" href="fortran.html" /> 
+  </head><body>
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/sphinx_docs/html/manual/matlab.html "><small>Report Typos and Errors</small></a></div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="profiling.html" title="Profiling"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="fortran.html" title="PETSc for Fortran Users"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">PETSc 3.14.6 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >PETSc Users Manual</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="additional.html" accesskey="U">Additional Information</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/PETSc-TAO_RGB.svg" alt="Logo"/>
+            </a></p>
+  <h3><a href="../index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Using MATLAB with PETSc</a><ul>
+<li><a class="reference internal" href="#dumping-data-for-matlab">Dumping Data for MATLAB</a><ul>
+<li><a class="reference internal" href="#dumping-ascii-matlab-data">Dumping ASCII MATLAB data</a></li>
+<li><a class="reference internal" href="#dumping-binary-data-for-matlab">Dumping Binary Data for MATLAB</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#sending-data-to-an-interactive-matlab-session">Sending Data to an Interactive MATLAB Session</a></li>
+<li><a class="reference internal" href="#using-the-matlab-compute-engine">Using the MATLAB Compute Engine</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="fortran.html"
+                        title="previous chapter">PETSc for Fortran Users</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="profiling.html"
+                        title="next chapter">Profiling</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/manual/matlab.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="using-matlab-with-petsc">
+<span id="ch-matlab"></span><h1>Using MATLAB with PETSc<a class="headerlink" href="#using-matlab-with-petsc" title="Permalink to this headline">¶</a></h1>
+<p>There are three basic ways to use MATLAB with PETSc:</p>
+<ol class="arabic simple">
+<li><p>(<a class="reference internal" href="#sec-matlabdump"><span class="std std-ref">Dumping Data for MATLAB</span></a>) dumping files to be read into
+MATLAB,</p></li>
+<li><p>(<a class="reference internal" href="#sec-matlabsocket"><span class="std std-ref">Sending Data to an Interactive MATLAB Session</span></a>) automatically sending data from
+a running PETSc program to a MATLAB process where you may
+interactively type MATLAB commands (or run scripts), and</p></li>
+<li><p>(<a class="reference internal" href="#sec-matlabengine"><span class="std std-ref">Using the MATLAB Compute Engine</span></a>) automatically sending data back
+and forth between PETSc and MATLAB where MATLAB commands are issued
+not interactively but from a script or the PETSc program (this uses
+the MATLAB Engine).</p></li>
+</ol>
+<div class="section" id="dumping-data-for-matlab">
+<span id="sec-matlabdump"></span><h2>Dumping Data for MATLAB<a class="headerlink" href="#dumping-data-for-matlab" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="dumping-ascii-matlab-data">
+<h3>Dumping ASCII MATLAB data<a class="headerlink" href="#dumping-ascii-matlab-data" title="Permalink to this headline">¶</a></h3>
+<p>One can dump PETSc matrices and vectors to the screen in an ASCII format
+that MATLAB can read in directly. This is done with the command line
+options <code class="docutils literal notranslate"><span class="pre">-vec_view</span> <span class="pre">::ascii_matlab</span></code> or <code class="docutils literal notranslate"><span class="pre">-mat_view</span> <span class="pre">::ascii_matlab</span></code>. To
+write a a file, use <code class="docutils literal notranslate"><span class="pre">-vec_view</span> <span class="pre">:filename.m:ascii_matlab</span></code> or
+<code class="docutils literal notranslate"><span class="pre">-mat_view</span> <span class="pre">:filename.m:ascii_matlab</span></code>.</p>
+<p>This causes the PETSc program to print the vectors and matrices every
+time <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/VecAssemblyEnd.html#VecAssemblyEnd">VecAssemblyEnd</a>()</span></code> or <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatAssemblyEnd.html#MatAssemblyEnd">MatAssemblyEnd</a>()</span></code> are called. To provide
+finer control over when and what vectors and matrices are dumped one can
+use the <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/VecView.html#VecView">VecView</a>()</span></code> and <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatView.html#MatView">MatView</a>()</span></code> functions with a viewer type of
+ASCII (see <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Viewer/PetscViewerASCIIOpen.html#PetscViewerASCIIOpen">PetscViewerASCIIOpen</a>()</span></code>, <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Viewer/PETSC_VIEWER_STDOUT_WORLD.html#PETSC_VIEWER_STDOUT_WORLD">PETSC_VIEWER_STDOUT_WORLD</a></span></code>,
+<code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Viewer/PETSC_VIEWER_STDOUT_SELF.html#PETSC_VIEWER_STDOUT_SELF">PETSC_VIEWER_STDOUT_SELF</a></span></code>, or <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Viewer/PETSC_VIEWER_STDOUT_.html#PETSC_VIEWER_STDOUT_">PETSC_VIEWER_STDOUT_</a>(<a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</a>)</span></code>).
+Before calling the viewer set the output type with, for example,</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Viewer/PetscViewerPushFormat.html#PetscViewerPushFormat">PetscViewerPushFormat</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Viewer/PETSC_VIEWER_STDOUT_WORLD.html#PETSC_VIEWER_STDOUT_WORLD">PETSC_VIEWER_STDOUT_WORLD</a></span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Viewer/PetscViewerFormat.html#PetscViewerFormat">PETSC_VIEWER_ASCII_MATLAB</a></span><span class="p">);</span>
+<span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/VecView.html#VecView">VecView</a></span><span class="p">(</span><span class="n">A</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Viewer/PETSC_VIEWER_STDOUT_WORLD.html#PETSC_VIEWER_STDOUT_WORLD">PETSC_VIEWER_STDOUT_WORLD</a></span><span class="p">);</span>
+<span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Viewer/PetscViewerPopFormat.html#PetscViewerPopFormat">PetscViewerPopFormat</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Viewer/PETSC_VIEWER_STDOUT_WORLD.html#PETSC_VIEWER_STDOUT_WORLD">PETSC_VIEWER_STDOUT_WORLD</a></span><span class="p">);</span>
+</pre></div>
+</div>
+<p>The name of each PETSc variable printed for MATLAB may be set with</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscObjectSetName.html#PetscObjectSetName">PetscObjectSetName</a></span><span class="p">((</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a></span><span class="p">)</span><span class="n">A</span><span class="p">,</span><span class="s">&quot;name&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>If no name is specified, the object is given a default name using
+<code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscObjectName.html#PetscObjectName">PetscObjectName</a>()</span></code>.</p>
+</div>
+<div class="section" id="dumping-binary-data-for-matlab">
+<h3>Dumping Binary Data for MATLAB<a class="headerlink" href="#dumping-binary-data-for-matlab" title="Permalink to this headline">¶</a></h3>
+<p>One can also read PETSc binary files (see
+<a class="reference internal" href="other.html#sec-viewers"><span class="std std-ref">Viewers: Looking at PETSc Objects</span></a>) directly into MATLAB via the scripts available
+in <code class="docutils literal notranslate"><span class="pre">$PETSC_DIR/share/matlab</span></code>. This requires less disk space and is
+recommended for all but the smallest data sizes. One can also use</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Viewer/PetscViewerPushFormat.html#PetscViewerPushFormat">PetscViewerPushFormat</a></span><span class="p">(</span><span class="n">viewer</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Viewer/PetscViewerFormat.html#PetscViewerFormat">PETSC_VIEWER_BINARY_MATLAB</a></span><span class="p">)</span>
+</pre></div>
+</div>
+<p>to dump both a PETSc binary file and a corresponding <code class="docutils literal notranslate"><span class="pre">.info</span></code> file
+which <code class="docutils literal notranslate"><span class="pre">PetscReadBinaryMatlab.m</span></code> will use to format the binary file in
+more complex cases, such as using a <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DMDA/DMDA.html#DMDA">DMDA</a></span></code>. For an example, see
+<a class="reference external" href="https://www.mcs.anl.gov/petsc/petsc-current/src/dm/tutorials/ex7.c.html">DM Tutorial ex7</a>.
+In MATLAB (R2015b), one may then generate a useful structure. For
+example:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>setenv<span class="o">(</span><span class="s1">&#39;PETSC_DIR&#39;</span>,<span class="s1">&#39;~/petsc&#39;</span><span class="o">)</span><span class="p">;</span>
+setenv<span class="o">(</span><span class="s1">&#39;PETSC_ARCH&#39;</span>,<span class="s1">&#39;arch-darwin-double-debug&#39;</span><span class="o">)</span><span class="p">;</span>
+addpath<span class="o">(</span><span class="s1">&#39;~/petsc/share/petsc/matlab&#39;</span><span class="o">)</span><span class="p">;</span>
+<span class="nv">gridData</span><span class="o">=</span>PetscReadBinaryMatlab<span class="o">(</span><span class="s1">&#39;output_file&#39;</span><span class="o">)</span><span class="p">;</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="sending-data-to-an-interactive-matlab-session">
+<span id="sec-matlabsocket"></span><h2>Sending Data to an Interactive MATLAB Session<a class="headerlink" href="#sending-data-to-an-interactive-matlab-session" title="Permalink to this headline">¶</a></h2>
+<p>One creates a viewer to MATLAB via</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Viewer/PetscViewerSocketOpen.html#PetscViewerSocketOpen">PetscViewerSocketOpen</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</a></span><span class="p">,</span><span class="kt">char</span> <span class="o">*</span><span class="n">machine</span><span class="p">,</span><span class="kt">int</span> <span class="n">port</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Viewer/PetscViewer.html#PetscViewer">PetscViewer</a></span> <span class="o">*</span><span class="n">v</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>(<code class="docutils literal notranslate"><span class="pre">port</span></code> is usually set to <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PETSC_DEFAULT.html#PETSC_DEFAULT">PETSC_DEFAULT</a></span></code>; use <code class="docutils literal notranslate"><span class="pre">NULL</span></code> for the
+machine if the MATLAB interactive session is running on the same machine
+as the PETSc program) and then sends matrices or vectors via</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/VecView.html#VecView">VecView</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span> <span class="n">A</span><span class="p">,</span><span class="n">v</span><span class="p">);</span>
+<span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatView.html#MatView">MatView</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/Mat.html#Mat">Mat</a></span> <span class="n">B</span><span class="p">,</span><span class="n">v</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>See <a class="reference internal" href="other.html#sec-viewers"><span class="std std-ref">Viewers: Looking at PETSc Objects</span></a> for more on PETSc viewers. One may
+start the MATLAB program manually or use the PETSc command
+<code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscStartMatlab.html#PetscStartMatlab">PetscStartMatlab</a>(<a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</a>,char</span> <span class="pre">*machine,char</span> <span class="pre">*script,FILE</span> <span class="pre">**fp)</span></code>;
+where <code class="docutils literal notranslate"><span class="pre">machine</span></code> and <code class="docutils literal notranslate"><span class="pre">script</span></code> may be <code class="docutils literal notranslate"><span class="pre">NULL</span></code>. It is also possible to
+start your PETSc program from MATLAB via <code class="docutils literal notranslate"><span class="pre">launch()</span></code>.</p>
+<p>To receive the objects in MATLAB, make sure that
+<code class="docutils literal notranslate"><span class="pre">${PETSC_DIR}/${PETSC_ARCH}/lib/petsc/matlab</span></code> and
+<code class="docutils literal notranslate"><span class="pre">${PETSC_DIR}/share/petsc/matlab</span></code> are in the MATLAB path. Use
+<code class="docutils literal notranslate"><span class="pre">p</span> <span class="pre">=</span> <span class="pre">PetscOpenSocket();</span></code> (or <code class="docutils literal notranslate"><span class="pre">p</span> <span class="pre">=</span> <span class="pre">PetscOpenSocket(portnum)</span></code> if you
+provided a port number in your call to <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Viewer/PetscViewerSocketOpen.html#PetscViewerSocketOpen">PetscViewerSocketOpen</a>()</span></code>), and
+then <code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">=</span> <span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscBinaryRead.html#PetscBinaryRead">PetscBinaryRead</a>(p);</span></code> returns the object passed from PETSc.
+<code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscBinaryRead.html#PetscBinaryRead">PetscBinaryRead</a>()</span></code> may be called any number of times. Each call
+should correspond on the PETSc side with viewing a single vector or
+matrix. <code class="docutils literal notranslate"><span class="pre">close()</span></code> closes the connection from MATLAB. On the PETSc
+side, one should destroy the viewer object with
+<code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Viewer/PetscViewerDestroy.html#PetscViewerDestroy">PetscViewerDestroy</a>()</span></code>.</p>
+<p>For an example, which includes sending data back to PETSc, see
+<a class="reference external" href="https://www.mcs.anl.gov/petsc/petsc-current/src/vec/vec/tutorials/ex42.c.html">Vec Tutorial ex42</a>
+and the associated <code class="docutils literal notranslate"><span class="pre">.m</span></code> file.</p>
+</div>
+<div class="section" id="using-the-matlab-compute-engine">
+<span id="sec-matlabengine"></span><h2>Using the MATLAB Compute Engine<a class="headerlink" href="#using-the-matlab-compute-engine" title="Permalink to this headline">¶</a></h2>
+<p>One creates access to the MATLAB engine via</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscMatlabEngineCreate.html#PetscMatlabEngineCreate">PetscMatlabEngineCreate</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</a></span> <span class="n">comm</span><span class="p">,</span><span class="kt">char</span> <span class="o">*</span><span class="n">machine</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscMatlabEngine.html#PetscMatlabEngine">PetscMatlabEngine</a></span> <span class="o">*</span><span class="n">e</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">machine</span></code> is the name of the machine hosting MATLAB (<code class="docutils literal notranslate"><span class="pre">NULL</span></code>
+may be used for localhost). One can send objects to MATLAB via</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscMatlabEnginePut.html#PetscMatlabEnginePut">PetscMatlabEnginePut</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscMatlabEngine.html#PetscMatlabEngine">PetscMatlabEngine</a></span> <span class="n">e</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a></span> <span class="n">obj</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>One can get objects via</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscMatlabEngineGet.html#PetscMatlabEngineGet">PetscMatlabEngineGet</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscMatlabEngine.html#PetscMatlabEngine">PetscMatlabEngine</a></span> <span class="n">e</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a></span> <span class="n">obj</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Similarly, one can send arrays via</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscMatlabEnginePutArray.html#PetscMatlabEnginePutArray">PetscMatlabEnginePutArray</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscMatlabEngine.html#PetscMatlabEngine">PetscMatlabEngine</a></span> <span class="n">e</span><span class="p">,</span><span class="kt">int</span> <span class="n">m</span><span class="p">,</span><span class="kt">int</span> <span class="n">n</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a></span> <span class="o">*</span><span class="n">array</span><span class="p">,</span><span class="kt">char</span> <span class="o">*</span><span class="n">name</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>and get them back via</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscMatlabEngineGetArray.html#PetscMatlabEngineGetArray">PetscMatlabEngineGetArray</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscMatlabEngine.html#PetscMatlabEngine">PetscMatlabEngine</a></span> <span class="n">e</span><span class="p">,</span><span class="kt">int</span> <span class="n">m</span><span class="p">,</span><span class="kt">int</span> <span class="n">n</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a></span> <span class="o">*</span><span class="n">array</span><span class="p">,</span><span class="kt">char</span> <span class="o">*</span><span class="n">name</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>One cannot use MATLAB interactively in this mode but one can send MATLAB
+commands via</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscMatlabEngineEvaluate.html#PetscMatlabEngineEvaluate">PetscMatlabEngineEvaluate</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscMatlabEngine.html#PetscMatlabEngine">PetscMatlabEngine</a></span><span class="p">,</span><span class="s">&quot;format&quot;</span><span class="p">,...);</span>
+</pre></div>
+</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">format</span></code> has the usual <code class="docutils literal notranslate"><span class="pre">printf()</span></code> format. For example,</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscMatlabEngineEvaluate.html#PetscMatlabEngineEvaluate">PetscMatlabEngineEvaluate</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscMatlabEngine.html#PetscMatlabEngine">PetscMatlabEngine</a></span><span class="p">,</span><span class="s">&quot;x = \%g *y + z;&quot;</span><span class="p">,</span><span class="n">avalue</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>The name of each PETSc variable passed to MATLAB may be set with</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscObjectSetName.html#PetscObjectSetName">PetscObjectSetName</a></span><span class="p">((</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a></span><span class="p">)</span><span class="n">A</span><span class="p">,</span><span class="s">&quot;name&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Text responses can be returned from MATLAB via</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscMatlabEngineGetOutput.html#PetscMatlabEngineGetOutput">PetscMatlabEngineGetOutput</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscMatlabEngine.html#PetscMatlabEngine">PetscMatlabEngine</a></span><span class="p">,</span><span class="kt">char</span> <span class="o">**</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>or</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">PetscMatlabEnginedPrintOutput</span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscMatlabEngine.html#PetscMatlabEngine">PetscMatlabEngine</a></span><span class="p">,</span><span class="kt">FILE</span><span class="o">*</span><span class="p">).</span>
+</pre></div>
+</div>
+<p>There is a short-cut to starting the MATLAB engine with
+<code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PETSC_MATLAB_ENGINE_.html#PETSC_MATLAB_ENGINE_">PETSC_MATLAB_ENGINE_</a>(<a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</a>)</span></code>.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="profiling.html" title="Profiling"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="fortran.html" title="PETSc for Fortran Users"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">PETSc 3.14.6 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >PETSc Users Manual</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="additional.html" >Additional Information</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 1991-2021, UChicago Argonne, LLC and the PETSc Development Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.4.
+    </div>
+  </body>
+</html>

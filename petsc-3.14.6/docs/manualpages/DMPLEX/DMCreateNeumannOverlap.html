@@ -1,0 +1,52 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DMPLEX/DMCreateNeumannOverlap.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>DMCreateNeumannOverlap</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/DMPLEX/DMCreateNeumannOverlap.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="DMCreateNeumannOverlap"><H1>DMCreateNeumannOverlap</H1></A>
+Generates an <A HREF="../IS/IS.html#IS">IS</A>, an unassembled (Neumann) <A HREF="../Mat/Mat.html#Mat">Mat</A>, a setup function, and the corresponding context to be used by <A HREF="../PC/PCHPDDM.html#PCHPDDM">PCHPDDM</A>. 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscdmplex.h"   
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> DMCreateNeumannOverlap_Plex(<A HREF="../DM/DM.html#DM">DM</A> dm, <A HREF="../IS/IS.html#IS">IS</A> *ovl, <A HREF="../Mat/Mat.html#Mat">Mat</A> *J, <A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> (**setup)(<A HREF="../Mat/Mat.html#Mat">Mat</A>, <A HREF="../Sys/PetscReal.html#PetscReal">PetscReal</A>, <A HREF="../Vec/Vec.html#Vec">Vec</A>, <A HREF="../Vec/Vec.html#Vec">Vec</A>, <A HREF="../Sys/PetscReal.html#PetscReal">PetscReal</A>, <A HREF="../IS/IS.html#IS">IS</A>, void*), void **setup_ctx)
+</PRE>
+<H3><FONT COLOR="#CC3333">Input Parameter</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>dm </B></TD><TD>- preconditioner context
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Output Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>ovl </B></TD><TD>- index set of overlapping subdomains
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>J </B></TD><TD>- unassembled (Neumann) local matrix
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>setup </B></TD><TD>- function for generating the matrix
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>setup_ctx </B></TD><TD>- context for setup
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Options Database Keys</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>-dm_plex_view_neumann_original </B></TD><TD>- view the <A HREF="../DM/DM.html#DM">DM</A> without overlap
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>-dm_plex_view_neumann_overlap </B></TD><TD>- view the <A HREF="../DM/DM.html#DM">DM</A> with overlap as needed by <A HREF="../PC/PCHPDDM.html#PCHPDDM">PCHPDDM</A>
+</TD></TR></TABLE>
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+  <A HREF="../DM/DMCreate.html#DMCreate">DMCreate</A>(), <A HREF="../DM/DM.html#DM">DM</A>, <A HREF="../Mat/MATIS.html#MATIS">MATIS</A>, <A HREF="../PC/PCHPDDM.html#PCHPDDM">PCHPDDM</A>, <A HREF="../PC/PCHPDDMSetAuxiliaryMat.html#PCHPDDMSetAuxiliaryMat">PCHPDDMSetAuxiliaryMat</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>advanced<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/dm/impls/plex/plexhpddm.c.html#DMCreateNeumannOverlap">src/dm/impls/plex/plexhpddm.c</A>
+<P><H3><FONT COLOR="CC3333">Implementations</FONT></H3><A HREF="../../../src/dm/impls/forest/p4est/pforest.c.html#DMCreateNeumannOverlap_pforest(DM dm, IS* ovl, Mat *J, PetscErrorCode (**setup)">DMCreateNeumannOverlap_pforest(DM dm, IS* ovl, Mat *J, PetscErrorCode (**setup) in src/dm/impls/forest/p4est/pforest.c</A><BR>
+<A HREF="../../../src/dm/impls/plex/plexhpddm.c.html#DMCreateNeumannOverlap_Plex(DM dm, IS *ovl, Mat *J, PetscErrorCode (**setup)">DMCreateNeumannOverlap_Plex(DM dm, IS *ovl, Mat *J, PetscErrorCode (**setup) in src/dm/impls/plex/plexhpddm.c</A><BR>
+<BR><A HREF="./index.html">Index of all DMPLEX routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

@@ -1,0 +1,326 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/sphinx_docs/html/developers/callbacks.html" />
+    <meta charset="utf-8" />
+    <title>How the Solvers Handle User Provided Callbacks &#8212; PETSc 3.14.6 documentation</title>
+    <link rel="stylesheet" href="../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/katex-math.css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/contrib/auto-render.min.js"></script>
+    <script src="../_static/katex_autorenderer.js"></script>
+    <link rel="shortcut icon" href="../_static/PETSc_RGB-logo.png"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="The Various Matrix Classes" href="matrices.html" />
+    <link rel="prev" title="Basic Object Design and Implementation" href="objects.html" /> 
+  </head><body>
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/sphinx_docs/html/developers/callbacks.html "><small>Report Typos and Errors</small></a></div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="matrices.html" title="The Various Matrix Classes"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="objects.html" title="Basic Object Design and Implementation"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">PETSc 3.14.6 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >PETSc Developer’s Documentation</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="design.html" accesskey="U">The Design of PETSc</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../index.html">
+              <img class="logo" src="../_static/PETSc-TAO_RGB.svg" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="objects.html"
+                        title="previous chapter">Basic Object Design and Implementation</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="matrices.html"
+                        title="next chapter">The Various Matrix Classes</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/developers/callbacks.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="how-the-solvers-handle-user-provided-callbacks">
+<h1>How the Solvers Handle User Provided Callbacks<a class="headerlink" href="#how-the-solvers-handle-user-provided-callbacks" title="Permalink to this headline">¶</a></h1>
+<p>The solver objects in PETSc, <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSP.html#KSP">KSP</a></span></code> (optionally), <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/SNES/SNES.html#SNES">SNES</a></span></code>, and <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/TS/TS.html#TS">TS</a></span></code>
+require user provided callback functions (and contexts for the
+functions) that define the problem to be solved. These functions are
+supplied by the user with calls such as <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/SNES/SNESSetFunction.html#SNESSetFunction">SNESSetFunction</a>(<a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/SNES/SNES.html#SNES">SNES</a>,...)</span></code>
+and <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/TS/TSSetRHSFunction.html#TSSetRHSFunction">TSSetRHSFunction</a>(<a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/TS/TS.html#TS">TS</a>,...)</span></code>. One would naturally think that the
+functions provided would be attached to the appropriate solver object,
+that is, that the SNES callbacks would be attached to the <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/SNES/SNES.html#SNES">SNES</a></span></code>
+object and <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/TS/TS.html#TS">TS</a></span></code> callbacks to the <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/TS/TS.html#TS">TS</a></span></code> object. This is not the case.
+Or possibly one might think the callbacks would be attached to the
+<code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DM/DM.html#DM">DM</a></span></code> object associated with the solver object. This is also not the
+case. Rather, the callback functions are attached to an inner nonpublic
+<code class="docutils literal notranslate"><span class="pre">DMXXX</span></code> object (<code class="docutils literal notranslate"><span class="pre">XXX</span></code> is <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSP.html#KSP">KSP</a></span></code>, <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/SNES/SNES.html#SNES">SNES</a></span></code>, or <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/TS/TS.html#TS">TS</a></span></code>) that is
+attached to the <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DM/DM.html#DM">DM</a></span></code> that is attached to the <code class="docutils literal notranslate"><span class="pre">XXX</span></code> solver object.
+This convoluted design is to support multilevel and multidomain solvers
+where different levels and different domains may (or may not) share the
+same callback function or callback context. You can control exactly what
+<code class="docutils literal notranslate"><span class="pre">XXX</span></code>/<code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DM/DM.html#DM">DM</a></span></code> objects share a common <code class="docutils literal notranslate"><span class="pre">DMXXX</span></code> object.</p>
+<div class="figure align-default" id="id1">
+<span id="fig-dmksp"></span><div class="graphviz"><img src="../_images/graphviz-4668b383c86bedfaca8d90971e1f3fcf63e1c226.png" alt="digraph {
+    ksp1[label = &quot;KSP 1&quot;]
+    ksp2[label = &quot;KSP 2&quot;]
+    ksp3[label = &quot;KSP 3&quot;]
+    dm1[label = &quot;DM 1&quot;]
+    dm2[label = &quot;DM 2&quot;]
+    dm3[label = &quot;DM 3&quot;]
+    dmksp[label = &quot;DMKSP&quot;]
+    ksp1 -&gt; dm1 -&gt; dmksp
+    ksp2 -&gt; dm2 -&gt; dmksp
+    ksp3 -&gt; dm3 -&gt; dmksp
+ }" class="graphviz" /></div>
+<p class="caption"><span class="caption-number">Fig. 11 </span><span class="caption-text">Three levels of KSP/DM share the same DMKSP</span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></p>
+</div>
+<p>In the preceding figure, we depict how three levels of <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSP.html#KSP">KSP</a></span></code>
+objects share a common <code class="docutils literal notranslate"><span class="pre">DMKSP</span></code> object. The code to access the inner
+<code class="docutils literal notranslate"><span class="pre">DMKSP</span></code> object is</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DM/DM.html#DM">DM</a></span>    <span class="n">dm_2</span><span class="p">;</span>
+<span class="n">DMKSP</span> <span class="n">dmksp</span><span class="p">;</span>
+<span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSPGetDM.html#KSPGetDM">KSPGetDM</a></span><span class="p">(</span><span class="n">ksp_2</span><span class="p">,</span><span class="o">&amp;</span><span class="n">dm_2</span><span class="p">);</span>
+<span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/DMGetDMKSP.html#DMGetDMKSP">DMGetDMKSP</a></span><span class="p">(</span><span class="n">dm_2</span><span class="p">,</span><span class="o">&amp;</span><span class="n">dmksp</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>To obtain a new DMKSP object for which you can change the callback
+functions (or their contexts) without affecting the original DMKSP, call</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DM/DM.html#DM">DM</a></span>    <span class="n">dm_2</span><span class="p">;</span>
+<span class="n">DMKSP</span> <span class="n">dmksp</span><span class="p">;</span>
+<span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSPGetDM.html#KSPGetDM">KSPGetDM</a></span><span class="p">(</span><span class="n">ksp_2</span><span class="p">,</span><span class="o">&amp;</span><span class="n">dm_2</span><span class="p">);</span>
+<span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/DMGetDMKSPWrite.html#DMGetDMKSPWrite">DMGetDMKSPWrite</a></span><span class="p">(</span><span class="n">dm_2</span><span class="p">,</span><span class="o">&amp;</span><span class="n">dmksp_2</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>This results in the object organization as indicated in the following figure</p>
+<div class="figure align-default" id="id2">
+<div class="graphviz"><img src="../_images/graphviz-3e78728ff827e5953109bf8709eb40dc639909bc.png" alt="digraph {
+    ksp1[label = &quot;KSP 1&quot;]
+    ksp2[label = &quot;KSP 2&quot;]
+    ksp3[label = &quot;KSP 3&quot;]
+    dm1[label = &quot;DM 1&quot;]
+    dm2[label = &quot;DM 2&quot;]
+    dm3[label = &quot;DM 3&quot;]
+    dmksp[label = &quot;DMKSP&quot;]
+    dmksp2[label = &quot;DMKSP&quot;]
+    ksp1 -&gt; dm1 -&gt; dmksp
+    ksp2 -&gt; dm2 -&gt; dmksp2
+    ksp3 -&gt; dm3 -&gt; dmksp
+ }" class="graphviz" /></div>
+<p class="caption"><span class="caption-number">Fig. 12 </span><span class="caption-text">Two levels of KSP/DM share the same DMKSP; one has its own private copy</span><a class="headerlink" href="#id2" title="Permalink to this image">¶</a></p>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">DMKSP</span></code> object is essentially the list of callback functions and
+their contexts, for example,</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">typedef</span> <span class="k">struct</span> <span class="nc">_p_DMKSP</span> <span class="o">*</span><span class="n">DMKSP</span><span class="p">;</span>
+<span class="k">typedef</span> <span class="k">struct</span> <span class="nc">_DMKSPOps</span> <span class="o">*</span><span class="n">DMKSPOps</span><span class="p">;</span>
+<span class="k">struct</span> <span class="nc">_DMKSPOps</span> <span class="p">{</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a></span> <span class="p">(</span><span class="o">*</span><span class="n">computeoperators</span><span class="p">)(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSP.html#KSP">KSP</a></span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/Mat.html#Mat">Mat</a></span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/Mat.html#Mat">Mat</a></span><span class="p">,</span><span class="kt">void</span><span class="o">*</span><span class="p">);</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a></span> <span class="p">(</span><span class="o">*</span><span class="n">computerhs</span><span class="p">)(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSP.html#KSP">KSP</a></span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span><span class="p">,</span><span class="kt">void</span><span class="o">*</span><span class="p">);</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a></span> <span class="p">(</span><span class="o">*</span><span class="n">computeinitialguess</span><span class="p">)(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSP.html#KSP">KSP</a></span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/Vec.html#Vec">Vec</a></span><span class="p">,</span><span class="kt">void</span><span class="o">*</span><span class="p">);</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a></span> <span class="p">(</span><span class="o">*</span><span class="n">destroy</span><span class="p">)(</span><span class="n">DMKSP</span><span class="o">*</span><span class="p">);</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a></span> <span class="p">(</span><span class="o">*</span><span class="n">duplicate</span><span class="p">)(</span><span class="n">DMKSP</span><span class="p">,</span><span class="n">DMKSP</span><span class="p">);</span>
+<span class="p">};</span>
+
+<span class="k">struct</span> <span class="nc">_p_DMKSP</span> <span class="p">{</span>
+  <span class="n">PETSCHEADER</span><span class="p">(</span><span class="k">struct</span> <span class="nc">_DMKSPOps</span><span class="p">);</span>
+  <span class="kt">void</span> <span class="o">*</span><span class="n">operatorsctx</span><span class="p">;</span>
+  <span class="kt">void</span> <span class="o">*</span><span class="n">rhsctx</span><span class="p">;</span>
+  <span class="kt">void</span> <span class="o">*</span><span class="n">initialguessctx</span><span class="p">;</span>
+  <span class="kt">void</span> <span class="o">*</span><span class="n">data</span><span class="p">;</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DM/DM.html#DM">DM</a></span> <span class="n">originaldm</span><span class="p">;</span>
+
+  <span class="kt">void</span> <span class="p">(</span><span class="o">*</span><span class="n">fortran_func_pointers</span><span class="p">[</span><span class="mi">3</span><span class="p">])(</span><span class="kt">void</span><span class="p">);</span> <span class="cm">/* Store our own function pointers so they are associated with the DMKSP instead of the <a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DM/DM.html#DM">DM</a> */</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<p>We now explore in more detail exactly how the solver calls set by the
+user are passed down to the inner <code class="docutils literal notranslate"><span class="pre">DMKSP</span></code> object. For each user level
+solver routine for setting a callback a similar routine exists at the
+<code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DM/DM.html#DM">DM</a></span></code> level. Thus, <code class="docutils literal notranslate"><span class="pre">XXXSetY(XXX,...)</span></code> has a routine
+<code class="docutils literal notranslate"><span class="pre">DMXXXSetY(<a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DM/DM.html#DM">DM</a>,...)</span></code>.</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a></span> <span class="nf"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSPSetComputeOperators.html#KSPSetComputeOperators">KSPSetComputeOperators</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSP.html#KSP">KSP</a></span> <span class="n">ksp</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a></span> <span class="p">(</span><span class="o">*</span><span class="n">func</span><span class="p">)(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSP.html#KSP">KSP</a></span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/Mat.html#Mat">Mat</a></span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/Mat.html#Mat">Mat</a></span><span class="p">,</span><span class="kt">void</span><span class="o">*</span><span class="p">),</span><span class="kt">void</span> <span class="o">*</span><span class="n">ctx</span><span class="p">)</span>
+<span class="p">{</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a></span> <span class="n">ierr</span><span class="p">;</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DM/DM.html#DM">DM</a></span>             <span class="n">dm</span><span class="p">;</span>
+
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscFunctionBegin.html#PetscFunctionBegin">PetscFunctionBegin</a></span><span class="p">;</span>
+  <span class="n">PetscValidHeaderSpecific</span><span class="p">(</span><span class="n">ksp</span><span class="p">,</span><span class="n">KSP_CLASSID</span><span class="p">,</span><span class="mi">1</span><span class="p">);</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSPGetDM.html#KSPGetDM">KSPGetDM</a></span><span class="p">(</span><span class="n">ksp</span><span class="p">,</span><span class="o">&amp;</span><span class="n">dm</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/DMKSPSetComputeOperators.html#DMKSPSetComputeOperators">DMKSPSetComputeOperators</a></span><span class="p">(</span><span class="n">dm</span><span class="p">,</span><span class="n">func</span><span class="p">,</span><span class="n">ctx</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">ksp</span><span class="o">-&gt;</span><span class="n">setupstage</span> <span class="o">==</span> <span class="n">KSP_SETUP_NEWRHS</span><span class="p">)</span> <span class="n">ksp</span><span class="o">-&gt;</span><span class="n">setupstage</span> <span class="o">=</span> <span class="n">KSP_SETUP_NEWMATRIX</span><span class="p">;</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscFunctionReturn.html#PetscFunctionReturn">PetscFunctionReturn</a></span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>The implementation of <code class="docutils literal notranslate"><span class="pre">DMXXXSetY(<a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DM/DM.html#DM">DM</a>,...)</span></code> gets a “writable” version of
+the <code class="docutils literal notranslate"><span class="pre">DMXXX</span></code> object via <code class="docutils literal notranslate"><span class="pre">DMGetDMXXXWrite(<a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DM/DM.html#DM">DM</a>,DMXXX*)</span></code> and sets the
+function callback and its context into the <code class="docutils literal notranslate"><span class="pre">DMXXX</span></code> object.</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a></span> <span class="nf"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/DMKSPSetComputeOperators.html#DMKSPSetComputeOperators">DMKSPSetComputeOperators</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DM/DM.html#DM">DM</a></span> <span class="n">dm</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a></span> <span class="p">(</span><span class="o">*</span><span class="n">func</span><span class="p">)(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSP.html#KSP">KSP</a></span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/Mat.html#Mat">Mat</a></span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/Mat.html#Mat">Mat</a></span><span class="p">,</span><span class="kt">void</span><span class="o">*</span><span class="p">),</span><span class="kt">void</span> <span class="o">*</span><span class="n">ctx</span><span class="p">)</span>
+<span class="p">{</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a></span> <span class="n">ierr</span><span class="p">;</span>
+  <span class="n">DMKSP</span>          <span class="n">kdm</span><span class="p">;</span>
+
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscFunctionBegin.html#PetscFunctionBegin">PetscFunctionBegin</a></span><span class="p">;</span>
+  <span class="n">PetscValidHeaderSpecific</span><span class="p">(</span><span class="n">dm</span><span class="p">,</span><span class="n">DM_CLASSID</span><span class="p">,</span><span class="mi">1</span><span class="p">);</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/DMGetDMKSPWrite.html#DMGetDMKSPWrite">DMGetDMKSPWrite</a></span><span class="p">(</span><span class="n">dm</span><span class="p">,</span><span class="o">&amp;</span><span class="n">kdm</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">func</span><span class="p">)</span> <span class="n">kdm</span><span class="o">-&gt;</span><span class="n">ops</span><span class="o">-&gt;</span><span class="n">computeoperators</span> <span class="o">=</span> <span class="n">func</span><span class="p">;</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">ctx</span><span class="p">)</span> <span class="n">kdm</span><span class="o">-&gt;</span><span class="n">operatorsctx</span> <span class="o">=</span> <span class="n">ctx</span><span class="p">;</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscFunctionReturn.html#PetscFunctionReturn">PetscFunctionReturn</a></span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>The routine for <code class="docutils literal notranslate"><span class="pre">DMGetDMXXXWrite(<a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DM/DM.html#DM">DM</a>,DMXXX*)</span></code> entails a duplication of
+the object unless the <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DM/DM.html#DM">DM</a></span></code> associated with the <code class="docutils literal notranslate"><span class="pre">DMXXX</span></code> object is the
+original <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DM/DM.html#DM">DM</a></span></code> that the <code class="docutils literal notranslate"><span class="pre">DMXXX</span></code> object was created with. This can be
+seen in the following code.</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a></span> <span class="nf"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/DMGetDMKSPWrite.html#DMGetDMKSPWrite">DMGetDMKSPWrite</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DM/DM.html#DM">DM</a></span> <span class="n">dm</span><span class="p">,</span><span class="n">DMKSP</span> <span class="o">*</span><span class="n">kspdm</span><span class="p">)</span>
+<span class="p">{</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a></span> <span class="n">ierr</span><span class="p">;</span>
+  <span class="n">DMKSP</span>          <span class="n">kdm</span><span class="p">;</span>
+
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscFunctionBegin.html#PetscFunctionBegin">PetscFunctionBegin</a></span><span class="p">;</span>
+  <span class="n">PetscValidHeaderSpecific</span><span class="p">(</span><span class="n">dm</span><span class="p">,</span><span class="n">DM_CLASSID</span><span class="p">,</span><span class="mi">1</span><span class="p">);</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/DMGetDMKSP.html#DMGetDMKSP">DMGetDMKSP</a></span><span class="p">(</span><span class="n">dm</span><span class="p">,</span><span class="o">&amp;</span><span class="n">kdm</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+  <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">kdm</span><span class="o">-&gt;</span><span class="n">originaldm</span><span class="p">)</span> <span class="n">kdm</span><span class="o">-&gt;</span><span class="n">originaldm</span> <span class="o">=</span> <span class="n">dm</span><span class="p">;</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">kdm</span><span class="o">-&gt;</span><span class="n">originaldm</span> <span class="o">!=</span> <span class="n">dm</span><span class="p">)</span> <span class="p">{</span>  <span class="cm">/* Copy on write */</span>
+    <span class="n">DMKSP</span> <span class="n">oldkdm</span> <span class="o">=</span> <span class="n">kdm</span><span class="p">;</span>
+    <span class="n">ierr</span>      <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Profiling/PetscInfo.html#PetscInfo">PetscInfo</a></span><span class="p">(</span><span class="n">dm</span><span class="p">,</span><span class="s">&quot;Copying DMKSP due to write</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+    <span class="n">ierr</span>      <span class="o">=</span> <span class="n">DMKSPCreate</span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a></span><span class="p">((</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a></span><span class="p">)</span><span class="n">dm</span><span class="p">),</span><span class="o">&amp;</span><span class="n">kdm</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+    <span class="n">ierr</span>      <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/DMKSPCopy.html#DMKSPCopy">DMKSPCopy</a></span><span class="p">(</span><span class="n">oldkdm</span><span class="p">,</span><span class="n">kdm</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+    <span class="n">ierr</span>      <span class="o">=</span> <span class="n">DMKSPDestroy</span><span class="p">((</span><span class="n">DMKSP</span><span class="o">*</span><span class="p">)</span><span class="o">&amp;</span><span class="n">dm</span><span class="o">-&gt;</span><span class="n">dmksp</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+    <span class="n">dm</span><span class="o">-&gt;</span><span class="n">dmksp</span> <span class="o">=</span> <span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a></span><span class="p">)</span><span class="n">kdm</span><span class="p">;</span>
+    <span class="n">kdm</span><span class="o">-&gt;</span><span class="n">originaldm</span> <span class="o">=</span> <span class="n">dm</span><span class="p">;</span>
+  <span class="p">}</span>
+  <span class="o">*</span><span class="n">kspdm</span> <span class="o">=</span> <span class="n">kdm</span><span class="p">;</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscFunctionReturn.html#PetscFunctionReturn">PetscFunctionReturn</a></span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>The routine <code class="docutils literal notranslate"><span class="pre">DMGetDMXXX(<a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DM/DM.html#DM">DM</a>,DMXXX*)</span></code> has the following form.</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a></span> <span class="nf"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/DMGetDMKSP.html#DMGetDMKSP">DMGetDMKSP</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DM/DM.html#DM">DM</a></span> <span class="n">dm</span><span class="p">,</span><span class="n">DMKSP</span> <span class="o">*</span><span class="n">kspdm</span><span class="p">)</span>
+<span class="p">{</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a></span> <span class="n">ierr</span><span class="p">;</span>
+
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscFunctionBegin.html#PetscFunctionBegin">PetscFunctionBegin</a></span><span class="p">;</span>
+  <span class="n">PetscValidHeaderSpecific</span><span class="p">(</span><span class="n">dm</span><span class="p">,</span><span class="n">DM_CLASSID</span><span class="p">,</span><span class="mi">1</span><span class="p">);</span>
+  <span class="o">*</span><span class="n">kspdm</span> <span class="o">=</span> <span class="p">(</span><span class="n">DMKSP</span><span class="p">)</span> <span class="n">dm</span><span class="o">-&gt;</span><span class="n">dmksp</span><span class="p">;</span>
+  <span class="k">if</span> <span class="p">(</span><span class="o">!*</span><span class="n">kspdm</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">ierr</span>      <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Profiling/PetscInfo.html#PetscInfo">PetscInfo</a></span><span class="p">(</span><span class="n">dm</span><span class="p">,</span><span class="s">&quot;Creating new DMKSP</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+    <span class="n">ierr</span>      <span class="o">=</span> <span class="n">DMKSPCreate</span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a></span><span class="p">((</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a></span><span class="p">)</span><span class="n">dm</span><span class="p">),</span><span class="n">kspdm</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+    <span class="n">dm</span><span class="o">-&gt;</span><span class="n">dmksp</span> <span class="o">=</span> <span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a></span><span class="p">)</span> <span class="o">*</span><span class="n">kspdm</span><span class="p">;</span>
+    <span class="p">(</span><span class="o">*</span><span class="n">kspdm</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">originaldm</span> <span class="o">=</span> <span class="n">dm</span><span class="p">;</span>
+    <span class="n">ierr</span>      <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DM/DMCoarsenHookAdd.html#DMCoarsenHookAdd">DMCoarsenHookAdd</a></span><span class="p">(</span><span class="n">dm</span><span class="p">,</span><span class="n">DMCoarsenHook_DMKSP</span><span class="p">,</span><span class="nb">NULL</span><span class="p">,</span><span class="nb">NULL</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+    <span class="n">ierr</span>      <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DM/DMRefineHookAdd.html#DMRefineHookAdd">DMRefineHookAdd</a></span><span class="p">(</span><span class="n">dm</span><span class="p">,</span><span class="n">DMRefineHook_DMKSP</span><span class="p">,</span><span class="nb">NULL</span><span class="p">,</span><span class="nb">NULL</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+  <span class="p">}</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscFunctionReturn.html#PetscFunctionReturn">PetscFunctionReturn</a></span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>This routine uses <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DM/DMCoarsenHookAdd.html#DMCoarsenHookAdd">DMCoarsenHookAdd</a>()</span></code> and <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DM/DMRefineHookAdd.html#DMRefineHookAdd">DMRefineHookAdd</a>()</span></code> to
+attach to the <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DM/DM.html#DM">DM</a></span></code> object two functions that are automatically called
+when the object is coarsened or refined. The hooks
+<code class="docutils literal notranslate"><span class="pre">DMCoarsenHook_DMXXX()</span></code> and <code class="docutils literal notranslate"><span class="pre">DMRefineHook_DMXXX()</span></code> have the same form:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">static</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a></span> <span class="n">DMCoarsenHook_DMKSP</span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DM/DM.html#DM">DM</a></span> <span class="n">dm</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DM/DM.html#DM">DM</a></span> <span class="n">dmc</span><span class="p">,</span><span class="kt">void</span> <span class="o">*</span><span class="n">ctx</span><span class="p">)</span>
+<span class="p">{</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a></span> <span class="n">ierr</span><span class="p">;</span>
+
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscFunctionBegin.html#PetscFunctionBegin">PetscFunctionBegin</a></span><span class="p">;</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/DMCopyDMKSP.html#DMCopyDMKSP">DMCopyDMKSP</a></span><span class="p">(</span><span class="n">dm</span><span class="p">,</span><span class="n">dmc</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscFunctionReturn.html#PetscFunctionReturn">PetscFunctionReturn</a></span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>where</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a></span> <span class="nf"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/DMCopyDMKSP.html#DMCopyDMKSP">DMCopyDMKSP</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DM/DM.html#DM">DM</a></span> <span class="n">dmsrc</span><span class="p">,</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DM/DM.html#DM">DM</a></span> <span class="n">dmdest</span><span class="p">)</span>
+<span class="p">{</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a></span> <span class="n">ierr</span><span class="p">;</span>
+
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscFunctionBegin.html#PetscFunctionBegin">PetscFunctionBegin</a></span><span class="p">;</span>
+  <span class="n">PetscValidHeaderSpecific</span><span class="p">(</span><span class="n">dmsrc</span><span class="p">,</span><span class="n">DM_CLASSID</span><span class="p">,</span><span class="mi">1</span><span class="p">);</span>
+  <span class="n">PetscValidHeaderSpecific</span><span class="p">(</span><span class="n">dmdest</span><span class="p">,</span><span class="n">DM_CLASSID</span><span class="p">,</span><span class="mi">2</span><span class="p">);</span>
+  <span class="n">ierr</span>          <span class="o">=</span> <span class="n">DMKSPDestroy</span><span class="p">((</span><span class="n">DMKSP</span><span class="o">*</span><span class="p">)</span><span class="o">&amp;</span><span class="n">dmdest</span><span class="o">-&gt;</span><span class="n">dmksp</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+  <span class="n">dmdest</span><span class="o">-&gt;</span><span class="n">dmksp</span> <span class="o">=</span> <span class="n">dmsrc</span><span class="o">-&gt;</span><span class="n">dmksp</span><span class="p">;</span>
+  <span class="n">ierr</span>          <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscObjectReference.html#PetscObjectReference">PetscObjectReference</a></span><span class="p">(</span><span class="n">dmdest</span><span class="o">-&gt;</span><span class="n">dmksp</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+  <span class="n">ierr</span>          <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DM/DMCoarsenHookAdd.html#DMCoarsenHookAdd">DMCoarsenHookAdd</a></span><span class="p">(</span><span class="n">dmdest</span><span class="p">,</span><span class="n">DMCoarsenHook_DMKSP</span><span class="p">,</span><span class="nb">NULL</span><span class="p">,</span><span class="nb">NULL</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+  <span class="n">ierr</span>          <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DM/DMRefineHookAdd.html#DMRefineHookAdd">DMRefineHookAdd</a></span><span class="p">(</span><span class="n">dmdest</span><span class="p">,</span><span class="n">DMRefineHook_DMKSP</span><span class="p">,</span><span class="nb">NULL</span><span class="p">,</span><span class="nb">NULL</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscFunctionReturn.html#PetscFunctionReturn">PetscFunctionReturn</a></span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>ensures that the new <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DM/DM.html#DM">DM</a></span></code> shares the same <code class="docutils literal notranslate"><span class="pre">DMXXX</span></code> as the parent
+<code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DM/DM.html#DM">DM</a></span></code> and also inherits the hooks if it is refined or coarsened.</p>
+<p>If you provide callbacks to a solver <em>after</em> the <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DM/DM.html#DM">DM</a></span></code> associated with
+a solver has been refined or coarsened, those child <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DM/DM.html#DM">DM</a></span></code>s will not
+share a common <code class="docutils literal notranslate"><span class="pre">DMXXX</span></code>.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/TS/TS.html#TS">TS</a></span></code> object manages its callback functions in a way similar to
+<code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSP.html#KSP">KSP</a></span></code> and <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/SNES/SNES.html#SNES">SNES</a></span></code>, although there are no multilevel <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/TS/TS.html#TS">TS</a></span></code>
+implementations so in theory the <code class="docutils literal notranslate"><span class="pre">DMTS</span></code> object is currently unneeded.</p>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="matrices.html" title="The Various Matrix Classes"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="objects.html" title="Basic Object Design and Implementation"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">PETSc 3.14.6 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >PETSc Developer’s Documentation</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="design.html" >The Design of PETSc</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 1991-2021, UChicago Argonne, LLC and the PETSc Development Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.4.
+    </div>
+  </body>
+</html>

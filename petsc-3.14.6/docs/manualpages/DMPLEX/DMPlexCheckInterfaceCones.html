@@ -1,0 +1,43 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DMPLEX/DMPlexCheckInterfaceCones.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>DMPlexCheckInterfaceCones</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/DMPLEX/DMPlexCheckInterfaceCones.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="DMPlexCheckInterfaceCones"><H1>DMPlexCheckInterfaceCones</H1></A>
+Check that points on inter-partition interfaces have conforming order of cone points. 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscdmplex.h"   
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../DMPLEX/DMPlexCheckInterfaceCones.html#DMPlexCheckInterfaceCones">DMPlexCheckInterfaceCones</A>(<A HREF="../DM/DM.html#DM">DM</A> dm)
+</PRE>
+<H3><FONT COLOR="#CC3333">Input Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>dm </B></TD><TD>- The DMPlex object
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Notes</FONT></H3>
+For example, if there is an edge (rank,index)=(0,2) connecting points cone(0,2)=[(0,0),(0,1)] in this order, and the point SF containts connections 0 &lt;- (1,0), 1 &lt;- (1,1) and 2 &lt;- (1,2),
+then this check would pass if the edge (1,2) has cone(1,2)=[(1,0),(1,1)]. By contrast, if cone(1,2)=[(1,1),(1,0)], then this check would fail.
+<P>
+This is mainly intended for debugging/testing purposes. Does not check cone orientation, for this purpose use <A HREF="../DMPLEX/DMPlexCheckFaces.html#DMPlexCheckFaces">DMPlexCheckFaces</A>().
+<P>
+For the complete list of DMPlexCheck* functions, see <A HREF="../DM/DMSetFromOptions.html#DMSetFromOptions">DMSetFromOptions</A>().
+<P>
+<H3><FONT COLOR="#CC3333">Developer Note</FONT></H3>
+Interface cones are expanded into vertices and then their coordinates are compared.
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../DMPLEX/DMPlexGetCone.html#DMPlexGetCone">DMPlexGetCone</A>(), <A HREF="../DMPLEX/DMPlexGetConeSize.html#DMPlexGetConeSize">DMPlexGetConeSize</A>(), <A HREF="../DM/DMGetPointSF.html#DMGetPointSF">DMGetPointSF</A>(), <A HREF="../DM/DMGetCoordinates.html#DMGetCoordinates">DMGetCoordinates</A>(), <A HREF="../DM/DMSetFromOptions.html#DMSetFromOptions">DMSetFromOptions</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>developer<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/dm/impls/plex/plexcheckinterface.c.html#DMPlexCheckInterfaceCones">src/dm/impls/plex/plexcheckinterface.c</A>
+<BR><A HREF="./index.html">Index of all DMPLEX routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

@@ -1,0 +1,46 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Vec/VecZeroEntries.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>VecZeroEntries</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/Vec/VecZeroEntries.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="VecZeroEntries"><H1>VecZeroEntries</H1></A>
+puts a 0.0 in each element of a vector 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscvec.h"   
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A>  <A HREF="../Vec/VecZeroEntries.html#VecZeroEntries">VecZeroEntries</A>(<A HREF="../Vec/Vec.html#Vec">Vec</A> vec)
+</PRE>
+Logically Collective on <A HREF="../Vec/Vec.html#Vec">Vec</A>
+<P>
+<H3><FONT COLOR="#CC3333">Input Parameter</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>vec </B></TD><TD>- The vector
+</TD></TR></TABLE>
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../Vec/VecCreate.html#VecCreate">VecCreate</A>(),  <A HREF="../Vec/VecSetOptionsPrefix.html#VecSetOptionsPrefix">VecSetOptionsPrefix</A>(), <A HREF="../Vec/VecSet.html#VecSet">VecSet</A>(), <A HREF="../Vec/VecSetValues.html#VecSetValues">VecSetValues</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>beginner<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/vec/vec/interface/vector.c.html#VecZeroEntries">src/vec/vec/interface/vector.c</A>
+<P><H3><FONT COLOR="#CC3333">Examples</FONT></H3>
+<A HREF="../../../src/ksp/ksp/tutorials/ex42.c.html">src/ksp/ksp/tutorials/ex42.c.html</A><BR>
+<A HREF="../../../src/ksp/ksp/tutorials/ex43.c.html">src/ksp/ksp/tutorials/ex43.c.html</A><BR>
+<A HREF="../../../src/ksp/ksp/tutorials/ex49.c.html">src/ksp/ksp/tutorials/ex49.c.html</A><BR>
+<A HREF="../../../src/ksp/ksp/tutorials/ex56.c.html">src/ksp/ksp/tutorials/ex56.c.html</A><BR>
+<A HREF="../../../src/ksp/ksp/tutorials/ex69.c.html">src/ksp/ksp/tutorials/ex69.c.html</A><BR>
+<A HREF="../../../src/ksp/ksp/tutorials/ex70.c.html">src/ksp/ksp/tutorials/ex70.c.html</A><BR>
+<A HREF="../../../src/ksp/ksp/tutorials/ex71.c.html">src/ksp/ksp/tutorials/ex71.c.html</A><BR>
+<A HREF="../../../src/snes/tutorials/ex28.c.html">src/snes/tutorials/ex28.c.html</A><BR>
+<A HREF="../../../src/snes/tutorials/ex56.c.html">src/snes/tutorials/ex56.c.html</A><BR>
+<A HREF="../../../src/snes/tutorials/ex73f90t.F90.html">src/snes/tutorials/ex73f90t.F90.html</A><BR>
+<A HREF="../../../src/ts/tutorials/ex9.c.html">src/ts/tutorials/ex9.c.html</A><BR>
+<BR><A HREF="./index.html">Index of all Vec routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

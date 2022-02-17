@@ -1,0 +1,42 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/SNES/SNESMultiblockSetType.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>SNESMultiblockSetType</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/SNES/SNESMultiblockSetType.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="SNESMultiblockSetType"><H1>SNESMultiblockSetType</H1></A>
+Sets the type of block combination. 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscsnes.h" 
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../SNES/SNESMultiblockSetType.html#SNESMultiblockSetType">SNESMultiblockSetType</A>(<A HREF="../SNES/SNES.html#SNES">SNES</A> snes, <A HREF="../PC/PCCompositeType.html#PCCompositeType">PCCompositeType</A> type)
+</PRE>
+Collective on <A HREF="../SNES/SNES.html#SNES">SNES</A>
+<P>
+<H3><FONT COLOR="#CC3333">Input Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>snes </B></TD><TD>- the solver context
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>type </B></TD><TD>- <A HREF="../PC/PCCompositeType.html#PCCompositeType">PC_COMPOSITE_ADDITIVE</A>, <A HREF="../PC/PCCompositeType.html#PCCompositeType">PC_COMPOSITE_MULTIPLICATIVE</A> (default), <A HREF="../PC/PCCompositeType.html#PCCompositeType">PC_COMPOSITE_SYMMETRIC_MULTIPLICATIVE</A>
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Options Database Key</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>-snes_multiblock_type &lt;type: one of multiplicative, additive, symmetric_multiplicative&gt; </B></TD><TD>- Sets block combination type
+</TD></TR></TABLE>
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../PC/PCCompositeSetType.html#PCCompositeSetType">PCCompositeSetType</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>Developer<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/snes/impls/multiblock/multiblock.c.html#SNESMultiblockSetType">src/snes/impls/multiblock/multiblock.c</A>
+<P><H3><FONT COLOR="CC3333">Implementations</FONT></H3><A HREF="../../../src/snes/impls/multiblock/multiblock.c.html#SNESMultiblockSetType_Default">SNESMultiblockSetType_Default in src/snes/impls/multiblock/multiblock.c</A><BR>
+<BR><A HREF="./index.html">Index of all SNES routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

@@ -1,0 +1,53 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DT/PetscDTJacobiEval.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>PetscDTJacobiEval</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/DT/PetscDTJacobiEval.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="PetscDTJacobiEval"><H1>PetscDTJacobiEval</H1></A>
+evaluate Jacobi polynomials for the weight function $(1.+x)^{\alpha} (1.-x)^{\beta}$ at points 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscdt.h" 
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../DT/PetscDTJacobiEval.html#PetscDTJacobiEval">PetscDTJacobiEval</A>(<A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> npoints,<A HREF="../Sys/PetscReal.html#PetscReal">PetscReal</A> alpha, <A HREF="../Sys/PetscReal.html#PetscReal">PetscReal</A> beta, const <A HREF="../Sys/PetscReal.html#PetscReal">PetscReal</A> *points,<A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> ndegree,const <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> *degrees,<A HREF="../Sys/PetscReal.html#PetscReal">PetscReal</A> *B,<A HREF="../Sys/PetscReal.html#PetscReal">PetscReal</A> *D,<A HREF="../Sys/PetscReal.html#PetscReal">PetscReal</A> *D2)
+</PRE>
+Not Collective
+<P>
+<H3><FONT COLOR="#CC3333">Input Arguments</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>npoints </B></TD><TD>- number of spatial points to evaluate at
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>alpha </B></TD><TD>- the left exponent &gt; -1
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>beta </B></TD><TD>- the right exponent &gt; -1
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>points </B></TD><TD>- array of locations to evaluate at
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>ndegree </B></TD><TD>- number of basis degrees to evaluate
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>degrees </B></TD><TD>- sorted array of degrees to evaluate
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Output Arguments</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>B </B></TD><TD>- row-oriented basis evaluation matrix B[point*ndegree + degree] (dimension npoints*ndegrees, allocated by caller) (or NULL)
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>D </B></TD><TD>- row-oriented derivative evaluation matrix (or NULL)
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>D2 </B></TD><TD>- row-oriented second derivative evaluation matrix (or NULL)
+</TD></TR></TABLE>
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../DT/PetscDTGaussQuadrature.html#PetscDTGaussQuadrature">PetscDTGaussQuadrature</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>intermediate<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/dm/dt/interface/dt.c.html#PetscDTJacobiEval">src/dm/dt/interface/dt.c</A>
+<BR><A HREF="./index.html">Index of all DT routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

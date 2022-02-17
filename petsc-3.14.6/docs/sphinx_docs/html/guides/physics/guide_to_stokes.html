@@ -1,0 +1,397 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/sphinx_docs/html/guides/physics/guide_to_stokes.html" />
+    <meta charset="utf-8" />
+    <title>Guide to the Stokes Equations using Finite Elements in PETSc &#8212; PETSc 3.14.6 documentation</title>
+    <link rel="stylesheet" href="../../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css" />
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/katex-math.css" />
+    <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/language_data.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/contrib/auto-render.min.js"></script>
+    <script src="../../_static/katex_autorenderer.js"></script>
+    <link rel="shortcut icon" href="../../_static/PETSc_RGB-logo.png"/>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="PETSc Developer’s Documentation" href="../../developers/index.html" />
+    <link rel="prev" title="Guide to PETSc Tutorial Examples, by Physics" href="../guide_to_examples_by_physics.html" /> 
+  </head><body>
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/sphinx_docs/html/guides/physics/guide_to_stokes.html "><small>Report Typos and Errors</small></a></div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../developers/index.html" title="PETSc Developer’s Documentation"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="../guide_to_examples_by_physics.html" title="Guide to PETSc Tutorial Examples, by Physics"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">PETSc 3.14.6 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../guide_to_examples.html" accesskey="U">Guide to PETSc Tutorial Examples</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="../../index.html">
+              <img class="logo" src="../../_static/PETSc-TAO_RGB.svg" alt="Logo"/>
+            </a></p>
+  <h3><a href="../../index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Guide to the Stokes Equations using Finite Elements in PETSc</a><ul>
+<li><a class="reference internal" href="#equation-definition">Equation Definition</a></li>
+<li><a class="reference internal" href="#mms-solutions">MMS Solutions</a></li>
+<li><a class="reference internal" href="#dealing-with-parameters">Dealing with Parameters</a></li>
+<li><a class="reference internal" href="#bibliography">Bibliography</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="../guide_to_examples_by_physics.html"
+                        title="previous chapter">Guide to PETSc Tutorial Examples, by Physics</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="../../developers/index.html"
+                        title="next chapter">PETSc Developer’s Documentation</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/guides/physics/guide_to_stokes.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="guide-to-the-stokes-equations-using-finite-elements-in-petsc">
+<h1>Guide to the Stokes Equations using Finite Elements in PETSc<a class="headerlink" href="#guide-to-the-stokes-equations-using-finite-elements-in-petsc" title="Permalink to this headline">¶</a></h1>
+<p>This guide accompanies <a class="reference external" href="https://www.mcs.anl.gov/petsc/petsc-current/src/snes/tutorials/ex62.c.html">SNES Example 62</a>.</p>
+<p>The Stokes equations for a fluid, a steady-state form of the Navier-Stokes equations, start with the balance of momentum, just as in elastostatics,</p>
+<div class="math">
+\[\nabla \cdot \sigma + f = 0,\]</div>
+<p>where <span class="math">\(\sigma\)</span> is the stress tensor and <span class="math">\(f\)</span> is the body force, combined with the conservation of mass</p>
+<div class="math">
+\[\nabla \cdot (\rho u) = 0,\]</div>
+<p>where <span class="math">\(\rho\)</span> is the density and <span class="math">\(u\)</span> is the fluid velocity. If we assume that the density is constant, making the fluid incompressible, and that the rheology is Newtonian, meaning that the viscous stress is linearly proportional to the local strain rate, then we have</p>
+<div class="math">
+\[\begin{aligned}
+  \nabla \cdot \mu \left( \nabla u + \nabla u^T \right) - \nabla p + f &= 0 \\
+  \nabla \cdot u &= 0
+\end{aligned}\]</div>
+<p>where <span class="math">\(p\)</span> is the pressure, <span class="math">\(\mu\)</span> is the dynamic shear viscosity, with units <span class="math">\(N\cdot s/m^2\)</span> or <span class="math">\(Pa\cdot s\)</span>. If we divide by the constant density, we would have the kinematic viscosity <span class="math">\(\nu\)</span> and a force per unit mass. The second equation demands that the velocity field be divergence-free, indicating that the flow is incompressible. The pressure in this case can be thought of as the Lagrange multiplier enforcing the incompressibility constraint. In the compressible case, we would need an equation of state to relate the pressure to the density, and perhaps temperature.</p>
+<p>We will discretize our Stokes equations with finite elements, so the first step is to write a variational weak form of the equations. We choose to use a Ritz-Galerkin setup, so let our velocity <span class="math">\(u \in V\)</span> and pressure <span class="math">\(p \in Q\)</span>, so that</p>
+<div class="math">
+\[\begin{aligned}
+  \left< \nabla v, \mu \left( \nabla u + \nabla u^T \right) \right> + \left< v, \frac{\partial\sigma}{\partial n} \right>_\Gamma - \left< \nabla\cdot v, p \right> - \left< v, f \right> &= 0 & \text{for all} \ v \in V\\
+  \left< q, -\nabla \cdot u \right> &= 0 & \text{for all} \ q \in Q
+\end{aligned}\]</div>
+<p>where integration by parts has added a boundary integral over the normal derivative of the stress (traction), and natural boundary conditions correspond to stress-free boundaries. We have multiplied the continuity equation by minus one in order to preserve symmetry.</p>
+<div class="section" id="equation-definition">
+<h2>Equation Definition<a class="headerlink" href="#equation-definition" title="Permalink to this headline">¶</a></h2>
+<p>The test functions <span class="math">\(v, q\)</span> and their derivatives are determined by the discretization, whereas the form of the integrand is determined by the physics. Given a quadrature rule to evaluate the form integral, we would only need the evaluation of the physics integrand at the quadrature points, given the values of the fields and their derivatives. The entire scheme is detailed in <span id="id1">[<a class="reference internal" href="#id2051">KnepleyBrownRuppSmith13</a>]</span>. The kernels paired with test functions we will call <span class="math">\(f_0\)</span> and those paired with gradients of test functions will be called <span class="math">\(f_1\)</span>.</p>
+<p>For example, the kernel for the continuity equation, paired with the pressure test function, is called <code class="docutils literal notranslate"><span class="pre">f0_p</span></code> and can be seen here</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">static</span> <span class="kt">void</span> <span class="n">f0_p</span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span> <span class="n">dim</span><span class="p">,</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span> <span class="n">Nf</span><span class="p">,</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span> <span class="n">NfAux</span><span class="p">,</span>
+                 <span class="k">const</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span> <span class="n">uOff</span><span class="p">[],</span> <span class="k">const</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span> <span class="n">uOff_x</span><span class="p">[],</span> <span class="k">const</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a></span> <span class="n">u</span><span class="p">[],</span> <span class="k">const</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a></span> <span class="n">u_t</span><span class="p">[],</span> <span class="k">const</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a></span> <span class="n">u_x</span><span class="p">[],</span>
+                 <span class="k">const</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span> <span class="n">aOff</span><span class="p">[],</span> <span class="k">const</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span> <span class="n">aOff_x</span><span class="p">[],</span> <span class="k">const</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a></span> <span class="n">a</span><span class="p">[],</span> <span class="k">const</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a></span> <span class="n">a_t</span><span class="p">[],</span> <span class="k">const</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a></span> <span class="n">a_x</span><span class="p">[],</span>
+                 <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a></span> <span class="n">t</span><span class="p">,</span> <span class="k">const</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a></span> <span class="n">x</span><span class="p">[],</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span> <span class="n">numConstants</span><span class="p">,</span> <span class="k">const</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a></span> <span class="n">constants</span><span class="p">[],</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a></span> <span class="n">f0</span><span class="p">[])</span>
+<span class="p">{</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span> <span class="n">d</span><span class="p">;</span>
+  <span class="k">for</span> <span class="p">(</span><span class="n">d</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">f0</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">d</span> <span class="o">&lt;</span> <span class="n">dim</span><span class="p">;</span> <span class="o">++</span><span class="n">d</span><span class="p">)</span> <span class="n">f0</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-=</span> <span class="n">u_x</span><span class="p">[</span><span class="n">d</span><span class="o">*</span><span class="n">dim</span><span class="o">+</span><span class="n">d</span><span class="p">];</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>We use the components of the Jacobian of <span class="math">\(u\)</span> to build up its divergence. For the balance of momentum excluding body force, we test against the gradient of the test function, as seen in <code class="docutils literal notranslate"><span class="pre">f1_u</span></code>,</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">static</span> <span class="kt">void</span> <span class="n">f1_u</span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span> <span class="n">dim</span><span class="p">,</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span> <span class="n">Nf</span><span class="p">,</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span> <span class="n">NfAux</span><span class="p">,</span>
+                 <span class="k">const</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span> <span class="n">uOff</span><span class="p">[],</span> <span class="k">const</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span> <span class="n">uOff_x</span><span class="p">[],</span> <span class="k">const</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a></span> <span class="n">u</span><span class="p">[],</span> <span class="k">const</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a></span> <span class="n">u_t</span><span class="p">[],</span> <span class="k">const</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a></span> <span class="n">u_x</span><span class="p">[],</span>
+                 <span class="k">const</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span> <span class="n">aOff</span><span class="p">[],</span> <span class="k">const</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span> <span class="n">aOff_x</span><span class="p">[],</span> <span class="k">const</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a></span> <span class="n">a</span><span class="p">[],</span> <span class="k">const</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a></span> <span class="n">a_t</span><span class="p">[],</span> <span class="k">const</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a></span> <span class="n">a_x</span><span class="p">[],</span>
+                 <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a></span> <span class="n">t</span><span class="p">,</span> <span class="k">const</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a></span> <span class="n">x</span><span class="p">[],</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span> <span class="n">numConstants</span><span class="p">,</span> <span class="k">const</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a></span> <span class="n">constants</span><span class="p">[],</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a></span> <span class="n">f1</span><span class="p">[])</span>
+<span class="p">{</span>
+  <span class="k">const</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a></span> <span class="n">mu</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscRealPart.html#PetscRealPart">PetscRealPart</a></span><span class="p">(</span><span class="n">constants</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
+  <span class="k">const</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span>  <span class="n">Nc</span> <span class="o">=</span> <span class="n">uOff</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">uOff</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span>        <span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">;</span>
+
+  <span class="k">for</span> <span class="p">(</span><span class="n">c</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">c</span> <span class="o">&lt;</span> <span class="n">Nc</span><span class="p">;</span> <span class="o">++</span><span class="n">c</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n">d</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">d</span> <span class="o">&lt;</span> <span class="n">dim</span><span class="p">;</span> <span class="o">++</span><span class="n">d</span><span class="p">)</span> <span class="p">{</span>
+      <span class="n">f1</span><span class="p">[</span><span class="n">c</span><span class="o">*</span><span class="n">dim</span><span class="o">+</span><span class="n">d</span><span class="p">]</span> <span class="o">=</span> <span class="n">mu</span> <span class="o">*</span> <span class="p">(</span><span class="n">u_x</span><span class="p">[</span><span class="n">c</span><span class="o">*</span><span class="n">dim</span><span class="o">+</span><span class="n">d</span><span class="p">]</span> <span class="o">+</span> <span class="n">u_x</span><span class="p">[</span><span class="n">d</span><span class="o">*</span><span class="n">dim</span><span class="o">+</span><span class="n">c</span><span class="p">]);</span>
+    <span class="p">}</span>
+</pre></div>
+</div>
+<p>Notice how the pressure <span class="math">\(p\)</span> is referred to using <code class="docutils literal notranslate"><span class="pre">u[uOff[1]]</span></code> so that we can have many fields with different numbers of components. <code class="docutils literal notranslate"><span class="pre">DMPlex</span></code> uses these point functions to construct the residual. A similar set of point functions is also used to build the Jacobian. The last piece of our physics specification is the construction of exact solutions using the Method of Manufactured Solutions (MMS).</p>
+</div>
+<div class="section" id="mms-solutions">
+<h2>MMS Solutions<a class="headerlink" href="#mms-solutions" title="Permalink to this headline">¶</a></h2>
+<p>An MMS solution is chosen to elucidate some property of the problem, and to check that it is being solved accurately, since the error can be calculated explicitly. For our Stokes problem, we first choose a solution with quadratic velocity and linear pressure,</p>
+<div class="math">
+\[u = \begin{pmatrix} x^2 + y^2 \\ 2 x^2 - 2 x y \end{pmatrix} \quad \mathrm{or} \quad \begin{pmatrix} 2 x^2 + y^2 + z^2 \\ 2 x^2 - 2xy \\ 2 x^2 - 2xz \end{pmatrix}\]</div>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">static</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a></span> <span class="n">quadratic_u</span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span> <span class="n">dim</span><span class="p">,</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a></span> <span class="n">time</span><span class="p">,</span> <span class="k">const</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a></span> <span class="n">x</span><span class="p">[],</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span> <span class="n">Nc</span><span class="p">,</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a></span> <span class="o">*</span><span class="n">u</span><span class="p">,</span> <span class="kt">void</span> <span class="o">*</span><span class="n">ctx</span><span class="p">)</span>
+<span class="p">{</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span> <span class="n">c</span><span class="p">;</span>
+
+  <span class="n">u</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">dim</span><span class="mi">-1</span><span class="p">)</span><span class="o">*</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscSqr.html#PetscSqr">PetscSqr</a></span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
+  <span class="k">for</span> <span class="p">(</span><span class="n">c</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="n">c</span> <span class="o">&lt;</span> <span class="n">Nc</span><span class="p">;</span> <span class="o">++</span><span class="n">c</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">u</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscSqr.html#PetscSqr">PetscSqr</a></span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">c</span><span class="p">]);</span>
+    <span class="n">u</span><span class="p">[</span><span class="n">c</span><span class="p">]</span>  <span class="o">=</span> <span class="mf">2.0</span><span class="o">*</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscSqr.html#PetscSqr">PetscSqr</a></span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">-</span> <span class="mf">2.0</span><span class="o">*</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">x</span><span class="p">[</span><span class="n">c</span><span class="p">];</span>
+  <span class="p">}</span>
+  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="math">
+\[p = x + y - 1 \quad \mathrm{or} \quad x + y + z - \frac{3}{2}\]</div>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">static</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a></span> <span class="n">quadratic_p</span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span> <span class="n">dim</span><span class="p">,</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a></span> <span class="n">time</span><span class="p">,</span> <span class="k">const</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a></span> <span class="n">x</span><span class="p">[],</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span> <span class="n">Nc</span><span class="p">,</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a></span> <span class="o">*</span><span class="n">u</span><span class="p">,</span> <span class="kt">void</span> <span class="o">*</span><span class="n">ctx</span><span class="p">)</span>
+<span class="p">{</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span> <span class="n">d</span><span class="p">;</span>
+
+  <span class="n">u</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">-0.5</span><span class="o">*</span><span class="n">dim</span><span class="p">;</span>
+  <span class="k">for</span> <span class="p">(</span><span class="n">d</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">d</span> <span class="o">&lt;</span> <span class="n">dim</span><span class="p">;</span> <span class="o">++</span><span class="n">d</span><span class="p">)</span> <span class="n">u</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+=</span> <span class="n">x</span><span class="p">[</span><span class="n">d</span><span class="p">];</span>
+  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>By plugging these solutions into our equations, assuming that the velocity we choose is divergence-free, we can determine the body force necessary to make them satisfy the Stokes equations. For the quadratic solution above, we find</p>
+<div class="math">
+\[f = \begin{pmatrix} 1 - 4\mu \\ 1 - 4\mu \end{pmatrix} \quad \mathrm{or} \quad \begin{pmatrix} 1 - 8\mu \\ 1 - 4\mu \\ 1 - 4\mu \end{pmatrix}\]</div>
+<p>which is implemented in our <code class="docutils literal notranslate"><span class="pre">f0_quadratic_u</span></code> pointwise function</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">static</span> <span class="kt">void</span> <span class="n">f0_quadratic_u</span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span> <span class="n">dim</span><span class="p">,</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span> <span class="n">Nf</span><span class="p">,</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span> <span class="n">NfAux</span><span class="p">,</span>
+                           <span class="k">const</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span> <span class="n">uOff</span><span class="p">[],</span> <span class="k">const</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span> <span class="n">uOff_x</span><span class="p">[],</span> <span class="k">const</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a></span> <span class="n">u</span><span class="p">[],</span> <span class="k">const</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a></span> <span class="n">u_t</span><span class="p">[],</span> <span class="k">const</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a></span> <span class="n">u_x</span><span class="p">[],</span>
+                           <span class="k">const</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span> <span class="n">aOff</span><span class="p">[],</span> <span class="k">const</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span> <span class="n">aOff_x</span><span class="p">[],</span> <span class="k">const</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a></span> <span class="n">a</span><span class="p">[],</span> <span class="k">const</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a></span> <span class="n">a_t</span><span class="p">[],</span> <span class="k">const</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a></span> <span class="n">a_x</span><span class="p">[],</span>
+                           <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a></span> <span class="n">t</span><span class="p">,</span> <span class="k">const</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a></span> <span class="n">x</span><span class="p">[],</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span> <span class="n">numConstants</span><span class="p">,</span> <span class="k">const</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a></span> <span class="n">constants</span><span class="p">[],</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a></span> <span class="n">f0</span><span class="p">[])</span>
+<span class="p">{</span>
+  <span class="k">const</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a></span> <span class="n">mu</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscRealPart.html#PetscRealPart">PetscRealPart</a></span><span class="p">(</span><span class="n">constants</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span>        <span class="n">d</span><span class="p">;</span>
+
+  <span class="n">f0</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">dim</span><span class="mi">-1</span><span class="p">)</span><span class="o">*</span><span class="mf">4.0</span><span class="o">*</span><span class="n">mu</span> <span class="o">-</span> <span class="mf">1.0</span><span class="p">;</span>
+  <span class="k">for</span> <span class="p">(</span><span class="n">d</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="n">d</span> <span class="o">&lt;</span> <span class="n">dim</span><span class="p">;</span> <span class="o">++</span><span class="n">d</span><span class="p">)</span> <span class="n">f0</span><span class="p">[</span><span class="n">d</span><span class="p">]</span> <span class="o">=</span> <span class="mf">4.0</span><span class="o">*</span><span class="n">mu</span> <span class="o">-</span> <span class="mf">1.0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>We let PETSc know about these solutions</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span>  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DT/PetscDSSetExactSolution.html#PetscDSSetExactSolution">PetscDSSetExactSolution</a></span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">exactFuncs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">user</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DT/PetscDSSetExactSolution.html#PetscDSSetExactSolution">PetscDSSetExactSolution</a></span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">exactFuncs</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">user</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>These solutions will be captured exactly by the <span class="math">\(P_2-P_1\)</span> finite element space. We can use the <code class="docutils literal notranslate"><span class="pre">-dmsnes_check</span></code> option to activate function space checks. It gives the <span class="math">\(L_2\)</span> error, or <em>discretization</em> error, of the exact solution, the residual computed using the interpolation of the exact solution into our finite element space, and uses a Taylor test to check that our Jacobian matches the residual. It should converge at order 2, or be exact in the case of linear equations like Stokes. Our <span class="math">\(P_2-P_1\)</span> runs in the PETSc test section at the bottom of the source file</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span>    <span class="nl">suffix</span><span class="p">:</span> <span class="mi">2</span><span class="n">d_p2_p1_check</span>
+    <span class="nl">requires</span><span class="p">:</span> <span class="n">triangle</span>
+    <span class="nl">args</span><span class="p">:</span> <span class="o">-</span><span class="n">sol</span> <span class="n">quadratic</span> <span class="o">-</span><span class="n">vel_petscspace_degree</span> <span class="mi">2</span> <span class="o">-</span><span class="n">pres_petscspace_degree</span> <span class="mi">1</span> <span class="o">-</span><span class="n">dmsnes_check</span> <span class="mf">0.0001</span>
+</pre></div>
+</div>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span>    <span class="nl">suffix</span><span class="p">:</span> <span class="mi">3</span><span class="n">d_p2_p1_check</span>
+    <span class="nl">requires</span><span class="p">:</span> <span class="n">ctetgen</span>
+    <span class="nl">args</span><span class="p">:</span> <span class="o">-</span><span class="n">sol</span> <span class="n">quadratic</span> <span class="o">-</span><span class="n">dm_plex_box_dim</span> <span class="mi">3</span> <span class="o">-</span><span class="n">dm_plex_box_faces</span> <span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span> <span class="o">-</span><span class="n">vel_petscspace_degree</span> <span class="mi">2</span> <span class="o">-</span><span class="n">pres_petscspace_degree</span> <span class="mi">1</span> <span class="o">-</span><span class="n">dmsnes_check</span> <span class="mf">0.0001</span>
+</pre></div>
+</div>
+<p>verify these claims, as we can see from the output files</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>L_2 Error: [2.08577e-16, 3.51044e-17]
+L_2 Residual: 3.30808e-15
+Function appears to be linear
+</pre></div>
+</div>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>L_2 Error: [8.33588e-16, 9.09348e-17]
+L_2 Residual: 2.40406e-15
+Function appears to be linear
+</pre></div>
+</div>
+<p>We can carry out the same tests for the <span class="math">\(Q_2-Q_1\)</span> element,</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span>    <span class="nl">suffix</span><span class="p">:</span> <span class="mi">2</span><span class="n">d_q2_q1_check</span>
+    <span class="nl">args</span><span class="p">:</span> <span class="o">-</span><span class="n">sol</span> <span class="n">quadratic</span> <span class="o">-</span><span class="n">dm_plex_box_simplex</span> <span class="mi">0</span> <span class="o">-</span><span class="n">vel_petscspace_degree</span> <span class="mi">2</span> <span class="o">-</span><span class="n">pres_petscspace_degree</span> <span class="mi">1</span> <span class="o">-</span><span class="n">dmsnes_check</span> <span class="mf">0.0001</span>
+</pre></div>
+</div>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span>    <span class="nl">suffix</span><span class="p">:</span> <span class="mi">3</span><span class="n">d_q2_q1_check</span>
+    <span class="nl">args</span><span class="p">:</span> <span class="o">-</span><span class="n">sol</span> <span class="n">quadratic</span> <span class="o">-</span><span class="n">dm_plex_box_simplex</span> <span class="mi">0</span> <span class="o">-</span><span class="n">dm_plex_box_dim</span> <span class="mi">3</span> <span class="o">-</span><span class="n">dm_plex_box_faces</span> <span class="mi">2</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">2</span> <span class="o">-</span><span class="n">vel_petscspace_degree</span> <span class="mi">2</span> <span class="o">-</span><span class="n">pres_petscspace_degree</span> <span class="mi">1</span> <span class="o">-</span><span class="n">dmsnes_check</span> <span class="mf">0.0001</span>
+</pre></div>
+</div>
+<p>The quadratic solution, however, cannot tell us whether our discretization is attaining the correct order of convergence, especially for higher order elements. Thus, we will define another solution based on trigonometric functions.</p>
+<div class="math">
+\[u = \begin{pmatrix} \sin(\pi x) + \sin(\pi y) \\ -\pi \cos(\pi x) y \end{pmatrix} \quad \mathrm{or} \quad
+    \begin{pmatrix} 2 \sin(\pi x) + \sin(\pi y) + \sin(\pi z) \\ -\pi \cos(\pi x) y \\ -\pi \cos(\pi x) z \end{pmatrix}\]</div>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">static</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a></span> <span class="n">trig_u</span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span> <span class="n">dim</span><span class="p">,</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a></span> <span class="n">time</span><span class="p">,</span> <span class="k">const</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a></span> <span class="n">x</span><span class="p">[],</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span> <span class="n">Nc</span><span class="p">,</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a></span> <span class="o">*</span><span class="n">u</span><span class="p">,</span> <span class="kt">void</span> <span class="o">*</span><span class="n">ctx</span><span class="p">)</span>
+<span class="p">{</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span> <span class="n">c</span><span class="p">;</span>
+
+  <span class="n">u</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">dim</span><span class="mi">-1</span><span class="p">)</span><span class="o">*</span><span class="n">PetscSinReal</span><span class="p">(</span><span class="n">PETSC_PI</span><span class="o">*</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
+  <span class="k">for</span> <span class="p">(</span><span class="n">c</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="n">c</span> <span class="o">&lt;</span> <span class="n">Nc</span><span class="p">;</span> <span class="o">++</span><span class="n">c</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">u</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+=</span> <span class="n">PetscSinReal</span><span class="p">(</span><span class="n">PETSC_PI</span><span class="o">*</span><span class="n">x</span><span class="p">[</span><span class="n">c</span><span class="p">]);</span>
+    <span class="n">u</span><span class="p">[</span><span class="n">c</span><span class="p">]</span>  <span class="o">=</span> <span class="o">-</span><span class="n">PETSC_PI</span><span class="o">*</span><span class="n">PetscCosReal</span><span class="p">(</span><span class="n">PETSC_PI</span><span class="o">*</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="n">x</span><span class="p">[</span><span class="n">c</span><span class="p">];</span>
+  <span class="p">}</span>
+  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="math">
+\[p = \sin(2 \pi x) + \sin(2 \pi y) \quad \mathrm{or} \quad \sin(2 \pi x) + \sin(2 \pi y) + \sin(2 \pi z)\]</div>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">static</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a></span> <span class="n">trig_p</span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span> <span class="n">dim</span><span class="p">,</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a></span> <span class="n">time</span><span class="p">,</span> <span class="k">const</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a></span> <span class="n">x</span><span class="p">[],</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span> <span class="n">Nc</span><span class="p">,</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a></span> <span class="o">*</span><span class="n">u</span><span class="p">,</span> <span class="kt">void</span> <span class="o">*</span><span class="n">ctx</span><span class="p">)</span>
+<span class="p">{</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span> <span class="n">d</span><span class="p">;</span>
+
+  <span class="k">for</span> <span class="p">(</span><span class="n">d</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">u</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">;</span> <span class="n">d</span> <span class="o">&lt;</span> <span class="n">dim</span><span class="p">;</span> <span class="o">++</span><span class="n">d</span><span class="p">)</span> <span class="n">u</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+=</span> <span class="n">PetscSinReal</span><span class="p">(</span><span class="mf">2.0</span><span class="o">*</span><span class="n">PETSC_PI</span><span class="o">*</span><span class="n">x</span><span class="p">[</span><span class="n">d</span><span class="p">]);</span>
+  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="math">
+\[f = \begin{pmatrix} 2 \pi \cos(2 \pi x) + \mu \pi^2 \sin(\pi x) + \mu \pi^2 \sin(\pi y) \\ 2 \pi \cos(2 \pi y) - \mu \pi^3 \cos(\pi x) y \end{pmatrix} \quad \mathrm{or} \quad
+\begin{pmatrix} 2 \pi \cos(2 \pi x) + 2\mu \pi^2 \sin(\pi x) + \mu \pi^2 \sin(\pi y) + \mu \pi^2 \sin(\pi z) \\ 2 \pi \cos(2 \pi y) - \mu \pi^3 cos(\pi x) y \\ 2 \pi \cos(2 \pi z) - \mu \pi^3 \cos(\pi x) z \end{pmatrix}\]</div>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">static</span> <span class="kt">void</span> <span class="n">f0_quadratic_u</span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span> <span class="n">dim</span><span class="p">,</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span> <span class="n">Nf</span><span class="p">,</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span> <span class="n">NfAux</span><span class="p">,</span>
+                           <span class="k">const</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span> <span class="n">uOff</span><span class="p">[],</span> <span class="k">const</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span> <span class="n">uOff_x</span><span class="p">[],</span> <span class="k">const</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a></span> <span class="n">u</span><span class="p">[],</span> <span class="k">const</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a></span> <span class="n">u_t</span><span class="p">[],</span> <span class="k">const</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a></span> <span class="n">u_x</span><span class="p">[],</span>
+                           <span class="k">const</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span> <span class="n">aOff</span><span class="p">[],</span> <span class="k">const</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span> <span class="n">aOff_x</span><span class="p">[],</span> <span class="k">const</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a></span> <span class="n">a</span><span class="p">[],</span> <span class="k">const</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a></span> <span class="n">a_t</span><span class="p">[],</span> <span class="k">const</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a></span> <span class="n">a_x</span><span class="p">[],</span>
+                           <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a></span> <span class="n">t</span><span class="p">,</span> <span class="k">const</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a></span> <span class="n">x</span><span class="p">[],</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span> <span class="n">numConstants</span><span class="p">,</span> <span class="k">const</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a></span> <span class="n">constants</span><span class="p">[],</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a></span> <span class="n">f0</span><span class="p">[])</span>
+<span class="p">{</span>
+  <span class="k">const</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscReal.html#PetscReal">PetscReal</a></span> <span class="n">mu</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscRealPart.html#PetscRealPart">PetscRealPart</a></span><span class="p">(</span><span class="n">constants</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a></span>        <span class="n">d</span><span class="p">;</span>
+
+  <span class="n">f0</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">dim</span><span class="mi">-1</span><span class="p">)</span><span class="o">*</span><span class="mf">4.0</span><span class="o">*</span><span class="n">mu</span> <span class="o">-</span> <span class="mf">1.0</span><span class="p">;</span>
+  <span class="k">for</span> <span class="p">(</span><span class="n">d</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="n">d</span> <span class="o">&lt;</span> <span class="n">dim</span><span class="p">;</span> <span class="o">++</span><span class="n">d</span><span class="p">)</span> <span class="n">f0</span><span class="p">[</span><span class="n">d</span><span class="p">]</span> <span class="o">=</span> <span class="mf">4.0</span><span class="o">*</span><span class="n">mu</span> <span class="o">-</span> <span class="mf">1.0</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>We can now use <code class="docutils literal notranslate"><span class="pre">-snes_convergence_estimate</span></code> to determine the convergence exponent for the discretization. This options solves the problem on a series of refined meshes, calculates the error on each mesh, and determines the slope on a logarithmic scale. For example, we do this in two dimensions, refining our mesh twice using <code class="docutils literal notranslate"><span class="pre">-convest_num_refine</span> <span class="pre">2</span></code> in the following test.</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span>    <span class="nl">suffix</span><span class="p">:</span> <span class="mi">2</span><span class="n">d_p2_p1_conv</span>
+    <span class="nl">requires</span><span class="p">:</span> <span class="n">triangle</span>
+    <span class="cp"># Using -dm_refine 3 gives L_2 convergence rate: [3.0, 2.1]</span>
+    <span class="nl">args</span><span class="p">:</span> <span class="o">-</span><span class="n">sol</span> <span class="n">trig</span> <span class="o">-</span><span class="n">vel_petscspace_degree</span> <span class="mi">2</span> <span class="o">-</span><span class="n">pres_petscspace_degree</span> <span class="mi">1</span> <span class="o">-</span><span class="n">snes_convergence_estimate</span> <span class="o">-</span><span class="n">convest_num_refine</span> <span class="mi">2</span> <span class="o">-</span><span class="n">ksp_error_if_not_converged</span> \
+      <span class="o">-</span><span class="n">ksp_atol</span> <span class="mf">1e-10</span> <span class="o">-</span><span class="n">ksp_error_if_not_converged</span> <span class="o">-</span><span class="n">pc_use_amat</span> \
+      <span class="o">-</span><span class="n">pc_type</span> <span class="n">fieldsplit</span> <span class="o">-</span><span class="n">pc_fieldsplit_type</span> <span class="n">schur</span> <span class="o">-</span><span class="n">pc_fieldsplit_schur_fact_type</span> <span class="n">full</span> <span class="o">-</span><span class="n">pc_fieldsplit_schur_precondition</span> <span class="n">a11</span> <span class="o">-</span><span class="n">pc_fieldsplit_off_diag_use_amat</span> \
+        <span class="o">-</span><span class="n">fieldsplit_velocity_pc_type</span> <span class="n">lu</span> <span class="o">-</span><span class="n">fieldsplit_pressure_ksp_rtol</span> <span class="mf">1e-10</span> <span class="o">-</span><span class="n">fieldsplit_pressure_pc_type</span> <span class="n">lu</span>
+
+</pre></div>
+</div>
+<p>However, the test needs an accurate linear solver. Sparse LU factorizations do not, in general, do full pivoting. Thus we must deal with the zero pressure block explicitly. We use the <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/PC/PCFIELDSPLIT.html#PCFIELDSPLIT">PCFIELDSPLIT</a></span></code> preconditioner and the full Schur complement factorization, but we still need a preconditioner for the Schur complement <span class="math">\(B^T A^{-1} B\)</span>. We can have PETSc construct that matrix automatically, but the cost rises steeply as the problem size increases. Instead, we use the fact that the Schur complement is spectrally equivalent to the pressure mass matrix <span class="math">\(M_p\)</span>. We can make a preconditioning matrix, which has the diagonal blocks we will use to build the preconditioners, letting PETSc know that we get the off-diagonal blocks from the original system with <code class="docutils literal notranslate"><span class="pre">-pc_fieldsplit_off_diag_use_amat</span></code> and to build the Schur complement from the original matrix using <code class="docutils literal notranslate"><span class="pre">-pc_use_amat</span></code>,</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span>  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DT/PetscDSSetJacobianPreconditioner.html#PetscDSSetJacobianPreconditioner">PetscDSSetJacobianPreconditioner</a></span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="n">g3_uu</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DT/PetscDSSetJacobianPreconditioner.html#PetscDSSetJacobianPreconditioner">PetscDSSetJacobianPreconditioner</a></span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">g0_pp</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Putting this all together, and using exact solvers on the subblocks, we have</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span>    <span class="nl">suffix</span><span class="p">:</span> <span class="mi">2</span><span class="n">d_p2_p1_conv</span>
+    <span class="nl">requires</span><span class="p">:</span> <span class="n">triangle</span>
+    <span class="cp"># Using -dm_refine 3 gives L_2 convergence rate: [3.0, 2.1]</span>
+    <span class="nl">args</span><span class="p">:</span> <span class="o">-</span><span class="n">sol</span> <span class="n">trig</span> <span class="o">-</span><span class="n">vel_petscspace_degree</span> <span class="mi">2</span> <span class="o">-</span><span class="n">pres_petscspace_degree</span> <span class="mi">1</span> <span class="o">-</span><span class="n">snes_convergence_estimate</span> <span class="o">-</span><span class="n">convest_num_refine</span> <span class="mi">2</span> <span class="o">-</span><span class="n">ksp_error_if_not_converged</span> \
+      <span class="o">-</span><span class="n">ksp_atol</span> <span class="mf">1e-10</span> <span class="o">-</span><span class="n">ksp_error_if_not_converged</span> <span class="o">-</span><span class="n">pc_use_amat</span> \
+      <span class="o">-</span><span class="n">pc_type</span> <span class="n">fieldsplit</span> <span class="o">-</span><span class="n">pc_fieldsplit_type</span> <span class="n">schur</span> <span class="o">-</span><span class="n">pc_fieldsplit_schur_fact_type</span> <span class="n">full</span> <span class="o">-</span><span class="n">pc_fieldsplit_schur_precondition</span> <span class="n">a11</span> <span class="o">-</span><span class="n">pc_fieldsplit_off_diag_use_amat</span> \
+        <span class="o">-</span><span class="n">fieldsplit_velocity_pc_type</span> <span class="n">lu</span> <span class="o">-</span><span class="n">fieldsplit_pressure_ksp_rtol</span> <span class="mf">1e-10</span> <span class="o">-</span><span class="n">fieldsplit_pressure_pc_type</span> <span class="n">lu</span>
+
+</pre></div>
+</div>
+<p>and we see it converges, however it is superconverging in the pressure,</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">L_2</span> <span class="n">convergence</span> <span class="nl">rate</span><span class="p">:</span> <span class="p">[</span><span class="mf">2.6</span><span class="p">,</span> <span class="mf">3.3</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>If we refine the mesh using <code class="docutils literal notranslate"><span class="pre">-dm_refine</span> <span class="pre">3</span></code>, the convergence rates become <code class="docutils literal notranslate"><span class="pre">[3.0,</span> <span class="pre">2.1]</span></code>.</p>
+</div>
+<div class="section" id="dealing-with-parameters">
+<h2>Dealing with Parameters<a class="headerlink" href="#dealing-with-parameters" title="Permalink to this headline">¶</a></h2>
+<p>Like most physical problems, the Stokes problem has a parameter, the dynamic shear viscosity, which determines what solution regime we are in. To handle these parameters in PETSc, we first define a C struct to hold them,</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">typedef</span> <span class="k">struct</span> <span class="p">{</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a></span> <span class="n">mu</span><span class="p">;</span> <span class="cm">/* dynamic shear viscosity */</span>
+<span class="p">}</span> <span class="n">Parameter</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>and then add a <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscBag.html#PetscBag">PetscBag</a></span></code> object to our application context. We then setup the parameter object,</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">static</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a></span> <span class="n">SetupParameters</span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/MPI_Comm.html#MPI_Comm">MPI_Comm</a></span> <span class="n">comm</span><span class="p">,</span> <span class="n">AppCtx</span> <span class="o">*</span><span class="n">ctx</span><span class="p">)</span>
+<span class="p">{</span>
+  <span class="n">Parameter</span>     <span class="o">*</span><span class="n">p</span><span class="p">;</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a></span> <span class="n">ierr</span><span class="p">;</span>
+
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscFunctionBeginUser.html#PetscFunctionBeginUser">PetscFunctionBeginUser</a></span><span class="p">;</span>
+  <span class="cm">/* setup PETSc parameter bag */</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscBagCreate.html#PetscBagCreate">PetscBagCreate</a></span><span class="p">(</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a></span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">Parameter</span><span class="p">),</span> <span class="o">&amp;</span><span class="n">ctx</span><span class="o">-&gt;</span><span class="n">bag</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscBagGetData.html#PetscBagGetData">PetscBagGetData</a></span><span class="p">(</span><span class="n">ctx</span><span class="o">-&gt;</span><span class="n">bag</span><span class="p">,</span> <span class="p">(</span><span class="kt">void</span> <span class="o">**</span><span class="p">)</span> <span class="o">&amp;</span><span class="n">p</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscBagSetName.html#PetscBagSetName">PetscBagSetName</a></span><span class="p">(</span><span class="n">ctx</span><span class="o">-&gt;</span><span class="n">bag</span><span class="p">,</span> <span class="s">&quot;par&quot;</span><span class="p">,</span> <span class="s">&quot;Stokes Parameters&quot;</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscBagRegisterScalar.html#PetscBagRegisterScalar">PetscBagRegisterScalar</a></span><span class="p">(</span><span class="n">ctx</span><span class="o">-&gt;</span><span class="n">bag</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">p</span><span class="o">-&gt;</span><span class="n">mu</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="s">&quot;mu&quot;</span><span class="p">,</span> <span class="s">&quot;Dynamic Shear Viscosity, Pa s&quot;</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+  <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscBagSetFromOptions.html#PetscBagSetFromOptions">PetscBagSetFromOptions</a></span><span class="p">(</span><span class="n">ctx</span><span class="o">-&gt;</span><span class="n">bag</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+  <span class="p">{</span>
+    <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Viewer/PetscViewer.html#PetscViewer">PetscViewer</a></span>       <span class="n">viewer</span><span class="p">;</span>
+    <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Viewer/PetscViewerFormat.html#PetscViewerFormat">PetscViewerFormat</a></span> <span class="n">format</span><span class="p">;</span>
+    <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a></span>         <span class="n">flg</span><span class="p">;</span>
+
+    <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Viewer/PetscOptionsGetViewer.html#PetscOptionsGetViewer">PetscOptionsGetViewer</a></span><span class="p">(</span><span class="n">comm</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="s">&quot;-param_view&quot;</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">viewer</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">format</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">flg</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">flg</span><span class="p">)</span> <span class="p">{</span>
+      <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Viewer/PetscViewerPushFormat.html#PetscViewerPushFormat">PetscViewerPushFormat</a></span><span class="p">(</span><span class="n">viewer</span><span class="p">,</span> <span class="n">format</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+      <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscBagView.html#PetscBagView">PetscBagView</a></span><span class="p">(</span><span class="n">ctx</span><span class="o">-&gt;</span><span class="n">bag</span><span class="p">,</span> <span class="n">viewer</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+      <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Viewer/PetscViewerFlush.html#PetscViewerFlush">PetscViewerFlush</a></span><span class="p">(</span><span class="n">viewer</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+      <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Viewer/PetscViewerPopFormat.html#PetscViewerPopFormat">PetscViewerPopFormat</a></span><span class="p">(</span><span class="n">viewer</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+      <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Viewer/PetscViewerDestroy.html#PetscViewerDestroy">PetscViewerDestroy</a></span><span class="p">(</span><span class="o">&amp;</span><span class="n">viewer</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+  <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscFunctionReturn.html#PetscFunctionReturn">PetscFunctionReturn</a></span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>which will allow us to set the value from the command line using <code class="docutils literal notranslate"><span class="pre">-mu</span></code>. The <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscBag.html#PetscBag">PetscBag</a></span></code> can also be persisted to disk with <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscBagLoad.html#PetscBagLoad">PetscBagLoad</a>/View()</span></code>. We can make these values available as constant to our pointwise functions through the <code class="docutils literal notranslate"><span class="pre"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DM/PetscDS.html#PetscDS">PetscDS</a></span></code> object.</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span>  <span class="p">{</span>
+    <span class="n">Parameter</span>  <span class="o">*</span><span class="n">param</span><span class="p">;</span>
+    <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscScalar.html#PetscScalar">PetscScalar</a></span> <span class="n">constants</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span>
+
+    <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscBagGetData.html#PetscBagGetData">PetscBagGetData</a></span><span class="p">(</span><span class="n">user</span><span class="o">-&gt;</span><span class="n">bag</span><span class="p">,</span> <span class="p">(</span><span class="kt">void</span> <span class="o">**</span><span class="p">)</span> <span class="o">&amp;</span><span class="n">param</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+    <span class="n">constants</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">param</span><span class="o">-&gt;</span><span class="n">mu</span><span class="p">;</span> <span class="cm">/* dynamic shear viscosity, Pa s */</span>
+    <span class="n">ierr</span> <span class="o">=</span> <span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DT/PetscDSSetConstants.html#PetscDSSetConstants">PetscDSSetConstants</a></span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">constants</span><span class="p">);</span><span class="n"><a href="https://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/CHKERRQ.html#CHKERRQ">CHKERRQ</a></span><span class="p">(</span><span class="n">ierr</span><span class="p">);</span>
+  <span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="bibliography">
+<h2>Bibliography<a class="headerlink" href="#bibliography" title="Permalink to this headline">¶</a></h2>
+<span class="target" id="id2"></span><p id="id1252"><dl class="citation">
+<dt class="label" id="id2051"><span class="brackets"><a class="fn-backref" href="#id1">KnepleyBrownRuppSmith13</a></span></dt>
+<dd><p>M. G. Knepley, J. Brown, K. Rupp, and B. F. Smith. Achieving high performance with unified residual evaluation. <em>ArXiv e-prints</em>, September 2013. <a class="reference external" href="https://arxiv.org/abs/1309.1204">arXiv:1309.1204</a>.</p>
+</dd>
+</dl>
+</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../developers/index.html" title="PETSc Developer’s Documentation"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="../guide_to_examples_by_physics.html" title="Guide to PETSc Tutorial Examples, by Physics"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">PETSc 3.14.6 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../guide_to_examples.html" >Guide to PETSc Tutorial Examples</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 1991-2021, UChicago Argonne, LLC and the PETSc Development Team.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.4.4.
+    </div>
+  </body>
+</html>

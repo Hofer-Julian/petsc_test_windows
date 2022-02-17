@@ -1,0 +1,46 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Profiling/PetscInfoGetInfo.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>PetscInfoGetInfo</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/Profiling/PetscInfoGetInfo.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="PetscInfoGetInfo"><H1>PetscInfoGetInfo</H1></A>
+Returns the current state of several important flags for <A HREF="../Profiling/PetscInfo.html#PetscInfo">PetscInfo</A>() 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscsys.h"   
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../Profiling/PetscInfoGetInfo.html#PetscInfoGetInfo">PetscInfoGetInfo</A>(<A HREF="../Sys/PetscBool.html#PetscBool">PetscBool</A> *infoEnabled, <A HREF="../Sys/PetscBool.html#PetscBool">PetscBool</A> *classesSet, <A HREF="../Sys/PetscBool.html#PetscBool">PetscBool</A> *exclude, <A HREF="../Sys/PetscBool.html#PetscBool">PetscBool</A> *locked, <A HREF="../Profiling/PetscInfoCommFlag.html#PetscInfoCommFlag">PetscInfoCommFlag</A> *commSelfFlag)
+</PRE>
+Not Collective
+<P>
+<H3><FONT COLOR="#CC3333">Output Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>infoEnabled </B></TD><TD>- <A HREF="../Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</A> if <A HREF="../Profiling/PetscInfoAllow.html#PetscInfoAllow">PetscInfoAllow</A>(<A HREF="../Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</A>) has been called
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>classesSet </B></TD><TD>- <A HREF="../Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</A> if the list of classes to filter for has been set
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>exclude </B></TD><TD>- <A HREF="../Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</A> if the class filtering for <A HREF="../Profiling/PetscInfo.html#PetscInfo">PetscInfo</A>() is inverted
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>locked </B></TD><TD>- <A HREF="../Sys/PETSC_TRUE.html#PETSC_TRUE">PETSC_TRUE</A> if the list of classes to filter for has been locked
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>commSelfFlag </B></TD><TD>- Enum indicating whether <A HREF="../Profiling/PetscInfo.html#PetscInfo">PetscInfo</A>() will print for communicators of size 1, any size != 1, or all
+communicators
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Notes</FONT></H3>
+Initially commSelfFlag = <A HREF="../Profiling/PetscInfoCommFlag.html#PetscInfoCommFlag">PETSC_INFO_COMM_ALL</A>
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../Profiling/PetscInfo.html#PetscInfo">PetscInfo</A>(), <A HREF="../Profiling/PetscInfoAllow.html#PetscInfoAllow">PetscInfoAllow</A>(), <A HREF="../Profiling/PetscInfoSetFilterCommSelf.html#PetscInfoSetFilterCommSelf">PetscInfoSetFilterCommSelf</A>, <A HREF="../Profiling/PetscInfoSetFromOptions.html#PetscInfoSetFromOptions">PetscInfoSetFromOptions</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>developer<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/sys/info/verboseinfo.c.html#PetscInfoGetInfo">src/sys/info/verboseinfo.c</A>
+<BR><A HREF="./index.html">Index of all Profiling routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

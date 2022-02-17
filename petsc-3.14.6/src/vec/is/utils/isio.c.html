@@ -1,0 +1,131 @@
+<center><a href="isio.c">Actual source code: isio.c</a></center><br>
+
+<html>
+<head> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/src/vec/is/utils/isio.c.html" />
+<title></title>
+<meta name="generator" content="c2html 0.9.4">
+<meta name="date" content="2021-03-30T16:49:57+00:00">
+</head>
+
+<body bgcolor="#FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 src/vec/is/utils/isio.c.html "><small>Report Typos and Errors</small></a></div>
+<pre width="80">
+<a name="line1">  1: </a>#include <A href="../../../../include/petscis.h.html">&lt;petscis.h&gt;</A>
+<a name="line2">  2: </a>#include <A href="../../../../include/petsc/private/isimpl.h.html">&lt;petsc/private/isimpl.h&gt;</A>
+<a name="line3">  3: </a>#include <A href="../../../../include/petsc/private/viewerimpl.h.html">&lt;petsc/private/viewerimpl.h&gt;</A>
+<a name="line4">  4: </a>#include <A href="../../../../include/petsclayouthdf5.h.html">&lt;petsclayouthdf5.h&gt;</A>
+
+<a name="line6">  6: </a><strong><font color="#4169E1"><a name="ISView_Binary"></a><a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> ISView_Binary(<a href="../../../../docs/manualpages/IS/IS.html#IS">IS</a> is,<a href="../../../../docs/manualpages/Viewer/PetscViewer.html#PetscViewer">PetscViewer</a> viewer)</font></strong>
+<a name="line7">  7: </a>{
+<a name="line9">  9: </a>  <a href="../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>      skipHeader;
+<a name="line10"> 10: </a>  <a href="../../../../docs/manualpages/IS/PetscLayout.html#PetscLayout">PetscLayout</a>    map;
+<a name="line11"> 11: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       tr[2],n,s,N;
+<a name="line12"> 12: </a>  const <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> *iarray;
+
+<a name="line15"> 15: </a>  <a href="../../../../docs/manualpages/Viewer/PetscViewerSetUp.html#PetscViewerSetUp">PetscViewerSetUp</a>(viewer);
+<a name="line16"> 16: </a>  <a href="../../../../docs/manualpages/Viewer/PetscViewerBinaryGetSkipHeader.html#PetscViewerBinaryGetSkipHeader">PetscViewerBinaryGetSkipHeader</a>(viewer,&amp;skipHeader);
+
+<a name="line18"> 18: </a>  <a href="../../../../docs/manualpages/IS/ISGetLayout.html#ISGetLayout">ISGetLayout</a>(is,&amp;map);
+<a name="line19"> 19: </a>  <a href="../../../../docs/manualpages/IS/PetscLayoutGetLocalSize.html#PetscLayoutGetLocalSize">PetscLayoutGetLocalSize</a>(map,&amp;n);
+<a name="line20"> 20: </a>  <a href="../../../../docs/manualpages/IS/PetscLayoutGetRange.html#PetscLayoutGetRange">PetscLayoutGetRange</a>(map,&amp;s,NULL);
+<a name="line21"> 21: </a>  <a href="../../../../docs/manualpages/IS/PetscLayoutGetSize.html#PetscLayoutGetSize">PetscLayoutGetSize</a>(map,&amp;N);
+
+<a name="line23"> 23: </a>  <font color="#B22222">/* write <a href="../../../../docs/manualpages/IS/IS.html#IS">IS</a> header */</font>
+<a name="line24"> 24: </a>  tr[0] = IS_FILE_CLASSID; tr[1] = N;
+<a name="line25"> 25: </a>  <font color="#4169E1">if</font> (!skipHeader) {<a href="../../../../docs/manualpages/Viewer/PetscViewerBinaryWrite.html#PetscViewerBinaryWrite">PetscViewerBinaryWrite</a>(viewer,tr,2,<a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_INT</a>);}
+
+<a name="line27"> 27: </a>  <font color="#B22222">/* write <a href="../../../../docs/manualpages/IS/IS.html#IS">IS</a> indices */</font>
+<a name="line28"> 28: </a>  <a href="../../../../docs/manualpages/IS/ISGetIndices.html#ISGetIndices">ISGetIndices</a>(is,&amp;iarray);
+<a name="line29"> 29: </a>  <a href="../../../../docs/manualpages/Viewer/PetscViewerBinaryWriteAll.html#PetscViewerBinaryWriteAll">PetscViewerBinaryWriteAll</a>(viewer,iarray,n,s,N,<a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_INT</a>);
+<a name="line30"> 30: </a>  <a href="../../../../docs/manualpages/IS/ISRestoreIndices.html#ISRestoreIndices">ISRestoreIndices</a>(is,&amp;iarray);
+<a name="line31"> 31: </a>  <font color="#4169E1">return</font>(0);
+<a name="line32"> 32: </a>}
+
+<a name="line34"> 34: </a><font color="#A020F0">#if defined(PETSC_HAVE_HDF5)</font>
+<a name="line35"> 35: </a><font color="#B22222">/*</font>
+<a name="line36"> 36: </a><font color="#B22222">     This should handle properly the cases where <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a> is 32 or 64 and hsize_t is 32 or 64. These means properly casting with</font>
+<a name="line37"> 37: </a><font color="#B22222">   checks back and forth between the two types of variables.</font>
+<a name="line38"> 38: </a><font color="#B22222">*/</font>
+<a name="line39"> 39: </a><strong><font color="#4169E1"><a name="ISLoad_HDF5"></a><a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> ISLoad_HDF5(<a href="../../../../docs/manualpages/IS/IS.html#IS">IS</a> is, <a href="../../../../docs/manualpages/Viewer/PetscViewer.html#PetscViewer">PetscViewer</a> viewer)</font></strong>
+<a name="line40"> 40: </a>{
+<a name="line41"> 41: </a>  hid_t           inttype;    <font color="#B22222">/* int type (H5T_NATIVE_INT or H5T_NATIVE_LLONG) */</font>
+<a name="line42"> 42: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       *ind;
+<a name="line43"> 43: </a>  const char     *isname;
+<a name="line44"> 44: </a>  <a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a>  ierr;
+
+<a name="line47"> 47: </a>  <font color="#4169E1">if</font> (!((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)is)-&gt;name) <a href="../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)is), PETSC_ERR_SUP, <font color="#666666">"Since HDF5 format gives ASCII name for each object in file; must use <a href="../../../../docs/manualpages/IS/ISLoad.html#ISLoad">ISLoad</a>() after setting name of <a href="../../../../docs/manualpages/Vec/Vec.html#Vec">Vec</a> with <a href="../../../../docs/manualpages/Sys/PetscObjectSetName.html#PetscObjectSetName">PetscObjectSetName</a>()"</font>);
+<a name="line48"> 48: </a><font color="#A020F0">#if defined(PETSC_USE_64BIT_INDICES)</font>
+<a name="line49"> 49: </a>  inttype = H5T_NATIVE_LLONG;
+<a name="line50"> 50: </a><font color="#A020F0">#else</font>
+<a name="line51"> 51: </a>  inttype = H5T_NATIVE_INT;
+<a name="line52"> 52: </a><font color="#A020F0">#endif</font>
+<a name="line53"> 53: </a>  <a href="../../../../docs/manualpages/Sys/PetscObjectGetName.html#PetscObjectGetName">PetscObjectGetName</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)is, &amp;isname);
+<a name="line54"> 54: </a>  <a href="../../../../docs/manualpages/IS/PetscViewerHDF5Load.html#PetscViewerHDF5Load">PetscViewerHDF5Load</a>(viewer, isname, is-&gt;map, inttype, (void**)&amp;ind);
+<a name="line55"> 55: </a>  <a href="../../../../docs/manualpages/IS/ISGeneralSetIndices.html#ISGeneralSetIndices">ISGeneralSetIndices</a>(is, is-&gt;map-&gt;n, ind, <a href="../../../../docs/manualpages/Sys/PetscCopyMode.html#PetscCopyMode">PETSC_OWN_POINTER</a>);
+<a name="line56"> 56: </a>  <font color="#4169E1">return</font>(0);
+<a name="line57"> 57: </a>}
+<a name="line58"> 58: </a><font color="#A020F0">#endif</font>
+
+<a name="line60"> 60: </a><strong><font color="#4169E1"><a name="ISLoad_Binary"></a><a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> ISLoad_Binary(<a href="../../../../docs/manualpages/IS/IS.html#IS">IS</a> is, <a href="../../../../docs/manualpages/Viewer/PetscViewer.html#PetscViewer">PetscViewer</a> viewer)</font></strong>
+<a name="line61"> 61: </a>{
+<a name="line63"> 63: </a>  <a href="../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>      isgeneral,skipHeader;
+<a name="line64"> 64: </a>  <a href="../../../../docs/manualpages/Sys/PetscInt.html#PetscInt">PetscInt</a>       tr[2],rows,N,n,s,*idx;
+<a name="line65"> 65: </a>  <a href="../../../../docs/manualpages/IS/PetscLayout.html#PetscLayout">PetscLayout</a>    map;
+
+<a name="line68"> 68: </a>  <a href="../../../../docs/manualpages/Sys/PetscObjectTypeCompare.html#PetscObjectTypeCompare">PetscObjectTypeCompare</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)is,ISGENERAL,&amp;isgeneral);
+<a name="line69"> 69: </a>  <font color="#4169E1">if</font> (!isgeneral) <a href="../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)is),PETSC_ERR_ARG_INCOMP,<font color="#666666">"<a href="../../../../docs/manualpages/IS/IS.html#IS">IS</a> must be of type ISGENERAL to load into it"</font>);
+<a name="line70"> 70: </a>  <a href="../../../../docs/manualpages/Viewer/PetscViewerSetUp.html#PetscViewerSetUp">PetscViewerSetUp</a>(viewer);
+<a name="line71"> 71: </a>  <a href="../../../../docs/manualpages/Viewer/PetscViewerBinaryGetSkipHeader.html#PetscViewerBinaryGetSkipHeader">PetscViewerBinaryGetSkipHeader</a>(viewer,&amp;skipHeader);
+
+<a name="line73"> 73: </a>  <a href="../../../../docs/manualpages/IS/ISGetLayout.html#ISGetLayout">ISGetLayout</a>(is,&amp;map);
+<a name="line74"> 74: </a>  <a href="../../../../docs/manualpages/IS/PetscLayoutGetSize.html#PetscLayoutGetSize">PetscLayoutGetSize</a>(map,&amp;N);
+
+<a name="line76"> 76: </a>  <font color="#B22222">/* read <a href="../../../../docs/manualpages/IS/IS.html#IS">IS</a> header */</font>
+<a name="line77"> 77: </a>  <font color="#4169E1">if</font> (!skipHeader) {
+<a name="line78"> 78: </a>    <a href="../../../../docs/manualpages/Viewer/PetscViewerBinaryRead.html#PetscViewerBinaryRead">PetscViewerBinaryRead</a>(viewer,tr,2,NULL,<a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_INT</a>);
+<a name="line79"> 79: </a>    <font color="#4169E1">if</font> (tr[0] != IS_FILE_CLASSID) <a href="../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)viewer),PETSC_ERR_FILE_UNEXPECTED,<font color="#666666">"Not an <a href="../../../../docs/manualpages/IS/IS.html#IS">IS</a> next in file"</font>);
+<a name="line80"> 80: </a>    <font color="#4169E1">if</font> (tr[1] &lt; 0) <a href="../../../../docs/manualpages/Sys/SETERRQ1.html#SETERRQ1">SETERRQ1</a>(<a href="../../../../docs/manualpages/Sys/PetscObjectComm.html#PetscObjectComm">PetscObjectComm</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)viewer),PETSC_ERR_FILE_UNEXPECTED,<font color="#666666">"<a href="../../../../docs/manualpages/IS/IS.html#IS">IS</a> size (%D) in file is negative"</font>,tr[1]);
+<a name="line81"> 81: </a>    <font color="#4169E1">if</font> (N &gt;= 0 &amp;&amp; N != tr[1]) <a href="../../../../docs/manualpages/Sys/SETERRQ2.html#SETERRQ2">SETERRQ2</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_FILE_UNEXPECTED,<font color="#666666">"<a href="../../../../docs/manualpages/IS/IS.html#IS">IS</a> in file different size (%D) than input <a href="../../../../docs/manualpages/IS/IS.html#IS">IS</a> (%D)"</font>,tr[1],N);
+<a name="line82"> 82: </a>    rows = tr[1];
+<a name="line83"> 83: </a>  } <font color="#4169E1">else</font> {
+<a name="line84"> 84: </a>    <font color="#4169E1">if</font> (N &lt; 0) <a href="../../../../docs/manualpages/Sys/SETERRQ.html#SETERRQ">SETERRQ</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_USER,<font color="#666666">"<a href="../../../../docs/manualpages/IS/IS.html#IS">IS</a> binary file header was skipped, thus the user must specify the global size of input <a href="../../../../docs/manualpages/IS/IS.html#IS">IS</a>"</font>);
+<a name="line85"> 85: </a>    rows = N;
+<a name="line86"> 86: </a>  }
+
+<a name="line88"> 88: </a>  <font color="#B22222">/* set <a href="../../../../docs/manualpages/IS/IS.html#IS">IS</a> size if not already set */</font>
+<a name="line89"> 89: </a>  <font color="#4169E1">if</font> (N &lt; 0) {<a href="../../../../docs/manualpages/IS/PetscLayoutSetSize.html#PetscLayoutSetSize">PetscLayoutSetSize</a>(map,rows);}
+<a name="line90"> 90: </a>  <a href="../../../../docs/manualpages/IS/PetscLayoutSetUp.html#PetscLayoutSetUp">PetscLayoutSetUp</a>(map);
+
+<a name="line92"> 92: </a>  <font color="#B22222">/* get <a href="../../../../docs/manualpages/IS/IS.html#IS">IS</a> sizes and check global size */</font>
+<a name="line93"> 93: </a>  <a href="../../../../docs/manualpages/IS/PetscLayoutGetSize.html#PetscLayoutGetSize">PetscLayoutGetSize</a>(map,&amp;N);
+<a name="line94"> 94: </a>  <a href="../../../../docs/manualpages/IS/PetscLayoutGetLocalSize.html#PetscLayoutGetLocalSize">PetscLayoutGetLocalSize</a>(map,&amp;n);
+<a name="line95"> 95: </a>  <a href="../../../../docs/manualpages/IS/PetscLayoutGetRange.html#PetscLayoutGetRange">PetscLayoutGetRange</a>(map,&amp;s,NULL);
+<a name="line96"> 96: </a>  <font color="#4169E1">if</font> (N != rows) <a href="../../../../docs/manualpages/Sys/SETERRQ2.html#SETERRQ2">SETERRQ2</a>(<a href="../../../../docs/manualpages/Sys/PETSC_COMM_SELF.html#PETSC_COMM_SELF">PETSC_COMM_SELF</a>,PETSC_ERR_FILE_UNEXPECTED,<font color="#666666">"<a href="../../../../docs/manualpages/IS/IS.html#IS">IS</a> in file different size (%D) than input <a href="../../../../docs/manualpages/IS/IS.html#IS">IS</a> (%D)"</font>,rows,N);
+
+<a name="line98"> 98: </a>  <font color="#B22222">/* read <a href="../../../../docs/manualpages/IS/IS.html#IS">IS</a> indices */</font>
+<a name="line99"> 99: </a>  <a href="../../../../docs/manualpages/Sys/PetscMalloc1.html#PetscMalloc1">PetscMalloc1</a>(n,&amp;idx);
+<a name="line100">100: </a>  <a href="../../../../docs/manualpages/Viewer/PetscViewerBinaryReadAll.html#PetscViewerBinaryReadAll">PetscViewerBinaryReadAll</a>(viewer,idx,n,s,N,<a href="../../../../docs/manualpages/Sys/PetscDataType.html#PetscDataType">PETSC_INT</a>);
+<a name="line101">101: </a>  <a href="../../../../docs/manualpages/IS/ISGeneralSetIndices.html#ISGeneralSetIndices">ISGeneralSetIndices</a>(is,n,idx,<a href="../../../../docs/manualpages/Sys/PetscCopyMode.html#PetscCopyMode">PETSC_OWN_POINTER</a>);
+<a name="line102">102: </a>  <font color="#4169E1">return</font>(0);
+<a name="line103">103: </a>}
+
+<a name="line105">105: </a><strong><font color="#4169E1"><a name="ISLoad_Default"></a><a href="../../../../docs/manualpages/Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</a> ISLoad_Default(<a href="../../../../docs/manualpages/IS/IS.html#IS">IS</a> is, <a href="../../../../docs/manualpages/Viewer/PetscViewer.html#PetscViewer">PetscViewer</a> viewer)</font></strong>
+<a name="line106">106: </a>{
+<a name="line107">107: </a>  <a href="../../../../docs/manualpages/Sys/PetscBool.html#PetscBool">PetscBool</a>      isbinary,ishdf5;
+
+<a name="line111">111: </a>  <a href="../../../../docs/manualpages/Sys/PetscObjectTypeCompare.html#PetscObjectTypeCompare">PetscObjectTypeCompare</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)viewer,<a href="../../../../docs/manualpages/Viewer/PETSCVIEWERBINARY.html#PETSCVIEWERBINARY">PETSCVIEWERBINARY</a>,&amp;isbinary);
+<a name="line112">112: </a>  <a href="../../../../docs/manualpages/Sys/PetscObjectTypeCompare.html#PetscObjectTypeCompare">PetscObjectTypeCompare</a>((<a href="../../../../docs/manualpages/Sys/PetscObject.html#PetscObject">PetscObject</a>)viewer,<a href="../../../../docs/manualpages/Viewer/PETSCVIEWERHDF5.html#PETSCVIEWERHDF5">PETSCVIEWERHDF5</a>,&amp;ishdf5);
+<a name="line113">113: </a>  <font color="#4169E1">if</font> (isbinary) {
+<a name="line114">114: </a>    ISLoad_Binary(is, viewer);
+<a name="line115">115: </a>  } <font color="#4169E1">else</font> <font color="#4169E1">if</font> (ishdf5) {
+<a name="line116">116: </a><font color="#A020F0">#if defined(PETSC_HAVE_HDF5)</font>
+<a name="line117">117: </a>    ISLoad_HDF5(is, viewer);
+<a name="line118">118: </a><font color="#A020F0">#endif</font>
+<a name="line119">119: </a>  }
+<a name="line120">120: </a>  <font color="#4169E1">return</font>(0);
+<a name="line121">121: </a>}
+</pre>
+</body>
+
+</html>

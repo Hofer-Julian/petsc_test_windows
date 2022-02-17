@@ -1,0 +1,52 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Sys/PetscRealSortSemiOrderedWithArrayInt.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>PetscRealSortSemiOrderedWithArrayInt</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/Sys/PetscRealSortSemiOrderedWithArrayInt.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="PetscRealSortSemiOrderedWithArrayInt"><H1>PetscRealSortSemiOrderedWithArrayInt</H1></A>
+Sorts an array of PetscReals in place in increasing order and reorders a second array of PetscInts to match the first. 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscsys.h"  
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../Sys/PetscRealSortSemiOrderedWithArrayInt.html#PetscRealSortSemiOrderedWithArrayInt">PetscRealSortSemiOrderedWithArrayInt</A>(<A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> n, <A HREF="../Sys/PetscReal.html#PetscReal">PetscReal</A> arr1[], <A HREF="../Sys/PetscInt.html#PetscInt">PetscInt</A> arr2[])
+</PRE>
+Not Collective
+<P>
+<H3><FONT COLOR="#CC3333">Input Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>n   </B></TD><TD>- number of values
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>arr1 </B></TD><TD>- array of PetscReals to be sorted
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>arr2 </B></TD><TD>- array of PetscReals to be reordered
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Output Parameters</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>arr1 </B></TD><TD>- sorted array of PetscReals
+</TD></TR>
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>arr2 </B></TD><TD>- reordered array of PetscInts
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Notes</FONT></H3>
+If the array to be sorted is less than 64 entries long <A HREF="../Sys/PetscSortRealWithArrayInt.html#PetscSortRealWithArrayInt">PetscSortRealWithArrayInt</A>() is automatically used.
+<P>
+This function serves as an alternative to PetscSortRealWithArray(). While this function works for any array of PetscReals it is
+significantly faster if the array is not totally random. There are exceptions to this and so it is __highly__
+recomended that the user benchmark their code to see which routine is fastest.
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../Sys/PetscTimSortWithArray.html#PetscTimSortWithArray">PetscTimSortWithArray</A>(), <A HREF="../Sys/PetscSortRealWithArrayInt.html#PetscSortRealWithArrayInt">PetscSortRealWithArrayInt</A>(), <A HREF="../Sys/PetscSortRealWithPermutation.html#PetscSortRealWithPermutation">PetscSortRealWithPermutation</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>intermediate<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/sys/utils/sortso.c.html#PetscRealSortSemiOrderedWithArrayInt">src/sys/utils/sortso.c</A>
+<BR><A HREF="./index.html">Index of all Sys routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>

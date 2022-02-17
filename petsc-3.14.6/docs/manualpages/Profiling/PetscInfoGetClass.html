@@ -1,0 +1,42 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML3.2 EN">
+<HTML>
+<HEAD> <link rel="canonical" href="http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Profiling/PetscInfoGetClass.html" />
+<META NAME="GENERATOR" CONTENT="DOCTEXT">
+<TITLE>PetscInfoGetClass</TITLE>
+</HEAD>
+<BODY BGCOLOR="FFFFFF">
+   <div id="version" align=right><b>petsc-3.14.6 2021-03-30</b></div>
+   <div id="bugreport" align=right><a href="mailto:petsc-maint@mcs.anl.gov?subject=Typo or Error in Documentation &body=Please describe the typo or error in the documentation: petsc-3.14.6 v3.14.6 docs/manualpages/Profiling/PetscInfoGetClass.html "><small>Report Typos and Errors</small></a></div>
+<A NAME="PetscInfoGetClass"><H1>PetscInfoGetClass</H1></A>
+Indicates whether the provided classname is marked as a filter in <A HREF="../Profiling/PetscInfo.html#PetscInfo">PetscInfo</A>() as set by <A HREF="../Profiling/PetscInfoSetClasses.html#PetscInfoSetClasses">PetscInfoSetClasses</A>() 
+<H3><FONT COLOR="#CC3333">Synopsis</FONT></H3>
+<PRE>
+#include "petscsys.h"   
+<A HREF="../Sys/PetscErrorCode.html#PetscErrorCode">PetscErrorCode</A> <A HREF="../Profiling/PetscInfoGetClass.html#PetscInfoGetClass">PetscInfoGetClass</A>(const char *classname, <A HREF="../Sys/PetscBool.html#PetscBool">PetscBool</A> *found)
+</PRE>
+Not Collective
+<P>
+<H3><FONT COLOR="#CC3333">Input Paramater</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>classname </B></TD><TD>- Name of the class to search for
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Output Parameter</FONT></H3>
+<TABLE border="0" cellpadding="0" cellspacing="0">
+<TR><TD WIDTH=40></TD><TD ALIGN=LEFT VALIGN=TOP><B>found </B></TD><TD>- <A HREF="../Sys/PetscBool.html#PetscBool">PetscBool</A> indicating whether the classname was found
+</TD></TR></TABLE>
+<P>
+<H3><FONT COLOR="#CC3333">Notes</FONT></H3>
+Use <A HREF="../Sys/PetscObjectGetName.html#PetscObjectGetName">PetscObjectGetName</A>() to retrieve an appropriate classname
+<P>
+
+<P>
+<H3><FONT COLOR="#CC3333">See Also</FONT></H3>
+ <A HREF="../Profiling/PetscInfo.html#PetscInfo">PetscInfo</A>(), <A HREF="../Profiling/PetscInfoSetClasses.html#PetscInfoSetClasses">PetscInfoSetClasses</A>(), <A HREF="../Profiling/PetscInfoSetFromOptions.html#PetscInfoSetFromOptions">PetscInfoSetFromOptions</A>(), <A HREF="../Sys/PetscObjectGetName.html#PetscObjectGetName">PetscObjectGetName</A>()
+<BR><P><B></B><H3><FONT COLOR="#CC3333">Level</FONT></H3>developer<BR>
+<H3><FONT COLOR="#CC3333">Location</FONT></H3>
+</B><A HREF="../../../src/sys/info/verboseinfo.c.html#PetscInfoGetClass">src/sys/info/verboseinfo.c</A>
+<BR><A HREF="./index.html">Index of all Profiling routines</A>
+<BR><A HREF="../../index.html">Table of Contents for all manual pages</A>
+<BR><A HREF="../singleindex.html">Index of all manual pages</A>
+</BODY></HTML>
