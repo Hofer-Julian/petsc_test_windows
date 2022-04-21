@@ -16,18 +16,17 @@ mv /usr/bin/link.exe /usr/bin/link-cygwin.exe
 ## Setup Cygwin terminal/bash-shell with Working Compilers
 
 
-Run: Start -> All Programs -> Intel oneAPI 2021 -> Intel oneAPI Command Prompt for Intel64 for Visual Studio 2019
-
-In this shell, run c:\cygwin64\bin\mintty.exe
-In mintty, run /usr/bin/bash --login
-Verify that the compilers are useable (by running cl, ifort in this Cygwin terminal/bash-shell)
+- Run: Start -> All Programs -> Intel oneAPI 2021 -> Intel oneAPI Command Prompt for Intel64 for Visual Studio 2019
+- In this shell, run c:\cygwin64\bin\mintty.exe
+- In mintty, run /usr/bin/bash --login
+- Verify that the compilers are useable (by running cl, ifort in this Cygwin terminal/bash-shell)
 
 ## Build 
 
 Run Configure
 
 ```
-cd /cygdrive/c/Development/petsc-3.14.6
+cd /cygdrive/c/path/to/petsc-3.14.6
 ```
 
 ```
@@ -40,11 +39,3 @@ cd /cygdrive/c/Development/petsc-3.14.6
 ```
 
 Build with the instructions as told at the end of the configure output
-
-# How to use
-
-- Install meson and oneAPI
-- Open `Intel oneAPI command prompt for Intel 64 for Visual Studio 2019`
-- Go to source directory
-- Execute `meson setup builddir`
-- Execute `meson compile -C builddir`
